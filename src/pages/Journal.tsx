@@ -1,15 +1,123 @@
-import { Plus, Apple, Droplets, Moon } from "lucide-react";
+import { useState, useRef } from "react";
+import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { WeekDaySelector } from "@/components/journal/WeekDaySelector";
+import { NutritionCard } from "@/components/journal/NutritionCard";
+import { AITrackingOnboarding } from "@/components/journal/AITrackingOnboarding";
+import { AITrackingSetupForm, AITrackingFormData } from "@/components/journal/AITrackingSetupForm";
+import { HealthMetricsView } from "@/components/journal/HealthMetricsView";
+import { FoodPhotoCapture } from "@/components/journal/FoodPhotoCapture";
+import { useJournalData } from "@/hooks/useJournalData";
+import { cn } from "@/lib/utils";
 
-const todayStats = [
-  { icon: Apple, label: "Måltider", current: 2, goal: 4, unit: "st", color: "text-primary" },
-  { icon: Droplets, label: "Vatten", current: 1.2, goal: 2, unit: "L", color: "text-blue-500" },
-  { icon: Moon, label: "Sömn", current: 7, goal: 8, unit: "h", color: "text-purple-500" },
-];
+type JournalView = "main" | "ai-setup";
+type SwipeView = "nutrition" | "health";
 
 export default function Journal() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [view, setView] = useState<JournalView>("main");
+  const [swipeView, setSwipeView] = useState<SwipeView>("nutrition");
+  const swipeContainerRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isLoading,
+    goals,
+    dailyTotals,
+    settings,
+    healthMetrics,
+    appleHealthSettings,
+    addEntry,
+    updateSettings,
+    connectAppleHealth,
+  } = useJournalData(selectedDate);
+
+  const nutritionCards = [
+    {
+      icon: Flame,
+      label: "Kalorier",
+      current: dailyTotals.calories,
+      goal: goals.caloriesGoal,
+      unit: "kcal",
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+    },
+    {
+      icon: Drumstick,
+      label: "Protein",
+      current: Math.round(dailyTotals.protein),
+      goal: goals.proteinGoal,
+      unit: "g",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+    {
+      icon: Wheat,
+      label: "Kolhydrater",
+      current: Math.round(dailyTotals.carbs),
+      goal: goals.carbsGoal,
+      unit: "g",
+      color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
+    },
+    {
+      icon: Droplet,
+      label: "Fett",
+      current: Math.round(dailyTotals.fat),
+      goal: goals.fatGoal,
+      unit: "g",
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+    },
+  ];
+
+  const handleAISetupComplete = (data: AITrackingFormData) => {
+    updateSettings({
+      aiTrackingEnabled: true,
+      aiTrackingOnboardingCompleted: true,
+      gender: data.gender,
+      heightCm: data.heightCm,
+      weightKg: data.weightKg,
+      activityLevel: data.activityLevel,
+    });
+    setView("main");
+  };
+
+  const handleSkipAITracking = () => {
+    updateSettings({
+      aiTrackingOnboardingCompleted: true,
+    });
+  };
+
+  const handleActivateAITracking = () => {
+    setView("ai-setup");
+  };
+
+  const handleAddEntry = (entry: {
+    mealName: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    isAiEstimated: boolean;
+  }) => {
+    addEntry(entry);
+  };
+
+  // Show AI setup form
+  if (view === "ai-setup") {
+    return (
+      <div className="px-4 py-6 animate-fade-in">
+        <AITrackingSetupForm 
+          onComplete={handleAISetupComplete}
+          onBack={() => setView("main")}
+        />
+      </div>
+    );
+  }
+
+  // Show onboarding if not completed
+  const showOnboarding = !settings.aiTrackingOnboardingCompleted;
+
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
       {/* Header */}
@@ -23,68 +131,107 @@ export default function Journal() {
         </Button>
       </div>
 
-      {/* Today's Stats */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-          Idag
-        </h2>
-        <div className="grid gap-3">
-          {todayStats.map((stat) => {
-            const percentage = (stat.current / stat.goal) * 100;
-            return (
-              <Card key={stat.label} className="shadow-soft">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-primary">
-                      <stat.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-foreground">{stat.label}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {stat.current} / {stat.goal} {stat.unit}
-                        </span>
-                      </div>
-                      <Progress value={percentage} className="h-2" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
+      {/* Week Day Selector */}
+      <WeekDaySelector 
+        selectedDate={selectedDate} 
+        onSelectDate={setSelectedDate} 
+      />
 
-      {/* Quick Add */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-          Snabbloggning
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-            <Apple className="w-6 h-6 text-primary" />
-            <span>Lägg till måltid</span>
-          </Button>
-          <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-            <Droplets className="w-6 h-6 text-primary" />
-            <span>Logga vatten</span>
-          </Button>
-        </div>
-      </section>
+      {/* Swipeable Area Indicator */}
+      <div className="flex justify-center gap-2">
+        <button
+          onClick={() => setSwipeView("nutrition")}
+          className={cn(
+            "w-2 h-2 rounded-full transition-all",
+            swipeView === "nutrition" ? "bg-primary w-4" : "bg-muted-foreground/30"
+          )}
+        />
+        <button
+          onClick={() => setSwipeView("health")}
+          className={cn(
+            "w-2 h-2 rounded-full transition-all",
+            swipeView === "health" ? "bg-primary w-4" : "bg-muted-foreground/30"
+          )}
+        />
+      </div>
 
-      {/* Recent Entries Placeholder */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-          Senaste anteckningar
-        </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">
-              Dina loggade måltider och anteckningar kommer visas här
-            </p>
-          </CardContent>
-        </Card>
-      </section>
+      {/* Swipeable Content Area */}
+      <div className="relative overflow-hidden">
+        <div
+          ref={swipeContainerRef}
+          className={cn(
+            "flex transition-transform duration-300 ease-out",
+            swipeView === "health" && "-translate-x-full"
+          )}
+        >
+          {/* Nutrition View */}
+          <div className="w-full flex-shrink-0 space-y-4">
+            {showOnboarding ? (
+              <AITrackingOnboarding
+                onActivate={handleActivateAITracking}
+                onSkip={handleSkipAITracking}
+              />
+            ) : (
+              <>
+                {/* AI Food Capture Button */}
+                {settings.aiTrackingEnabled && (
+                  <FoodPhotoCapture onAddEntry={handleAddEntry} />
+                )}
+
+                {/* Nutrition Cards */}
+                <div className="space-y-3">
+                  {nutritionCards.map((card) => (
+                    <NutritionCard key={card.label} {...card} />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Health Metrics View */}
+          <div className="w-full flex-shrink-0 pl-4">
+            <HealthMetricsView
+              isConnected={appleHealthSettings.connected}
+              steps={healthMetrics.steps}
+              activeEnergy={healthMetrics.activeEnergy}
+              onConnect={connectAppleHealth}
+            />
+          </div>
+        </div>
+
+        {/* Swipe Navigation Buttons */}
+        <div className="absolute inset-y-0 left-0 flex items-center">
+          {swipeView === "health" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-background/80 shadow-sm"
+              onClick={() => setSwipeView("nutrition")}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+        <div className="absolute inset-y-0 right-0 flex items-center">
+          {swipeView === "nutrition" && !showOnboarding && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-background/80 shadow-sm"
+              onClick={() => setSwipeView("health")}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Section Label */}
+      <div className="text-center">
+        <span className="text-xs text-muted-foreground uppercase tracking-wider">
+          {swipeView === "nutrition" ? "Näring" : "Hälsomätare"}
+        </span>
+      </div>
     </div>
   );
 }
