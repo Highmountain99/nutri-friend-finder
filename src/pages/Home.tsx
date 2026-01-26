@@ -1,0 +1,68 @@
+import { useNavigate } from "react-router-dom";
+import { MessageCircle, User, Settings } from "lucide-react";
+import { AppointmentCard } from "@/components/home/AppointmentCard";
+import { QuickActionCard } from "@/components/home/QuickActionCard";
+
+export default function Home() {
+  const navigate = useNavigate();
+
+  // Mock data - in real app this would come from API
+  const upcomingAppointment = {
+    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+    dietitianName: "Anna Lindström",
+  };
+
+  return (
+    <div className="px-4 py-6 space-y-6 animate-fade-in">
+      {/* Appointment Section */}
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+          Din nästa tid
+        </h2>
+        <AppointmentCard
+          appointment={upcomingAppointment}
+          onRebook={() => navigate("/booking")}
+          onBook={() => navigate("/booking")}
+        />
+      </section>
+
+      {/* Quick Actions */}
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+          Snabbåtgärder
+        </h2>
+        <div className="space-y-3">
+          <QuickActionCard
+            icon={MessageCircle}
+            title="Chatta med din dietist"
+            description="Skicka ett meddelande när som helst"
+            onClick={() => navigate("/messages")}
+            variant="accent"
+          />
+          <QuickActionCard
+            icon={User}
+            title="Min hälsoprofil"
+            description="Visa hälsoprofil"
+            onClick={() => navigate("/profile")}
+          />
+          <QuickActionCard
+            icon={Settings}
+            title="Profilinställningar"
+            description="Uppdatera din information"
+            onClick={() => navigate("/settings")}
+          />
+        </div>
+      </section>
+
+      {/* Motivation Section */}
+      <section className="pt-2">
+        <div className="rounded-2xl gradient-hero p-5 text-primary-foreground">
+          <p className="text-sm opacity-90 mb-1">Dagens tanke</p>
+          <p className="font-medium leading-relaxed">
+            "Små steg varje dag leder till stora förändringar. Du gör ett fantastiskt jobb!"
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
