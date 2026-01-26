@@ -27,26 +27,29 @@ export function NutritionCard({
   
   return (
     <Card className="shadow-soft">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", bgColor)}>
-            <Icon className={cn("w-5 h-5", color)} />
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", bgColor)}>
+            <Icon className={cn("w-4 h-4", color)} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-foreground">{label}</span>
-              <span className={cn(
-                "text-sm",
-                isOverGoal ? "text-destructive font-medium" : "text-muted-foreground"
-              )}>
-                {current} / {goal} {unit}
-              </span>
-            </div>
-            <Progress 
-              value={percentage} 
-              className={cn("h-2", isOverGoal && "[&>div]:bg-destructive")} 
-            />
+          <span className="text-sm font-medium text-foreground">{label}</span>
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-baseline justify-between">
+            <span className={cn(
+              "text-lg font-semibold",
+              isOverGoal ? "text-destructive" : "text-foreground"
+            )}>
+              {current}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              / {goal} {unit}
+            </span>
           </div>
+          <Progress 
+            value={percentage} 
+            className={cn("h-1.5", isOverGoal && "[&>div]:bg-destructive")} 
+          />
         </div>
       </CardContent>
     </Card>
