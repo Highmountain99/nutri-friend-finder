@@ -41,6 +41,10 @@
 
     --radius: 1rem;
 
+    /* Semantic colors for ratings/badges */
+    --star-rating: 45 93% 58%;
+    --trustpilot: 142 70% 45%;
+
     /* Custom tokens */
     --gradient-hero: linear-gradient(135deg, hsl(150 35% 45%) 0%, hsl(160 40% 55%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 30% 98%) 100%);

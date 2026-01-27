@@ -92,6 +92,87 @@ export type Database = {
         }
         Relationships: []
       }
+      intake_profiles: {
+        Row: {
+          activity_level: Database["public"]["Enums"]["activity_level"] | null
+          ai_free_text: string | null
+          ai_parsed_fields: Json | null
+          care_seeker_type:
+            | Database["public"]["Enums"]["care_seeker_type"]
+            | null
+          completed_at: string | null
+          concern_tags: string[] | null
+          created_at: string
+          current_step: number | null
+          id: string
+          motivation_level:
+            | Database["public"]["Enums"]["motivation_level"]
+            | null
+          primary_concern_category:
+            | Database["public"]["Enums"]["primary_concern_category"]
+            | null
+          primary_concern_subcategory: string | null
+          relationship_if_other:
+            | Database["public"]["Enums"]["relationship_type"]
+            | null
+          support_areas: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_level?: Database["public"]["Enums"]["activity_level"] | null
+          ai_free_text?: string | null
+          ai_parsed_fields?: Json | null
+          care_seeker_type?:
+            | Database["public"]["Enums"]["care_seeker_type"]
+            | null
+          completed_at?: string | null
+          concern_tags?: string[] | null
+          created_at?: string
+          current_step?: number | null
+          id?: string
+          motivation_level?:
+            | Database["public"]["Enums"]["motivation_level"]
+            | null
+          primary_concern_category?:
+            | Database["public"]["Enums"]["primary_concern_category"]
+            | null
+          primary_concern_subcategory?: string | null
+          relationship_if_other?:
+            | Database["public"]["Enums"]["relationship_type"]
+            | null
+          support_areas?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_level?: Database["public"]["Enums"]["activity_level"] | null
+          ai_free_text?: string | null
+          ai_parsed_fields?: Json | null
+          care_seeker_type?:
+            | Database["public"]["Enums"]["care_seeker_type"]
+            | null
+          completed_at?: string | null
+          concern_tags?: string[] | null
+          created_at?: string
+          current_step?: number | null
+          id?: string
+          motivation_level?:
+            | Database["public"]["Enums"]["motivation_level"]
+            | null
+          primary_concern_category?:
+            | Database["public"]["Enums"]["primary_concern_category"]
+            | null
+          primary_concern_subcategory?: string | null
+          relationship_if_other?:
+            | Database["public"]["Enums"]["relationship_type"]
+            | null
+          support_areas?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       nutrition_entries: {
         Row: {
           calories: number | null
@@ -258,7 +339,20 @@ export type Database = {
         | "active"
         | "very_active"
       app_role: "admin" | "dietist" | "user"
+      care_seeker_type: "self" | "other"
       gender: "male" | "female" | "other"
+      motivation_level: "excited" | "curious" | "hesitant" | "not_ready"
+      primary_concern_category:
+        | "weight_loss"
+        | "diabetes"
+        | "gut_health"
+        | "general_health"
+        | "womens_health"
+        | "emotional_eating"
+        | "eating_disorder"
+        | "heart_health"
+        | "other"
+      relationship_type: "guardian" | "trustee" | "relative"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -394,7 +488,21 @@ export const Constants = {
         "very_active",
       ],
       app_role: ["admin", "dietist", "user"],
+      care_seeker_type: ["self", "other"],
       gender: ["male", "female", "other"],
+      motivation_level: ["excited", "curious", "hesitant", "not_ready"],
+      primary_concern_category: [
+        "weight_loss",
+        "diabetes",
+        "gut_health",
+        "general_health",
+        "womens_health",
+        "emotional_eating",
+        "eating_disorder",
+        "heart_health",
+        "other",
+      ],
+      relationship_type: ["guardian", "trustee", "relative"],
     },
   },
 } as const
