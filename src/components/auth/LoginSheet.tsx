@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BankIdLogo } from "./BankIdLogo";
 import { startBankId } from "@/lib/bankid";
@@ -7,6 +8,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 
 interface LoginSheetProps {
@@ -16,13 +18,14 @@ interface LoginSheetProps {
 
 export function LoginSheet({ open, onClose }: LoginSheetProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
       await startBankId("login");
-      // After successful login, would redirect to app
       onClose();
+      navigate("/");
     } catch (error) {
       console.error("BankID login failed:", error);
     } finally {
