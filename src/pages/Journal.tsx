@@ -1,36 +1,42 @@
 import { useState, useRef } from "react";
-import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera, X, Loader2, Check } from "lucide-react";
+import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { WeekDaySelector } from "@/components/journal/WeekDaySelector";
-import { NutritionCard } from "@/components/journal/NutritionCard";
+import { NutritionProgressCard } from "@/components/journal/NutritionProgressCard";
 import { AITrackingOnboarding } from "@/components/journal/AITrackingOnboarding";
 import { AITrackingSetupForm, AITrackingFormData } from "@/components/journal/AITrackingSetupForm";
 import { HealthMetricsView } from "@/components/journal/HealthMetricsView";
-import { useJournalData } from "@/hooks/useJournalData";
+import { MealTimeline } from "@/components/journal/MealTimeline";
+import { AddMealSheet } from "@/components/journal/AddMealSheet";
+import { useJournalData, type Ingredient } from "@/hooks/useJournalData";
 import { cn } from "@/lib/utils";
 
 type JournalView = "main" | "ai-setup";
 type SwipeView = "nutrition" | "health";
 
+// Helper to get meal type based on time
+function getMealType(date: Date): string {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 10) return "Frukost";
+  if (hour >= 10 && hour < 12) return "Förmiddagssnack";
+  if (hour >= 12 && hour < 14) return "Lunch";
+  if (hour >= 14 && hour < 17) return "Mellanmål";
+  if (hour >= 17 && hour < 21) return "Middag";
+  return "Kvällssnack";
+}
+
 export default function Journal() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState<JournalView>("main");
   const [swipeView, setSwipeView] = useState<SwipeView>("nutrition");
-  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
+  const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const swipeContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     isLoading,
     goals,
     dailyTotals,
+    entries,
     settings,
     healthMetrics,
     appleHealthSettings,
@@ -39,20 +45,28 @@ export default function Journal() {
     connectAppleHealth,
   } = useJournalData(selectedDate);
 
+  // Calculate remaining macros
+  const remaining = {
+    calories: goals.caloriesGoal - dailyTotals.calories,
+    protein: goals.proteinGoal - dailyTotals.protein,
+    carbs: goals.carbsGoal - dailyTotals.carbs,
+    fat: goals.fatGoal - dailyTotals.fat,
+  };
+
   const nutritionCards = [
     {
       icon: Flame,
       label: "Kalorier",
-      current: dailyTotals.calories,
+      remaining: remaining.calories,
       goal: goals.caloriesGoal,
       unit: "kcal",
-      color: "text-accent",
-      bgColor: "bg-accent/10",
+      color: "text-foreground",
+      bgColor: "bg-muted",
     },
     {
       icon: Drumstick,
       label: "Protein",
-      current: Math.round(dailyTotals.protein),
+      remaining: Math.round(remaining.protein),
       goal: goals.proteinGoal,
       unit: "g",
       color: "text-primary",
@@ -61,20 +75,20 @@ export default function Journal() {
     {
       icon: Wheat,
       label: "Kolhydrater",
-      current: Math.round(dailyTotals.carbs),
+      remaining: Math.round(remaining.carbs),
       goal: goals.carbsGoal,
       unit: "g",
-      color: "text-amber-500",
-      bgColor: "bg-amber-500/10",
+      color: "text-accent",
+      bgColor: "bg-accent/10",
     },
     {
       icon: Droplet,
       label: "Fett",
-      current: Math.round(dailyTotals.fat),
+      remaining: Math.round(remaining.fat),
       goal: goals.fatGoal,
       unit: "g",
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
+      color: "text-secondary",
+      bgColor: "bg-secondary/10",
     },
   ];
 
@@ -102,14 +116,27 @@ export default function Journal() {
 
   const handleAddEntry = (entry: {
     mealName: string;
+    mealType: string;
     calories: number;
     protein: number;
     carbs: number;
     fat: number;
     isAiEstimated: boolean;
+    imageUrl?: string;
+    ingredients?: Ingredient[];
   }) => {
-    addEntry(entry);
-    setIsPhotoDialogOpen(false);
+    addEntry({
+      mealName: entry.mealName,
+      mealType: entry.mealType,
+      calories: entry.calories,
+      protein: entry.protein,
+      carbs: entry.carbs,
+      fat: entry.fat,
+      isAiEstimated: entry.isAiEstimated,
+      imageUrl: entry.imageUrl,
+      ingredients: entry.ingredients,
+    });
+    setIsAddMealOpen(false);
   };
 
   // Show AI setup form
@@ -128,23 +155,17 @@ export default function Journal() {
   const showOnboarding = !settings.aiTrackingOnboardingCompleted;
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Din journal</h1>
-          <p className="text-sm text-muted-foreground">Håll koll på din dag</p>
-        </div>
-        <Button size="icon" className="rounded-full">
-          <Plus className="w-5 h-5" />
-        </Button>
-      </div>
-
+    <div className="px-4 py-6 space-y-6 animate-fade-in pb-32">
       {/* Week Day Selector */}
       <WeekDaySelector 
         selectedDate={selectedDate} 
         onSelectDate={setSelectedDate} 
       />
+
+      {/* Streak indicator (placeholder) */}
+      <div className="bg-accent/10 py-2 px-4 rounded-full text-center">
+        <span className="text-sm text-accent font-medium">🔥 1-dagarsstreak!</span>
+      </div>
 
       {/* Swipeable Area Indicator */}
       <div className="flex justify-center gap-2">
@@ -182,10 +203,10 @@ export default function Journal() {
               />
             ) : (
               <>
-                {/* Nutrition Cards - 2x2 Grid */}
+                {/* Nutrition Cards - 2x2 Grid showing "remaining" */}
                 <div className="grid grid-cols-2 gap-3">
                   {nutritionCards.map((card) => (
-                    <NutritionCard key={card.label} {...card} />
+                    <NutritionProgressCard key={card.label} {...card} />
                   ))}
                 </div>
               </>
@@ -230,210 +251,48 @@ export default function Journal() {
         </div>
       </div>
 
-      {/* Section Label */}
-      <div className="text-center">
-        <span className="text-xs text-muted-foreground uppercase tracking-wider">
-          {swipeView === "nutrition" ? "Näring" : "Hälsomätare"}
-        </span>
+      {/* Add Meal Buttons */}
+      <div className="flex gap-3">
+        <Button 
+          variant="outline" 
+          className="flex-1 gap-2"
+          onClick={() => setIsAddMealOpen(true)}
+        >
+          <Plus className="w-4 h-4" />
+          Lägg till måltid
+        </Button>
       </div>
 
-      {/* Fixed Camera Button - Bottom Right */}
+      {/* Meal Timeline */}
+      <div className="space-y-3">
+        <MealTimeline 
+          entries={entries}
+          onEntryClick={(entry) => {
+            // TODO: Open entry detail view
+            console.log("Entry clicked:", entry);
+          }}
+        />
+      </div>
+
+      {/* Fixed Camera FAB - Bottom Right */}
       {settings.aiTrackingEnabled && !showOnboarding && (
         <div className="fixed bottom-24 right-4 z-50">
           <Button
             size="icon"
-            className="h-14 w-14 rounded-full shadow-elevated"
-            onClick={() => setIsPhotoDialogOpen(true)}
+            className="h-14 w-14 rounded-full shadow-elevated bg-accent hover:bg-accent/90"
+            onClick={() => setIsAddMealOpen(true)}
           >
             <Camera className="w-6 h-6" />
           </Button>
         </div>
       )}
 
-      {/* Photo Capture Dialog */}
-      <FoodPhotoCaptureDialog 
-        isOpen={isPhotoDialogOpen}
-        onClose={() => setIsPhotoDialogOpen(false)}
+      {/* Add Meal Sheet */}
+      <AddMealSheet 
+        isOpen={isAddMealOpen}
+        onClose={() => setIsAddMealOpen(false)}
         onAddEntry={handleAddEntry}
       />
     </div>
-  );
-}
-
-// Extracted dialog component for cleaner code
-interface FoodPhotoCaptureDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onAddEntry: (entry: {
-    mealName: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    isAiEstimated: boolean;
-  }) => void;
-}
-
-function FoodPhotoCaptureDialog({ isOpen, onClose, onAddEntry }: FoodPhotoCaptureDialogProps) {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [estimation, setEstimation] = useState<{
-    mealName: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-  } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-      analyzeImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const analyzeImage = async (imageBase64: string) => {
-    setIsAnalyzing(true);
-    
-    // Simulate AI analysis
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setEstimation({
-      mealName: "Kyckling med ris och grönsaker",
-      calories: 450,
-      protein: 35,
-      carbs: 45,
-      fat: 12,
-    });
-    
-    setIsAnalyzing(false);
-  };
-
-  const handleConfirm = () => {
-    if (!estimation) return;
-    
-    onAddEntry({
-      ...estimation,
-      isAiEstimated: true,
-    });
-    
-    handleReset();
-  };
-
-  const handleReset = () => {
-    setImagePreview(null);
-    setEstimation(null);
-    setIsAnalyzing(false);
-  };
-
-  const handleClose = () => {
-    handleReset();
-    onClose();
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Camera className="w-5 h-5" />
-            AI Näringsspårning
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {!imagePreview ? (
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-            >
-              <Camera className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">
-                Klicka för att ta eller välja ett foto
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
-          ) : (
-            <div className="relative">
-              <img 
-                src={imagePreview} 
-                alt="Mat" 
-                className="w-full h-48 object-cover rounded-xl"
-              />
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2"
-                onClick={handleReset}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
-          {isAnalyzing && (
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="p-4 flex items-center gap-3">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                <span className="text-sm">Analyserar matbilden...</span>
-              </CardContent>
-            </Card>
-          )}
-
-          {estimation && !isAnalyzing && (
-            <Card className="shadow-soft">
-              <CardContent className="p-4 space-y-4">
-                <div>
-                  <Label className="text-xs text-muted-foreground">AI-uppskattning</Label>
-                  <p className="font-medium text-foreground">{estimation.mealName}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-muted/50 p-3 rounded-lg">
-                    <span className="text-muted-foreground">Kalorier</span>
-                    <p className="font-semibold text-foreground">{estimation.calories} kcal</p>
-                  </div>
-                  <div className="bg-muted/50 p-3 rounded-lg">
-                    <span className="text-muted-foreground">Protein</span>
-                    <p className="font-semibold text-foreground">{estimation.protein} g</p>
-                  </div>
-                  <div className="bg-muted/50 p-3 rounded-lg">
-                    <span className="text-muted-foreground">Kolhydrater</span>
-                    <p className="font-semibold text-foreground">{estimation.carbs} g</p>
-                  </div>
-                  <div className="bg-muted/50 p-3 rounded-lg">
-                    <span className="text-muted-foreground">Fett</span>
-                    <p className="font-semibold text-foreground">{estimation.fat} g</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1" onClick={handleClose}>
-                    Avbryt
-                  </Button>
-                  <Button className="flex-1 gap-2" onClick={handleConfirm}>
-                    <Check className="w-4 h-4" />
-                    Lägg till
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
