@@ -71,6 +71,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dietist_patient_assignments: {
+        Row: {
+          created_at: string | null
+          dietist_id: string
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dietist_id: string
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dietist_id?: string
+          id?: string
+          patient_id?: string
+        }
+        Relationships: []
+      }
       nutrition_entries: {
         Row: {
           calories: number | null
@@ -227,6 +248,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_assigned_dietist: { Args: { _patient_id: string }; Returns: boolean }
     }
     Enums: {
       activity_level:

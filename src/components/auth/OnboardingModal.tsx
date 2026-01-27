@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BankIdLogo } from "./BankIdLogo";
-import { startBankId } from "@/lib/bankid";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -14,25 +16,52 @@ interface OnboardingModalProps {
 export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   if (!open) return null;
 
   const handleNext = () => {
-    if (currentPage === 0) {
-      setCurrentPage(1);
+    if (currentPage < 2) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
-  const handleGetStarted = async () => {
+  const handleGetStarted = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Fyll i e-post och lösenord");
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast.error("Lösenorden matchar inte");
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast.error("Lösenordet måste vara minst 6 tecken");
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      await startBankId("signup");
+      const { error } = await signUp(email, password);
+      if (error) {
+        toast.error(error.message || "Registreringen misslyckades");
+        return;
+      }
+      toast.success("Konto skapat! Du är nu inloggad.");
       onClose();
       navigate("/");
     } catch (error) {
-      console.error("BankID signup failed:", error);
+      console.error("Signup failed:", error);
+      toast.error("Ett fel uppstod vid registrering");
     } finally {
       setIsLoading(false);
     }
@@ -47,10 +76,10 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
     const touchEnd = e.changedTouches[0].clientX;
     const diff = touchStart - touchEnd;
     if (Math.abs(diff) > 50) {
-      if (diff > 0 && currentPage === 0) {
-        setCurrentPage(1);
-      } else if (diff < 0 && currentPage === 1) {
-        setCurrentPage(0);
+      if (diff > 0 && currentPage < 2) {
+        setCurrentPage(currentPage + 1);
+      } else if (diff < 0 && currentPage > 0) {
+        setCurrentPage(currentPage - 1);
       }
     }
     setTouchStart(null);
@@ -58,6 +87,9 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
 
   const handleClose = () => {
     setCurrentPage(0);
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
     onClose();
   };
 
@@ -89,14 +121,28 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
 
           {/* Page 2 */}
           <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto">
-            <OnboardingPage2 onGetStarted={handleGetStarted} isLoading={isLoading} />
+            <OnboardingPage2 onNext={handleNext} />
+          </div>
+
+          {/* Page 3 - Registration */}
+          <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto">
+            <OnboardingPage3 
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              confirmPassword={confirmPassword}
+              setConfirmPassword={setConfirmPassword}
+              onGetStarted={handleGetStarted} 
+              isLoading={isLoading} 
+            />
           </div>
         </div>
       </div>
 
       {/* Page indicators - fixed at bottom */}
       <div className="flex-shrink-0 py-4 flex justify-center gap-2 pb-safe">
-        {[0, 1].map((index) => (
+        {[0, 1, 2].map((index) => (
           <button
             key={index}
             onClick={() => setCurrentPage(index)}
@@ -146,13 +192,7 @@ function OnboardingPage1({ onNext }: { onNext: () => void }) {
   );
 }
 
-function OnboardingPage2({
-  onGetStarted,
-  isLoading,
-}: {
-  onGetStarted: () => void;
-  isLoading: boolean;
-}) {
+function OnboardingPage2({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex-1 flex flex-col px-6 pt-16">
       {/* Illustration placeholder */}
@@ -199,8 +239,7 @@ function OnboardingPage2({
             </span>
             <span>
               Mellan samtalen använder du appens näringsspårningsverktyg samt tar del av de
-              mål din dietist sätter upp för dig. Verktyg och mål, särskilt anpassade för
-              att du ska må bättre.
+              mål din dietist sätter upp för dig.
             </span>
           </li>
         </ul>
@@ -208,19 +247,98 @@ function OnboardingPage2({
 
       {/* CTA */}
       <div className="flex-shrink-0 py-6">
-        <Button
-          onClick={onGetStarted}
-          size="xl"
-          className="w-full h-14 text-base font-medium relative"
-          disabled={isLoading}
-        >
-          {isLoading ? "Öppnar BankID…" : "Kom igång"}
-          {!isLoading && (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2">
-              <BankIdLogo className="h-5 w-auto text-primary-foreground" />
-            </span>
-          )}
+        <Button onClick={onNext} size="xl" className="w-full h-14 text-base font-medium">
+          Skapa konto
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function OnboardingPage3({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  confirmPassword,
+  setConfirmPassword,
+  onGetStarted,
+  isLoading,
+}: {
+  email: string;
+  setEmail: (v: string) => void;
+  password: string;
+  setPassword: (v: string) => void;
+  confirmPassword: string;
+  setConfirmPassword: (v: string) => void;
+  onGetStarted: (e: React.FormEvent) => void;
+  isLoading: boolean;
+}) {
+  return (
+    <div className="flex-1 flex flex-col px-6 pt-16">
+      {/* Content */}
+      <div className="flex-1">
+        <h2 className="text-2xl font-semibold text-foreground mb-2">
+          Skapa ditt konto
+        </h2>
+        <p className="text-muted-foreground mb-8">
+          Fyll i dina uppgifter för att komma igång.
+        </p>
+
+        <form onSubmit={onGetStarted} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="signup-email">E-post</Label>
+            <Input
+              id="signup-email"
+              type="email"
+              placeholder="din@epost.se"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="signup-password">Lösenord</Label>
+            <Input
+              id="signup-password"
+              type="password"
+              placeholder="Minst 6 tecken"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              required
+              minLength={6}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="signup-confirm">Bekräfta lösenord</Label>
+            <Input
+              id="signup-confirm"
+              type="password"
+              placeholder="Upprepa lösenord"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isLoading}
+              required
+              minLength={6}
+            />
+          </div>
+
+          {/* CTA */}
+          <div className="pt-4">
+            <Button
+              type="submit"
+              size="xl"
+              className="w-full h-14 text-base font-medium"
+              disabled={isLoading}
+            >
+              {isLoading ? "Skapar konto…" : "Kom igång"}
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );

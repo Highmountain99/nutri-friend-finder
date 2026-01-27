@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, User, Bell, Shield, CreditCard, HelpCircle, ChevronRight, BookOpen, Flame, Sparkles, Target } from "lucide-react";
+import { ArrowLeft, User, Bell, Shield, CreditCard, HelpCircle, ChevronRight, Flame, Sparkles, Target, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NutritionGoals {
   caloriesGoal: number;
@@ -51,7 +53,9 @@ const settingsSections = [
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [isGoalsDialogOpen, setIsGoalsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Journal settings state
   const [nutritionSettings, setNutritionSettings] = useState<NutritionSettings>({
@@ -68,38 +72,70 @@ export default function Settings() {
   
   const [editableGoals, setEditableGoals] = useState<NutritionGoals>(goals);
 
-  // Load settings from localStorage
+  // Load settings from Supabase
   useEffect(() => {
-    const storedSettings = localStorage.getItem("nutrition_settings");
-    const storedGoals = localStorage.getItem("nutrition_goals");
-    
-    if (storedSettings) {
-      const parsed = JSON.parse(storedSettings);
-      setNutritionSettings({
-        aiTrackingEnabled: parsed.aiTrackingEnabled ?? false,
-        calorieTrackingEnabled: parsed.calorieTrackingEnabled ?? true,
-      });
-    }
-    
-    if (storedGoals) {
-      setGoals(JSON.parse(storedGoals));
-    }
-  }, []);
+    if (!user) return;
 
-  const handleToggleAITracking = (enabled: boolean) => {
-    const stored = localStorage.getItem("nutrition_settings");
-    const current = stored ? JSON.parse(stored) : {};
-    const updated = { ...current, aiTrackingEnabled: enabled };
-    localStorage.setItem("nutrition_settings", JSON.stringify(updated));
+    const loadSettings = async () => {
+      setIsLoading(true);
+      try {
+        // Load nutrition settings
+        const { data: settingsData } = await supabase
+          .from("user_nutrition_settings")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (settingsData) {
+          setNutritionSettings({
+            aiTrackingEnabled: settingsData.ai_tracking_enabled ?? false,
+            calorieTrackingEnabled: settingsData.calorie_tracking_enabled ?? true,
+          });
+        }
+
+        // Load nutrition goals
+        const { data: goalsData } = await supabase
+          .from("user_nutrition_goals")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (goalsData) {
+          setGoals({
+            caloriesGoal: goalsData.calories_goal ?? 2000,
+            proteinGoal: goalsData.protein_goal ?? 50,
+            carbsGoal: goalsData.carbs_goal ?? 250,
+            fatGoal: goalsData.fat_goal ?? 65,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [user]);
+
+  const handleToggleAITracking = async (enabled: boolean) => {
+    if (!user) return;
     setNutritionSettings(prev => ({ ...prev, aiTrackingEnabled: enabled }));
+    
+    await supabase.from("user_nutrition_settings").upsert({
+      user_id: user.id,
+      ai_tracking_enabled: enabled,
+    });
   };
 
-  const handleToggleCalorieTracking = (enabled: boolean) => {
-    const stored = localStorage.getItem("nutrition_settings");
-    const current = stored ? JSON.parse(stored) : {};
-    const updated = { ...current, calorieTrackingEnabled: enabled };
-    localStorage.setItem("nutrition_settings", JSON.stringify(updated));
+  const handleToggleCalorieTracking = async (enabled: boolean) => {
+    if (!user) return;
     setNutritionSettings(prev => ({ ...prev, calorieTrackingEnabled: enabled }));
+    
+    await supabase.from("user_nutrition_settings").upsert({
+      user_id: user.id,
+      calorie_tracking_enabled: enabled,
+    });
   };
 
   const handleOpenGoalsDialog = () => {
@@ -107,11 +143,32 @@ export default function Settings() {
     setIsGoalsDialogOpen(true);
   };
 
-  const handleSaveGoals = () => {
+  const handleSaveGoals = async () => {
+    if (!user) return;
+    
     setGoals(editableGoals);
-    localStorage.setItem("nutrition_goals", JSON.stringify(editableGoals));
     setIsGoalsDialogOpen(false);
+    
+    await supabase.from("user_nutrition_goals").upsert({
+      user_id: user.id,
+      calories_goal: editableGoals.caloriesGoal,
+      protein_goal: editableGoals.proteinGoal,
+      carbs_goal: editableGoals.carbsGoal,
+      fat_goal: editableGoals.fatGoal,
+    });
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  // Get display name and email
+  const displayName = user?.user_metadata?.full_name || 
+                      user?.email?.split("@")[0] || 
+                      "Användare";
+  const displayEmail = user?.email || "";
+  const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
@@ -130,11 +187,11 @@ export default function Settings() {
       <Card className="shadow-soft">
         <CardContent className="p-4 flex items-center gap-4">
           <div className="w-16 h-16 rounded-full gradient-hero flex items-center justify-center text-primary-foreground text-xl font-bold">
-            EM
+            {initials}
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">Erik Magnusson</h3>
-            <p className="text-sm text-muted-foreground">erik.magnusson@email.se</p>
+            <h3 className="font-semibold text-foreground">{displayName}</h3>
+            <p className="text-sm text-muted-foreground">{displayEmail}</p>
           </div>
         </CardContent>
       </Card>
@@ -155,6 +212,7 @@ export default function Settings() {
               <Switch 
                 checked={nutritionSettings.aiTrackingEnabled}
                 onCheckedChange={handleToggleAITracking}
+                disabled={isLoading}
               />
             </div>
             
@@ -167,6 +225,7 @@ export default function Settings() {
               <Switch 
                 checked={nutritionSettings.calorieTrackingEnabled}
                 onCheckedChange={handleToggleCalorieTracking}
+                disabled={isLoading}
               />
             </div>
             
@@ -216,6 +275,23 @@ export default function Settings() {
           </Card>
         </section>
       ))}
+
+      {/* Sign Out */}
+      <section>
+        <Card className="shadow-soft">
+          <CardContent className="p-0">
+            <div
+              className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-destructive/10 transition-colors"
+              onClick={handleSignOut}
+            >
+              <div className="flex items-center gap-3">
+                <LogOut className="w-5 h-5 text-destructive" />
+                <span className="text-destructive font-medium">Logga ut</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* App Version */}
       <p className="text-center text-xs text-muted-foreground">

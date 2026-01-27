@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BankIdLogo } from "./BankIdLogo";
-import { startBankId } from "@/lib/bankid";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +11,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { toast } from "sonner";
 
 interface LoginSheetProps {
   open: boolean;
@@ -17,17 +19,32 @@ interface LoginSheetProps {
 }
 
 export function LoginSheet({ open, onClose }: LoginSheetProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Fyll i e-post och lösenord");
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      await startBankId("login");
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast.error(error.message || "Inloggningen misslyckades");
+        return;
+      }
       onClose();
       navigate("/");
     } catch (error) {
-      console.error("BankID login failed:", error);
+      console.error("Login failed:", error);
+      toast.error("Ett fel uppstod vid inloggning");
     } finally {
       setIsLoading(false);
     }
@@ -40,30 +57,53 @@ export function LoginSheet({ open, onClose }: LoginSheetProps) {
         className="rounded-t-3xl px-6 pb-safe pt-8"
       >
         <div className="flex flex-col items-center text-center space-y-6">
-          {/* BankID Logo */}
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-            <BankIdLogo className="h-8 w-auto text-primary" />
-          </div>
-
           {/* Header */}
           <SheetHeader className="space-y-2">
             <SheetTitle className="text-xl font-semibold">
-              Logga in med BankID
+              Logga in
             </SheetTitle>
-            <p className="text-sm text-muted-foreground">
-              Om du inte redan har ett konto skapas ett åt dig.
-            </p>
+            <SheetDescription>
+              Ange din e-post och lösenord för att logga in.
+            </SheetDescription>
           </SheetHeader>
 
-          {/* Login button */}
-          <Button
-            onClick={handleLogin}
-            size="xl"
-            className="w-full h-14 text-base font-medium"
-            disabled={isLoading}
-          >
-            {isLoading ? "Öppnar BankID…" : "Logga in"}
-          </Button>
+          {/* Login form */}
+          <form onSubmit={handleLogin} className="w-full space-y-4">
+            <div className="space-y-2 text-left">
+              <Label htmlFor="email">E-post</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="din@epost.se"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2 text-left">
+              <Label htmlFor="password">Lösenord</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                required
+              />
+            </div>
+
+            <Button
+              type="submit"
+              size="xl"
+              className="w-full h-14 text-base font-medium"
+              disabled={isLoading}
+            >
+              {isLoading ? "Loggar in…" : "Logga in"}
+            </Button>
+          </form>
         </div>
       </SheetContent>
     </Sheet>
