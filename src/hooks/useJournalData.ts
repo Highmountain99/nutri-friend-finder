@@ -17,14 +17,26 @@ export interface DailyTotals {
   fat: number;
 }
 
+export interface Ingredient {
+  name: string;
+  amount: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export interface NutritionEntry {
   id: string;
   mealName: string;
+  mealType: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   isAiEstimated: boolean;
+  imageUrl?: string;
+  ingredients?: Ingredient[];
   createdAt: Date;
 }
 
@@ -148,6 +160,22 @@ export function useJournalData(selectedDate: Date) {
     localStorage.setItem(`nutrition_entries_${dateKey}`, JSON.stringify(updatedEntries));
   }, [entries, dateKey]);
 
+  const updateEntry = useCallback((id: string, updates: Partial<NutritionEntry>) => {
+    const updatedEntries = entries.map(entry => 
+      entry.id === id ? { ...entry, ...updates } : entry
+    );
+    setEntries(updatedEntries);
+    calculateTotals(updatedEntries);
+    localStorage.setItem(`nutrition_entries_${dateKey}`, JSON.stringify(updatedEntries));
+  }, [entries, dateKey]);
+
+  const deleteEntry = useCallback((id: string) => {
+    const updatedEntries = entries.filter(entry => entry.id !== id);
+    setEntries(updatedEntries);
+    calculateTotals(updatedEntries);
+    localStorage.setItem(`nutrition_entries_${dateKey}`, JSON.stringify(updatedEntries));
+  }, [entries, dateKey]);
+
   const updateSettings = useCallback((newSettings: Partial<NutritionSettings>) => {
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
@@ -175,6 +203,8 @@ export function useJournalData(selectedDate: Date) {
     healthMetrics,
     appleHealthSettings,
     addEntry,
+    updateEntry,
+    deleteEntry,
     updateSettings,
     updateGoals,
     connectAppleHealth,
