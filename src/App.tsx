@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { QualifyingRoute } from "@/components/auth/QualifyingRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
@@ -15,6 +16,7 @@ import Progress from "./pages/Progress";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
+import Qualifying from "./pages/Qualifying";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -34,8 +36,15 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
-            {/* Protected app routes with layout */}
+            {/* Qualifying flow - protected but no layout, requires incomplete profile */}
             <Route element={<ProtectedRoute />}>
+              <Route element={<QualifyingRoute requireQualifying />}>
+                <Route path="/qualifying" element={<Qualifying />} />
+              </Route>
+            </Route>
+            
+            {/* Protected app routes with layout - requires completed qualifying */}
+            <Route element={<QualifyingRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/booking" element={<Booking />} />

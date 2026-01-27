@@ -61,6 +61,9 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Semantic colors for ratings and badges
+        "star-rating": "hsl(var(--star-rating))",
+        "trustpilot": "hsl(var(--trustpilot))",
       },
       borderRadius: {
         lg: "var(--radius)",

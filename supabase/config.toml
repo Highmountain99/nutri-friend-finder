@@ -1,4 +1,9 @@
 project_id = "tqqszajpfnqhyrictani"
 
 [functions.analyze-food]
+enabled = true
+verify_jwt = false
+
+[functions.analyze-intake]
+enabled = true
 verify_jwt = false
