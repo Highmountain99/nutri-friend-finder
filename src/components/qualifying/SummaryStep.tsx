@@ -52,7 +52,6 @@ export function SummaryStep({
 
         {/* Value illustration placeholder */}
         <div className="bg-primary-soft rounded-2xl p-6 text-center">
-          <div className="text-4xl mb-2">🎯</div>
           <p className="text-sm text-muted-foreground">
             Din personliga dietist väntar på dig
           </p>

@@ -12,12 +12,6 @@ interface MotivationStepProps {
   initialValue?: MotivationLevel;
 }
 
-const motivationIcons: Record<MotivationLevel, string> = {
-  excited: '🔥',
-  curious: '🤔',
-  hesitant: '😐',
-  not_ready: '😕',
-};
 
 export function MotivationStep({
   currentStep,
@@ -53,14 +47,13 @@ export function MotivationStep({
           <label
             key={level}
             className={cn(
-              "flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+              "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all",
               motivationLevel === level
                 ? "border-primary bg-primary/5"
                 : "border-border hover:border-primary/50"
             )}
           >
             <RadioGroupItem value={level} id={level} />
-            <span className="text-2xl">{motivationIcons[level]}</span>
             <span className="font-medium">{motivationLevelLabels[level]}</span>
           </label>
         ))}
