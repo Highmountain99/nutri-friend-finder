@@ -9,6 +9,7 @@ import { HealthMetricsView } from "@/components/journal/HealthMetricsView";
 import { MealTimeline } from "@/components/journal/MealTimeline";
 import { AddMealSheet } from "@/components/journal/AddMealSheet";
 import { useJournalData, type Ingredient } from "@/hooks/useJournalData";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { cn } from "@/lib/utils";
 
 type JournalView = "main" | "ai-setup";
@@ -183,6 +184,13 @@ export default function Journal() {
   // Get streak display
   const streakDisplay = getStreakDisplay(streak);
 
+  // Swipe gesture for nutrition/health view
+  const contentSwipeHandlers = useSwipeGesture({
+    onSwipeLeft: () => !showOnboarding && setSwipeView("health"),
+    onSwipeRight: () => setSwipeView("nutrition"),
+    threshold: 50,
+  });
+
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in pb-32">
       {/* Journal Calendar */}
@@ -220,7 +228,10 @@ export default function Journal() {
       </div>
 
       {/* Swipeable Content Area */}
-      <div className="relative overflow-hidden">
+      <div 
+        className="relative overflow-hidden"
+        {...contentSwipeHandlers}
+      >
         <div
           ref={swipeContainerRef}
           className={cn(

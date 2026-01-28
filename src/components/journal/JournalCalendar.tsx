@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format, startOfWeek, addDays, subWeeks, addWeeks, isSameDay, isBefore, isAfter, parseISO } from "date-fns";
+import { format, startOfWeek, addDays, addWeeks, isSameDay, isBefore, isAfter, parseISO } from "date-fns";
 import { sv } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 
 interface JournalCalendarProps {
   selectedDate: Date;
@@ -63,6 +64,13 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
     }
   };
 
+  // Swipe gesture for week navigation
+  const swipeHandlers = useSwipeGesture({
+    onSwipeLeft: handleNextWeek,  // Swipe left = go to next (newer) week
+    onSwipeRight: handlePrevWeek, // Swipe right = go to previous (older) week
+    threshold: 50,
+  });
+
   const handleDateSelect = (date: Date) => {
     // Don't allow selecting future dates
     if (isAfter(date, today)) return;
@@ -84,8 +92,11 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
 
   return (
     <div className="space-y-3">
-      {/* Week navigation with day buttons */}
-      <div className="flex items-center gap-2">
+      {/* Week navigation with day buttons - swipeable */}
+      <div 
+        className="flex items-center gap-2"
+        {...swipeHandlers}
+      >
         {/* Previous week button */}
         <Button
           variant="ghost"
