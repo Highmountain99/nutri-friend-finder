@@ -476,7 +476,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                         onClick={() => setShowIngredients(true)}
                       >
-                        Redigera detaljer
+                        Visa detaljer
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -599,129 +599,38 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
         </SheetContent>
       </Sheet>
 
-      {/* Ingredients Dialog - editable */}
+      {/* Ingredients Dialog - read-only */}
       <Dialog open={showIngredients} onOpenChange={setShowIngredients}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Redigera ingredienser</DialogTitle>
+            <DialogTitle>Ingredienser</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {ingredients.map((ing, index) => (
-              <div key={index} className="p-3 bg-muted/50 rounded-lg space-y-3">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-sm flex-1">{ing.name}</p>
-                  {ing.dataSource === "livsmedelsverket" && (
-                    <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                      <Database className="w-2 h-2 mr-0.5" />
-                      LV
-                    </Badge>
-                  )}
+              <div key={index} className="flex justify-between items-start p-3 bg-muted/50 rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm">{ing.name}</p>
+                    {ing.dataSource === "livsmedelsverket" && (
+                      <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                        <Database className="w-2 h-2 mr-0.5" />
+                        LV
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{ing.amount}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">{ing.amount}</p>
-                
-                {/* Editable nutrition values for ingredient */}
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] text-muted-foreground">Kcal</Label>
-                    <Input
-                      type="number"
-                      value={ing.calories}
-                      onChange={(e) => {
-                        const newIngredients = [...ingredients];
-                        newIngredients[index] = {
-                          ...ing,
-                          calories: Math.max(0, parseInt(e.target.value) || 0)
-                        };
-                        setIngredients(newIngredients);
-                      }}
-                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] text-primary">Protein</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={ing.protein}
-                      onChange={(e) => {
-                        const newIngredients = [...ingredients];
-                        newIngredients[index] = {
-                          ...ing,
-                          protein: Math.max(0, parseFloat(e.target.value) || 0)
-                        };
-                        setIngredients(newIngredients);
-                      }}
-                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] text-amber-600">Kolh.</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={ing.carbs}
-                      onChange={(e) => {
-                        const newIngredients = [...ingredients];
-                        newIngredients[index] = {
-                          ...ing,
-                          carbs: Math.max(0, parseFloat(e.target.value) || 0)
-                        };
-                        setIngredients(newIngredients);
-                      }}
-                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] text-green-600">Fett</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={ing.fat}
-                      onChange={(e) => {
-                        const newIngredients = [...ingredients];
-                        newIngredients[index] = {
-                          ...ing,
-                          fat: Math.max(0, parseFloat(e.target.value) || 0)
-                        };
-                        setIngredients(newIngredients);
-                      }}
-                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
+                <div className="text-right text-xs">
+                  <p className="font-medium">{ing.calories} kcal</p>
+                  <div className="flex gap-2 text-muted-foreground">
+                    <span className="text-primary">P: {ing.protein}g</span>
+                    <span className="text-amber-600">K: {ing.carbs}g</span>
+                    <span className="text-green-600">F: {ing.fat}g</span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          {/* Recalculate totals button */}
-          <Button
-            variant="secondary"
-            className="w-full mt-2"
-            onClick={() => {
-              // Sum up all ingredient values
-              const totals = ingredients.reduce(
-                (acc, ing) => ({
-                  calories: acc.calories + ing.calories,
-                  protein: acc.protein + ing.protein,
-                  carbs: acc.carbs + ing.carbs,
-                  fat: acc.fat + ing.fat,
-                }),
-                { calories: 0, protein: 0, carbs: 0, fat: 0 }
-              );
-              setCalories(Math.round(totals.calories));
-              setProtein(Math.round(totals.protein * 10) / 10);
-              setCarbs(Math.round(totals.carbs * 10) / 10);
-              setFat(Math.round(totals.fat * 10) / 10);
-              setShowIngredients(false);
-              toast({
-                title: "Näringsvärden uppdaterade",
-                description: "Totalen har räknats om baserat på ingredienserna.",
-              });
-            }}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Räkna om total från ingredienser
-          </Button>
         </DialogContent>
       </Dialog>
     </>
