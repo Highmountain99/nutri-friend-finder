@@ -20,6 +20,9 @@ import Qualifying from "./pages/Qualifying";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import Frikort from "./pages/Frikort";
+import Koder from "./pages/Koder";
+import SEBForsakring from "./pages/SEBForsakring";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +57,9 @@ const App = () => (
                 <Route path="/progress" element={<Progress />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/frikort" element={<Frikort />} />
+                <Route path="/koder" element={<Koder />} />
+                <Route path="/seb-forsakring" element={<SEBForsakring />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
