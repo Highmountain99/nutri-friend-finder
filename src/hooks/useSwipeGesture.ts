@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, TouchEvent } from "react";
 
 interface SwipeConfig {
   onSwipeLeft?: () => void;
@@ -6,37 +6,44 @@ interface SwipeConfig {
   threshold?: number;
 }
 
-export function useSwipeGesture({ onSwipeLeft, onSwipeRight, threshold = 50 }: SwipeConfig) {
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
+interface SwipeHandlers {
+  onTouchStart: (e: TouchEvent) => void;
+  onTouchMove: (e: TouchEvent) => void;
+  onTouchEnd: () => void;
+}
 
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    touchEndX.current = null;
-    touchStartX.current = e.targetTouches[0].clientX;
+export function useSwipeGesture({ onSwipeLeft, onSwipeRight, threshold = 50 }: SwipeConfig): SwipeHandlers {
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const isSwiping = useRef(false);
+
+  const onTouchStart = useCallback((e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+    isSwiping.current = true;
   }, []);
 
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
-    touchEndX.current = e.targetTouches[0].clientX;
+  const onTouchMove = useCallback((e: TouchEvent) => {
+    if (!isSwiping.current) return;
+    touchEndX.current = e.touches[0].clientX;
   }, []);
 
   const onTouchEnd = useCallback(() => {
-    if (!touchStartX.current || !touchEndX.current) return;
+    if (!isSwiping.current) return;
     
     const distance = touchStartX.current - touchEndX.current;
-    const isLeftSwipe = distance > threshold;
-    const isRightSwipe = distance < -threshold;
-
-    if (isLeftSwipe && onSwipeLeft) {
-      onSwipeLeft();
-    }
     
-    if (isRightSwipe && onSwipeRight) {
-      onSwipeRight();
+    if (Math.abs(distance) > threshold) {
+      if (distance > 0 && onSwipeLeft) {
+        onSwipeLeft();
+      } else if (distance < 0 && onSwipeRight) {
+        onSwipeRight();
+      }
     }
 
-    // Reset
-    touchStartX.current = null;
-    touchEndX.current = null;
+    isSwiping.current = false;
+    touchStartX.current = 0;
+    touchEndX.current = 0;
   }, [onSwipeLeft, onSwipeRight, threshold]);
 
   return {

@@ -234,8 +234,10 @@ export default function Journal() {
 
       {/* Swipeable Content Area */}
       <div 
-        className="relative overflow-hidden"
-        {...contentSwipeHandlers}
+        className="relative overflow-hidden touch-pan-y"
+        onTouchStart={contentSwipeHandlers.onTouchStart}
+        onTouchMove={contentSwipeHandlers.onTouchMove}
+        onTouchEnd={contentSwipeHandlers.onTouchEnd}
       >
         <div
           ref={swipeContainerRef}
