@@ -21,6 +21,7 @@ interface AIInputStepProps {
       confidence?: number;
     };
   }) => void;
+  onBack: () => void;
   onSkip: () => void;
   initialValue?: string;
 }
@@ -29,6 +30,7 @@ export function AIInputStep({
   currentStep,
   totalSteps,
   onNext,
+  onBack,
   onSkip,
   initialValue = '',
 }: AIInputStepProps) {
@@ -145,10 +147,11 @@ export function AIInputStep({
       title="Beskriv med egna ord vad du vill ha hjälp med"
       subtitle="Du kan prata in eller skriva. Vi använder AI för att hjälpa dig hitta rätt dietist."
       onNext={parsedResult ? handleConfirmAndContinue : analyzeText}
+      onBack={onBack}
       nextLabel={parsedResult ? 'Fortsätt' : 'Analysera'}
       nextDisabled={!text.trim() && !parsedResult}
       isLoading={isAnalyzing}
-      showBackButton={false}
+      showBackButton={true}
     >
       <div className="space-y-6">
         {/* Voice/Text input */}

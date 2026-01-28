@@ -73,6 +73,10 @@ export function QualifyingFlow() {
     }
   };
 
+  const handleBackToAuth = () => {
+    navigate('/auth', { replace: true });
+  };
+
   // Step handlers
   const handleAIInput = async (data: {
     aiFreeText: string;
@@ -165,6 +169,7 @@ export function QualifyingFlow() {
           currentStep={currentStep}
           totalSteps={TOTAL_STEPS}
           onNext={handleAIInput}
+          onBack={handleBackToAuth}
           onSkip={handleSkipAI}
           initialValue={formData.aiFreeText}
         />
