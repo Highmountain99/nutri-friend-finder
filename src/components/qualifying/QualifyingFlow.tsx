@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIntakeProfile } from '@/hooks/useIntakeProfile';
+import { useAppointments } from '@/hooks/useAppointments';
 import { AIInputStep } from './AIInputStep';
 import { CareSeekerStep } from './CareSeekerStep';
 import { ProblemStep } from './ProblemStep';
@@ -9,6 +10,7 @@ import { ActivityStep } from './ActivityStep';
 import { MotivationStep } from './MotivationStep';
 import { SupportAreasStep } from './SupportAreasStep';
 import { SummaryStep } from './SummaryStep';
+import { BookingStep } from './BookingStep';
 import { 
   IntakeFormData, 
   CareSeekerType, 
@@ -19,11 +21,12 @@ import {
 } from '@/types/intake';
 import { Loader2 } from 'lucide-react';
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 export function QualifyingFlow() {
   const navigate = useNavigate();
   const { profile, loading, saving, saveProfile, isCompleted } = useIntakeProfile();
+  const { bookAppointment, saving: bookingSaving } = useAppointments();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<IntakeFormData>({
     concernTags: [],
@@ -125,7 +128,19 @@ export function QualifyingFlow() {
     goToStep(7);
   };
 
-  const handleComplete = async () => {
+  const handleSummary = () => {
+    goToStep(8);
+  };
+
+  const handleBooking = async (appointmentDate: Date) => {
+    const result = await bookAppointment(appointmentDate, 'video');
+    if (result) {
+      await saveProfile({}, true);
+      navigate('/', { replace: true });
+    }
+  };
+
+  const handleSkipBooking = async () => {
     await saveProfile({}, true);
     navigate('/', { replace: true });
   };
@@ -224,9 +239,20 @@ export function QualifyingFlow() {
         <SummaryStep
           currentStep={currentStep}
           totalSteps={TOTAL_STEPS}
-          onNext={handleComplete}
+          onNext={handleSummary}
           onBack={handleBack}
           isLoading={saving}
+        />
+      )}
+
+      {currentStep === 8 && (
+        <BookingStep
+          currentStep={currentStep}
+          totalSteps={TOTAL_STEPS}
+          onNext={handleBooking}
+          onBack={handleBack}
+          onSkip={handleSkipBooking}
+          isLoading={bookingSaving || saving}
         />
       )}
     </>
