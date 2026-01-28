@@ -2,15 +2,22 @@ import { useNavigate } from "react-router-dom";
 import { MessageCircle, User, Settings } from "lucide-react";
 import { AppointmentCard } from "@/components/home/AppointmentCard";
 import { QuickActionCard } from "@/components/home/QuickActionCard";
+import { useAppointments } from "@/hooks/useAppointments";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { getUpcomingAppointment, loading } = useAppointments();
 
-  // Mock data - in real app this would come from API
-  const upcomingAppointment = {
-    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-    dietitianName: "Anna Lindström",
-  };
+  const upcomingAppointment = getUpcomingAppointment();
+
+  // Format appointment for card
+  const formattedAppointment = upcomingAppointment
+    ? {
+        date: upcomingAppointment.appointmentDate,
+        dietitianName: "Din dietist", // Will be populated when dietitian matching is implemented
+      }
+    : undefined;
 
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
@@ -19,11 +26,15 @@ export default function Home() {
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
           Din nästa tid
         </h2>
-        <AppointmentCard
-          appointment={upcomingAppointment}
-          onRebook={() => navigate("/booking")}
-          onBook={() => navigate("/booking")}
-        />
+        {loading ? (
+          <Skeleton className="h-40 w-full rounded-xl" />
+        ) : (
+          <AppointmentCard
+            appointment={formattedAppointment}
+            onRebook={() => navigate("/booking")}
+            onBook={() => navigate("/booking")}
+          />
+        )}
       </section>
 
       {/* Quick Actions */}
