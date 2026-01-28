@@ -254,6 +254,95 @@ export type Database = {
         }
         Relationships: []
       }
+      recipes: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          id: string
+          image_url: string | null
+          ingredients: Json | null
+          instructions: Json | null
+          is_climate_smart: boolean | null
+          is_featured: boolean | null
+          rating: number | null
+          servings: number | null
+          source_url: string | null
+          tags: string[] | null
+          time_minutes: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json | null
+          instructions?: Json | null
+          is_climate_smart?: boolean | null
+          is_featured?: boolean | null
+          rating?: number | null
+          servings?: number | null
+          source_url?: string | null
+          tags?: string[] | null
+          time_minutes?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json | null
+          instructions?: Json | null
+          is_climate_smart?: boolean | null
+          is_featured?: boolean | null
+          rating?: number | null
+          servings?: number | null
+          source_url?: string | null
+          tags?: string[] | null
+          time_minutes?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_favorite_recipes: {
+        Row: {
+          created_at: string | null
+          id: string
+          recipe_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          recipe_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          recipe_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorite_recipes_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_nutrition_goals: {
         Row: {
           calories_goal: number | null
