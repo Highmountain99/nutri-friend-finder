@@ -19,17 +19,6 @@ interface ProblemStepProps {
   suggestedSubcategory?: string;
 }
 
-const categoryIcons: Record<PrimaryConcernCategory, string> = {
-  weight_loss: '⚖️',
-  diabetes: '🩸',
-  gut_health: '🫃',
-  general_health: '💚',
-  womens_health: '👩',
-  emotional_eating: '💭',
-  eating_disorder: '🍽️',
-  heart_health: '❤️',
-  other: '✨',
-};
 
 export function ProblemStep({
   currentStep,
@@ -98,7 +87,6 @@ export function ProblemStep({
                     : "border-border hover:border-primary/50"
                 )}
               >
-                <span className="text-2xl">{categoryIcons[cat]}</span>
                 <span className="font-medium">{categoryLabels[cat]}</span>
               </button>
             ))}
@@ -114,7 +102,6 @@ export function ProblemStep({
             </button>
 
             <div className="p-3 bg-muted rounded-lg mb-4">
-              <span className="text-2xl mr-2">{categoryIcons[category]}</span>
               <span className="font-medium">{categoryLabels[category]}</span>
             </div>
 
