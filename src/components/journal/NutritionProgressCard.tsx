@@ -28,22 +28,22 @@ export function NutritionProgressCard({
   
   return (
     <Card className="shadow-soft">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", bgColor)}>
-            <Icon className={cn("w-3.5 h-3.5", color)} />
+      <CardContent className="p-2.5 sm:p-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+          <div className={cn("w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center", bgColor)}>
+            <Icon className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", color)} />
           </div>
-          <span className="text-xs font-medium text-muted-foreground">{label} kvar</span>
+          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">{label} kvar</span>
         </div>
         <div className="space-y-1">
           <div className="flex items-baseline gap-1">
             <span className={cn(
-              "text-2xl font-bold",
+              "text-xl sm:text-2xl font-bold",
               isOverGoal ? "text-destructive" : "text-foreground"
             )}>
               {isOverGoal ? "+" : ""}{Math.abs(remaining).toLocaleString("sv-SE")}
             </span>
-            <span className="text-xs text-muted-foreground">{unit}</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground">{unit}</span>
           </div>
           <Progress 
             value={percentage} 
