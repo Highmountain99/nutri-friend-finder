@@ -1,4 +1,4 @@
-import { useRef, useCallback, TouchEvent } from "react";
+import { useRef, useCallback, type TouchEvent } from "react";
 
 interface SwipeConfig {
   onSwipeLeft?: () => void;
@@ -15,22 +15,17 @@ interface SwipeHandlers {
 export function useSwipeGesture({ onSwipeLeft, onSwipeRight, threshold = 50 }: SwipeConfig): SwipeHandlers {
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
-  const isSwiping = useRef(false);
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = e.touches[0].clientX;
-    isSwiping.current = true;
   }, []);
 
   const onTouchMove = useCallback((e: TouchEvent) => {
-    if (!isSwiping.current) return;
     touchEndX.current = e.touches[0].clientX;
   }, []);
 
   const onTouchEnd = useCallback(() => {
-    if (!isSwiping.current) return;
-    
     const distance = touchStartX.current - touchEndX.current;
     
     if (Math.abs(distance) > threshold) {
@@ -41,7 +36,6 @@ export function useSwipeGesture({ onSwipeLeft, onSwipeRight, threshold = 50 }: S
       }
     }
 
-    isSwiping.current = false;
     touchStartX.current = 0;
     touchEndX.current = 0;
   }, [onSwipeLeft, onSwipeRight, threshold]);
