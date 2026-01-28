@@ -1,6 +1,5 @@
-import { Camera, HelpCircle, ChevronRight } from "lucide-react";
+import { Camera } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { NutritionEntry } from "@/hooks/useJournalData";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -52,30 +51,25 @@ export function MealEntryCard({ entry, onClick }: MealEntryCardProps) {
               {entry.mealName}
             </p>
             
-            {/* Macros row */}
+            {/* Macros row with color-coded dots */}
             <div className="flex items-center gap-3 text-xs">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-foreground"></span>
+              <span className="flex items-center gap-1 text-foreground font-medium">
+                <span className="w-2 h-2 rounded-full bg-foreground/70"></span>
                 {entry.calories}
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-primary font-medium">
                 <span className="w-2 h-2 rounded-full bg-primary"></span>
                 {Math.round(entry.protein)}g
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-amber-600 font-medium">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                 {Math.round(entry.carbs)}g
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-green-600 font-medium">
                 <span className="w-2 h-2 rounded-full bg-green-500"></span>
                 {Math.round(entry.fat)}g
               </span>
             </div>
-          </div>
-          
-          {/* Arrow */}
-          <div className="flex items-center">
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </div>
         </div>
       </CardContent>

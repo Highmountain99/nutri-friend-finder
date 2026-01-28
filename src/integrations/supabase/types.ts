@@ -220,6 +220,7 @@ export type Database = {
           image_url: string | null
           is_ai_estimated: boolean | null
           meal_name: string | null
+          meal_type: string | null
           protein: number | null
           user_id: string
         }
@@ -233,6 +234,7 @@ export type Database = {
           image_url?: string | null
           is_ai_estimated?: boolean | null
           meal_name?: string | null
+          meal_type?: string | null
           protein?: number | null
           user_id: string
         }
@@ -246,6 +248,7 @@ export type Database = {
           image_url?: string | null
           is_ai_estimated?: boolean | null
           meal_name?: string | null
+          meal_type?: string | null
           protein?: number | null
           user_id?: string
         }
