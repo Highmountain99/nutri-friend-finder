@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
-import { Camera, Image, Type, X, Loader2, Check, HelpCircle, RefreshCw } from "lucide-react";
+import { Camera, Image, Type, Loader2, Check, HelpCircle, RefreshCw, Database, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +29,7 @@ interface Ingredient {
   protein: number;
   carbs: number;
   fat: number;
+  dataSource?: "livsmedelsverket" | "ai_estimation";
 }
 
 interface FoodEstimation {
@@ -39,6 +41,7 @@ interface FoodEstimation {
   fat: number;
   ingredients: Ingredient[];
   confidence: "high" | "medium" | "low";
+  dataSource?: "livsmedelsverket" | "ai_estimation" | "mixed";
 }
 
 interface AddMealSheetProps {
@@ -206,6 +209,22 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry }: AddMealSheetProps)
     onClose();
   };
 
+  const getDataSourceLabel = () => {
+    if (!estimation?.dataSource) return null;
+    
+    switch (estimation.dataSource) {
+      case "livsmedelsverket":
+        return { label: "Livsmedelsverket", icon: Database, variant: "default" as const };
+      case "mixed":
+        return { label: "Livsmedelsverket + AI", icon: Database, variant: "secondary" as const };
+      case "ai_estimation":
+      default:
+        return { label: "AI-uppskattning", icon: Sparkles, variant: "outline" as const };
+    }
+  };
+
+  const dataSourceInfo = getDataSourceLabel();
+
   return (
     <>
       <Sheet open={isOpen} onOpenChange={handleClose}>
@@ -304,18 +323,19 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry }: AddMealSheetProps)
               )}
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-muted-foreground">Analyserar måltiden...</p>
+              <p className="text-xs text-muted-foreground">Söker i Livsmedelsverkets databas...</p>
             </div>
           )}
 
           {/* Result State */}
           {viewState === "result" && estimation && (
             <div className="space-y-4 overflow-y-auto max-h-[calc(85vh-120px)]">
-              {/* Image preview if available */}
+              {/* Image preview with meal type badge */}
               {imagePreview && (
                 <div className="relative w-full h-40 rounded-xl overflow-hidden">
                   <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
-                  <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded-lg">
-                    <span className="text-xs font-medium">{estimation.mealType}</span>
+                  <div className="absolute bottom-2 left-2 bg-background/90 px-3 py-1.5 rounded-lg">
+                    <span className="text-sm font-medium">{estimation.mealType}</span>
                   </div>
                 </div>
               )}
@@ -323,13 +343,21 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry }: AddMealSheetProps)
               {/* Meal info card */}
               <Card className="shadow-soft">
                 <CardContent className="p-4 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">AI-uppskattning</Label>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      {dataSourceInfo && (
+                        <Badge variant={dataSourceInfo.variant} className="mb-2 gap-1">
+                          <dataSourceInfo.icon className="w-3 h-3" />
+                          {dataSourceInfo.label}
+                        </Badge>
+                      )}
                       <p className="font-semibold text-foreground">{estimation.mealName}</p>
+                      {!imagePreview && (
+                        <p className="text-sm text-muted-foreground">{estimation.mealType}</p>
+                      )}
                     </div>
                     <span className={cn(
-                      "text-xs px-2 py-1 rounded",
+                      "text-xs px-2 py-1 rounded flex-shrink-0",
                       estimation.confidence === "high" && "bg-green-100 text-green-700",
                       estimation.confidence === "medium" && "bg-amber-100 text-amber-700",
                       estimation.confidence === "low" && "bg-red-100 text-red-700"
@@ -338,23 +366,23 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry }: AddMealSheetProps)
                     </span>
                   </div>
                   
-                  {/* Macros grid */}
+                  {/* Macros grid with color coding */}
                   <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div className="bg-muted/50 p-2 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs">Kcal</span>
-                      <p className="font-semibold">{estimation.calories}</p>
+                    <div className="bg-muted/50 p-3 rounded-lg text-center">
+                      <span className="block text-muted-foreground text-xs mb-1">Kcal</span>
+                      <p className="font-bold text-foreground text-lg">{estimation.calories}</p>
                     </div>
-                    <div className="bg-primary/10 p-2 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs">Protein</span>
-                      <p className="font-semibold text-primary">{estimation.protein}g</p>
+                    <div className="bg-primary/10 p-3 rounded-lg text-center">
+                      <span className="block text-muted-foreground text-xs mb-1">Protein</span>
+                      <p className="font-bold text-primary text-lg">{estimation.protein}g</p>
                     </div>
-                    <div className="bg-amber-500/10 p-2 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs">Kolh.</span>
-                      <p className="font-semibold text-amber-600">{estimation.carbs}g</p>
+                    <div className="bg-amber-500/10 p-3 rounded-lg text-center">
+                      <span className="block text-muted-foreground text-xs mb-1">Kolh.</span>
+                      <p className="font-bold text-amber-600 text-lg">{estimation.carbs}g</p>
                     </div>
-                    <div className="bg-green-500/10 p-2 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs">Fett</span>
-                      <p className="font-semibold text-green-600">{estimation.fat}g</p>
+                    <div className="bg-green-500/10 p-3 rounded-lg text-center">
+                      <span className="block text-muted-foreground text-xs mb-1">Fett</span>
+                      <p className="font-bold text-green-600 text-lg">{estimation.fat}g</p>
                     </div>
                   </div>
 
@@ -451,16 +479,24 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry }: AddMealSheetProps)
           <div className="space-y-3">
             {estimation?.ingredients.map((ing, index) => (
               <div key={index} className="flex justify-between items-start p-3 bg-muted/50 rounded-lg">
-                <div>
-                  <p className="font-medium text-sm">{ing.name}</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm">{ing.name}</p>
+                    {ing.dataSource === "livsmedelsverket" && (
+                      <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                        <Database className="w-2 h-2 mr-0.5" />
+                        LV
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{ing.amount}</p>
                 </div>
                 <div className="text-right text-xs">
                   <p className="font-medium">{ing.calories} kcal</p>
                   <div className="flex gap-2 text-muted-foreground">
-                    <span>P: {ing.protein}g</span>
-                    <span>K: {ing.carbs}g</span>
-                    <span>F: {ing.fat}g</span>
+                    <span className="text-primary">P: {ing.protein}g</span>
+                    <span className="text-amber-600">K: {ing.carbs}g</span>
+                    <span className="text-green-600">F: {ing.fat}g</span>
                   </div>
                 </div>
               </div>

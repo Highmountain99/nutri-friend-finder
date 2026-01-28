@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera } from "lucide-react";
+import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WeekDaySelector } from "@/components/journal/WeekDaySelector";
 import { NutritionProgressCard } from "@/components/journal/NutritionProgressCard";
@@ -13,17 +13,6 @@ import { cn } from "@/lib/utils";
 
 type JournalView = "main" | "ai-setup";
 type SwipeView = "nutrition" | "health";
-
-// Helper to get meal type based on time
-function getMealType(date: Date): string {
-  const hour = date.getHours();
-  if (hour >= 5 && hour < 10) return "Frukost";
-  if (hour >= 10 && hour < 12) return "Förmiddagssnack";
-  if (hour >= 12 && hour < 14) return "Lunch";
-  if (hour >= 14 && hour < 17) return "Mellanmål";
-  if (hour >= 17 && hour < 21) return "Middag";
-  return "Kvällssnack";
-}
 
 export default function Journal() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -274,18 +263,17 @@ export default function Journal() {
         />
       </div>
 
-      {/* Fixed Camera FAB - Bottom Right */}
-      {settings.aiTrackingEnabled && !showOnboarding && (
-        <div className="fixed bottom-24 right-4 z-50">
-          <Button
-            size="icon"
-            className="h-14 w-14 rounded-full shadow-elevated bg-accent hover:bg-accent/90"
-            onClick={() => setIsAddMealOpen(true)}
-          >
-            <Camera className="w-6 h-6" />
-          </Button>
-        </div>
-      )}
+      {/* Fixed Camera FAB - Always visible */}
+      <div className="fixed bottom-24 right-4 z-50">
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full shadow-elevated bg-accent hover:bg-accent/90 relative"
+          onClick={() => setIsAddMealOpen(true)}
+        >
+          <Camera className="w-6 h-6 text-accent-foreground" />
+          <Sparkles className="w-3 h-3 text-accent-foreground absolute top-2 right-2" />
+        </Button>
+      </div>
 
       {/* Add Meal Sheet */}
       <AddMealSheet 

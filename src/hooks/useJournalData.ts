@@ -77,6 +77,17 @@ const DEFAULT_SETTINGS: NutritionSettings = {
   calorieTrackingEnabled: true,
 };
 
+// Helper to get meal type based on time
+function getMealTypeFromTime(date: Date): string {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 10) return "Frukost";
+  if (hour >= 10 && hour < 12) return "Förmiddagssnack";
+  if (hour >= 12 && hour < 14) return "Lunch";
+  if (hour >= 14 && hour < 17) return "Mellanmål";
+  if (hour >= 17 && hour < 21) return "Middag";
+  return "Kvällssnack";
+}
+
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
@@ -121,18 +132,21 @@ export function useJournalData(selectedDate: Date) {
           .eq("entry_date", dateKey);
 
         if (entriesData) {
-          const mappedEntries: NutritionEntry[] = entriesData.map((entry) => ({
-            id: entry.id,
-            mealName: entry.meal_name || "Okänd måltid",
-            mealType: "Måltid",
-            calories: entry.calories || 0,
-            protein: Number(entry.protein) || 0,
-            carbs: Number(entry.carbs) || 0,
-            fat: Number(entry.fat) || 0,
-            isAiEstimated: entry.is_ai_estimated || false,
-            imageUrl: entry.image_url || undefined,
-            createdAt: new Date(entry.created_at || Date.now()),
-          }));
+          const mappedEntries: NutritionEntry[] = entriesData.map((entry) => {
+            const entryRecord = entry as Record<string, unknown>;
+            return {
+              id: entry.id,
+              mealName: entry.meal_name || "Okänd måltid",
+              mealType: (entryRecord.meal_type as string) || getMealTypeFromTime(new Date(entry.created_at || Date.now())),
+              calories: entry.calories || 0,
+              protein: Number(entry.protein) || 0,
+              carbs: Number(entry.carbs) || 0,
+              fat: Number(entry.fat) || 0,
+              isAiEstimated: entry.is_ai_estimated || false,
+              imageUrl: entry.image_url || undefined,
+              createdAt: new Date(entry.created_at || Date.now()),
+            };
+          });
           setEntries(mappedEntries);
           calculateTotals(mappedEntries);
         } else {
@@ -220,19 +234,23 @@ export function useJournalData(selectedDate: Date) {
     async (entry: Omit<NutritionEntry, "id" | "createdAt">) => {
       if (!user) return;
 
+      // Use type assertion to include meal_type which was added via migration
+      const insertData = {
+        user_id: user.id,
+        entry_date: dateKey,
+        meal_name: entry.mealName,
+        meal_type: entry.mealType,
+        calories: entry.calories,
+        protein: entry.protein,
+        carbs: entry.carbs,
+        fat: entry.fat,
+        is_ai_estimated: entry.isAiEstimated,
+        image_url: entry.imageUrl,
+      };
+
       const { data, error } = await supabase
         .from("nutrition_entries")
-        .insert({
-          user_id: user.id,
-          entry_date: dateKey,
-          meal_name: entry.mealName,
-          calories: entry.calories,
-          protein: entry.protein,
-          carbs: entry.carbs,
-          fat: entry.fat,
-          is_ai_estimated: entry.isAiEstimated,
-          image_url: entry.imageUrl,
-        })
+        .insert(insertData as typeof insertData & { meal_type: string })
         .select()
         .single();
 

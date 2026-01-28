@@ -22,7 +22,7 @@ const MAX_ADJUSTMENT_LENGTH = 500;
 // CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Determine meal type based on time
@@ -34,6 +34,98 @@ function getMealType(date: Date): string {
   if (hour >= 14 && hour < 17) return "Mellanmål";
   if (hour >= 17 && hour < 21) return "Middag";
   return "Kvällssnack";
+}
+
+// Livsmedelsverket API helpers
+interface LivsmedelsverketFood {
+  nummer: number;
+  namn: string;
+}
+
+interface LivsmedelsverketNutrient {
+  namn: string;
+  forkortning: string;
+  varde: number;
+  enhet: string;
+}
+
+async function searchLivsmedelsverket(query: string): Promise<LivsmedelsverketFood | null> {
+  try {
+    const url = `https://dataportal.livsmedelsverket.se/livsmedel/api/v1/livsmedel?query=${encodeURIComponent(query)}&offset=0&limit=1&sprak=sv`;
+    const response = await fetch(url, {
+      headers: { "Accept": "application/json" },
+    });
+    
+    if (!response.ok) {
+      console.log(`[analyze-food] Livsmedelsverket search failed for "${query}": ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    if (data.livsmedel && data.livsmedel.length > 0) {
+      return data.livsmedel[0];
+    }
+    return null;
+  } catch (error) {
+    console.log(`[analyze-food] Livsmedelsverket search error for "${query}":`, error);
+    return null;
+  }
+}
+
+async function getNutritionFromLivsmedelsverket(foodNumber: number): Promise<{
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+} | null> {
+  try {
+    const url = `https://dataportal.livsmedelsverket.se/livsmedel/api/v1/livsmedel/${foodNumber}/naringsvarden`;
+    const response = await fetch(url, {
+      headers: { "Accept": "application/json" },
+    });
+    
+    if (!response.ok) {
+      console.log(`[analyze-food] Livsmedelsverket nutrition fetch failed for ${foodNumber}: ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    const nutrients = data.naringsvarden || [];
+    
+    // Map common nutrient codes
+    let calories = 0;
+    let protein = 0;
+    let carbs = 0;
+    let fat = 0;
+    
+    for (const nutrient of nutrients) {
+      const abbr = nutrient.forkortning?.toLowerCase() || "";
+      const name = nutrient.namn?.toLowerCase() || "";
+      const value = nutrient.varde || 0;
+      
+      // Energy (kcal)
+      if (abbr === "ener" || name.includes("energi") && nutrient.enhet === "kcal") {
+        calories = value;
+      }
+      // Protein
+      if (abbr === "prot" || name.includes("protein")) {
+        protein = value;
+      }
+      // Carbohydrates
+      if (abbr === "kolh" || name.includes("kolhydrat")) {
+        carbs = value;
+      }
+      // Fat
+      if (abbr === "fett" || name === "fett") {
+        fat = value;
+      }
+    }
+    
+    return { calories, protein, carbs, fat };
+  } catch (error) {
+    console.log(`[analyze-food] Livsmedelsverket nutrition error for ${foodNumber}:`, error);
+    return null;
+  }
 }
 
 // Input validation
@@ -104,6 +196,16 @@ function sanitizeInput(text: string, maxLength: number): string {
 }
 
 // Validate AI response
+interface IngredientAnalysis {
+  name: string;
+  amount: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  dataSource?: "livsmedelsverket" | "ai_estimation";
+}
+
 interface FoodAnalysis {
   mealName: string;
   mealType: string;
@@ -111,15 +213,9 @@ interface FoodAnalysis {
   protein: number;
   carbs: number;
   fat: number;
-  ingredients: Array<{
-    name: string;
-    amount: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-  }>;
+  ingredients: IngredientAnalysis[];
   confidence: "high" | "medium" | "low";
+  dataSource: "livsmedelsverket" | "ai_estimation" | "mixed";
 }
 
 function validateFoodAnalysis(data: unknown, mealType: string): FoodAnalysis {
@@ -148,6 +244,93 @@ function validateFoodAnalysis(data: unknown, mealType: string): FoodAnalysis {
     fat,
     ingredients: Array.isArray(analysis.ingredients) ? analysis.ingredients.slice(0, 20) : [],
     confidence,
+    dataSource: "ai_estimation",
+  };
+}
+
+// Enrich ingredients with Livsmedelsverket data
+async function enrichWithLivsmedelsverket(analysis: FoodAnalysis): Promise<FoodAnalysis> {
+  const enrichedIngredients: IngredientAnalysis[] = [];
+  let livsmedelsverketCount = 0;
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+
+  for (const ingredient of analysis.ingredients) {
+    // Try to find in Livsmedelsverket
+    const food = await searchLivsmedelsverket(ingredient.name);
+    
+    if (food) {
+      const nutrition = await getNutritionFromLivsmedelsverket(food.nummer);
+      
+      if (nutrition && nutrition.calories > 0) {
+        // Parse amount to estimate portion (assume 100g is base)
+        const amountMatch = ingredient.amount.match(/(\d+)/);
+        const portionGrams = amountMatch ? parseInt(amountMatch[1]) : 100;
+        const multiplier = portionGrams / 100;
+
+        const enrichedIngredient: IngredientAnalysis = {
+          name: ingredient.name,
+          amount: ingredient.amount,
+          calories: Math.round(nutrition.calories * multiplier),
+          protein: Math.round(nutrition.protein * multiplier * 10) / 10,
+          carbs: Math.round(nutrition.carbs * multiplier * 10) / 10,
+          fat: Math.round(nutrition.fat * multiplier * 10) / 10,
+          dataSource: "livsmedelsverket",
+        };
+        
+        enrichedIngredients.push(enrichedIngredient);
+        livsmedelsverketCount++;
+        
+        totalCalories += enrichedIngredient.calories;
+        totalProtein += enrichedIngredient.protein;
+        totalCarbs += enrichedIngredient.carbs;
+        totalFat += enrichedIngredient.fat;
+        
+        console.log(`[analyze-food] Found "${ingredient.name}" in Livsmedelsverket (${food.namn})`);
+        continue;
+      }
+    }
+
+    // Fallback to AI estimation
+    enrichedIngredients.push({
+      ...ingredient,
+      dataSource: "ai_estimation",
+    });
+    
+    totalCalories += ingredient.calories;
+    totalProtein += ingredient.protein;
+    totalCarbs += ingredient.carbs;
+    totalFat += ingredient.fat;
+  }
+
+  // Determine overall data source
+  let dataSource: "livsmedelsverket" | "ai_estimation" | "mixed" = "ai_estimation";
+  if (livsmedelsverketCount === analysis.ingredients.length && livsmedelsverketCount > 0) {
+    dataSource = "livsmedelsverket";
+  } else if (livsmedelsverketCount > 0) {
+    dataSource = "mixed";
+  }
+
+  // If we got any Livsmedelsverket data, recalculate totals
+  if (livsmedelsverketCount > 0) {
+    return {
+      ...analysis,
+      calories: Math.round(totalCalories),
+      protein: Math.round(totalProtein * 10) / 10,
+      carbs: Math.round(totalCarbs * 10) / 10,
+      fat: Math.round(totalFat * 10) / 10,
+      ingredients: enrichedIngredients,
+      dataSource,
+      confidence: livsmedelsverketCount === analysis.ingredients.length ? "high" : "medium",
+    };
+  }
+
+  return {
+    ...analysis,
+    ingredients: enrichedIngredients,
+    dataSource,
   };
 }
 
@@ -226,8 +409,8 @@ VIKTIGT: Svara ENDAST med ett JSON-objekt, inget annat text. Formatet måste var
   "fat": nummer (gram),
   "ingredients": [
     {
-      "name": "Ingrediens namn",
-      "amount": "mängd (t.ex. 150g, 1 st)",
+      "name": "Ingrediens namn (använd svenska livsmedelsnamn)",
+      "amount": "mängd i gram (t.ex. 150g)",
       "calories": nummer,
       "protein": nummer,
       "carbs": nummer,
@@ -236,6 +419,11 @@ VIKTIGT: Svara ENDAST med ett JSON-objekt, inget annat text. Formatet måste var
   ],
   "confidence": "high" | "medium" | "low"
 }
+
+VIKTIGT för ingredienser:
+- Använd svenska namn som matchar Livsmedelsverkets databas
+- Ange alltid mängd i gram när möjligt (t.ex. "150g" istället för "1 portion")
+- Var specifik med ingrediensnamn (t.ex. "kycklingbröst" istället för "kyckling")
 
 Var realistisk med portionsstorlekar. Om osäker, anta normala svenska portioner.`;
 
@@ -247,7 +435,7 @@ Var realistisk med portionsstorlekar. Om osäker, anta normala svenska portioner
           content: [
             {
               type: "text",
-              text: "Analysera denna matbild och uppskatta näringsinnehållet. Identifiera alla synliga ingredienser.",
+              text: "Analysera denna matbild och uppskatta näringsinnehållet. Identifiera alla synliga ingredienser med svenska namn.",
             },
             {
               type: "image_url",
@@ -368,7 +556,15 @@ VIKTIGT: Svara ENDAST med ett JSON-objekt med samma format som tidigare:
         fat: 10,
         ingredients: [],
         confidence: "low",
+        dataSource: "ai_estimation",
       };
+    }
+
+    // Try to enrich with Livsmedelsverket data
+    if (parsed.ingredients.length > 0 && analysisType !== "adjust") {
+      console.log("[analyze-food] Enriching with Livsmedelsverket data...");
+      parsed = await enrichWithLivsmedelsverket(parsed);
+      console.log(`[analyze-food] Data source: ${parsed.dataSource}`);
     }
 
     return new Response(JSON.stringify(parsed), {
