@@ -1,7 +1,8 @@
 import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SideMenuProps {
   isOpen: boolean;
@@ -23,6 +24,15 @@ const secondaryNavItems = [
 ];
 
 export function SideMenu({ isOpen, onClose }: SideMenuProps) {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    onClose();
+    navigate('/auth', { replace: true });
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -109,6 +119,7 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
+              onClick={handleLogout}
             >
               <LogOut className="w-5 h-5" />
               <span>Logga ut</span>
