@@ -390,7 +390,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                 </CardContent>
               </Card>
 
-              {/* Nutrition info card */}
+              {/* Nutrition info card - editable */}
               <Card className="shadow-soft">
                 <CardContent className="p-4 space-y-4">
                   <div className="flex items-start justify-between gap-2">
@@ -412,40 +412,93 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                     </span>
                   </div>
                   
-                  {/* Macros grid */}
+                  {/* Editable Macros grid */}
                   <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div className="bg-muted/50 p-3 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs mb-1">Kcal</span>
-                      <p className="font-bold text-foreground text-lg">{calories}</p>
+                    <div className="bg-muted/50 p-2 rounded-lg text-center">
+                      <Label className="block text-muted-foreground text-xs mb-1">Kcal</Label>
+                      <Input
+                        type="number"
+                        value={calories}
+                        onChange={(e) => setCalories(Math.max(0, parseInt(e.target.value) || 0))}
+                        className="h-8 text-center font-bold text-foreground text-lg p-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
                     </div>
-                    <div className="bg-primary/10 p-3 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs mb-1">Protein</span>
-                      <p className="font-bold text-primary text-lg">{protein}g</p>
+                    <div className="bg-primary/10 p-2 rounded-lg text-center">
+                      <Label className="block text-muted-foreground text-xs mb-1">Protein</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={protein}
+                          onChange={(e) => setProtein(Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="h-8 text-center font-bold text-primary text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+                      </div>
                     </div>
-                    <div className="bg-amber-500/10 p-3 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs mb-1">Kolh.</span>
-                      <p className="font-bold text-amber-600 text-lg">{carbs}g</p>
+                    <div className="bg-amber-500/10 p-2 rounded-lg text-center">
+                      <Label className="block text-muted-foreground text-xs mb-1">Kolh.</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={carbs}
+                          onChange={(e) => setCarbs(Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="h-8 text-center font-bold text-amber-600 text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+                      </div>
                     </div>
-                    <div className="bg-green-500/10 p-3 rounded-lg text-center">
-                      <span className="block text-muted-foreground text-xs mb-1">Fett</span>
-                      <p className="font-bold text-green-600 text-lg">{fat}g</p>
+                    <div className="bg-green-500/10 p-2 rounded-lg text-center">
+                      <Label className="block text-muted-foreground text-xs mb-1">Fett</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={fat}
+                          onChange={(e) => setFat(Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="h-8 text-center font-bold text-green-600 text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Ingredients */}
-                  {ingredients.length > 0 && (
-                    <div>
-                      <button
-                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => setShowIngredients(true)}
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                        Visa ingredienser ({ingredients.length})
-                      </button>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
+              
+              {/* Ingredients section - inline view */}
+              {ingredients.length > 0 && (
+                <Card className="shadow-soft">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Ingredienser ({ingredients.length})</Label>
+                      <button
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setShowIngredients(true)}
+                      >
+                        Redigera detaljer
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {ingredients.map((ing, index) => (
+                        <div key={index} className="flex justify-between items-center p-2 bg-muted/30 rounded-lg text-sm">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="font-medium truncate">{ing.name}</span>
+                            {ing.dataSource === "livsmedelsverket" && (
+                              <Badge variant="secondary" className="text-[10px] px-1 py-0 flex-shrink-0">
+                                <Database className="w-2 h-2 mr-0.5" />
+                                LV
+                              </Badge>
+                            )}
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{ing.amount}</span>
+                          </div>
+                          <span className="text-xs font-medium flex-shrink-0 ml-2">{ing.calories} kcal</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Quick adjustments */}
               <Card className="shadow-soft">
@@ -546,38 +599,129 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
         </SheetContent>
       </Sheet>
 
-      {/* Ingredients Dialog */}
+      {/* Ingredients Dialog - editable */}
       <Dialog open={showIngredients} onOpenChange={setShowIngredients}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Ingredienser</DialogTitle>
+            <DialogTitle>Redigera ingredienser</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {ingredients.map((ing, index) => (
-              <div key={index} className="flex justify-between items-start p-3 bg-muted/50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm">{ing.name}</p>
-                    {ing.dataSource === "livsmedelsverket" && (
-                      <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                        <Database className="w-2 h-2 mr-0.5" />
-                        LV
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{ing.amount}</p>
+              <div key={index} className="p-3 bg-muted/50 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-sm flex-1">{ing.name}</p>
+                  {ing.dataSource === "livsmedelsverket" && (
+                    <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                      <Database className="w-2 h-2 mr-0.5" />
+                      LV
+                    </Badge>
+                  )}
                 </div>
-                <div className="text-right text-xs">
-                  <p className="font-medium">{ing.calories} kcal</p>
-                  <div className="flex gap-2 text-muted-foreground">
-                    <span className="text-primary">P: {ing.protein}g</span>
-                    <span className="text-amber-600">K: {ing.carbs}g</span>
-                    <span className="text-green-600">F: {ing.fat}g</span>
+                <p className="text-xs text-muted-foreground">{ing.amount}</p>
+                
+                {/* Editable nutrition values for ingredient */}
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-muted-foreground">Kcal</Label>
+                    <Input
+                      type="number"
+                      value={ing.calories}
+                      onChange={(e) => {
+                        const newIngredients = [...ingredients];
+                        newIngredients[index] = {
+                          ...ing,
+                          calories: Math.max(0, parseInt(e.target.value) || 0)
+                        };
+                        setIngredients(newIngredients);
+                      }}
+                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-primary">Protein</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={ing.protein}
+                      onChange={(e) => {
+                        const newIngredients = [...ingredients];
+                        newIngredients[index] = {
+                          ...ing,
+                          protein: Math.max(0, parseFloat(e.target.value) || 0)
+                        };
+                        setIngredients(newIngredients);
+                      }}
+                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-amber-600">Kolh.</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={ing.carbs}
+                      onChange={(e) => {
+                        const newIngredients = [...ingredients];
+                        newIngredients[index] = {
+                          ...ing,
+                          carbs: Math.max(0, parseFloat(e.target.value) || 0)
+                        };
+                        setIngredients(newIngredients);
+                      }}
+                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-green-600">Fett</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={ing.fat}
+                      onChange={(e) => {
+                        const newIngredients = [...ingredients];
+                        newIngredients[index] = {
+                          ...ing,
+                          fat: Math.max(0, parseFloat(e.target.value) || 0)
+                        };
+                        setIngredients(newIngredients);
+                      }}
+                      className="h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
               </div>
             ))}
           </div>
+          
+          {/* Recalculate totals button */}
+          <Button
+            variant="secondary"
+            className="w-full mt-2"
+            onClick={() => {
+              // Sum up all ingredient values
+              const totals = ingredients.reduce(
+                (acc, ing) => ({
+                  calories: acc.calories + ing.calories,
+                  protein: acc.protein + ing.protein,
+                  carbs: acc.carbs + ing.carbs,
+                  fat: acc.fat + ing.fat,
+                }),
+                { calories: 0, protein: 0, carbs: 0, fat: 0 }
+              );
+              setCalories(Math.round(totals.calories));
+              setProtein(Math.round(totals.protein * 10) / 10);
+              setCarbs(Math.round(totals.carbs * 10) / 10);
+              setFat(Math.round(totals.fat * 10) / 10);
+              setShowIngredients(false);
+              toast({
+                title: "Näringsvärden uppdaterade",
+                description: "Totalen har räknats om baserat på ingredienserna.",
+              });
+            }}
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Räkna om total från ingredienser
+          </Button>
         </DialogContent>
       </Dialog>
     </>
