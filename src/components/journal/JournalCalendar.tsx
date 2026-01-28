@@ -109,7 +109,7 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
         </Button>
 
         {/* Week day circles */}
-        <div className="flex gap-2 flex-1 justify-center">
+        <div className="flex gap-1 sm:gap-2 flex-1 justify-between sm:justify-center">
           {weekDates.map((date, index) => {
             const isSelected = isSameDay(date, selectedDate);
             const isToday = isSameDay(date, today);
@@ -122,7 +122,7 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
                 onClick={() => handleDayClick(date)}
                 disabled={isFuture}
                 className={cn(
-                  "flex-shrink-0 w-10 h-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 relative",
+                  "flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 relative",
                   isSelected 
                     ? "bg-primary text-primary-foreground shadow-soft" 
                     : isToday
@@ -132,8 +132,8 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
                         : "bg-muted text-muted-foreground hover:bg-muted/80"
                 )}
               >
-                <span className="text-xs font-semibold">{WEEK_DAYS[index]}</span>
-                <span className="text-[10px]">{format(date, "d")}</span>
+                <span className="text-[10px] sm:text-xs font-semibold">{WEEK_DAYS[index]}</span>
+                <span className="text-[9px] sm:text-[10px]">{format(date, "d")}</span>
                 
                 {/* Entry indicator dot */}
                 {hasEntry && !isSelected && (

@@ -197,7 +197,7 @@ export default function Journal() {
   });
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in pb-32">
+    <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 animate-fade-in pb-32">
       {/* Journal Calendar */}
       <JournalCalendar 
         selectedDate={selectedDate} 
@@ -254,7 +254,7 @@ export default function Journal() {
             ) : (
               <>
                 {/* Nutrition Cards - 2x2 Grid showing "remaining" */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   {nutritionCards.map((card) => (
                     <NutritionProgressCard key={card.label} {...card} />
                   ))}
