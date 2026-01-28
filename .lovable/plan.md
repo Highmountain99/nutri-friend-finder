@@ -1,104 +1,109 @@
 
-# Plan: Logga Måltider med AI-bildanalys
+# Plan: Journal Kalender som Tidsarkiv med Streak-funktion
 
 ## Översikt
-Bygg ut den befintliga måltidsloggningsfunktionen med ett förbättrat UX-flöde och integration med Livsmedelsverkets databas för mer exakta näringsvärden.
+Bygg ut kalendern i Journal-vyn till ett komplett tidsarkiv där användare kan navigera bakåt i tiden för att se loggade måltider och näringsvärden. Lägg till en riktig streak-räknare som visar antal dagar i rad man loggat måltider.
 
 ## Nuvarande tillstånd
-- **Journal.tsx**: Har redan en flytande kameraknapp (FAB) och `AddMealSheet`
-- **AddMealSheet.tsx**: Har tre inmatningsmetoder (kamera, galleri, text) och AI-analys
-- **analyze-food edge function**: Fungerar med Lovable AI för bildanalys
-- **MealTimeline.tsx** och **MealEntryCard.tsx**: Visar loggade måltider i en tidslinje
+- **WeekDaySelector.tsx**: Visar endast en vecka åt gången (7 dagar)
+- **Journal.tsx**: Har en statisk streak-placeholder som alltid visar "🔥 1-dagarsstreak!"
+- **useJournalData.ts**: Laddar data för vald dag men beräknar inte streak
+- **nutrition_entries tabell**: Har `entry_date` kolumn som kan användas för streak-beräkning
 
 ## Planerade förändringar
 
-### 1. Förbättra FAB-knappen
-**Fil:** `src/pages/Journal.tsx`
-- Flytta FAB till ett mer framträdande läge med rätt färg (accent/coral enligt designsystemet)
-- Visa FAB alltid (inte bara när AI tracking är aktiverat) för bättre UX
-- Lägg till visuella detaljer som matchar referensbilden (glitter-ikon)
+### 1. Ny kalenderkomponent med helårsnavigering
+**Fil:** `src/components/journal/JournalCalendar.tsx` (ny)
 
-### 2. Uppdatera analyze-food Edge Function
-**Fil:** `supabase/functions/analyze-food/index.ts`
+Skapa en ny kalenderkomponent som:
+- Visar aktuell vecka med horisontell scroll
+- Har en klickbar datumvisning som öppnar en full kalender-popover
+- Tillåter navigering bakåt till 1 januari 2025 (eller start av användarens loggning)
+- Markerar dagar med loggade måltider visuellt
+- Använder `react-day-picker` via befintliga `Calendar`-komponenten
+- Begränsar framtida datum (kan inte välja datum efter idag)
 
-Lägg till integration med Livsmedelsverkets öppna API:
-- Använd `/api/v1/livsmedel` för att söka efter identifierade ingredienser
-- Hämta exakta näringsvärden från `/api/v1/livsmedel/{nummer}/naringsvarden`
-- Om ingen match hittas, fall tillbaka på AI-uppskattning
-- Retunera `dataSource: "livsmedelsverket" | "ai_estimation"` för transparens
-
-**API-endpoints att använda:**
+**Visuell design:**
 ```text
-GET https://dataportal.livsmedelsverket.se/livsmedel/api/v1/livsmedel
-GET https://dataportal.livsmedelsverket.se/livsmedel/api/v1/livsmedel/{nummer}/naringsvarden
+[< veckopilar >]  [M] [T] [O] [T] [F] [L] [S]
+                   27  28  29  30  31   1   2
+
+      Tryck på datumet för kalender-popup:
+           "28 januari 2025" (klickbar)
+                  ↓
+      +---------------------------+
+      |    ← Januari 2025 →       |
+      | M  T  O  T  F  L  S       |
+      |          1  2  3  4       |
+      | 5  6  7  8  9 10 11       |
+      | ... (markerade loggedagar) |
+      +---------------------------+
 ```
 
-### 3. Förbättra AddMealSheet med nytt flöde
-**Fil:** `src/components/journal/AddMealSheet.tsx`
+### 2. Uppdatera WeekDaySelector för bättre UX
+**Fil:** `src/components/journal/WeekDaySelector.tsx`
 
-**Steg 1 - Val av inmatningsmetod:**
-- Ta foto (snabbknapp med kamera)
-- Välj bild från galleri
-- Skriv in manuellt
+- Lägg till veckopilnavigering (föregående/nästa vecka)
+- Markera dagar med loggade måltider med en liten prick
+- Integrera med kalender-popup via callback
 
-**Steg 2 - Analys och resultatvisning:**
-- Visa bilden i litet format
-- Visa AI-genererad måltidstitel
-- Visa måltidskategori baserat på tid (Frukost, Lunch, Middag etc.)
-- Visa näringsvärden med färgkodning:
-  - Svart/grå: Kalorier
-  - Primär (grön): Protein  
-  - Amber/gul: Kolhydrater
-  - Grön: Fett
-- Visa datakälla (Livsmedelsverket eller AI-uppskattning)
+### 3. Lägg till streak-beräkning
+**Fil:** `src/hooks/useJournalData.ts`
 
-**Steg 3 - Justering och bekräftelse:**
-- Snabbval för mängd (hälften, 3/4, 1.5x)
-- Fritextjustering för omräkning
-- Visa ingredienslista
-- Bekräfta och spara
+Ny funktion för att beräkna streak:
+```text
+1. Hämta alla unika entry_date för användaren
+2. Starta från igår och räkna bakåt
+3. Öka streak för varje konsekutiv dag med loggningar
+4. Returnera streak-antal
+```
 
-### 4. Uppdatera MealEntryCard för tidslinjen
-**Fil:** `src/components/journal/MealEntryCard.tsx`
+Exposa `streak` och `daysWithEntries` från hooken.
 
-Matcha referensbilden:
-- Visa måltidskategori + tid (t.ex. "Breakfast • 8:42 AM")
-- Bilden till vänster
-- Måltidsnamn
-- Färgkodade makron inline (• 95 • 25g • 0.5g • 0.3g)
+### 4. Visa streak endast vid loggning
+**Fil:** `src/pages/Journal.tsx`
 
-### 5. Databasuppdatering
-Lägg till kolumn för att spara måltidskategori (meal_type) i `nutrition_entries` tabellen om den inte redan finns där.
+- Ta bort den statiska streak-placeholdern
+- Visa streak-emoji endast om `streak > 0`
+- Visa dynamisk text baserat på streak-antal:
+  - 1 dag: "🔥 1-dagarsstreak!"
+  - 2-6 dagar: "🔥 X-dagarsstreak!"
+  - 7+ dagar: "🔥🔥 X-dagarsstreak!" (dubbel emoji)
+  - 30+ dagar: "🔥🔥🔥 X-dagarsstreak!" (trippel emoji)
+
+### 5. Markera dagar med loggningar i kalendern
+**Fil:** `src/components/journal/JournalCalendar.tsx`
+
+- Hämta lista över alla dagar med loggade måltider
+- Visa en liten prick under datum som har loggningar
+- Olika färg för dagar med få vs många loggningar (valfritt)
 
 ---
 
 ## Tekniska detaljer
 
-### Edge Function: Livsmedelsverkets API-integration
+### Streak-beräkningslogik
 ```text
-1. AI analyserar bilden och identifierar ingredienser
-2. För varje ingrediens:
-   a. Sök i Livsmedelsverket: GET /api/v1/livsmedel?query={ingrediens}
-   b. Om match hittas: Hämta näringsvärden
-   c. Om ingen match: Använd AI-uppskattning
-3. Summera näringsvärden från alla ingredienser
-4. Returnera med källa för varje ingrediens
+function calculateStreak(datesWithEntries: string[]): number {
+  // Sortera datum i fallande ordning
+  // Starta från igår (eller idag om det finns loggning idag)
+  // Räkna konsekutiva dagar bakåt
+  // Returnera antal
+}
 ```
 
-### Färgkodning (enligt index.css)
-- Kalorier: `text-foreground` (mörk)
-- Protein: `text-primary` (sage green)
-- Kolhydrater: `text-amber-500` (befintlig)
-- Fett: `text-green-500` (befintlig)
-
-### Måltidskategorier baserat på tid
+### Kalenderbegränsningar
 ```text
-05:00-10:00 → Frukost
-10:00-12:00 → Förmiddagssnack
-12:00-14:00 → Lunch
-14:00-17:00 → Mellanmål
-17:00-21:00 → Middag
-21:00-05:00 → Kvällssnack
+fromDate: new Date(2025, 0, 1)  // 1 januari 2025
+toDate: new Date()              // Idag (ingen framtida val)
+```
+
+### Databasfråga för dagar med loggningar
+```sql
+SELECT DISTINCT entry_date 
+FROM nutrition_entries 
+WHERE user_id = $1 
+ORDER BY entry_date DESC;
 ```
 
 ---
@@ -107,19 +112,43 @@ Lägg till kolumn för att spara måltidskategori (meal_type) i `nutrition_entri
 
 | Fil | Åtgärd |
 |-----|--------|
-| `supabase/functions/analyze-food/index.ts` | Uppdatera med Livsmedelsverket-integration |
-| `src/pages/Journal.tsx` | Visa FAB alltid, använd accent-färg |
-| `src/components/journal/AddMealSheet.tsx` | Förbättra resultatvyn med datakälla |
-| `src/components/journal/MealEntryCard.tsx` | Uppdatera layout för att matcha design |
-| `src/hooks/useJournalData.ts` | Säkerställ mealType sparas korrekt |
+| `src/components/journal/JournalCalendar.tsx` | Skapa ny komponent med kalender-popup |
+| `src/components/journal/WeekDaySelector.tsx` | Uppdatera med veckopilnavigering |
+| `src/hooks/useJournalData.ts` | Lägg till streak-beräkning och daysWithEntries |
+| `src/pages/Journal.tsx` | Ersätt WeekDaySelector med JournalCalendar, dynamisk streak |
 
 ---
 
 ## Stegordning för implementation
 
-1. **Databas**: Verifiera att `meal_type` sparas i `nutrition_entries`
-2. **Edge Function**: Lägg till Livsmedelsverket-sökning med fallback till AI
-3. **FAB**: Visa alltid, använd accent-färg, lägg till sparkle-ikon
-4. **AddMealSheet**: Uppdatera resultatvyn med källa och förbättrad design
-5. **MealEntryCard**: Uppdatera layout för tidslinje-visning
-6. **Testa**: Flödet från foto → analys → bekräftelse → tidslinje
+1. **useJournalData**: Lägg till hämtning av alla entry_dates och streak-beräkning
+2. **JournalCalendar**: Skapa ny komponent med:
+   - Horisontell veckovisning
+   - Kalender-popover för helårsnavigering
+   - Markering av loggade dagar
+3. **Journal.tsx**: 
+   - Ersätt WeekDaySelector med JournalCalendar
+   - Visa dynamisk streak baserat på faktiska data
+   - Göm streak om ingen loggning finns
+4. **Rensa**: Ta bort eller behåll WeekDaySelector beroende på om den återanvänds
+
+---
+
+## Design/UX-detaljer
+
+### Veckovisning
+- Behåll nuvarande cirkulära dagsknappar
+- Lägg till små pilar för att byta vecka
+- Dagar med loggningar får en liten grön prick
+
+### Kalender-popup
+- Öppnas när användaren trycker på datumet under veckodagarna
+- Visar full månadsvy med react-day-picker
+- Tillbaka till januari 2025
+- Markerar dagar med loggningar
+- Stängs automatiskt vid val av datum
+
+### Streak-display
+- Visas endast om minst 1 dag loggats i rad
+- Placeras under veckoväljaren
+- Animeras in mjukt när en streak finns
