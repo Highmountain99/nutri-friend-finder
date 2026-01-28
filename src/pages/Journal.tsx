@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WeekDaySelector } from "@/components/journal/WeekDaySelector";
@@ -19,7 +19,25 @@ export default function Journal() {
   const [view, setView] = useState<JournalView>("main");
   const [swipeView, setSwipeView] = useState<SwipeView>("nutrition");
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const swipeContainerRef = useRef<HTMLDivElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setCapturedImage(base64);
+      setIsAddMealOpen(true);
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset input so same file can be selected again
+    e.target.value = "";
+  };
 
   const {
     isLoading,
@@ -263,12 +281,22 @@ export default function Journal() {
         />
       </div>
 
+      {/* Hidden camera input */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleCameraCapture}
+      />
+
       {/* Fixed Camera FAB - Always visible */}
       <div className="fixed bottom-24 right-4 z-50">
         <Button
           size="icon"
           className="h-14 w-14 rounded-full shadow-elevated bg-accent hover:bg-accent/90 relative"
-          onClick={() => setIsAddMealOpen(true)}
+          onClick={() => cameraInputRef.current?.click()}
         >
           <Camera className="w-6 h-6 text-accent-foreground" />
           <Sparkles className="w-3 h-3 text-accent-foreground absolute top-2 right-2" />
@@ -278,8 +306,12 @@ export default function Journal() {
       {/* Add Meal Sheet */}
       <AddMealSheet 
         isOpen={isAddMealOpen}
-        onClose={() => setIsAddMealOpen(false)}
+        onClose={() => {
+          setIsAddMealOpen(false);
+          setCapturedImage(null);
+        }}
         onAddEntry={handleAddEntry}
+        initialImage={capturedImage}
       />
     </div>
   );

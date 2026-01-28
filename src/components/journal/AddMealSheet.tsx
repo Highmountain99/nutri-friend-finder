@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Camera, Image, Type, Loader2, Check, HelpCircle, RefreshCw, Database, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,12 +58,13 @@ interface AddMealSheetProps {
     imageUrl?: string;
     ingredients?: Ingredient[];
   }) => void;
+  initialImage?: string | null;
 }
 
 type InputMode = "select" | "camera" | "gallery" | "text";
 type ViewState = "input" | "analyzing" | "result";
 
-export function AddMealSheet({ isOpen, onClose, onAddEntry }: AddMealSheetProps) {
+export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddMealSheetProps) {
   const [inputMode, setInputMode] = useState<InputMode>("select");
   const [viewState, setViewState] = useState<ViewState>("input");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -75,6 +76,15 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry }: AddMealSheetProps)
   
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle initial image from camera FAB
+  React.useEffect(() => {
+    if (isOpen && initialImage) {
+      setImagePreview(initialImage);
+      setInputMode("camera");
+      analyzeFood("image", initialImage);
+    }
+  }, [isOpen, initialImage]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, fromCamera: boolean) => {
     const file = e.target.files?.[0];
