@@ -8,7 +8,8 @@ import { AITrackingSetupForm, AITrackingFormData } from "@/components/journal/AI
 import { HealthMetricsView } from "@/components/journal/HealthMetricsView";
 import { MealTimeline } from "@/components/journal/MealTimeline";
 import { AddMealSheet } from "@/components/journal/AddMealSheet";
-import { useJournalData, type Ingredient } from "@/hooks/useJournalData";
+import { EditMealSheet } from "@/components/journal/EditMealSheet";
+import { useJournalData, type Ingredient, type NutritionEntry } from "@/hooks/useJournalData";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,8 @@ export default function Journal() {
   const [swipeView, setSwipeView] = useState<SwipeView>("nutrition");
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [editingEntry, setEditingEntry] = useState<NutritionEntry | null>(null);
+  const [isEditMealOpen, setIsEditMealOpen] = useState(false);
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,6 +71,8 @@ export default function Journal() {
     streak,
     daysWithEntries,
     addEntry,
+    updateEntry,
+    deleteEntry,
     updateSettings,
     connectAppleHealth,
   } = useJournalData(selectedDate);
@@ -164,6 +169,26 @@ export default function Journal() {
       ingredients: entry.ingredients,
     });
     setIsAddMealOpen(false);
+  };
+
+  // Handlers for editing entries
+  const handleEntryClick = (entry: NutritionEntry) => {
+    setEditingEntry(entry);
+    setIsEditMealOpen(true);
+  };
+
+  const handleUpdateEntry = async (updates: Partial<NutritionEntry> & { mealTime?: Date }) => {
+    if (!editingEntry) return;
+    await updateEntry(editingEntry.id, updates);
+    setIsEditMealOpen(false);
+    setEditingEntry(null);
+  };
+
+  const handleDeleteEntry = async () => {
+    if (!editingEntry) return;
+    await deleteEntry(editingEntry.id);
+    setIsEditMealOpen(false);
+    setEditingEntry(null);
   };
 
   // Show AI setup form
@@ -312,10 +337,7 @@ export default function Journal() {
       <div className="space-y-3">
         <MealTimeline 
           entries={entries}
-          onEntryClick={(entry) => {
-            // TODO: Open entry detail view
-            console.log("Entry clicked:", entry);
-          }}
+          onEntryClick={handleEntryClick}
         />
       </div>
 
@@ -350,6 +372,18 @@ export default function Journal() {
         }}
         onAddEntry={handleAddEntry}
         initialImage={capturedImage}
+      />
+
+      {/* Edit Meal Sheet */}
+      <EditMealSheet
+        isOpen={isEditMealOpen}
+        onClose={() => {
+          setIsEditMealOpen(false);
+          setEditingEntry(null);
+        }}
+        entry={editingEntry}
+        onSave={handleUpdateEntry}
+        onDelete={handleDeleteEntry}
       />
     </div>
   );
