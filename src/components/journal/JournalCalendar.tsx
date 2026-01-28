@@ -1,16 +1,14 @@
-import { useState } from "react";
-import { format, startOfWeek, addDays, addWeeks, isSameDay, isBefore, isAfter, parseISO } from "date-fns";
+import { useState, useRef, useEffect } from "react";
+import { format, addDays, subDays, isSameDay, isBefore, isAfter, parseISO, differenceInDays } from "date-fns";
 import { sv } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 
 interface JournalCalendarProps {
   selectedDate: Date;
@@ -18,26 +16,27 @@ interface JournalCalendarProps {
   daysWithEntries: string[];
 }
 
-const WEEK_DAYS = ["M", "T", "O", "T", "F", "L", "S"];
+const WEEK_DAYS_SHORT = ["Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"];
 
 // Start of the archive (January 1, 2025)
 const ARCHIVE_START = new Date(2025, 0, 1);
 
+// Number of days to show in each direction from today
+const DAYS_BEFORE = 60;
+const DAYS_AFTER = 0;
+
 export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }: JournalCalendarProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [weekOffset, setWeekOffset] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToSelected = useRef(false);
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  // Get the start of the displayed week (adjusted by offset)
-  const baseWeekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
-  const displayedWeekStart = weekOffset === 0 
-    ? baseWeekStart 
-    : addWeeks(baseWeekStart, weekOffset);
-  
-  // Generate dates for the displayed week
-  const weekDates = Array.from({ length: 7 }, (_, i) => addDays(displayedWeekStart, i));
+  // Generate all dates from DAYS_BEFORE ago to today
+  const allDates = Array.from({ length: DAYS_BEFORE + DAYS_AFTER + 1 }, (_, i) => 
+    subDays(today, DAYS_BEFORE - i)
+  ).filter(date => !isBefore(date, ARCHIVE_START));
 
   // Check if a date has entries
   const hasEntries = (date: Date): boolean => {
@@ -45,44 +44,32 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
     return daysWithEntries.includes(dateStr);
   };
 
-  // Check if we can go to next week (not past today's week)
-  const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const canGoNext = isBefore(displayedWeekStart, currentWeekStart);
-  
-  // Check if we can go to previous week (not before archive start)
-  const canGoPrev = isAfter(displayedWeekStart, ARCHIVE_START);
-
-  const handlePrevWeek = () => {
-    if (canGoPrev) {
-      setWeekOffset(prev => prev - 1);
+  // Scroll to selected date on mount and when selectedDate changes
+  useEffect(() => {
+    if (scrollRef.current && !hasScrolledToSelected.current) {
+      const selectedIndex = allDates.findIndex(d => isSameDay(d, selectedDate));
+      if (selectedIndex >= 0) {
+        const itemWidth = 52; // w-12 = 48px + gap
+        const containerWidth = scrollRef.current.clientWidth;
+        const scrollPosition = (selectedIndex * itemWidth) - (containerWidth / 2) + (itemWidth / 2);
+        scrollRef.current.scrollLeft = Math.max(0, scrollPosition);
+        hasScrolledToSelected.current = true;
+      }
     }
-  };
+  }, [selectedDate, allDates]);
 
-  const handleNextWeek = () => {
-    if (canGoNext) {
-      setWeekOffset(prev => prev + 1);
-    }
-  };
-
-  // Swipe gesture for week navigation
-  const swipeHandlers = useSwipeGesture({
-    onSwipeLeft: handleNextWeek,  // Swipe left = go to next (newer) week
-    onSwipeRight: handlePrevWeek, // Swipe right = go to previous (older) week
-    threshold: 50,
-  });
+  // Reset scroll flag when selectedDate changes significantly
+  useEffect(() => {
+    hasScrolledToSelected.current = false;
+  }, [Math.floor(selectedDate.getTime() / (1000 * 60 * 60 * 24))]);
 
   const handleDateSelect = (date: Date) => {
-    // Don't allow selecting future dates
     if (isAfter(date, today)) return;
-    
-    // Reset week offset and select the date
-    setWeekOffset(0);
     onSelectDate(date);
     setCalendarOpen(false);
   };
 
   const handleDayClick = (date: Date) => {
-    // Don't allow selecting future dates
     if (isAfter(date, today)) return;
     onSelectDate(date);
   };
@@ -92,70 +79,52 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
 
   return (
     <div className="space-y-3">
-      {/* Week navigation with day buttons - swipeable */}
+      {/* Horizontally scrollable days */}
       <div 
-        className="flex items-center gap-2 touch-pan-y"
-        onTouchStart={swipeHandlers.onTouchStart}
-        onTouchMove={swipeHandlers.onTouchMove}
-        onTouchEnd={swipeHandlers.onTouchEnd}
+        ref={scrollRef}
+        className="flex gap-1 overflow-x-auto scrollbar-hide scroll-smooth pb-1 -mx-3 px-3 sm:-mx-4 sm:px-4"
+        style={{ 
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
-        {/* Previous week button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 flex-shrink-0"
-          onClick={handlePrevWeek}
-          disabled={!canGoPrev}
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-
-        {/* Week day circles */}
-        <div className="flex gap-1 sm:gap-2 flex-1 justify-between sm:justify-center">
-          {weekDates.map((date, index) => {
-            const isSelected = isSameDay(date, selectedDate);
-            const isToday = isSameDay(date, today);
-            const isFuture = isAfter(date, today);
-            const hasEntry = hasEntries(date);
-            
-            return (
-              <button
-                key={date.toISOString()}
-                onClick={() => handleDayClick(date)}
-                disabled={isFuture}
-                className={cn(
-                  "flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex flex-col items-center justify-center transition-all duration-200 relative",
-                  isSelected 
-                    ? "bg-primary text-primary-foreground shadow-soft" 
-                    : isToday
-                      ? "bg-primary/10 text-primary border-2 border-primary/30"
-                      : isFuture
-                        ? "bg-muted/50 text-muted-foreground/50 cursor-not-allowed"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                )}
-              >
-                <span className="text-[10px] sm:text-xs font-semibold">{WEEK_DAYS[index]}</span>
-                <span className="text-[9px] sm:text-[10px]">{format(date, "d")}</span>
-                
-                {/* Entry indicator dot */}
-                {hasEntry && !isSelected && (
-                  <span className="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-accent" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Next week button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 flex-shrink-0"
-          onClick={handleNextWeek}
-          disabled={!canGoNext}
-        >
-          <ChevronRight className="w-4 h-4" />
-        </Button>
+        {allDates.map((date) => {
+          const isSelected = isSameDay(date, selectedDate);
+          const isToday = isSameDay(date, today);
+          const isFuture = isAfter(date, today);
+          const hasEntry = hasEntries(date);
+          const dayOfWeek = date.getDay();
+          
+          return (
+            <button
+              key={date.toISOString()}
+              onClick={() => handleDayClick(date)}
+              disabled={isFuture}
+              style={{ scrollSnapAlign: 'center' }}
+              className={cn(
+                "flex-shrink-0 w-12 h-14 rounded-xl flex flex-col items-center justify-center transition-all duration-200 relative",
+                isSelected 
+                  ? "bg-primary text-primary-foreground shadow-soft scale-105" 
+                  : isToday
+                    ? "bg-primary/10 text-primary border-2 border-primary/30"
+                    : isFuture
+                      ? "bg-muted/50 text-muted-foreground/50 cursor-not-allowed"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
+              )}
+            >
+              <span className="text-[10px] font-medium opacity-70">{WEEK_DAYS_SHORT[dayOfWeek]}</span>
+              <span className="text-base font-bold">{format(date, "d")}</span>
+              
+              {/* Entry indicator dot */}
+              {hasEntry && !isSelected && (
+                <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-accent" />
+              )}
+              {hasEntry && isSelected && (
+                <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary-foreground/70" />
+              )}
+            </button>
+          );
+        })}
       </div>
       
       {/* Clickable date display with calendar popover */}
@@ -166,7 +135,7 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
             <span>{format(selectedDate, "d MMMM yyyy", { locale: sv })}</span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="center">
+        <PopoverContent className="w-auto p-0 bg-background" align="center">
           <Calendar
             mode="single"
             selected={selectedDate}
