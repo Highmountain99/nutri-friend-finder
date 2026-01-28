@@ -351,32 +351,53 @@ export function useJournalData(selectedDate: Date) {
   );
 
   const updateEntry = useCallback(
-    async (id: string, updates: Partial<NutritionEntry>) => {
+    async (id: string, updates: Partial<NutritionEntry> & { mealTime?: Date }) => {
       if (!user) return;
+
+      // Build update object, handling mealTime specially
+      const updateData: Record<string, unknown> = {};
+      
+      if (updates.mealName !== undefined) updateData.meal_name = updates.mealName;
+      if (updates.mealType !== undefined) updateData.meal_type = updates.mealType;
+      if (updates.calories !== undefined) updateData.calories = updates.calories;
+      if (updates.protein !== undefined) updateData.protein = updates.protein;
+      if (updates.carbs !== undefined) updateData.carbs = updates.carbs;
+      if (updates.fat !== undefined) updateData.fat = updates.fat;
+      if (updates.isAiEstimated !== undefined) updateData.is_ai_estimated = updates.isAiEstimated;
+      if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
+      
+      // Handle mealTime: update both created_at and entry_date
+      if (updates.mealTime) {
+        updateData.created_at = updates.mealTime.toISOString();
+        updateData.entry_date = format(updates.mealTime, "yyyy-MM-dd");
+      }
 
       const { error } = await supabase
         .from("nutrition_entries")
-        .update({
-          meal_name: updates.mealName,
-          calories: updates.calories,
-          protein: updates.protein,
-          carbs: updates.carbs,
-          fat: updates.fat,
-          is_ai_estimated: updates.isAiEstimated,
-          image_url: updates.imageUrl,
-        })
+        .update(updateData)
         .eq("id", id)
         .eq("user_id", user.id);
 
       if (!error) {
         const updatedEntries = entries.map((entry) =>
-          entry.id === id ? { ...entry, ...updates } : entry
+          entry.id === id 
+            ? { 
+                ...entry, 
+                ...updates,
+                createdAt: updates.mealTime || entry.createdAt,
+              } 
+            : entry
         );
         setEntries(updatedEntries);
         calculateTotals(updatedEntries);
+        
+        // Reload entry dates if the date changed
+        if (updates.mealTime) {
+          await loadEntryDates();
+        }
       }
     },
-    [user, entries, calculateTotals]
+    [user, entries, calculateTotals, loadEntryDates]
   );
 
   const deleteEntry = useCallback(
