@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WeekDaySelector } from "@/components/journal/WeekDaySelector";
+import { JournalCalendar } from "@/components/journal/JournalCalendar";
 import { NutritionProgressCard } from "@/components/journal/NutritionProgressCard";
 import { AITrackingOnboarding } from "@/components/journal/AITrackingOnboarding";
 import { AITrackingSetupForm, AITrackingFormData } from "@/components/journal/AITrackingSetupForm";
@@ -13,6 +13,23 @@ import { cn } from "@/lib/utils";
 
 type JournalView = "main" | "ai-setup";
 type SwipeView = "nutrition" | "health";
+
+// Helper to get streak emoji based on streak count
+function getStreakDisplay(streak: number): { emoji: string; text: string } | null {
+  if (streak <= 0) return null;
+  
+  let emoji = "🔥";
+  if (streak >= 30) {
+    emoji = "🔥🔥🔥";
+  } else if (streak >= 7) {
+    emoji = "🔥🔥";
+  }
+  
+  return {
+    emoji,
+    text: `${streak}-dagarsstreak!`,
+  };
+}
 
 export default function Journal() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -47,6 +64,8 @@ export default function Journal() {
     settings,
     healthMetrics,
     appleHealthSettings,
+    streak,
+    daysWithEntries,
     addEntry,
     updateSettings,
     connectAppleHealth,
@@ -161,18 +180,26 @@ export default function Journal() {
   // Show onboarding if not completed
   const showOnboarding = !settings.aiTrackingOnboardingCompleted;
 
+  // Get streak display
+  const streakDisplay = getStreakDisplay(streak);
+
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in pb-32">
-      {/* Week Day Selector */}
-      <WeekDaySelector 
+      {/* Journal Calendar */}
+      <JournalCalendar 
         selectedDate={selectedDate} 
-        onSelectDate={setSelectedDate} 
+        onSelectDate={setSelectedDate}
+        daysWithEntries={daysWithEntries}
       />
 
-      {/* Streak indicator (placeholder) */}
-      <div className="bg-accent/10 py-2 px-4 rounded-full text-center">
-        <span className="text-sm text-accent font-medium">🔥 1-dagarsstreak!</span>
-      </div>
+      {/* Streak indicator - only show if streak > 0 */}
+      {streakDisplay && (
+        <div className="bg-accent/10 py-2 px-4 rounded-full text-center animate-fade-in">
+          <span className="text-sm text-accent font-medium">
+            {streakDisplay.emoji} {streakDisplay.text}
+          </span>
+        </div>
+      )}
 
       {/* Swipeable Area Indicator */}
       <div className="flex justify-center gap-2">

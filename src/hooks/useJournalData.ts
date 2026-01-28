@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { format } from "date-fns";
+import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -88,6 +88,52 @@ function getMealTypeFromTime(date: Date): string {
   return "Kvällssnack";
 }
 
+// Calculate streak from an array of date strings
+function calculateStreak(datesWithEntries: string[]): number {
+  if (datesWithEntries.length === 0) return 0;
+
+  // Sort dates in descending order (newest first)
+  const sortedDates = [...datesWithEntries].sort((a, b) => 
+    new Date(b).getTime() - new Date(a).getTime()
+  );
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const yesterday = subDays(today, 1);
+  yesterday.setHours(0, 0, 0, 0);
+
+  // Check if there's an entry today or yesterday to start the streak
+  const mostRecentDate = parseISO(sortedDates[0]);
+  mostRecentDate.setHours(0, 0, 0, 0);
+
+  const hasEntryToday = isSameDay(mostRecentDate, today);
+  const hasEntryYesterday = isSameDay(mostRecentDate, yesterday);
+
+  // If no entry today or yesterday, streak is 0
+  if (!hasEntryToday && !hasEntryYesterday) return 0;
+
+  // Start counting from the most recent entry
+  let streak = 1;
+  let expectedDate = hasEntryToday ? subDays(today, 1) : subDays(yesterday, 1);
+
+  for (let i = 1; i < sortedDates.length; i++) {
+    const entryDate = parseISO(sortedDates[i]);
+    entryDate.setHours(0, 0, 0, 0);
+
+    if (isSameDay(entryDate, expectedDate)) {
+      streak++;
+      expectedDate = subDays(expectedDate, 1);
+    } else if (entryDate < expectedDate) {
+      // Gap in the streak
+      break;
+    }
+    // If entryDate > expectedDate, it's a duplicate day, skip it
+  }
+
+  return streak;
+}
+
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
@@ -97,6 +143,10 @@ export function useJournalData(selectedDate: Date) {
   const [settings, setSettings] = useState<NutritionSettings>(DEFAULT_SETTINGS);
   const [healthMetrics, setHealthMetrics] = useState<HealthMetrics>({ steps: 0, activeEnergy: 0 });
   const [appleHealthSettings, setAppleHealthSettings] = useState<AppleHealthSettings>({ connected: false });
+  
+  // Streak and days with entries
+  const [streak, setStreak] = useState(0);
+  const [daysWithEntries, setDaysWithEntries] = useState<string[]>([]);
 
   const dateKey = format(selectedDate, "yyyy-MM-dd");
 
@@ -112,6 +162,24 @@ export function useJournalData(selectedDate: Date) {
     );
     setDailyTotals(totals);
   }, []);
+
+  // Load all entry dates for streak calculation and calendar markers
+  const loadEntryDates = useCallback(async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("nutrition_entries")
+      .select("entry_date")
+      .eq("user_id", user.id)
+      .order("entry_date", { ascending: false });
+
+    if (data) {
+      // Get unique dates
+      const uniqueDates = [...new Set(data.map(d => d.entry_date))];
+      setDaysWithEntries(uniqueDates);
+      setStreak(calculateStreak(uniqueDates));
+    }
+  }, [user]);
 
   // Load data from Supabase
   useEffect(() => {
@@ -220,6 +288,9 @@ export function useJournalData(selectedDate: Date) {
             lastSyncAt: appleHealthData.last_sync_at ? new Date(appleHealthData.last_sync_at) : undefined,
           });
         }
+
+        // Load entry dates for streak
+        await loadEntryDates();
       } catch (error) {
         console.error("Failed to load journal data:", error);
       } finally {
@@ -228,7 +299,7 @@ export function useJournalData(selectedDate: Date) {
     };
 
     loadData();
-  }, [user, dateKey, calculateTotals]);
+  }, [user, dateKey, calculateTotals, loadEntryDates]);
 
   const addEntry = useCallback(
     async (entry: Omit<NutritionEntry, "id" | "createdAt">) => {
@@ -271,9 +342,12 @@ export function useJournalData(selectedDate: Date) {
         const updatedEntries = [...entries, newEntry];
         setEntries(updatedEntries);
         calculateTotals(updatedEntries);
+        
+        // Reload entry dates to update streak
+        await loadEntryDates();
       }
     },
-    [user, entries, dateKey, calculateTotals]
+    [user, entries, dateKey, calculateTotals, loadEntryDates]
   );
 
   const updateEntry = useCallback(
@@ -319,9 +393,12 @@ export function useJournalData(selectedDate: Date) {
         const updatedEntries = entries.filter((entry) => entry.id !== id);
         setEntries(updatedEntries);
         calculateTotals(updatedEntries);
+        
+        // Reload entry dates to update streak
+        await loadEntryDates();
       }
     },
-    [user, entries, calculateTotals]
+    [user, entries, calculateTotals, loadEntryDates]
   );
 
   const updateSettings = useCallback(
@@ -387,6 +464,8 @@ export function useJournalData(selectedDate: Date) {
     settings,
     healthMetrics,
     appleHealthSettings,
+    streak,
+    daysWithEntries,
     addEntry,
     updateEntry,
     deleteEntry,
