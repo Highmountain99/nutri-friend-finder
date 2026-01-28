@@ -94,8 +94,10 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
     <div className="space-y-3">
       {/* Week navigation with day buttons - swipeable */}
       <div 
-        className="flex items-center gap-2"
-        {...swipeHandlers}
+        className="flex items-center gap-2 touch-pan-y"
+        onTouchStart={swipeHandlers.onTouchStart}
+        onTouchMove={swipeHandlers.onTouchMove}
+        onTouchEnd={swipeHandlers.onTouchEnd}
       >
         {/* Previous week button */}
         <Button
