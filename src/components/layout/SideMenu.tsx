@@ -1,4 +1,4 @@
-import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf } from "lucide-react";
+import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, ExternalLink, CreditCard, KeyRound, Shield } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,12 @@ const secondaryNavItems = [
   { path: "/profile", icon: User, label: "Hälsoprofil" },
   { path: "/settings", icon: Settings, label: "Inställningar" },
   { path: "/help", icon: HelpCircle, label: "Hjälp & Support" },
+];
+
+const paymentNavItems = [
+  { path: "/frikort", icon: CreditCard, label: "Frikort" },
+  { path: "/koder", icon: KeyRound, label: "Koder" },
+  { path: "/seb-forsakring", icon: Shield, label: "SEB försäkring" },
 ];
 
 export function SideMenu({ isOpen, onClose }: SideMenuProps) {
@@ -94,7 +100,72 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-3">
               Konto
             </p>
-            {secondaryNavItems.map((item) => (
+            <NavLink
+              to="/profile"
+              onClick={onClose}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                  isActive
+                    ? "bg-primary-soft text-primary font-medium"
+                    : "text-foreground hover:bg-muted"
+                )
+              }
+            >
+              <User className="w-5 h-5" />
+              <span>Hälsoprofil</span>
+            </NavLink>
+
+            {/* 1177 External Link */}
+            <button
+              onClick={() => {
+                window.open("https://m07-mg-local.idp.funktionstjanster.se/samlv2/idp/sign_in/781", "_blank");
+                onClose();
+              }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-foreground hover:bg-muted w-full text-left"
+            >
+              <ExternalLink className="w-5 h-5" />
+              <span>1177 - Journal</span>
+            </button>
+
+            <NavLink
+              to="/settings"
+              onClick={onClose}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                  isActive
+                    ? "bg-primary-soft text-primary font-medium"
+                    : "text-foreground hover:bg-muted"
+                )
+              }
+            >
+              <Settings className="w-5 h-5" />
+              <span>Inställningar</span>
+            </NavLink>
+
+            <NavLink
+              to="/help"
+              onClick={onClose}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                  isActive
+                    ? "bg-primary-soft text-primary font-medium"
+                    : "text-foreground hover:bg-muted"
+                )
+              }
+            >
+              <HelpCircle className="w-5 h-5" />
+              <span>Hjälp & Support</span>
+            </NavLink>
+
+            <div className="h-px bg-border my-4" />
+
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-3">
+              Betalningsmetod
+            </p>
+            {paymentNavItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
