@@ -8,7 +8,8 @@ import { AITrackingSetupForm, AITrackingFormData } from "@/components/journal/AI
 import { HealthMetricsView } from "@/components/journal/HealthMetricsView";
 import { MealTimeline } from "@/components/journal/MealTimeline";
 import { AddMealSheet } from "@/components/journal/AddMealSheet";
-import { useJournalData, type Ingredient } from "@/hooks/useJournalData";
+import { EditMealSheet } from "@/components/journal/EditMealSheet";
+import { useJournalData, type Ingredient, type NutritionEntry } from "@/hooks/useJournalData";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,8 @@ export default function Journal() {
   const [view, setView] = useState<JournalView>("main");
   const [swipeView, setSwipeView] = useState<SwipeView>("nutrition");
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
+  const [isEditMealOpen, setIsEditMealOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<NutritionEntry | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +71,8 @@ export default function Journal() {
     streak,
     daysWithEntries,
     addEntry,
+    updateEntry,
+    deleteEntry,
     updateSettings,
     connectAppleHealth,
   } = useJournalData(selectedDate);
@@ -313,8 +318,8 @@ export default function Journal() {
         <MealTimeline 
           entries={entries}
           onEntryClick={(entry) => {
-            // TODO: Open entry detail view
-            console.log("Entry clicked:", entry);
+            setEditingEntry(entry);
+            setIsEditMealOpen(true);
           }}
         />
       </div>
@@ -350,6 +355,18 @@ export default function Journal() {
         }}
         onAddEntry={handleAddEntry}
         initialImage={capturedImage}
+      />
+
+      {/* Edit Meal Sheet */}
+      <EditMealSheet
+        isOpen={isEditMealOpen}
+        onClose={() => {
+          setIsEditMealOpen(false);
+          setEditingEntry(null);
+        }}
+        entry={editingEntry}
+        onUpdate={updateEntry}
+        onDelete={deleteEntry}
       />
     </div>
   );
