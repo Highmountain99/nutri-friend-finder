@@ -70,7 +70,8 @@ export default function Journal() {
   } = useJournalData(selectedDate);
 
   // Swipe gesture for nutrition/health view - must be called unconditionally
-  const showOnboarding = !settings.aiTrackingOnboardingCompleted;
+  // Show onboarding only if AI tracking is enabled but onboarding not completed
+  const showOnboarding = settings.aiTrackingEnabled && !settings.aiTrackingOnboardingCompleted;
   const contentSwipeHandlers = useSwipeGesture({
     onSwipeLeft: () => !showOnboarding && setSwipeView("health"),
     onSwipeRight: () => setSwipeView("nutrition"),

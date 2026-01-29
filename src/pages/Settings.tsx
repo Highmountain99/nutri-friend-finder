@@ -135,8 +135,42 @@ export default function Settings() {
     loadSettings();
   }, [user]);
 
+  // Track if onboarding is completed
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+
+  // Load onboarding status
+  useEffect(() => {
+    if (!user) return;
+    
+    const loadOnboardingStatus = async () => {
+      const { data } = await supabase
+        .from("user_nutrition_settings")
+        .select("ai_tracking_onboarding_completed")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setOnboardingCompleted(data.ai_tracking_onboarding_completed ?? false);
+      }
+    };
+    
+    loadOnboardingStatus();
+  }, [user]);
+
   const handleToggleAITracking = async (enabled: boolean) => {
     if (!user) return;
+    
+    // If enabling and onboarding not completed, navigate to Journal to show setup form
+    if (enabled && !onboardingCompleted) {
+      await supabase.from("user_nutrition_settings").upsert({
+        user_id: user.id,
+        ai_tracking_enabled: true,
+        ai_tracking_onboarding_completed: false,
+      });
+      navigate("/journal");
+      return;
+    }
+    
     setNutritionSettings(prev => ({ ...prev, aiTrackingEnabled: enabled }));
     
     await supabase.from("user_nutrition_settings").upsert({
