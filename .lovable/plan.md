@@ -1,102 +1,373 @@
 
 
-## Omdesign av symptomkort i journaltidslinjen
+## EatSuite Recept - Komplett Receptupplevelse
 
 ### Sammanfattning
-Gör symptomkortet mer kompakt och subtilt jämfört med måltidskortet. Lägg till en visuell koppling (streck) mellan symptom och dess kopplade måltid. Byt ut utropstecknet mot en mildare symbol.
+Bygg en komplett receptupplevelse med personliga "Dagens tips" (swipeable stack), "Mina recept" (sparade), detaljsidor med näringsinformation, "Börja laga"-läge, samt avancerad sök och filtrering.
 
 ---
 
-### Ändringar i SymptomCard
+### Databasschema - Nya tabeller och ändringar
 
-**Ny design:**
+**1. Utöka `recipes`-tabellen med nya kolumner:**
+
+| Kolumn | Typ | Beskrivning |
+|--------|-----|-------------|
+| calories_per_serving | integer | Kalorier per portion |
+| protein_per_serving | numeric | Protein i gram |
+| carbs_per_serving | numeric | Kolhydrater i gram |
+| fat_per_serving | numeric | Fett i gram |
+| nutrition_details | jsonb | Detaljerad näringsprofil (fiber, natrium, etc.) |
+| cuisine_types | text[] | Köktyper (Medelhav, Asiatiskt, Svenskt) |
+| meal_types | text[] | Måltidstyper (Frukost, Lunch, Middag) |
+| health_plans | text[] | Hälsoplaner (Högprotein, Låg natrium) |
+| dietary_needs | text[] | Kostbehov (Vegetariskt, Veganskt) |
+| allergens | text[] | Allergener (Glutenfri, Äggfri) |
+| similar_recipe_ids | uuid[] | ID:n för liknande recept |
+| rating_count | integer | Antal betyg |
+
+**2. Ny tabell: `user_recipe_interactions`**
+
 ```text
-┌──────────────────────────────────┐
-│  ○  08:30 · Fick ont i magen     │
-└──────────────────────────────────┘
+user_recipe_interactions
++------------------+------------------+--------------------------------------+
+| Kolumn           | Typ              | Beskrivning                          |
++------------------+------------------+--------------------------------------+
+| id               | uuid (PK)        | Primärnyckel                         |
+| user_id          | uuid (NOT NULL)  | Användar-ID                          |
+| recipe_id        | uuid (NOT NULL)  | Recept-ID                            |
+| status           | text             | "suggested" | "saved" | "skipped"    |
+| suggested_date   | date             | Datum då receptet föreslogs          |
+| source           | text             | "algo" | "dietitian"                 |
+| dietitian_id     | uuid             | Dietist-ID om rekommenderat          |
+| created_at       | timestamptz      |                                      |
+| updated_at       | timestamptz      |                                      |
++------------------+------------------+--------------------------------------+
+UNIQUE(user_id, recipe_id, suggested_date)
 ```
 
-**Förändringar:**
-- **Mildare ikon:** Byt `AlertTriangle` mot `Circle` (fylld liten cirkel) eller `Activity` för att antyda en händelse utan att vara alarmistisk
-- **Kompaktare layout:** Ta bort padding och gör kortet till en enkel rad
-- **Endast tid + beskrivning:** Visa bara tid och en trunkerad rubrik (ej "Kopplat till"-text)
-- **Mindre storlek:** Reducera padding från `p-3` till `py-1.5 px-3`
-- **Ta bort border-left:** Använd istället en liten cirkel-ikon inline
+**3. Ny tabell: `recipe_ratings`**
 
-**Ny struktur:**
-```tsx
-<div
-  className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-muted/50 
-             cursor-pointer hover:bg-muted transition-colors text-sm"
-  onClick={onClick}
->
-  <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-  <span className="text-xs text-muted-foreground">{timeDisplay}</span>
-  <span className="text-xs truncate">{symptom.description}</span>
-</div>
+```text
+recipe_ratings
++------------------+------------------+--------------------------------------+
+| Kolumn           | Typ              | Beskrivning                          |
++------------------+------------------+--------------------------------------+
+| id               | uuid (PK)        | Primärnyckel                         |
+| user_id          | uuid (NOT NULL)  | Användar-ID                          |
+| recipe_id        | uuid (NOT NULL)  | Recept-ID                            |
+| rating           | integer          | Betyg 1-5                            |
+| review_text      | text             | Frivillig kommentar                  |
+| created_at       | timestamptz      |                                      |
+| updated_at       | timestamptz      |                                      |
++------------------+------------------+--------------------------------------+
+UNIQUE(user_id, recipe_id)
+```
+
+**4. RLS-policyer**
+
+- `user_recipe_interactions`: Användare kan endast läsa/skriva sin egen data
+- `recipe_ratings`: Användare kan läsa alla betyg, men endast skriva/uppdatera sina egna
+- Dietister kan skapa rekommendationer för sina tilldelade patienter
+
+---
+
+### Filstruktur - Nya komponenter
+
+```text
+src/
+├── pages/
+│   ├── Recipes.tsx                    (refaktoreras helt)
+│   └── RecipeDetail.tsx               (ny - detaljsida)
+│
+├── components/recipes/
+│   ├── RecipeMainView.tsx             (huvudvy med sektioner)
+│   ├── DailyPicksSection.tsx          (Dagens tips-stack)
+│   ├── SwipeableRecipeCard.tsx        (swipeable receptkort)
+│   ├── MyRecipesSection.tsx           (Mina recept-lista)
+│   ├── RecipeCard.tsx                 (listvy-kort)
+│   ├── RecipeSearchBar.tsx            (sökfält)
+│   ├── RecipeFilters.tsx              (filter-chips modal)
+│   ├── CuisineShortcuts.tsx           (Populära kök-genvägar)
+│   ├── MealTypeShortcuts.tsx          (Måltidstyper-genvägar)
+│   ├── RecipeDetailSheet.tsx          (detaljvy som sheet)
+│   ├── NutritionSummary.tsx           (näringssammanfattning)
+│   ├── NutritionDetailModal.tsx       (full näringsprofil)
+│   ├── IngredientsSection.tsx         (ingredienslista)
+│   ├── InstructionsSection.tsx        (steglista)
+│   ├── SimilarRecipesCarousel.tsx     (liknande recept)
+│   ├── RecipeRating.tsx               (betygsättning)
+│   ├── CookingModeSheet.tsx           (Börja laga-läge)
+│   ├── CookingInstructionsView.tsx    (steg-för-steg)
+│   ├── CookingIngredientsView.tsx     (ingrediensvy)
+│   ├── EmptyDailyPicks.tsx            (tomt-läge)
+│   ├── EmptyMyRecipes.tsx             (tomt-läge)
+│   └── DietitianBadge.tsx             (rekommenderad-badge)
+│
+├── hooks/
+│   ├── useRecipes.ts                  (uppdateras)
+│   ├── useDailyPicks.ts               (ny - dagens tips)
+│   ├── useMyRecipes.ts                (ny - sparade recept)
+│   ├── useRecipeDetail.ts             (ny - receptdetalj)
+│   ├── useRecipeRating.ts             (ny - betygsättning)
+│   └── useRecipeFilters.ts            (ny - filterhantering)
 ```
 
 ---
 
-### Ändringar i MealTimeline
+### Komponentstruktur
 
-**Visuell koppling för länkade symptom:**
+**Recipes.tsx (Refaktorerad huvudsida)**
 
-Nuvarande design visar endast en liten punkt. Ny design lägger till ett vertikalt streck som binder ihop symptomet med måltiden.
-
-**Ny struktur för länkade symptom:**
 ```text
-       ┌────────────────────────────────────┐
-   ●   │ Lunch • 12:30                      │
-       │ Pasta carbonara                    │
-       │ ⬤ 450  ⬤ 32g  ⬤ 45g  ⬤ 18g        │
-       └────────────────────────────────────┘
-       │  ← Vertikal linje som kopplar
-       ├──○ 14:30 · Fick ont i magen
-       │
-       ├──○ 15:00 · Uppsvälld
+┌─────────────────────────────────────────┐
+│  🔍 Sök recept...                       │
+├─────────────────────────────────────────┤
+│                                         │
+│  DAGENS TIPS                            │
+│  ┌─────────────────────────────────┐    │
+│  │  [Swipeable Card Stack]         │    │
+│  │  ┌───────────────────────────┐  │    │
+│  │  │  🍽️ Laxsallad med quinoa  │  │    │
+│  │  │  🏷️ Rekommenderad av...   │  │    │
+│  │  │  ⏱️ 25 min  👥 2 port     │  │    │
+│  │  │                           │  │    │
+│  │  │  [Hoppa över] [Spara]     │  │    │
+│  │  └───────────────────────────┘  │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  MINA RECEPT (3)           Se alla →    │
+│  ┌─────┐ ┌─────┐ ┌─────┐               │
+│  │ 🍝  │ │ 🥗  │ │ 🍰  │               │
+│  └─────┘ └─────┘ └─────┘               │
+│                                         │
+│  POPULÄRA KÖK                           │
+│  [Medelhav] [Asiatiskt] [Svenskt] ...   │
+│                                         │
+│  MÅLTIDSTYPER                           │
+│  [Frukost] [Lunch] [Middag] [Dessert]   │
+│                                         │
+└─────────────────────────────────────────┘
 ```
 
-**Implementation:**
-- Lägg till en vertikal linje (`border-l-2`) som sträcker sig från måltidskortet ner till symptomen
-- Lägg till en horisontell linje (`w-4 h-0.5`) som kopplar från den vertikala linjen till symptomet
-- Placera en liten punkt vid kopplingspunkten
+**SwipeableRecipeCard (Swipe-kort)**
 
-**Uppdaterad JSX för länkade symptom:**
+```text
+                 SWIPE LEFT = HOPPA ÖVER
+                        ←
+┌─────────────────────────────────────────┐
+│  ┌─────────────────────────────────┐    │
+│  │         [Recipe Image]          │    │
+│  │                                 │    │
+│  │  🏷️ Rekommenderad av dietist   │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  Laxsallad med quinoa                   │
+│  Fräsch sallad med ugnsbakad lax...     │
+│                                         │
+│  ⏱️ 25 min   👥 2 port   ⭐ 4.3         │
+│  🔥 450 kcal   💪 32g protein           │
+│                                         │
+│  [Hoppa över]          [Spara ❤️]       │
+└─────────────────────────────────────────┘
+                        →
+                  SWIPE RIGHT = SPARA
+```
+
+**RecipeDetailSheet (Detaljvy)**
+
+```text
+┌─────────────────────────────────────────┐
+│  ← Tillbaka                             │
+├─────────────────────────────────────────┤
+│  ┌─────────────────────────────────┐    │
+│  │         [Recipe Image]          │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  Laxsallad med quinoa              ❤️   │
+│  ⏱️ 25 min   👥 2 port   📊 Enkel       │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │  NÄRING PER PORTION             │    │
+│  │  🔥 450   💪 32g   🍞 28g   🧈 18g  │
+│  │           [Visa detaljer →]     │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│  INGREDIENSER (8)                       │
+│  • 200g laxfilé                         │
+│  • 100g quinoa                          │
+│  • ...                                  │
+│                                         │
+│  INSTRUKTIONER                          │
+│  1. Värm ugnen till 200°C               │
+│  2. Lägg laxen på en plåt...            │
+│  3. ...                                 │
+│                                         │
+│  [⭐ Betygsätt detta recept]            │
+│                                         │
+│  LIKNANDE RECEPT                        │
+│  ┌─────┐ ┌─────┐ ┌─────┐               │
+│  │ 🥗  │ │ 🐟  │ │ 🥙  │               │
+│  └─────┘ └─────┘ └─────┘               │
+│                                         │
+│  [      🍳 BÖRJA LAGA      ]            │
+└─────────────────────────────────────────┘
+```
+
+**CookingModeSheet (Börja laga-läge)**
+
+```text
+┌─────────────────────────────────────────┐
+│  ✕ Avsluta                              │
+├─────────────────────────────────────────┤
+│  [Instruktioner]  [Ingredienser]        │
+├─────────────────────────────────────────┤
+│                                         │
+│              STEG 2 AV 6                │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │                                 │    │
+│  │   Koka quinoa enligt förpack-   │    │
+│  │   ningens anvisningar. Låt      │    │
+│  │   svalna något.                 │    │
+│  │                                 │    │
+│  └─────────────────────────────────┘    │
+│                                         │
+│         [●]  [○]  [○]  [○]  [○]  [○]    │
+│                                         │
+│  [ ← Föregående ]    [ Nästa → ]        │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### Hooks och datahantering
+
+**useDailyPicks.ts**
+
+```typescript
+// Hämtar dagens rekommendationer baserat på datum
+// Hanterar spara/hoppa över-logik
+// Återställer hoppade recept vid "Granska hoppade"
+
+interface DailyPicksReturn {
+  picks: RecipeWithStatus[];
+  isLoading: boolean;
+  saveRecipe: (recipeId: string) => Promise<void>;
+  skipRecipe: (recipeId: string) => Promise<void>;
+  reviewSkipped: () => Promise<void>;
+  hasSkippedRecipes: boolean;
+}
+```
+
+**useRecipeFilters.ts**
+
+```typescript
+// Hanterar filterlogik och kombinationer
+
+interface FilterState {
+  cuisineTypes: string[];
+  mealTypes: string[];
+  healthPlans: string[];
+  dietaryNeeds: string[];
+  allergens: string[];
+}
+```
+
+---
+
+### Routingändringar
+
+Uppdatera `App.tsx` med ny route för receptdetaljer:
+
 ```tsx
-{item.linkedSymptoms && item.linkedSymptoms.length > 0 && (
-  <div className="ml-4 mt-1 border-l-2 border-accent/30 pl-4 space-y-1">
-    {item.linkedSymptoms.map((symptom) => (
-      <div key={symptom.id} className="relative flex items-center">
-        {/* Horisontell kopplingsstreck */}
-        <div className="absolute -left-4 top-1/2 w-3 h-0.5 bg-accent/30" />
-        <SymptomCard
-          symptom={symptom}
-          onClick={() => onSymptomClick?.(symptom)}
-        />
-      </div>
-    ))}
-  </div>
-)}
+<Route path="/recipes" element={<Recipes />} />
+<Route path="/recipes/:recipeId" element={<RecipeDetail />} />
 ```
+
+---
+
+### Implementationsordning
+
+**Fas 1: Databas och grundläggande struktur**
+1. Skapa databasmigration för nya tabeller och kolumner
+2. Lägg till RLS-policyer
+3. Uppdatera hooks-grundstruktur
+
+**Fas 2: Huvudvy (Recipes.tsx)**
+4. Refaktorera Recipes.tsx till ny layout
+5. Implementera RecipeSearchBar
+6. Implementera CuisineShortcuts och MealTypeShortcuts
+7. Implementera MyRecipesSection
+
+**Fas 3: Dagens tips**
+8. Implementera useDailyPicks hook
+9. Implementera SwipeableRecipeCard med svep-gester
+10. Implementera DailyPicksSection med kortstack
+11. Implementera EmptyDailyPicks med "Granska hoppade"
+12. Lägg till DietitianBadge för rekommenderade recept
+
+**Fas 4: Receptdetaljer**
+13. Skapa RecipeDetailSheet/RecipeDetail-sida
+14. Implementera NutritionSummary och NutritionDetailModal
+15. Implementera IngredientsSection och InstructionsSection
+16. Implementera SimilarRecipesCarousel
+17. Implementera RecipeRating
+
+**Fas 5: Börja laga**
+18. Implementera CookingModeSheet
+19. Implementera CookingInstructionsView med stegnavigering
+20. Implementera CookingIngredientsView
+
+**Fas 6: Sök och filter**
+21. Implementera useRecipeFilters
+22. Implementera RecipeFilters modal med kombinerbara filter
+23. Koppla ihop sök + filter
 
 ---
 
 ### Tekniska detaljer
 
-**Filer som ändras:**
+**Svep-implementation för kortstack:**
 
-| Fil | Åtgärd |
-|-----|--------|
-| `src/components/journal/SymptomCard.tsx` | Gör kompaktare, byt ikon, visa endast tid + rubrik |
-| `src/components/journal/MealTimeline.tsx` | Lägg till visuellt kopplingsstreck för länkade symptom |
+Använder befintlig `useSwipeGesture` hook men utökas med:
+- Visuell feedback under svepning (opacity, rotation)
+- Threshold på 100px för aktivering
+- Animering vid borttagning
 
-**Storleksjämförelse:**
+```tsx
+const swipeHandlers = useSwipeGesture({
+  onSwipeLeft: () => skipRecipe(currentRecipe.id),
+  onSwipeRight: () => saveRecipe(currentRecipe.id),
+  threshold: 100
+});
+```
 
-| Element | Före | Efter |
-|---------|------|-------|
-| SymptomCard padding | `p-3` | `py-1.5 px-3` |
-| SymptomCard höjd | ~60px | ~32px |
-| Ikon | `AlertTriangle` (utropstecken) | Liten fylld cirkel |
-| Innehåll | Tid + beskrivning + länkinfo | Endast tid + trunkerad beskrivning |
+**Datumbaserad stack-logik:**
+
+```typescript
+// Lokalt datum för att avgöra "idag"
+const today = format(new Date(), 'yyyy-MM-dd');
+
+// Hämta recept som inte har status för idag
+const picks = await supabase
+  .from('recipes')
+  .select('*, user_recipe_interactions!left(*)')
+  .or(`suggested_date.neq.${today},suggested_date.is.null`, 
+      { foreignTable: 'user_recipe_interactions' });
+```
+
+**RLS för dietist-rekommendationer:**
+
+```sql
+-- Dietister kan skapa rekommendationer för sina patienter
+CREATE POLICY "Dietists can recommend to patients"
+ON user_recipe_interactions FOR INSERT
+TO authenticated
+WITH CHECK (
+  source = 'dietitian' AND
+  is_assigned_dietist(user_id)
+);
+```
 
