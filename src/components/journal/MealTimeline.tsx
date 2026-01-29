@@ -4,9 +4,20 @@ import type { NutritionEntry } from "@/hooks/useJournalData";
 interface MealTimelineProps {
   entries: NutritionEntry[];
   onEntryClick?: (entry: NutritionEntry) => void;
+  showCalories?: boolean;
+  showProtein?: boolean;
+  showCarbs?: boolean;
+  showFat?: boolean;
 }
 
-export function MealTimeline({ entries, onEntryClick }: MealTimelineProps) {
+export function MealTimeline({ 
+  entries, 
+  onEntryClick,
+  showCalories = true,
+  showProtein = true,
+  showCarbs = true,
+  showFat = true,
+}: MealTimelineProps) {
   // Sort entries by time, newest first
   const sortedEntries = [...entries].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -34,6 +45,10 @@ export function MealTimeline({ entries, onEntryClick }: MealTimelineProps) {
           <MealEntryCard 
             entry={entry} 
             onClick={() => onEntryClick?.(entry)}
+            showCalories={showCalories}
+            showProtein={showProtein}
+            showCarbs={showCarbs}
+            showFat={showFat}
           />
         </div>
       ))}

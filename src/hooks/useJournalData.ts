@@ -51,7 +51,10 @@ export interface HealthMetrics {
 export interface NutritionSettings {
   aiTrackingEnabled: boolean;
   aiTrackingOnboardingCompleted: boolean;
-  calorieTrackingEnabled: boolean;
+  showCalories: boolean;
+  showProtein: boolean;
+  showCarbs: boolean;
+  showFat: boolean;
   gender?: "male" | "female" | "other";
   heightCm?: number;
   weightKg?: number;
@@ -75,7 +78,10 @@ const DEFAULT_GOALS: NutritionGoals = {
 const DEFAULT_SETTINGS: NutritionSettings = {
   aiTrackingEnabled: false,
   aiTrackingOnboardingCompleted: false,
-  calorieTrackingEnabled: true,
+  showCalories: true,
+  showProtein: true,
+  showCarbs: true,
+  showFat: true,
 };
 
 // Helper to get meal type based on time
@@ -234,7 +240,10 @@ export function useJournalData(selectedDate: Date) {
           setSettings({
             aiTrackingEnabled: settingsData.ai_tracking_enabled || false,
             aiTrackingOnboardingCompleted: settingsData.ai_tracking_onboarding_completed || false,
-            calorieTrackingEnabled: settingsData.calorie_tracking_enabled ?? true,
+            showCalories: settingsData.show_calories ?? true,
+            showProtein: settingsData.show_protein ?? true,
+            showCarbs: settingsData.show_carbs ?? true,
+            showFat: settingsData.show_fat ?? true,
             gender: settingsData.gender || undefined,
             heightCm: settingsData.height_cm ? Number(settingsData.height_cm) : undefined,
             weightKg: settingsData.weight_kg ? Number(settingsData.weight_kg) : undefined,
@@ -442,7 +451,10 @@ export function useJournalData(selectedDate: Date) {
         user_id: user.id,
         ai_tracking_enabled: updated.aiTrackingEnabled,
         ai_tracking_onboarding_completed: updated.aiTrackingOnboardingCompleted,
-        calorie_tracking_enabled: updated.calorieTrackingEnabled,
+        show_calories: updated.showCalories,
+        show_protein: updated.showProtein,
+        show_carbs: updated.showCarbs,
+        show_fat: updated.showFat,
         gender: updated.gender,
         height_cm: updated.heightCm,
         weight_kg: updated.weightKg,

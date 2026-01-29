@@ -392,6 +392,10 @@ export type Database = {
           gender: Database["public"]["Enums"]["gender"] | null
           height_cm: number | null
           id: string
+          show_calories: boolean | null
+          show_carbs: boolean | null
+          show_fat: boolean | null
+          show_protein: boolean | null
           updated_at: string | null
           user_id: string
           weight_kg: number | null
@@ -405,6 +409,10 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender"] | null
           height_cm?: number | null
           id?: string
+          show_calories?: boolean | null
+          show_carbs?: boolean | null
+          show_fat?: boolean | null
+          show_protein?: boolean | null
           updated_at?: string | null
           user_id: string
           weight_kg?: number | null
@@ -418,6 +426,10 @@ export type Database = {
           gender?: Database["public"]["Enums"]["gender"] | null
           height_cm?: number | null
           id?: string
+          show_calories?: boolean | null
+          show_carbs?: boolean | null
+          show_fat?: boolean | null
+          show_protein?: boolean | null
           updated_at?: string | null
           user_id?: string
           weight_kg?: number | null
