@@ -94,14 +94,13 @@ export function MealTimeline({
               
               {/* Linked symptoms as sub-items */}
               {item.linkedSymptoms && item.linkedSymptoms.length > 0 && (
-                <div className="mt-2 space-y-2 pl-12">
+                <div className="ml-4 mt-1 border-l-2 border-accent/30 pl-4 space-y-1">
                   {item.linkedSymptoms.map((symptom) => (
-                    <div key={symptom.id} className="relative">
-                      {/* Small connector dot */}
-                      <div className="absolute -left-5 top-4 w-2 h-2 rounded-full bg-accent border border-background" />
+                    <div key={symptom.id} className="relative flex items-center">
+                      {/* Horisontell kopplingsstreck */}
+                      <div className="absolute -left-4 top-1/2 w-3 h-0.5 bg-accent/30" />
                       <SymptomCard
                         symptom={symptom}
-                        linkedMeal={item.data as NutritionEntry}
                         onClick={() => onSymptomClick?.(symptom)}
                       />
                     </div>
