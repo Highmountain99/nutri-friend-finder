@@ -314,6 +314,47 @@ export type Database = {
         }
         Relationships: []
       }
+      symptom_entries: {
+        Row: {
+          created_at: string | null
+          description: string
+          entry_date: string
+          id: string
+          meal_id: string | null
+          symptom_time: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          entry_date?: string
+          id?: string
+          meal_id?: string | null
+          symptom_time?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          entry_date?: string
+          id?: string
+          meal_id?: string | null
+          symptom_time?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_entries_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_favorite_recipes: {
         Row: {
           created_at: string | null
