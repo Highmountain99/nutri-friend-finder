@@ -47,20 +47,7 @@ export default function Journal() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setCapturedImage(base64);
-      setIsAddMealOpen(true);
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input so same file can be selected again
-    e.target.value = "";
-  };
+  
   const {
     isLoading,
     goals,
@@ -81,6 +68,29 @@ export default function Journal() {
     updateSettings,
     connectAppleHealth
   } = useJournalData(selectedDate);
+
+  // Swipe gesture for nutrition/health view - must be called unconditionally
+  const showOnboarding = !settings.aiTrackingOnboardingCompleted;
+  const contentSwipeHandlers = useSwipeGesture({
+    onSwipeLeft: () => !showOnboarding && setSwipeView("health"),
+    onSwipeRight: () => setSwipeView("nutrition"),
+    threshold: 50
+  });
+
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setCapturedImage(base64);
+      setIsAddMealOpen(true);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input so same file can be selected again
+    e.target.value = "";
+  };
 
   // Calculate remaining macros
   const remaining = {
@@ -129,6 +139,7 @@ export default function Journal() {
   
   // Filter to only show visible nutrition cards
   const nutritionCards = allNutritionCards.filter(card => card.visible);
+
   const handleAISetupComplete = (data: AITrackingFormData) => {
     updateSettings({
       aiTrackingEnabled: true,
@@ -140,14 +151,17 @@ export default function Journal() {
     });
     setView("main");
   };
+
   const handleSkipAITracking = () => {
     updateSettings({
       aiTrackingOnboardingCompleted: true
     });
   };
+
   const handleActivateAITracking = () => {
     setView("ai-setup");
   };
+
   const handleAddEntry = (entry: {
     mealName: string;
     mealType: string;
@@ -173,25 +187,18 @@ export default function Journal() {
     setIsAddMealOpen(false);
   };
 
-  // Show AI setup form
-  if (view === "ai-setup") {
-    return <div className="px-4 py-6 animate-fade-in">
-        <AITrackingSetupForm onComplete={handleAISetupComplete} onBack={() => setView("main")} />
-      </div>;
-  }
-
-  // Show onboarding if not completed
-  const showOnboarding = !settings.aiTrackingOnboardingCompleted;
-
   // Get streak display
   const streakDisplay = getStreakDisplay(streak);
 
-  // Swipe gesture for nutrition/health view
-  const contentSwipeHandlers = useSwipeGesture({
-    onSwipeLeft: () => !showOnboarding && setSwipeView("health"),
-    onSwipeRight: () => setSwipeView("nutrition"),
-    threshold: 50
-  });
+  // Show AI setup form - MUST be after all hooks
+  if (view === "ai-setup") {
+    return (
+      <div className="px-4 py-6 animate-fade-in">
+        <AITrackingSetupForm onComplete={handleAISetupComplete} onBack={() => setView("main")} />
+      </div>
+    );
+  }
+
   return <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 animate-fade-in pb-32">
       {/* Journal Calendar */}
       <JournalCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} daysWithEntries={daysWithEntries} />
