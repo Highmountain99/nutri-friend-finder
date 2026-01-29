@@ -43,6 +43,14 @@ export interface NutritionEntry {
   createdAt: Date;
 }
 
+export interface SymptomEntry {
+  id: string;
+  mealId: string | null;
+  description: string;
+  symptomTime: Date;
+  createdAt: Date;
+}
+
 export interface HealthMetrics {
   steps: number;
   activeEnergy: number;
@@ -147,6 +155,7 @@ export function useJournalData(selectedDate: Date) {
   const [goals, setGoals] = useState<NutritionGoals>(DEFAULT_GOALS);
   const [dailyTotals, setDailyTotals] = useState<DailyTotals>({ calories: 0, protein: 0, carbs: 0, fat: 0 });
   const [entries, setEntries] = useState<NutritionEntry[]>([]);
+  const [symptoms, setSymptoms] = useState<SymptomEntry[]>([]);
   const [settings, setSettings] = useState<NutritionSettings>(DEFAULT_SETTINGS);
   const [healthMetrics, setHealthMetrics] = useState<HealthMetrics>({ steps: 0, activeEnergy: 0 });
   const [appleHealthSettings, setAppleHealthSettings] = useState<AppleHealthSettings>({ connected: false });
@@ -227,6 +236,26 @@ export function useJournalData(selectedDate: Date) {
         } else {
           setEntries([]);
           setDailyTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+        }
+
+        // Load symptoms for the selected date
+        const { data: symptomsData } = await supabase
+          .from("symptom_entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("entry_date", dateKey);
+
+        if (symptomsData) {
+          const mappedSymptoms: SymptomEntry[] = symptomsData.map((symptom) => ({
+            id: symptom.id,
+            mealId: symptom.meal_id || null,
+            description: symptom.description,
+            symptomTime: new Date(symptom.symptom_time),
+            createdAt: new Date(symptom.created_at || Date.now()),
+          }));
+          setSymptoms(mappedSymptoms);
+        } else {
+          setSymptoms([]);
         }
 
         // Load nutrition settings
@@ -497,11 +526,83 @@ export function useJournalData(selectedDate: Date) {
     });
   }, [user]);
 
+  // Symptom CRUD operations
+  const addSymptom = useCallback(
+    async (symptom: { mealId: string | null; description: string; symptomTime: Date }) => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("symptom_entries")
+        .insert({
+          user_id: user.id,
+          meal_id: symptom.mealId,
+          entry_date: dateKey,
+          symptom_time: symptom.symptomTime.toISOString(),
+          description: symptom.description,
+        })
+        .select()
+        .single();
+
+      if (data && !error) {
+        const newSymptom: SymptomEntry = {
+          id: data.id,
+          mealId: data.meal_id || null,
+          description: data.description,
+          symptomTime: new Date(data.symptom_time),
+          createdAt: new Date(data.created_at || Date.now()),
+        };
+        setSymptoms((prev) => [...prev, newSymptom]);
+      }
+    },
+    [user, dateKey]
+  );
+
+  const updateSymptom = useCallback(
+    async (id: string, updates: Partial<SymptomEntry>) => {
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("symptom_entries")
+        .update({
+          meal_id: updates.mealId,
+          description: updates.description,
+          symptom_time: updates.symptomTime?.toISOString(),
+        })
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (!error) {
+        setSymptoms((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+        );
+      }
+    },
+    [user]
+  );
+
+  const deleteSymptom = useCallback(
+    async (id: string) => {
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("symptom_entries")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (!error) {
+        setSymptoms((prev) => prev.filter((s) => s.id !== id));
+      }
+    },
+    [user]
+  );
+
   return {
     isLoading,
     goals,
     dailyTotals,
     entries,
+    symptoms,
     settings,
     healthMetrics,
     appleHealthSettings,
@@ -510,6 +611,9 @@ export function useJournalData(selectedDate: Date) {
     addEntry,
     updateEntry,
     deleteEntry,
+    addSymptom,
+    updateSymptom,
+    deleteSymptom,
     updateSettings,
     updateGoals,
     connectAppleHealth,
