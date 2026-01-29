@@ -1,144 +1,173 @@
 
 
-## Flytta synlighetsinställningar till "Justera mål"-dialogen
+## Förbättringar i redigera måltid-vyn
 
 ### Sammanfattning
-Ta bort den fristående "Spåra kalorier"-knappen och integrera synlighetsinställningar direkt i "Justera mål"-dialogen. Varje näringsämne (kalorier, protein, kolhydrater, fett) får en individuell switch för att dölja/visa det i journalen. Data fortsätter att spåras i bakgrunden för dietistens åtkomst.
+Tre funktionella förbättringar i EditMealSheet-komponenten:
+1. Snabbknappar för mängdjustering (Hälften, 3/4, 1.5x) ska endast kunna klickas en gång
+2. När titeln ändras ska AI:n kunna analysera den nya beskrivningen
+3. Näringsinput-fält ska bli tomma (inte visa "0") vid redigering
 
 ---
 
-### Del 1: Uppdatera databasschemat
+### Del 1: Begränsa snabbknappar till ett klick
 
-**Ändring i `user_nutrition_settings`-tabellen:**
+**Problem:** Knapparna "Hälften", "3/4" och "1.5x" kan klickas flera gånger, vilket multiplicerar värdena exponentiellt (t.ex. hälften av hälften = 25%).
 
-Byt ut den enstaka `calorie_tracking_enabled`-kolumnen mot fyra separata kolumner:
-- `show_calories` (boolean, default true)
-- `show_protein` (boolean, default true)  
-- `show_carbs` (boolean, default true)
-- `show_fat` (boolean, default true)
+**Lösning:** Lägg till en state-variabel som spårar vilken multiplikator som har applicerats. När en knapp klickats blir den inaktiverad och visuellt markerad.
+
+**Ny state:**
+```typescript
+const [appliedMultiplier, setAppliedMultiplier] = useState<number | null>(null);
+```
+
+**Reset vid entry-ändring:**
+- Återställ `appliedMultiplier` till `null` när `entry` ändras i `useEffect`
+
+**Uppdaterad handleQuickAdjust:**
+```typescript
+const handleQuickAdjust = (multiplier: number) => {
+  if (appliedMultiplier !== null) return; // Redan applicerad
+  
+  setAppliedMultiplier(multiplier);
+  setCalories(Math.round(calories * multiplier));
+  // ... resten av logiken
+};
+```
+
+**Uppdaterade knappar:**
+- Disabled om `appliedMultiplier !== null`
+- Visuell markering på den aktiva knappen (variant "default" istället för "outline")
 
 ---
 
-### Del 2: Uppdatera Settings.tsx
+### Del 2: AI-analys vid titeländring
 
-**Ta bort:**
-- "Spåra kalorier" toggle-knappen (rad 219-230)
-- `handleToggleCalorieTracking` funktionen
+**Problem:** När användaren ändrar titeln händer ingenting automatiskt. Användaren förväntar sig samma beteende som "beskriv din måltid" i AddMealSheet.
 
-**Uppdatera "Justera mål"-dialogen:**
-- Lägg till en Switch under varje näringsämne-input
-- Switcharna styr synlighet: "Visa i journal"
-- Spara synlighetsinställningar tillsammans med målen
+**Lösning:** Lägg till en "Analysera"-knapp bredvid titelfältet som triggar AI-analys baserat på den nya titeln.
 
-**Ny dialogstruktur:**
+**Ny UI-struktur:**
 ```text
-┌─────────────────────────────────┐
-│  Justera dagliga mål            │
-├─────────────────────────────────┤
-│  Kalorier (kcal)                │
-│  [Input: 2000]                  │
-│  ○ Visa i journal    [Switch]   │
-│                                 │
-│  Protein (g)                    │
-│  [Input: 50]                    │
-│  ○ Visa i journal    [Switch]   │
-│                                 │
-│  Kolhydrater (g)                │
-│  [Input: 250]                   │
-│  ○ Visa i journal    [Switch]   │
-│                                 │
-│  Fett (g)                       │
-│  [Input: 65]                    │
-│  ○ Visa i journal    [Switch]   │
-├─────────────────────────────────┤
-│  [Avbryt]           [Spara mål] │
-└─────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  Titel                                  │
+│  ┌───────────────────────┐ ┌──────────┐ │
+│  │ Pasta carbonara...    │ │ 🔄 Analys│ │
+│  └───────────────────────┘ └──────────┘ │
+└─────────────────────────────────────────┘
 ```
 
----
-
-### Del 3: Uppdatera useJournalData hook
-
-**Utöka NutritionSettings-typen:**
+**Ny funktion:**
 ```typescript
-interface NutritionSettings {
-  aiTrackingEnabled: boolean;
-  aiTrackingOnboardingCompleted: boolean;
-  // Nya synlighetsfält
-  showCalories: boolean;
-  showProtein: boolean;
-  showCarbs: boolean;
-  showFat: boolean;
-  // Övriga fält...
-}
+const handleReanalyzeFromTitle = async () => {
+  if (!mealName.trim()) return;
+  
+  setIsAnalyzing(true);
+  try {
+    const { data: result, error } = await supabase.functions.invoke("analyze-food", {
+      body: {
+        analysisType: "text",
+        textDescription: mealName,
+      },
+    });
+    
+    if (error) throw error;
+    
+    // Uppdatera alla värden från AI-analysen
+    const estimation = result as FoodEstimation;
+    setCalories(estimation.calories);
+    setProtein(estimation.protein);
+    // ... etc
+    
+    toast({ title: "Måltid analyserad" });
+  } catch (error) {
+    toast({ title: "Analys misslyckades", variant: "destructive" });
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
 ```
-
-**Uppdatera loadData och updateSettings:**
-- Ladda de nya synlighetsfälten från databasen
-- Spara synlighetsinställningar vid uppdatering
 
 ---
 
-### Del 4: Uppdatera Journal.tsx
+### Del 3: Tomma fält istället för "0"
 
-**Filtrera nutritionCards baserat på synlighet:**
+**Problem:** När ett näringsfält visar "0" och användaren vill skriva ett nytt värde måste de först radera nollan.
+
+**Lösning:** Använd string-state för input-värden och konvertera endast vid behov. När värdet är 0 ska fältet vara tomt.
+
+**Ändrad state-hantering:**
 
 ```typescript
-const visibleNutritionCards = nutritionCards.filter(card => {
-  if (card.label === "Kalorier") return settings.showCalories;
-  if (card.label === "Protein") return settings.showProtein;
-  if (card.label === "Kolhydrater") return settings.showCarbs;
-  if (card.label === "Fett") return settings.showFat;
-  return true;
-});
+// Istället för: const [calories, setCalories] = useState(0);
+// Använd string för input:
+const [caloriesInput, setCaloriesInput] = useState("");
+const [proteinInput, setProteinInput] = useState("");
+const [carbsInput, setCarbsInput] = useState("");
+const [fatInput, setFatInput] = useState("");
+
+// Parsade värden för beräkningar:
+const calories = parseFloat(caloriesInput) || 0;
+const protein = parseFloat(proteinInput) || 0;
+const carbs = parseFloat(carbsInput) || 0;
+const fat = parseFloat(fatInput) || 0;
 ```
 
-**Dynamisk grid-layout:**
-- Anpassa grid baserat på antal synliga kort (1-4 kort)
-- Behåll 2x2 layout om alla visas, annars responsiv justering
+**Uppdaterad useEffect (vid entry-laddning):**
+```typescript
+useEffect(() => {
+  if (entry && isOpen) {
+    setCaloriesInput(entry.calories > 0 ? String(entry.calories) : "");
+    setProteinInput(entry.protein > 0 ? String(entry.protein) : "");
+    setCarbsInput(entry.carbs > 0 ? String(entry.carbs) : "");
+    setFatInput(entry.fat > 0 ? String(entry.fat) : "");
+    // ... resten
+  }
+}, [entry, isOpen]);
+```
 
----
+**Uppdaterade Input-komponenter:**
+```tsx
+<Input
+  type="number"
+  value={caloriesInput}
+  onChange={(e) => setCaloriesInput(e.target.value)}
+  placeholder="0"
+  // ...
+/>
+```
 
-### Del 5: MealEntryCard och EditMealSheet
-
-**Dölj dolda näringsämnen i måltidskorten:**
-- Filtrera bort dolda makros från visningen
-- Data finns fortfarande kvar i databasen
+**handleQuickAdjust uppdateras:**
+```typescript
+const handleQuickAdjust = (multiplier: number) => {
+  if (appliedMultiplier !== null) return;
+  
+  setAppliedMultiplier(multiplier);
+  const newCalories = Math.round(calories * multiplier);
+  setCaloriesInput(newCalories > 0 ? String(newCalories) : "");
+  // ... samma för protein, carbs, fat
+};
+```
 
 ---
 
 ### Tekniska detaljer
 
-**Databasmigrering:**
-```sql
--- Lägg till nya synlighetskolumner
-ALTER TABLE user_nutrition_settings
-ADD COLUMN show_calories BOOLEAN DEFAULT true,
-ADD COLUMN show_protein BOOLEAN DEFAULT true,
-ADD COLUMN show_carbs BOOLEAN DEFAULT true,
-ADD COLUMN show_fat BOOLEAN DEFAULT true;
-
--- Ta bort gammal kolumn (valfritt, kan behållas för bakåtkompatibilitet)
--- ALTER TABLE user_nutrition_settings DROP COLUMN calorie_tracking_enabled;
-```
-
 **Filer som ändras:**
 
 | Fil | Åtgärd |
 |-----|--------|
-| `supabase/migrations/...` | Databasmigrering för nya kolumner |
-| `src/pages/Settings.tsx` | Ta bort toggle, uppdatera dialog |
-| `src/hooks/useJournalData.ts` | Utöka NutritionSettings, hantera nya fält |
-| `src/pages/Journal.tsx` | Filtrera synliga nutritionskort |
-| `src/components/journal/MealEntryCard.tsx` | Dölj osynliga makros |
-| `src/components/journal/EditMealSheet.tsx` | Dölj osynliga makros i redigering |
+| `src/components/journal/EditMealSheet.tsx` | Alla tre förändringar |
 
----
+**Ingen databasändring krävs.**
 
-### Viktig funktionalitet
+**Sammanfattning av ändringar:**
 
-**Dietistens åtkomst bevaras:**
-- Data spåras alltid i `nutrition_entries`-tabellen
-- Synlighetsinställningar påverkar endast användarens vy
-- Dietister kan fortfarande se all data via sin dashboard
+1. **Ny state:** `appliedMultiplier` för att spåra om snabbknapp använts
+2. **Ny funktion:** `handleReanalyzeFromTitle()` för AI-analys baserat på titel
+3. **Ändrad state-modell:** String-inputs för näringsfält med tom sträng för 0-värden
+4. **UI-uppdateringar:** 
+   - Snabbknappar får `disabled` och visuell markering
+   - Ny "Analysera"-knapp bredvid titelfältet
+   - Input-placeholder visar "0" när fältet är tomt
 
