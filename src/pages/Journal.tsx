@@ -80,14 +80,15 @@ export default function Journal() {
     carbs: goals.carbsGoal - dailyTotals.carbs,
     fat: goals.fatGoal - dailyTotals.fat
   };
-  const nutritionCards = [{
+  const allNutritionCards = [{
     icon: Flame,
     label: "Kalorier",
     remaining: remaining.calories,
     goal: goals.caloriesGoal,
     unit: "kcal",
     color: "text-foreground",
-    bgColor: "bg-muted"
+    bgColor: "bg-muted",
+    visible: settings.showCalories
   }, {
     icon: Drumstick,
     label: "Protein",
@@ -95,7 +96,8 @@ export default function Journal() {
     goal: goals.proteinGoal,
     unit: "g",
     color: "text-primary",
-    bgColor: "bg-primary/10"
+    bgColor: "bg-primary/10",
+    visible: settings.showProtein
   }, {
     icon: Wheat,
     label: "Kolhydrater",
@@ -103,7 +105,8 @@ export default function Journal() {
     goal: goals.carbsGoal,
     unit: "g",
     color: "text-accent",
-    bgColor: "bg-accent/10"
+    bgColor: "bg-accent/10",
+    visible: settings.showCarbs
   }, {
     icon: Droplet,
     label: "Fett",
@@ -111,8 +114,12 @@ export default function Journal() {
     goal: goals.fatGoal,
     unit: "g",
     color: "text-secondary",
-    bgColor: "bg-secondary/10"
+    bgColor: "bg-secondary/10",
+    visible: settings.showFat
   }];
+  
+  // Filter to only show visible nutrition cards
+  const nutritionCards = allNutritionCards.filter(card => card.visible);
   const handleAISetupComplete = (data: AITrackingFormData) => {
     updateSettings({
       aiTrackingEnabled: true,
@@ -199,10 +206,18 @@ export default function Journal() {
           {/* Nutrition View */}
           <div className="w-full flex-shrink-0 space-y-4">
             {showOnboarding ? <AITrackingOnboarding onActivate={handleActivateAITracking} onSkip={handleSkipAITracking} /> : <>
-                {/* Nutrition Cards - 2x2 Grid showing "remaining" */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  {nutritionCards.map(card => <NutritionProgressCard key={card.label} {...card} />)}
-                </div>
+                {/* Nutrition Cards - Dynamic grid based on visible cards */}
+                {nutritionCards.length > 0 && (
+                  <div className={cn(
+                    "grid gap-2 sm:gap-3",
+                    nutritionCards.length === 1 && "grid-cols-1",
+                    nutritionCards.length === 2 && "grid-cols-2",
+                    nutritionCards.length === 3 && "grid-cols-3",
+                    nutritionCards.length >= 4 && "grid-cols-2"
+                  )}>
+                    {nutritionCards.map(card => <NutritionProgressCard key={card.label} {...card} />)}
+                  </div>
+                )}
               </>}
           </div>
 
@@ -235,10 +250,17 @@ export default function Journal() {
 
       {/* Meal Timeline */}
       <div className="space-y-3">
-        <MealTimeline entries={entries} onEntryClick={entry => {
-        setEditingEntry(entry);
-        setIsEditMealOpen(true);
-      }} />
+        <MealTimeline 
+          entries={entries} 
+          onEntryClick={entry => {
+            setEditingEntry(entry);
+            setIsEditMealOpen(true);
+          }}
+          showCalories={settings.showCalories}
+          showProtein={settings.showProtein}
+          showCarbs={settings.showCarbs}
+          showFat={settings.showFat}
+        />
       </div>
 
       {/* Hidden camera input */}

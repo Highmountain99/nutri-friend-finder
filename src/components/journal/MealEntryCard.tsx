@@ -7,10 +7,49 @@ import { sv } from "date-fns/locale";
 interface MealEntryCardProps {
   entry: NutritionEntry;
   onClick?: () => void;
+  showCalories?: boolean;
+  showProtein?: boolean;
+  showCarbs?: boolean;
+  showFat?: boolean;
 }
 
-export function MealEntryCard({ entry, onClick }: MealEntryCardProps) {
+export function MealEntryCard({ 
+  entry, 
+  onClick,
+  showCalories = true,
+  showProtein = true,
+  showCarbs = true,
+  showFat = true,
+}: MealEntryCardProps) {
   const timeStr = format(new Date(entry.createdAt), "HH:mm", { locale: sv });
+  
+  // Build visible macros array
+  const visibleMacros = [
+    showCalories && {
+      value: entry.calories,
+      unit: "",
+      color: "text-foreground",
+      bgColor: "bg-foreground/70"
+    },
+    showProtein && {
+      value: Math.round(entry.protein),
+      unit: "g",
+      color: "text-primary",
+      bgColor: "bg-primary"
+    },
+    showCarbs && {
+      value: Math.round(entry.carbs),
+      unit: "g",
+      color: "text-accent",
+      bgColor: "bg-accent"
+    },
+    showFat && {
+      value: Math.round(entry.fat),
+      unit: "g",
+      color: "text-secondary",
+      bgColor: "bg-secondary"
+    },
+  ].filter(Boolean) as Array<{ value: number; unit: string; color: string; bgColor: string }>;
   
   return (
     <Card 
@@ -51,25 +90,17 @@ export function MealEntryCard({ entry, onClick }: MealEntryCardProps) {
               {entry.mealName}
             </p>
             
-            {/* Macros row with color-coded dots */}
-            <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs">
-              <span className="flex items-center gap-0.5 sm:gap-1 text-foreground font-medium">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-foreground/70"></span>
-                {entry.calories}
-              </span>
-              <span className="flex items-center gap-0.5 sm:gap-1 text-primary font-medium">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary"></span>
-                {Math.round(entry.protein)}g
-              </span>
-              <span className="flex items-center gap-0.5 sm:gap-1 text-accent font-medium">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-accent"></span>
-                {Math.round(entry.carbs)}g
-              </span>
-              <span className="flex items-center gap-0.5 sm:gap-1 text-secondary font-medium">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-secondary"></span>
-                {Math.round(entry.fat)}g
-              </span>
-            </div>
+            {/* Macros row with color-coded dots - only show visible ones */}
+            {visibleMacros.length > 0 && (
+              <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs">
+                {visibleMacros.map((macro, index) => (
+                  <span key={index} className={`flex items-center gap-0.5 sm:gap-1 ${macro.color} font-medium`}>
+                    <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${macro.bgColor}`}></span>
+                    {macro.value}{macro.unit}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

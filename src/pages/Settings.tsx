@@ -25,7 +25,10 @@ interface NutritionGoals {
 
 interface NutritionSettings {
   aiTrackingEnabled: boolean;
-  calorieTrackingEnabled: boolean;
+  showCalories: boolean;
+  showProtein: boolean;
+  showCarbs: boolean;
+  showFat: boolean;
 }
 
 const settingsSections = [
@@ -60,7 +63,18 @@ export default function Settings() {
   // Journal settings state
   const [nutritionSettings, setNutritionSettings] = useState<NutritionSettings>({
     aiTrackingEnabled: false,
-    calorieTrackingEnabled: true,
+    showCalories: true,
+    showProtein: true,
+    showCarbs: true,
+    showFat: true,
+  });
+  
+  // Visibility state for dialog
+  const [editableVisibility, setEditableVisibility] = useState({
+    showCalories: true,
+    showProtein: true,
+    showCarbs: true,
+    showFat: true,
   });
   
   const [goals, setGoals] = useState<NutritionGoals>({
@@ -89,7 +103,10 @@ export default function Settings() {
         if (settingsData) {
           setNutritionSettings({
             aiTrackingEnabled: settingsData.ai_tracking_enabled ?? false,
-            calorieTrackingEnabled: settingsData.calorie_tracking_enabled ?? true,
+            showCalories: settingsData.show_calories ?? true,
+            showProtein: settingsData.show_protein ?? true,
+            showCarbs: settingsData.show_carbs ?? true,
+            showFat: settingsData.show_fat ?? true,
           });
         }
 
@@ -128,18 +145,15 @@ export default function Settings() {
     });
   };
 
-  const handleToggleCalorieTracking = async (enabled: boolean) => {
-    if (!user) return;
-    setNutritionSettings(prev => ({ ...prev, calorieTrackingEnabled: enabled }));
-    
-    await supabase.from("user_nutrition_settings").upsert({
-      user_id: user.id,
-      calorie_tracking_enabled: enabled,
-    });
-  };
 
   const handleOpenGoalsDialog = () => {
     setEditableGoals(goals);
+    setEditableVisibility({
+      showCalories: nutritionSettings.showCalories,
+      showProtein: nutritionSettings.showProtein,
+      showCarbs: nutritionSettings.showCarbs,
+      showFat: nutritionSettings.showFat,
+    });
     setIsGoalsDialogOpen(true);
   };
 
@@ -147,14 +161,28 @@ export default function Settings() {
     if (!user) return;
     
     setGoals(editableGoals);
+    setNutritionSettings(prev => ({
+      ...prev,
+      ...editableVisibility,
+    }));
     setIsGoalsDialogOpen(false);
     
+    // Save goals
     await supabase.from("user_nutrition_goals").upsert({
       user_id: user.id,
       calories_goal: editableGoals.caloriesGoal,
       protein_goal: editableGoals.proteinGoal,
       carbs_goal: editableGoals.carbsGoal,
       fat_goal: editableGoals.fatGoal,
+    });
+    
+    // Save visibility settings
+    await supabase.from("user_nutrition_settings").upsert({
+      user_id: user.id,
+      show_calories: editableVisibility.showCalories,
+      show_protein: editableVisibility.showProtein,
+      show_carbs: editableVisibility.showCarbs,
+      show_fat: editableVisibility.showFat,
     });
   };
 
@@ -216,18 +244,6 @@ export default function Settings() {
               />
             </div>
             
-            {/* Calorie Tracking Toggle */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3">
-                <Flame className="w-5 h-5 text-muted-foreground" />
-                <span className="text-foreground">Spåra kalorier</span>
-              </div>
-              <Switch 
-                checked={nutritionSettings.calorieTrackingEnabled}
-                onCheckedChange={handleToggleCalorieTracking}
-                disabled={isLoading}
-              />
-            </div>
             
             {/* Adjust Goals */}
             <div 
@@ -309,6 +325,7 @@ export default function Settings() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {/* Calories */}
             <div className="space-y-2">
               <Label htmlFor="calories">Kalorier (kcal)</Label>
               <Input
@@ -320,8 +337,19 @@ export default function Settings() {
                   caloriesGoal: parseInt(e.target.value) || 0 
                 }))}
               />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Visa i journal</span>
+                <Switch
+                  checked={editableVisibility.showCalories}
+                  onCheckedChange={(checked) => setEditableVisibility(prev => ({
+                    ...prev,
+                    showCalories: checked,
+                  }))}
+                />
+              </div>
             </div>
             
+            {/* Protein */}
             <div className="space-y-2">
               <Label htmlFor="protein">Protein (g)</Label>
               <Input
@@ -333,8 +361,19 @@ export default function Settings() {
                   proteinGoal: parseInt(e.target.value) || 0 
                 }))}
               />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Visa i journal</span>
+                <Switch
+                  checked={editableVisibility.showProtein}
+                  onCheckedChange={(checked) => setEditableVisibility(prev => ({
+                    ...prev,
+                    showProtein: checked,
+                  }))}
+                />
+              </div>
             </div>
             
+            {/* Carbs */}
             <div className="space-y-2">
               <Label htmlFor="carbs">Kolhydrater (g)</Label>
               <Input
@@ -346,8 +385,19 @@ export default function Settings() {
                   carbsGoal: parseInt(e.target.value) || 0 
                 }))}
               />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Visa i journal</span>
+                <Switch
+                  checked={editableVisibility.showCarbs}
+                  onCheckedChange={(checked) => setEditableVisibility(prev => ({
+                    ...prev,
+                    showCarbs: checked,
+                  }))}
+                />
+              </div>
             </div>
             
+            {/* Fat */}
             <div className="space-y-2">
               <Label htmlFor="fat">Fett (g)</Label>
               <Input
@@ -359,6 +409,16 @@ export default function Settings() {
                   fatGoal: parseInt(e.target.value) || 0 
                 }))}
               />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Visa i journal</span>
+                <Switch
+                  checked={editableVisibility.showFat}
+                  onCheckedChange={(checked) => setEditableVisibility(prev => ({
+                    ...prev,
+                    showFat: checked,
+                  }))}
+                />
+              </div>
             </div>
           </div>
           
