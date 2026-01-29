@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera } from "lucide-react";
+import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JournalCalendar } from "@/components/journal/JournalCalendar";
 import { NutritionProgressCard } from "@/components/journal/NutritionProgressCard";
@@ -9,7 +9,9 @@ import { HealthMetricsView } from "@/components/journal/HealthMetricsView";
 import { MealTimeline } from "@/components/journal/MealTimeline";
 import { AddMealSheet } from "@/components/journal/AddMealSheet";
 import { EditMealSheet } from "@/components/journal/EditMealSheet";
-import { useJournalData, type Ingredient, type NutritionEntry } from "@/hooks/useJournalData";
+import { AddSymptomSheet } from "@/components/journal/AddSymptomSheet";
+import { EditSymptomSheet } from "@/components/journal/EditSymptomSheet";
+import { useJournalData, type Ingredient, type NutritionEntry, type SymptomEntry } from "@/hooks/useJournalData";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { cn } from "@/lib/utils";
 type JournalView = "main" | "ai-setup";
@@ -39,6 +41,9 @@ export default function Journal() {
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
   const [isEditMealOpen, setIsEditMealOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<NutritionEntry | null>(null);
+  const [isAddSymptomOpen, setIsAddSymptomOpen] = useState(false);
+  const [isEditSymptomOpen, setIsEditSymptomOpen] = useState(false);
+  const [editingSymptom, setEditingSymptom] = useState<SymptomEntry | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -61,6 +66,7 @@ export default function Journal() {
     goals,
     dailyTotals,
     entries,
+    symptoms,
     settings,
     healthMetrics,
     appleHealthSettings,
@@ -69,6 +75,9 @@ export default function Journal() {
     addEntry,
     updateEntry,
     deleteEntry,
+    addSymptom,
+    updateSymptom,
+    deleteSymptom,
     updateSettings,
     connectAppleHealth
   } = useJournalData(selectedDate);
@@ -240,21 +249,35 @@ export default function Journal() {
         </div>
       </div>
 
-      {/* Add Meal Buttons */}
+      {/* Add Meal & Symptom Buttons */}
       <div className="flex gap-3">
         <Button variant="outline" className="flex-1 gap-2" onClick={() => setIsAddMealOpen(true)}>
           <Plus className="w-4 h-4" />
           Lägg till måltid
+        </Button>
+        <Button 
+          variant="outline" 
+          className="flex-1 gap-2" 
+          onClick={() => setIsAddSymptomOpen(true)}
+          disabled={entries.length === 0}
+        >
+          <AlertCircle className="w-4 h-4" />
+          Lägg till symptom
         </Button>
       </div>
 
       {/* Meal Timeline */}
       <div className="space-y-3">
         <MealTimeline 
-          entries={entries} 
+          entries={entries}
+          symptoms={symptoms}
           onEntryClick={entry => {
             setEditingEntry(entry);
             setIsEditMealOpen(true);
+          }}
+          onSymptomClick={symptom => {
+            setEditingSymptom(symptom);
+            setIsEditSymptomOpen(true);
           }}
           showCalories={settings.showCalories}
           showProtein={settings.showProtein}
@@ -270,20 +293,51 @@ export default function Journal() {
       <div className="fixed bottom-24 right-4 z-50">
         <Button size="icon" className="h-14 w-14 rounded-full shadow-elevated bg-primary hover:bg-primary/90 relative" onClick={() => cameraInputRef.current?.click()}>
           <Camera className="w-6 h-6 text-accent-foreground" />
-          
         </Button>
       </div>
 
       {/* Add Meal Sheet */}
-      <AddMealSheet isOpen={isAddMealOpen} onClose={() => {
-      setIsAddMealOpen(false);
-      setCapturedImage(null);
-    }} onAddEntry={handleAddEntry} initialImage={capturedImage} />
+      <AddMealSheet 
+        isOpen={isAddMealOpen} 
+        onClose={() => {
+          setIsAddMealOpen(false);
+          setCapturedImage(null);
+        }} 
+        onAddEntry={handleAddEntry} 
+        initialImage={capturedImage} 
+      />
 
       {/* Edit Meal Sheet */}
-      <EditMealSheet isOpen={isEditMealOpen} onClose={() => {
-      setIsEditMealOpen(false);
-      setEditingEntry(null);
-    }} entry={editingEntry} onUpdate={updateEntry} onDelete={deleteEntry} />
+      <EditMealSheet 
+        isOpen={isEditMealOpen} 
+        onClose={() => {
+          setIsEditMealOpen(false);
+          setEditingEntry(null);
+        }} 
+        entry={editingEntry} 
+        onUpdate={updateEntry} 
+        onDelete={deleteEntry} 
+      />
+
+      {/* Add Symptom Sheet */}
+      <AddSymptomSheet
+        isOpen={isAddSymptomOpen}
+        onClose={() => setIsAddSymptomOpen(false)}
+        onAddSymptom={addSymptom}
+        meals={entries}
+      />
+
+      {/* Edit Symptom Sheet */}
+      <EditSymptomSheet
+        isOpen={isEditSymptomOpen}
+        onClose={() => {
+          setIsEditSymptomOpen(false);
+          setEditingSymptom(null);
+        }}
+        symptom={editingSymptom}
+        meals={entries}
+        onUpdate={updateSymptom}
+        onDelete={deleteSymptom}
+      />
     </div>;
 }
