@@ -167,23 +167,25 @@ export default function Settings() {
     }));
     setIsGoalsDialogOpen(false);
     
-    // Save goals
-    await supabase.from("user_nutrition_goals").upsert({
-      user_id: user.id,
-      calories_goal: editableGoals.caloriesGoal,
-      protein_goal: editableGoals.proteinGoal,
-      carbs_goal: editableGoals.carbsGoal,
-      fat_goal: editableGoals.fatGoal,
-    });
+    // Update goals (use update instead of upsert to avoid 409 conflicts)
+    await supabase.from("user_nutrition_goals")
+      .update({
+        calories_goal: editableGoals.caloriesGoal,
+        protein_goal: editableGoals.proteinGoal,
+        carbs_goal: editableGoals.carbsGoal,
+        fat_goal: editableGoals.fatGoal,
+      })
+      .eq("user_id", user.id);
     
-    // Save visibility settings
-    await supabase.from("user_nutrition_settings").upsert({
-      user_id: user.id,
-      show_calories: editableVisibility.showCalories,
-      show_protein: editableVisibility.showProtein,
-      show_carbs: editableVisibility.showCarbs,
-      show_fat: editableVisibility.showFat,
-    });
+    // Update visibility settings
+    await supabase.from("user_nutrition_settings")
+      .update({
+        show_calories: editableVisibility.showCalories,
+        show_protein: editableVisibility.showProtein,
+        show_carbs: editableVisibility.showCarbs,
+        show_fat: editableVisibility.showFat,
+      })
+      .eq("user_id", user.id);
   };
 
   const handleSignOut = async () => {
