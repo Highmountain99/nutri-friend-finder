@@ -254,20 +254,70 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_ratings: {
+        Row: {
+          created_at: string | null
+          id: string
+          rating: number
+          recipe_id: string
+          review_text: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rating: number
+          recipe_id: string
+          review_text?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rating?: number
+          recipe_id?: string
+          review_text?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_ratings_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipes: {
         Row: {
+          allergen_free: string[] | null
+          calories_per_serving: number | null
+          carbs_per_serving: number | null
           category: string | null
           created_at: string | null
+          cuisine_types: string[] | null
           description: string | null
+          dietary_needs: string[] | null
           difficulty: string | null
+          fat_per_serving: number | null
+          health_plans: string[] | null
           id: string
           image_url: string | null
           ingredients: Json | null
           instructions: Json | null
           is_climate_smart: boolean | null
           is_featured: boolean | null
+          meal_types: string[] | null
+          nutrition_details: Json | null
+          protein_per_serving: number | null
           rating: number | null
+          rating_count: number | null
           servings: number | null
+          similar_recipe_ids: string[] | null
           source_url: string | null
           tags: string[] | null
           time_minutes: number | null
@@ -275,18 +325,30 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          allergen_free?: string[] | null
+          calories_per_serving?: number | null
+          carbs_per_serving?: number | null
           category?: string | null
           created_at?: string | null
+          cuisine_types?: string[] | null
           description?: string | null
+          dietary_needs?: string[] | null
           difficulty?: string | null
+          fat_per_serving?: number | null
+          health_plans?: string[] | null
           id?: string
           image_url?: string | null
           ingredients?: Json | null
           instructions?: Json | null
           is_climate_smart?: boolean | null
           is_featured?: boolean | null
+          meal_types?: string[] | null
+          nutrition_details?: Json | null
+          protein_per_serving?: number | null
           rating?: number | null
+          rating_count?: number | null
           servings?: number | null
+          similar_recipe_ids?: string[] | null
           source_url?: string | null
           tags?: string[] | null
           time_minutes?: number | null
@@ -294,18 +356,30 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          allergen_free?: string[] | null
+          calories_per_serving?: number | null
+          carbs_per_serving?: number | null
           category?: string | null
           created_at?: string | null
+          cuisine_types?: string[] | null
           description?: string | null
+          dietary_needs?: string[] | null
           difficulty?: string | null
+          fat_per_serving?: number | null
+          health_plans?: string[] | null
           id?: string
           image_url?: string | null
           ingredients?: Json | null
           instructions?: Json | null
           is_climate_smart?: boolean | null
           is_featured?: boolean | null
+          meal_types?: string[] | null
+          nutrition_details?: Json | null
+          protein_per_serving?: number | null
           rating?: number | null
+          rating_count?: number | null
           servings?: number | null
+          similar_recipe_ids?: string[] | null
           source_url?: string | null
           tags?: string[] | null
           time_minutes?: number | null
@@ -476,6 +550,50 @@ export type Database = {
           weight_kg?: number | null
         }
         Relationships: []
+      }
+      user_recipe_interactions: {
+        Row: {
+          created_at: string | null
+          dietitian_id: string | null
+          id: string
+          recipe_id: string
+          source: string
+          status: string
+          suggested_date: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dietitian_id?: string | null
+          id?: string
+          recipe_id: string
+          source?: string
+          status: string
+          suggested_date?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dietitian_id?: string | null
+          id?: string
+          recipe_id?: string
+          source?: string
+          status?: string
+          suggested_date?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_recipe_interactions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
