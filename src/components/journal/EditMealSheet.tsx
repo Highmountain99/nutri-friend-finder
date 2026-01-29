@@ -56,18 +56,24 @@ interface FoodEstimation {
 }
 
 export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: EditMealSheetProps) {
-  // Form state
+  // Form state - using string inputs for nutrition fields
   const [mealName, setMealName] = useState("");
   const [mealType, setMealType] = useState("");
   const [mealTime, setMealTime] = useState<Date>(new Date());
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [calories, setCalories] = useState(0);
-  const [protein, setProtein] = useState(0);
-  const [carbs, setCarbs] = useState(0);
-  const [fat, setFat] = useState(0);
+  const [caloriesInput, setCaloriesInput] = useState("");
+  const [proteinInput, setProteinInput] = useState("");
+  const [carbsInput, setCarbsInput] = useState("");
+  const [fatInput, setFatInput] = useState("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [confidence, setConfidence] = useState<"high" | "medium" | "low">("medium");
   const [dataSource, setDataSource] = useState<"livsmedelsverket" | "ai_estimation" | "mixed">("ai_estimation");
+  
+  // Parsed numeric values for calculations
+  const calories = parseFloat(caloriesInput) || 0;
+  const protein = parseFloat(proteinInput) || 0;
+  const carbs = parseFloat(carbsInput) || 0;
+  const fat = parseFloat(fatInput) || 0;
   
   // UI state
   const [showIngredients, setShowIngredients] = useState(false);
@@ -75,9 +81,16 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [appliedMultiplier, setAppliedMultiplier] = useState<number | null>(null);
   
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to format number to string (empty if 0)
+  const formatNutritionValue = (value: number, decimals: number = 0): string => {
+    if (value <= 0) return "";
+    return decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
+  };
 
   // Initialize state when entry changes
   useEffect(() => {
@@ -86,13 +99,14 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
       setMealType(entry.mealType);
       setMealTime(new Date(entry.createdAt));
       setImagePreview(entry.imageUrl || null);
-      setCalories(entry.calories);
-      setProtein(entry.protein);
-      setCarbs(entry.carbs);
-      setFat(entry.fat);
+      setCaloriesInput(entry.calories > 0 ? String(entry.calories) : "");
+      setProteinInput(entry.protein > 0 ? String(entry.protein) : "");
+      setCarbsInput(entry.carbs > 0 ? String(entry.carbs) : "");
+      setFatInput(entry.fat > 0 ? String(entry.fat) : "");
       setIngredients(entry.ingredients || []);
       setConfidence("medium"); // Default since we don't store this
       setDataSource(entry.isAiEstimated ? "ai_estimation" : "livsmedelsverket");
+      setAppliedMultiplier(null); // Reset multiplier when entry changes
     }
   }, [entry, isOpen]);
 
@@ -116,6 +130,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
 
   const analyzeNewImage = async (imageBase64: string) => {
     setIsAnalyzing(true);
+    setAppliedMultiplier(null); // Reset multiplier when new analysis happens
     
     try {
       const { data: result, error } = await supabase.functions.invoke("analyze-food", {
@@ -130,10 +145,10 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
       const estimation = result as FoodEstimation;
       setMealName(estimation.mealName);
       setMealType(estimation.mealType);
-      setCalories(estimation.calories);
-      setProtein(estimation.protein);
-      setCarbs(estimation.carbs);
-      setFat(estimation.fat);
+      setCaloriesInput(formatNutritionValue(estimation.calories));
+      setProteinInput(formatNutritionValue(estimation.protein, 1));
+      setCarbsInput(formatNutritionValue(estimation.carbs, 1));
+      setFatInput(formatNutritionValue(estimation.fat, 1));
       setIngredients(estimation.ingredients || []);
       setConfidence(estimation.confidence);
       setDataSource(estimation.dataSource || "ai_estimation");
@@ -154,10 +169,53 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
     }
   };
 
+  const handleReanalyzeFromTitle = async () => {
+    if (!mealName.trim()) return;
+    
+    setIsAnalyzing(true);
+    setAppliedMultiplier(null); // Reset multiplier when new analysis happens
+    
+    try {
+      const { data: result, error } = await supabase.functions.invoke("analyze-food", {
+        body: {
+          analysisType: "text",
+          textDescription: mealName,
+        },
+      });
+
+      if (error) throw error;
+      
+      const estimation = result as FoodEstimation;
+      setMealType(estimation.mealType);
+      setCaloriesInput(formatNutritionValue(estimation.calories));
+      setProteinInput(formatNutritionValue(estimation.protein, 1));
+      setCarbsInput(formatNutritionValue(estimation.carbs, 1));
+      setFatInput(formatNutritionValue(estimation.fat, 1));
+      setIngredients(estimation.ingredients || []);
+      setConfidence(estimation.confidence);
+      setDataSource(estimation.dataSource || "ai_estimation");
+      
+      toast({
+        title: "Måltid analyserad",
+        description: "Näringsvärdena har uppdaterats baserat på titeln.",
+      });
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      toast({
+        title: "Analys misslyckades",
+        description: "Kunde inte analysera måltiden. Försök igen.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleRecalculate = async (adjustment: string) => {
     if (!adjustment.trim()) return;
     
     setIsRecalculating(true);
+    setAppliedMultiplier(null); // Reset multiplier when recalculating
     
     try {
       const originalEstimation: FoodEstimation = {
@@ -183,10 +241,10 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
       if (error) throw error;
       
       const estimation = result as FoodEstimation;
-      setCalories(estimation.calories);
-      setProtein(estimation.protein);
-      setCarbs(estimation.carbs);
-      setFat(estimation.fat);
+      setCaloriesInput(formatNutritionValue(estimation.calories));
+      setProteinInput(formatNutritionValue(estimation.protein, 1));
+      setCarbsInput(formatNutritionValue(estimation.carbs, 1));
+      setFatInput(formatNutritionValue(estimation.fat, 1));
       setIngredients(estimation.ingredients || []);
       setAdjustmentText("");
       
@@ -207,10 +265,21 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
   };
 
   const handleQuickAdjust = (multiplier: number) => {
-    setCalories(Math.round(calories * multiplier));
-    setProtein(Math.round(protein * multiplier * 10) / 10);
-    setCarbs(Math.round(carbs * multiplier * 10) / 10);
-    setFat(Math.round(fat * multiplier * 10) / 10);
+    // Prevent multiple clicks - only allow one multiplier to be applied
+    if (appliedMultiplier !== null) return;
+    
+    setAppliedMultiplier(multiplier);
+    
+    const newCalories = Math.round(calories * multiplier);
+    const newProtein = Math.round(protein * multiplier * 10) / 10;
+    const newCarbs = Math.round(carbs * multiplier * 10) / 10;
+    const newFat = Math.round(fat * multiplier * 10) / 10;
+    
+    setCaloriesInput(formatNutritionValue(newCalories));
+    setProteinInput(formatNutritionValue(newProtein, 1));
+    setCarbsInput(formatNutritionValue(newCarbs, 1));
+    setFatInput(formatNutritionValue(newFat, 1));
+    
     setIngredients(ingredients.map(ing => ({
       ...ing,
       calories: Math.round(ing.calories * multiplier),
@@ -308,7 +377,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                 </div>
               )}
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Analyserar ny bild...</p>
+              <p className="text-muted-foreground">Analyserar...</p>
             </div>
           ) : (
             <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-120px)]">
@@ -365,15 +434,31 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
               {/* Meal metadata */}
               <Card className="shadow-soft">
                 <CardContent className="p-4 space-y-4">
-                  {/* Meal name */}
+                  {/* Meal name with analyze button */}
                   <div className="space-y-2">
                     <Label htmlFor="meal-name">Titel</Label>
-                    <Input
-                      id="meal-name"
-                      value={mealName}
-                      onChange={(e) => setMealName(e.target.value)}
-                      placeholder="T.ex. Pasta med köttfärssås"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="meal-name"
+                        value={mealName}
+                        onChange={(e) => setMealName(e.target.value)}
+                        placeholder="T.ex. Pasta med köttfärssås"
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleReanalyzeFromTitle}
+                        disabled={!mealName.trim() || isAnalyzing}
+                        title="Analysera med AI"
+                      >
+                        {isAnalyzing ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   
                   {/* Meal type */}
@@ -418,8 +503,9 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                       <Label className="block text-muted-foreground text-xs mb-1">Kcal</Label>
                       <Input
                         type="number"
-                        value={calories}
-                        onChange={(e) => setCalories(Math.max(0, parseInt(e.target.value) || 0))}
+                        value={caloriesInput}
+                        onChange={(e) => setCaloriesInput(e.target.value)}
+                        placeholder="0"
                         className="h-8 text-center font-bold text-foreground text-lg p-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
@@ -429,8 +515,9 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                         <Input
                           type="number"
                           step="0.1"
-                          value={protein}
-                          onChange={(e) => setProtein(Math.max(0, parseFloat(e.target.value) || 0))}
+                          value={proteinInput}
+                          onChange={(e) => setProteinInput(e.target.value)}
+                          placeholder="0"
                           className="h-8 text-center font-bold text-primary text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
@@ -442,8 +529,9 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                         <Input
                           type="number"
                           step="0.1"
-                          value={carbs}
-                          onChange={(e) => setCarbs(Math.max(0, parseFloat(e.target.value) || 0))}
+                          value={carbsInput}
+                          onChange={(e) => setCarbsInput(e.target.value)}
+                          placeholder="0"
                           className="h-8 text-center font-bold text-amber-600 text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
@@ -455,8 +543,9 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                         <Input
                           type="number"
                           step="0.1"
-                          value={fat}
-                          onChange={(e) => setFat(Math.max(0, parseFloat(e.target.value) || 0))}
+                          value={fatInput}
+                          onChange={(e) => setFatInput(e.target.value)}
+                          placeholder="0"
                           className="h-8 text-center font-bold text-green-600 text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
@@ -506,26 +595,29 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                   <Label className="text-sm">Justera mängd</Label>
                   <div className="flex gap-2">
                     <Button 
-                      variant="outline" 
+                      variant={appliedMultiplier === 0.5 ? "default" : "outline"}
                       size="sm" 
                       className="flex-1"
                       onClick={() => handleQuickAdjust(0.5)}
+                      disabled={appliedMultiplier !== null}
                     >
                       Hälften
                     </Button>
                     <Button 
-                      variant="outline" 
+                      variant={appliedMultiplier === 0.75 ? "default" : "outline"}
                       size="sm" 
                       className="flex-1"
                       onClick={() => handleQuickAdjust(0.75)}
+                      disabled={appliedMultiplier !== null}
                     >
                       3/4
                     </Button>
                     <Button 
-                      variant="outline" 
+                      variant={appliedMultiplier === 1.5 ? "default" : "outline"}
                       size="sm" 
                       className="flex-1"
                       onClick={() => handleQuickAdjust(1.5)}
+                      disabled={appliedMultiplier !== null}
                     >
                       1.5x
                     </Button>
