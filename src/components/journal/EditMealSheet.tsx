@@ -69,6 +69,9 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
   const [confidence, setConfidence] = useState<"high" | "medium" | "low">("medium");
   const [dataSource, setDataSource] = useState<"livsmedelsverket" | "ai_estimation" | "mixed">("ai_estimation");
   
+  // Store original values for quick adjust calculations
+  const [originalNutrition, setOriginalNutrition] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+  
   // Parsed numeric values for calculations
   const calories = parseFloat(caloriesInput) || 0;
   const protein = parseFloat(proteinInput) || 0;
@@ -107,6 +110,13 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
       setConfidence("medium"); // Default since we don't store this
       setDataSource(entry.isAiEstimated ? "ai_estimation" : "livsmedelsverket");
       setAppliedMultiplier(null); // Reset multiplier when entry changes
+      // Store original values for quick adjust calculations
+      setOriginalNutrition({
+        calories: entry.calories,
+        protein: entry.protein,
+        carbs: entry.carbs,
+        fat: entry.fat,
+      });
     }
   }, [entry, isOpen]);
 
@@ -265,28 +275,32 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
   };
 
   const handleQuickAdjust = (multiplier: number) => {
-    // Prevent multiple clicks - only allow one multiplier to be applied
-    if (appliedMultiplier !== null) return;
+    // Prevent clicking the same multiplier twice
+    if (appliedMultiplier === multiplier) return;
     
     setAppliedMultiplier(multiplier);
     
-    const newCalories = Math.round(calories * multiplier);
-    const newProtein = Math.round(protein * multiplier * 10) / 10;
-    const newCarbs = Math.round(carbs * multiplier * 10) / 10;
-    const newFat = Math.round(fat * multiplier * 10) / 10;
+    // Always calculate from original values to prevent exponential multiplication
+    const newCalories = Math.round(originalNutrition.calories * multiplier);
+    const newProtein = Math.round(originalNutrition.protein * multiplier * 10) / 10;
+    const newCarbs = Math.round(originalNutrition.carbs * multiplier * 10) / 10;
+    const newFat = Math.round(originalNutrition.fat * multiplier * 10) / 10;
     
     setCaloriesInput(formatNutritionValue(newCalories));
     setProteinInput(formatNutritionValue(newProtein, 1));
     setCarbsInput(formatNutritionValue(newCarbs, 1));
     setFatInput(formatNutritionValue(newFat, 1));
     
-    setIngredients(ingredients.map(ing => ({
-      ...ing,
-      calories: Math.round(ing.calories * multiplier),
-      protein: Math.round(ing.protein * multiplier * 10) / 10,
-      carbs: Math.round(ing.carbs * multiplier * 10) / 10,
-      fat: Math.round(ing.fat * multiplier * 10) / 10,
-    })));
+    // Also update ingredients proportionally from their original (entry) values
+    if (entry?.ingredients) {
+      setIngredients(entry.ingredients.map(ing => ({
+        ...ing,
+        calories: Math.round(ing.calories * multiplier),
+        protein: Math.round(ing.protein * multiplier * 10) / 10,
+        carbs: Math.round(ing.carbs * multiplier * 10) / 10,
+        fat: Math.round(ing.fat * multiplier * 10) / 10,
+      })));
+    }
   };
 
   const handleSave = async () => {
@@ -599,7 +613,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                       size="sm" 
                       className="flex-1"
                       onClick={() => handleQuickAdjust(0.5)}
-                      disabled={appliedMultiplier !== null}
+                      disabled={appliedMultiplier === 0.5}
                     >
                       Hälften
                     </Button>
@@ -608,7 +622,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                       size="sm" 
                       className="flex-1"
                       onClick={() => handleQuickAdjust(0.75)}
-                      disabled={appliedMultiplier !== null}
+                      disabled={appliedMultiplier === 0.75}
                     >
                       3/4
                     </Button>
@@ -617,7 +631,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                       size="sm" 
                       className="flex-1"
                       onClick={() => handleQuickAdjust(1.5)}
-                      disabled={appliedMultiplier !== null}
+                      disabled={appliedMultiplier === 1.5}
                     >
                       1.5x
                     </Button>
