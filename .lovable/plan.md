@@ -1,173 +1,271 @@
 
 
-## Förbättringar i redigera måltid-vyn
+## Lägg till symptomspårning i journalen
 
 ### Sammanfattning
-Tre funktionella förbättringar i EditMealSheet-komponenten:
-1. Snabbknappar för mängdjustering (Hälften, 3/4, 1.5x) ska endast kunna klickas en gång
-2. När titeln ändras ska AI:n kunna analysera den nya beskrivningen
-3. Näringsinput-fält ska bli tomma (inte visa "0") vid redigering
+Implementera en ny funktion för att logga och visa symptom i journalen. Symptom kan kopplas till måltider eller registreras fristående. Inkluderar röstinmatning via ElevenLabs Speech-to-Text samt visning i tidslinjens struktur.
 
 ---
 
-### Del 1: Begränsa snabbknappar till ett klick
+### Del 1: Databasschema
 
-**Problem:** Knapparna "Hälften", "3/4" och "1.5x" kan klickas flera gånger, vilket multiplicerar värdena exponentiellt (t.ex. hälften av hälften = 25%).
+**Ny tabell: `symptom_entries`**
 
-**Lösning:** Lägg till en state-variabel som spårar vilken multiplikator som har applicerats. När en knapp klickats blir den inaktiverad och visuellt markerad.
+```sql
+CREATE TABLE public.symptom_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  meal_id UUID REFERENCES public.nutrition_entries(id) ON DELETE SET NULL,
+  entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  symptom_time TIMESTAMPTZ NOT NULL DEFAULT now(),
+  description TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-**Ny state:**
-```typescript
-const [appliedMultiplier, setAppliedMultiplier] = useState<number | null>(null);
+-- RLS policies
+ALTER TABLE public.symptom_entries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own symptoms" 
+  ON public.symptom_entries FOR SELECT 
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own symptoms" 
+  ON public.symptom_entries FOR INSERT 
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own symptoms" 
+  ON public.symptom_entries FOR UPDATE 
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own symptoms" 
+  ON public.symptom_entries FOR DELETE 
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Dietists can view assigned patient symptoms" 
+  ON public.symptom_entries FOR SELECT 
+  USING (is_assigned_dietist(user_id));
 ```
-
-**Reset vid entry-ändring:**
-- Återställ `appliedMultiplier` till `null` när `entry` ändras i `useEffect`
-
-**Uppdaterad handleQuickAdjust:**
-```typescript
-const handleQuickAdjust = (multiplier: number) => {
-  if (appliedMultiplier !== null) return; // Redan applicerad
-  
-  setAppliedMultiplier(multiplier);
-  setCalories(Math.round(calories * multiplier));
-  // ... resten av logiken
-};
-```
-
-**Uppdaterade knappar:**
-- Disabled om `appliedMultiplier !== null`
-- Visuell markering på den aktiva knappen (variant "default" istället för "outline")
 
 ---
 
-### Del 2: AI-analys vid titeländring
+### Del 2: Utöka useJournalData hook
 
-**Problem:** När användaren ändrar titeln händer ingenting automatiskt. Användaren förväntar sig samma beteende som "beskriv din måltid" i AddMealSheet.
+**Nya typer:**
+```typescript
+export interface SymptomEntry {
+  id: string;
+  mealId: string | null;
+  description: string;
+  symptomTime: Date;
+  createdAt: Date;
+}
+```
 
-**Lösning:** Lägg till en "Analysera"-knapp bredvid titelfältet som triggar AI-analys baserat på den nya titeln.
+**Nya funktioner i hooken:**
+- `symptoms: SymptomEntry[]` - Lista över dagens symptom
+- `addSymptom(symptom)` - Lägg till nytt symptom
+- `updateSymptom(id, updates)` - Uppdatera symptom
+- `deleteSymptom(id)` - Ta bort symptom
 
-**Ny UI-struktur:**
+---
+
+### Del 3: Ny komponent - AddSymptomSheet
+
+**Fil:** `src/components/journal/AddSymptomSheet.tsx`
+
+**UI-struktur:**
 ```text
 ┌─────────────────────────────────────────┐
-│  Titel                                  │
-│  ┌───────────────────────┐ ┌──────────┐ │
-│  │ Pasta carbonara...    │ │ 🔄 Analys│ │
-│  └───────────────────────┘ └──────────┘ │
+│  Lägg till symptom                      │
+├─────────────────────────────────────────┤
+│                                         │
+│  Koppla till måltid                     │
+│  ┌─────────────────────────────────────┐│
+│  │ [Dropdown: Välj måltid...]          ││
+│  │ • Ej kopplat till måltid            ││
+│  │ • Frukost - Havregrynsgröt (08:15)  ││
+│  │ • Lunch - Pasta carbonara (12:30)   ││
+│  └─────────────────────────────────────┘│
+│                                         │
+│  Tid för symptom                        │
+│  ┌──────────────┐                       │
+│  │ [14:30]      │                       │
+│  └──────────────┘                       │
+│                                         │
+│  Beskriv ditt symptom                   │
+│  ┌─────────────────────────────────────┐│
+│  │                                     ││
+│  │  Fick ont i magen 30 min efter...   ││
+│  │                                     ││
+│  └─────────────────────────────────────┘│
+│        [🎤 Tala in]                     │
+│                                         │
+├─────────────────────────────────────────┤
+│  [Avbryt]               [Lägg till]     │
 └─────────────────────────────────────────┘
 ```
 
-**Ny funktion:**
+**Funktionalitet:**
+- Dropdown med alla måltider för vald dag + "Ej kopplat"
+- Tidsväljare som defaultar till nuvarande tid
+- Textarea för symptombeskrivning
+- Mikrofon-knapp för röstinmatning
+
+---
+
+### Del 4: ElevenLabs Speech-to-Text integration
+
+**Steg 1: Anslut ElevenLabs connector**
+
+Använd ElevenLabs-connectorn för att få API-nyckel.
+
+**Steg 2: Skapa Edge Function för token**
+
+**Fil:** `supabase/functions/elevenlabs-scribe-token/index.ts`
+
 ```typescript
-const handleReanalyzeFromTitle = async () => {
-  if (!mealName.trim()) return;
+serve(async (req) => {
+  const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
   
-  setIsAnalyzing(true);
-  try {
-    const { data: result, error } = await supabase.functions.invoke("analyze-food", {
-      body: {
-        analysisType: "text",
-        textDescription: mealName,
-      },
-    });
-    
-    if (error) throw error;
-    
-    // Uppdatera alla värden från AI-analysen
-    const estimation = result as FoodEstimation;
-    setCalories(estimation.calories);
-    setProtein(estimation.protein);
-    // ... etc
-    
-    toast({ title: "Måltid analyserad" });
-  } catch (error) {
-    toast({ title: "Analys misslyckades", variant: "destructive" });
-  } finally {
-    setIsAnalyzing(false);
-  }
-};
+  const response = await fetch(
+    "https://api.elevenlabs.io/v1/single-use-token/realtime_scribe",
+    {
+      method: "POST",
+      headers: { "xi-api-key": ELEVENLABS_API_KEY },
+    }
+  );
+  
+  const { token } = await response.json();
+  return new Response(JSON.stringify({ token }));
+});
+```
+
+**Steg 3: React-komponent för röstinmatning**
+
+Använd `@elevenlabs/react` och `useScribe` hook för realtidstranskribering.
+
+---
+
+### Del 5: Ny komponent - EditSymptomSheet
+
+**Fil:** `src/components/journal/EditSymptomSheet.tsx`
+
+Samma layout som AddSymptomSheet men med:
+- Förpopulerade värden
+- Uppdateringslogik istället för skapande
+- Radera-knapp
+
+---
+
+### Del 6: Ny komponent - SymptomCard
+
+**Fil:** `src/components/journal/SymptomCard.tsx`
+
+**Design:**
+```text
+┌─────────────────────────────────────────┐
+│  ⚠️  14:30                              │
+│  Fick ont i magen 30 min efter lunch    │
+│  [Kopplat till: Lunch - Pasta...]       │
+└─────────────────────────────────────────┘
+```
+
+- Varningsikon i orange/gul för att skilja från måltider
+- Visar tid och beskrivning
+- Länk till kopplad måltid om sådan finns
+
+---
+
+### Del 7: Uppdatera MealTimeline
+
+**Ändra logik för att visa symptom:**
+
+1. Kombinera `entries` och `symptoms` till en timeline
+2. Sortera baserat på tid (måltider: createdAt, symptom: symptomTime)
+3. Symptom kopplade till måltider visas som sub-items
+4. Fristående symptom visas som egna items i tidslinjen
+
+**Ny struktur:**
+```typescript
+interface TimelineItem {
+  type: "meal" | "symptom";
+  id: string;
+  time: Date;
+  data: NutritionEntry | SymptomEntry;
+  linkedSymptoms?: SymptomEntry[]; // För måltider
+}
 ```
 
 ---
 
-### Del 3: Tomma fält istället för "0"
+### Del 8: Uppdatera Journal.tsx
 
-**Problem:** När ett näringsfält visar "0" och användaren vill skriva ett nytt värde måste de först radera nollan.
-
-**Lösning:** Använd string-state för input-värden och konvertera endast vid behov. När värdet är 0 ska fältet vara tomt.
-
-**Ändrad state-hantering:**
-
-```typescript
-// Istället för: const [calories, setCalories] = useState(0);
-// Använd string för input:
-const [caloriesInput, setCaloriesInput] = useState("");
-const [proteinInput, setProteinInput] = useState("");
-const [carbsInput, setCarbsInput] = useState("");
-const [fatInput, setFatInput] = useState("");
-
-// Parsade värden för beräkningar:
-const calories = parseFloat(caloriesInput) || 0;
-const protein = parseFloat(proteinInput) || 0;
-const carbs = parseFloat(carbsInput) || 0;
-const fat = parseFloat(fatInput) || 0;
-```
-
-**Uppdaterad useEffect (vid entry-laddning):**
-```typescript
-useEffect(() => {
-  if (entry && isOpen) {
-    setCaloriesInput(entry.calories > 0 ? String(entry.calories) : "");
-    setProteinInput(entry.protein > 0 ? String(entry.protein) : "");
-    setCarbsInput(entry.carbs > 0 ? String(entry.carbs) : "");
-    setFatInput(entry.fat > 0 ? String(entry.fat) : "");
-    // ... resten
-  }
-}, [entry, isOpen]);
-```
-
-**Uppdaterade Input-komponenter:**
+**Lägg till knapp:**
 ```tsx
-<Input
-  type="number"
-  value={caloriesInput}
-  onChange={(e) => setCaloriesInput(e.target.value)}
-  placeholder="0"
-  // ...
-/>
+<div className="flex gap-3">
+  <Button variant="outline" className="flex-1 gap-2" onClick={() => setIsAddMealOpen(true)}>
+    <Plus className="w-4 h-4" />
+    Lägg till måltid
+  </Button>
+  <Button 
+    variant="outline" 
+    className="flex-1 gap-2" 
+    onClick={() => setIsAddSymptomOpen(true)}
+    disabled={entries.length === 0}
+  >
+    <AlertCircle className="w-4 h-4" />
+    Lägg till symptom
+  </Button>
+</div>
 ```
 
-**handleQuickAdjust uppdateras:**
-```typescript
-const handleQuickAdjust = (multiplier: number) => {
-  if (appliedMultiplier !== null) return;
-  
-  setAppliedMultiplier(multiplier);
-  const newCalories = Math.round(calories * multiplier);
-  setCaloriesInput(newCalories > 0 ? String(newCalories) : "");
-  // ... samma för protein, carbs, fat
-};
-```
+**Ny state:**
+- `isAddSymptomOpen`
+- `isEditSymptomOpen`
+- `editingSymptom`
 
 ---
 
 ### Tekniska detaljer
 
+**Nya beroenden:**
+```bash
+npm install @elevenlabs/react
+```
+
+**Filer som skapas:**
+
+| Fil | Beskrivning |
+|-----|-------------|
+| `supabase/migrations/...` | Databasmigrering för `symptom_entries` |
+| `supabase/functions/elevenlabs-scribe-token/index.ts` | Edge function för token |
+| `src/components/journal/AddSymptomSheet.tsx` | Sheet för att lägga till symptom |
+| `src/components/journal/EditSymptomSheet.tsx` | Sheet för att redigera symptom |
+| `src/components/journal/SymptomCard.tsx` | Kort för visning av symptom |
+
 **Filer som ändras:**
 
 | Fil | Åtgärd |
 |-----|--------|
-| `src/components/journal/EditMealSheet.tsx` | Alla tre förändringar |
+| `src/hooks/useJournalData.ts` | Utöka med symptom-funktionalitet |
+| `src/components/journal/MealTimeline.tsx` | Visa symptom i tidslinjen |
+| `src/pages/Journal.tsx` | Lägg till symptom-knapp och sheets |
 
-**Ingen databasändring krävs.**
+---
 
-**Sammanfattning av ändringar:**
+### Flöde för användaren
 
-1. **Ny state:** `appliedMultiplier` för att spåra om snabbknapp använts
-2. **Ny funktion:** `handleReanalyzeFromTitle()` för AI-analys baserat på titel
-3. **Ändrad state-modell:** String-inputs för näringsfält med tom sträng för 0-värden
-4. **UI-uppdateringar:** 
-   - Snabbknappar får `disabled` och visuell markering
-   - Ny "Analysera"-knapp bredvid titelfältet
-   - Input-placeholder visar "0" när fältet är tomt
+1. Användaren lägger till en måltid
+2. "Lägg till symptom"-knappen blir aktiv
+3. Användaren klickar på knappen
+4. Sheet öppnas med dropdown för måltidsval
+5. Användaren väljer måltid eller "Ej kopplat"
+6. Tid sätts (default: nu)
+7. Användaren skriver eller talar in beskrivning
+8. Klickar "Lägg till"
+9. Symptomet visas i tidslinjen:
+   - Som sub-item under måltiden (om kopplat)
+   - Som eget item (om ej kopplat)
+10. Klick på symptomet öppnar redigering
 
