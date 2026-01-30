@@ -64,7 +64,7 @@ export function RecipeFiltersBar({ filters, onFiltersChange }: RecipeFiltersBarP
   };
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+    <div className="relative z-50 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
       <FilterDropdown
         label="Kök"
         options={cuisineOptions}
