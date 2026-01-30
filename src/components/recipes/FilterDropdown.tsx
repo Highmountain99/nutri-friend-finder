@@ -57,7 +57,7 @@ export function FilterDropdown({
       </Button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 z-50 min-w-[180px] bg-popover border border-border rounded-lg shadow-lg py-1 max-h-[300px] overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1 z-[100] min-w-[180px] bg-popover border border-border rounded-lg shadow-lg py-1 max-h-[300px] overflow-y-auto">
           {options.map((option) => {
             const isSelected = selected.includes(option.id);
             return (
