@@ -23,6 +23,13 @@ interface NutritionGoals {
   fatGoal: number;
 }
 
+interface EditableNutritionGoals {
+  caloriesGoal: number | string;
+  proteinGoal: number | string;
+  carbsGoal: number | string;
+  fatGoal: number | string;
+}
+
 interface NutritionSettings {
   aiTrackingEnabled: boolean;
   showCalories: boolean;
@@ -84,7 +91,7 @@ export default function Settings() {
     fatGoal: 65,
   });
   
-  const [editableGoals, setEditableGoals] = useState<NutritionGoals>(goals);
+  const [editableGoals, setEditableGoals] = useState<EditableNutritionGoals>(goals);
 
   // Load settings from Supabase
   useEffect(() => {
@@ -194,7 +201,15 @@ export default function Settings() {
   const handleSaveGoals = async () => {
     if (!user) return;
     
-    setGoals(editableGoals);
+    // Convert empty strings to default values for saving
+    const finalGoals: NutritionGoals = {
+      caloriesGoal: editableGoals.caloriesGoal === "" ? 0 : Number(editableGoals.caloriesGoal),
+      proteinGoal: editableGoals.proteinGoal === "" ? 0 : Number(editableGoals.proteinGoal),
+      carbsGoal: editableGoals.carbsGoal === "" ? 0 : Number(editableGoals.carbsGoal),
+      fatGoal: editableGoals.fatGoal === "" ? 0 : Number(editableGoals.fatGoal),
+    };
+    
+    setGoals(finalGoals);
     setNutritionSettings(prev => ({
       ...prev,
       ...editableVisibility,
@@ -204,10 +219,10 @@ export default function Settings() {
     // Update goals (use update instead of upsert to avoid 409 conflicts)
     await supabase.from("user_nutrition_goals")
       .update({
-        calories_goal: editableGoals.caloriesGoal,
-        protein_goal: editableGoals.proteinGoal,
-        carbs_goal: editableGoals.carbsGoal,
-        fat_goal: editableGoals.fatGoal,
+        calories_goal: finalGoals.caloriesGoal,
+        protein_goal: finalGoals.proteinGoal,
+        carbs_goal: finalGoals.carbsGoal,
+        fat_goal: finalGoals.fatGoal,
       })
       .eq("user_id", user.id);
     
@@ -370,7 +385,7 @@ export default function Settings() {
                 value={editableGoals.caloriesGoal}
                 onChange={(e) => setEditableGoals(prev => ({ 
                   ...prev, 
-                  caloriesGoal: parseInt(e.target.value) || 0 
+                  caloriesGoal: e.target.value === "" ? "" : parseInt(e.target.value) || 0 
                 }))}
               />
               <div className="flex items-center justify-between">
@@ -394,7 +409,7 @@ export default function Settings() {
                 value={editableGoals.proteinGoal}
                 onChange={(e) => setEditableGoals(prev => ({ 
                   ...prev, 
-                  proteinGoal: parseInt(e.target.value) || 0 
+                  proteinGoal: e.target.value === "" ? "" : parseInt(e.target.value) || 0 
                 }))}
               />
               <div className="flex items-center justify-between">
@@ -418,7 +433,7 @@ export default function Settings() {
                 value={editableGoals.carbsGoal}
                 onChange={(e) => setEditableGoals(prev => ({ 
                   ...prev, 
-                  carbsGoal: parseInt(e.target.value) || 0 
+                  carbsGoal: e.target.value === "" ? "" : parseInt(e.target.value) || 0 
                 }))}
               />
               <div className="flex items-center justify-between">
@@ -442,7 +457,7 @@ export default function Settings() {
                 value={editableGoals.fatGoal}
                 onChange={(e) => setEditableGoals(prev => ({ 
                   ...prev, 
-                  fatGoal: parseInt(e.target.value) || 0 
+                  fatGoal: e.target.value === "" ? "" : parseInt(e.target.value) || 0 
                 }))}
               />
               <div className="flex items-center justify-between">
