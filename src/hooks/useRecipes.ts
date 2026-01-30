@@ -95,6 +95,8 @@ export function useToggleFavorite() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["recipe-search"] });
+      queryClient.invalidateQueries({ queryKey: ["my-recipes"] });
     },
   });
 }

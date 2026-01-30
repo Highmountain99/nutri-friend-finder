@@ -1,25 +1,31 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecipeSearchBar } from "@/components/recipes/RecipeSearchBar";
+import { RecipeSearchView } from "@/components/recipes/RecipeSearchView";
+import { RecipeFiltersBar } from "@/components/recipes/RecipeFiltersBar";
+import { RecipeSearchResultsList } from "@/components/recipes/RecipeSearchResultsList";
 import { DailyPicksSection } from "@/components/recipes/DailyPicksSection";
 import { MyRecipesSection } from "@/components/recipes/MyRecipesSection";
-import { CuisineShortcuts } from "@/components/recipes/CuisineShortcuts";
-import { MealTypeShortcuts } from "@/components/recipes/MealTypeShortcuts";
 import { RecipeDetailSheet } from "@/components/recipes/RecipeDetailSheet";
-import { RecipeSearchResults } from "@/components/recipes/RecipeSearchResults";
 import { RecipeWithInteraction } from "@/hooks/useDailyPicks";
+import { emptyFilters, hasActiveFilters, type RecipeFilters } from "@/hooks/useRecipeSearch";
+
+type ViewMode = "default" | "search-browse" | "search-results";
 
 export default function Recipes() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<{
-    cuisineType?: string;
-    mealType?: string;
-  }>({});
+  const [filters, setFilters] = useState<RecipeFilters>(emptyFilters);
 
-  const isSearching = searchQuery.length > 0 || Object.keys(activeFilters).length > 0;
+  // Determine view mode
+  const viewMode: ViewMode = 
+    isSearchFocused && !searchQuery.trim() && !hasActiveFilters(filters)
+      ? "search-browse"
+      : searchQuery.trim().length > 0 || hasActiveFilters(filters)
+        ? "search-results"
+        : "default";
 
   const handleRecipeSelect = (recipe: RecipeWithInteraction) => {
     setSelectedRecipeId(recipe.id);
@@ -29,48 +35,68 @@ export default function Recipes() {
     setSelectedRecipeId(recipeId);
   };
 
-  const handleCuisineSelect = (cuisineType: string) => {
-    setActiveFilters({ cuisineType });
+  const handleCuisineSelect = (cuisineId: string) => {
+    setFilters({ ...emptyFilters, cuisineTypes: [cuisineId] });
   };
 
-  const handleMealTypeSelect = (mealType: string) => {
-    setActiveFilters({ mealType });
+  const handleMealTypeSelect = (mealTypeId: string) => {
+    setFilters({ ...emptyFilters, mealTypes: [mealTypeId] });
+  };
+
+  const handleCancel = () => {
+    setSearchQuery("");
+    setFilters(emptyFilters);
+    setIsSearchFocused(false);
   };
 
   const clearFilters = () => {
-    setActiveFilters({});
+    setFilters(emptyFilters);
     setSearchQuery("");
   };
 
   return (
-    <div className="px-4 py-6 space-y-8 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Recept</h1>
-        <p className="text-sm text-muted-foreground">
-          Hitta recept som passar dig
-        </p>
-      </div>
+    <div className="px-4 py-6 space-y-6 animate-fade-in">
+      {/* Header - only show in default mode */}
+      {viewMode === "default" && (
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Recept</h1>
+          <p className="text-sm text-muted-foreground">
+            Hitta recept som passar dig
+          </p>
+        </div>
+      )}
 
-      {/* Search */}
+      {/* Search Bar */}
       <RecipeSearchBar
         value={searchQuery}
         onChange={setSearchQuery}
-        onFilterClick={() => setShowFilters(true)}
+        isFocused={isSearchFocused}
+        onFocus={() => setIsSearchFocused(true)}
+        onCancel={handleCancel}
       />
 
-      {isSearching ? (
-        /* Search Results View */
-        <RecipeSearchResults
-          searchQuery={searchQuery}
-          cuisineType={activeFilters.cuisineType}
-          mealType={activeFilters.mealType}
-          onRecipeSelect={handleRecipeIdSelect}
-          onClearFilters={clearFilters}
+      {/* View content based on mode */}
+      {viewMode === "search-browse" && (
+        <RecipeSearchView
+          onCuisineSelect={handleCuisineSelect}
+          onMealTypeSelect={handleMealTypeSelect}
         />
-      ) : (
-        /* Default View */
+      )}
+
+      {viewMode === "search-results" && (
         <>
+          <RecipeFiltersBar filters={filters} onFiltersChange={setFilters} />
+          <RecipeSearchResultsList
+            searchQuery={searchQuery}
+            filters={filters}
+            onRecipeSelect={handleRecipeIdSelect}
+            onClearFilters={clearFilters}
+          />
+        </>
+      )}
+
+      {viewMode === "default" && (
+        <div className="space-y-8">
           {/* Daily Picks - only for logged in users */}
           {user && <DailyPicksSection onRecipeSelect={handleRecipeSelect} />}
 
@@ -83,13 +109,7 @@ export default function Recipes() {
               }}
             />
           )}
-
-          {/* Cuisine shortcuts */}
-          <CuisineShortcuts onSelect={handleCuisineSelect} />
-
-          {/* Meal type shortcuts */}
-          <MealTypeShortcuts onSelect={handleMealTypeSelect} />
-        </>
+        </div>
       )}
 
       {/* Recipe Detail Sheet */}
