@@ -128,6 +128,42 @@ export type Database = {
         }
         Relationships: []
       }
+      health_tracking_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          id: string
+          metric_type: string
+          notes: string | null
+          unit: string | null
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          metric_type: string
+          notes?: string | null
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          metric_type?: string
+          notes?: string | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
       intake_profiles: {
         Row: {
           activity_level: Database["public"]["Enums"]["activity_level"] | null
