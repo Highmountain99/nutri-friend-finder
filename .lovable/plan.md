@@ -1,247 +1,354 @@
 
 
-## Redesign av Receptsökning - Söksida med kategorier och avancerade filter
+## Anpassningsbar Utvecklingssida
 
-### Sammanfattning
-Omstrukturera sökupplevelsen i recept-fliken till en dedikerad sökvy med visuella kategorikort och avancerade dropdownfilter som endast visas vid textsökning.
+### Bakgrund
+
+Utvecklingssidan behöver visa olika innehåll beroende på användarens hälsobehov som anges i kvalificeringsflödet. Olika tillstånd kräver olika behandlingsmodeller:
+
+| Tillstånd | Behandlingsmodell | Fokusområden |
+|-----------|-------------------|--------------|
+| **Viktminskning** | 12-veckors fasindelad plan | BMI-trend, kalorimål, vikt-loggning, milstolpar |
+| **Diabetes** | Kontinuerlig övervakning | Blodsockernivåer, HbA1c-trender, kolhydratintag |
+| **Tarmhälsa (IBS)** | 3-fas FODMAP-protokoll | Eliminering, återintroduktion, personalisering |
+| **Ätstörning** | Stadiebaserad återhämtning | Psykologisk trygghet, regelbundna måltider |
+| **Hjärthälsa** | Livsstilsförändring | Kolesterol, blodtryck, kostmönster |
+| **Kvinnohälsa (PCOS)** | Hormonbalans-fokus | Insulin, androgener, vikthantering |
+| **Allmän hälsa** | Balanserat näringsfokus | Kalorier, makros, aktivitet |
 
 ---
 
-### Ny användarresa
+### Arkitektur
 
 ```text
-Steg 1: Användaren klickar i sökfältet
-        ↓
-    ┌─────────────────────────────────────┐
-    │  🔍 Vad vill du laga?   [Avbryt]    │
-    ├─────────────────────────────────────┤
-    │                                      │
-    │  POPULARA KOK                        │
-    │  ┌─────────┐ ┌─────────┐            │
-    │  │ Medelhav│ │Asiatiskt│            │
-    │  └─────────┘ └─────────┘            │
-    │  ┌─────────┐ ┌─────────┐            │
-    │  │Svenskt  │ │Mexikansk│            │
-    │  └─────────┘ └─────────┘            │
-    │  ┌─────────┐ ┌─────────┐            │
-    │  │Italiensk│ │ Indiskt │            │
-    │  └─────────┘ └─────────┘            │
-    │                                      │
-    │  MALTIDSTYPER                        │
-    │  ┌─────────┐ ┌─────────┐            │
-    │  │ Frukost │ │  Lunch  │            │
-    │  └─────────┘ └─────────┘            │
-    │  ┌─────────┐ ┌─────────┐            │
-    │  │ Middag  │ │  Soppa  │            │
-    │  └─────────┘ └─────────┘            │
-    │  ┌─────────┐ ┌─────────┐            │
-    │  │ Sallad  │ │ Förrätt │            │
-    │  └─────────┘ └─────────┘            │
-    └─────────────────────────────────────┘
-
-Steg 2: Användaren börjar skriva
-        ↓
-    ┌─────────────────────────────────────┐
-    │  🔍 Kyckling          [x] [Avbryt]  │
-    ├─────────────────────────────────────┤
-    │  [Kök v] [Måltid v] [Hälsa v] [...] │
-    ├─────────────────────────────────────┤
-    │  ┌────────────────────────────────┐ │
-    │  │ 🖼️ Adobo Kyckling             │ │
-    │  │    ⏱️ 35min  👥 4 port         │ │
-    │  └────────────────────────────────┘ │
-    │  ┌────────────────────────────────┐ │
-    │  │ 🖼️ Dijon Kyckling             │ │
-    │  │    ⏱️ 25min  👥 2 port         │ │
-    │  └────────────────────────────────┘ │
-    └─────────────────────────────────────┘
+Progress.tsx
+    │
+    ├── useProgressData.ts (NY hook)
+    │       └── Hämtar intake_profiles + relevanta metrics
+    │
+    ├── ProgressRouter.tsx (NY)
+    │       └── Väljer rätt layout baserat på primaryConcernCategory
+    │
+    └── Layouts per tillstånd:
+            ├── WeightLossProgress.tsx
+            ├── DiabetesProgress.tsx
+            ├── GutHealthProgress.tsx
+            ├── EatingDisorderProgress.tsx
+            ├── HeartHealthProgress.tsx
+            ├── WomensHealthProgress.tsx
+            └── GeneralHealthProgress.tsx
 ```
 
 ---
 
-### Filterstruktur
+### Datamodell - Ny tabell
 
-| Filterkategori | Alternativ |
-|----------------|------------|
-| **Kök** | Medelhav, Asiatiskt, Svenskt, Mexikanskt, Italienskt, Indiskt |
-| **Måltidstyp** | Frukost, Lunch, Middag, Sallad, Soppa, Huvudrätt, Förrätt |
-| **Hälsoplan** | Låga kolhydrater, Högt fiber, Högt protein, Medelhavs, Bra för hjärta, Lågt sodium, Bra för njurar, Bra för diabetes |
-| **Kostbehov** | Vegetarian, Vegan, Pescitarian, Keto, Paleo, Kosher |
-| **Allergier** | Laktosfri, Glutenfri, Sojafri, Äggfri, Skaldjursfri, Jordnöttsfri, Nötfri, Sesamfri, Sulfitfri, FODMAPfri |
+Eftersom olika tillstånd kräver olika metriker (blodsocker, vikt, HbA1c, etc.), behövs en ny tabell för att lagra dessa värden:
+
+```sql
+CREATE TABLE health_tracking_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  metric_type TEXT NOT NULL,  -- 'blood_sugar', 'weight', 'hba1c', 'blood_pressure', etc.
+  value NUMERIC NOT NULL,
+  unit TEXT,                  -- 'mmol/L', 'kg', '%', 'mmHg'
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, entry_date, metric_type)
+);
+```
 
 ---
 
-### Nya och uppdaterade filer
+### Layouter per tillstånd
+
+#### 1. Viktminskning (WeightLossProgress.tsx)
+
+```text
+┌─────────────────────────────────────────┐
+│  Din viktresa                           │
+│  ──────────────────────────────────     │
+│  Vecka 3 av 12                          │
+│  [████████░░░░░░░░░░░░░░░] 25%          │
+├─────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐       │
+│  │  Startvikt  │  │  Nu         │       │
+│  │  85.2 kg    │  │  83.1 kg    │       │
+│  └─────────────┘  └─────────────┘       │
+│                                         │
+│  ┌─────────────┐  ┌─────────────┐       │
+│  │  Mål        │  │  Kvar       │       │
+│  │  75 kg      │  │  8.1 kg     │       │
+│  └─────────────┘  └─────────────┘       │
+├─────────────────────────────────────────┤
+│  📈 Viktutveckling (graf senaste 4 v)   │
+├─────────────────────────────────────────┤
+│  🏆 MILSTOLPAR                          │
+│  ✅ Första kilo                         │
+│  ✅ 5% av målvikt                       │
+│  ○  10% av målvikt                      │
+│  ○  Halvvägs                            │
+├─────────────────────────────────────────┤
+│  📊 Denna vecka                         │
+│  Kalorimål: 1650 / 1800 (92%)           │
+│  Aktiva dagar: 5/7                      │
+└─────────────────────────────────────────┘
+```
+
+---
+
+#### 2. Diabetes (DiabetesProgress.tsx)
+
+```text
+┌─────────────────────────────────────────┐
+│  Blodsockerkontroll                     │
+│  ──────────────────────────────────     │
+│  Senaste HbA1c: 6.8%                    │
+│  Mål: <7.0%                             │
+├─────────────────────────────────────────┤
+│  📊 Dagsöversikt                        │
+│  ┌─────────────┐  ┌─────────────┐       │
+│  │  Morgon     │  │  Efter mat  │       │
+│  │  5.4 mmol/L │  │  7.2 mmol/L │       │
+│  │  ✅ I mål   │  │  ✅ I mål   │       │
+│  └─────────────┘  └─────────────┘       │
+├─────────────────────────────────────────┤
+│  📈 Blodsocker senaste 7 dagar          │
+│  [Graf med normalgräns markerat]        │
+├─────────────────────────────────────────┤
+│  🍽️ Kolhydratintag idag                │
+│  [████████████░░░░░] 145g / 180g        │
+├─────────────────────────────────────────┤
+│  📆 Tid i målintervall (4-10 mmol/L)    │
+│  Denna vecka: 78%                       │
+│  Förra veckan: 72%                      │
+│  [Trend: ↑ +6%]                         │
+├─────────────────────────────────────────┤
+│  🎯 FOKUSOMRÅDEN                        │
+│  • Håll kolhydraterna jämna över dagen  │
+│  • Logga blodsocker efter måltid        │
+└─────────────────────────────────────────┘
+```
+
+---
+
+#### 3. Tarmhälsa / IBS (GutHealthProgress.tsx)
+
+```text
+┌─────────────────────────────────────────┐
+│  FODMAP-resan                           │
+│  ──────────────────────────────────     │
+│  Fas 2: Återintroduktion                │
+├─────────────────────────────────────────┤
+│  📊 Fasöversikt                         │
+│  [1. Eliminering ✅] [2. Åter... ●] [3. Personalisering ○] │
+├─────────────────────────────────────────┤
+│  📝 Aktuell utmaning                    │
+│  ┌─────────────────────────────────┐    │
+│  │  Testar: Laktos (mjölk)         │    │
+│  │  Dag 2 av 3                     │    │
+│  │  [Logga reaktion]               │    │
+│  └─────────────────────────────────┘    │
+├─────────────────────────────────────────┤
+│  🔍 Identifierade triggers              │
+│  ⚠️  Lök (oligosackarider)              │
+│  ⚠️  Äpple (fruktos)                    │
+│  ✅ Laktosfria mejerier                 │
+├─────────────────────────────────────────┤
+│  📆 Symptomfria dagar                   │
+│  Denna vecka: 5/7 dagar                 │
+│  Trend: ↑ bättre än förra veckan        │
+├─────────────────────────────────────────┤
+│  📋 Nästa steg                          │
+│  • Slutför laktostest                   │
+│  • Börja testa fruktan (bröd)           │
+└─────────────────────────────────────────┘
+```
+
+---
+
+#### 4. Ätstörning (EatingDisorderProgress.tsx)
+
+```text
+┌─────────────────────────────────────────┐
+│  Din återhämtning                       │
+│  ──────────────────────────────────     │
+│  En dag i taget                         │
+├─────────────────────────────────────────┤
+│  💚 Dagens fokus                        │
+│  ┌─────────────────────────────────┐    │
+│  │  "Lyssna på din kropp och       │    │
+│  │   var snäll mot dig själv"      │    │
+│  └─────────────────────────────────┘    │
+├─────────────────────────────────────────┤
+│  🍽️ Måltidsrytm                        │
+│  ☑️ Frukost                             │
+│  ☑️ Lunch                               │
+│  ○  Middag                              │
+│  ○  Mellanmål                           │
+├─────────────────────────────────────────┤
+│  📈 Regelbundenhet (30 dagar)           │
+│  [Heatmap utan kalorier]                │
+│  Dagar med 3+ måltider: 24/30           │
+├─────────────────────────────────────────┤
+│  🎯 Veckomål från dietist               │
+│  ✅ Äta frukost varje dag               │
+│  ○  Prova en ny maträtt                 │
+│  ○  Äta tillsammans med någon           │
+├─────────────────────────────────────────┤
+│  📅 Nästa samtal                        │
+│  Onsdag 5 feb kl 14:00                  │
+│  [Boka om] [Förbered anteckningar]      │
+└─────────────────────────────────────────┘
+```
+
+**Viktigt:** Ingen kalorivisning, fokus på regelbundenhet och positiva beteenden.
+
+---
+
+#### 5. Hjärthälsa (HeartHealthProgress.tsx)
+
+```text
+┌─────────────────────────────────────────┐
+│  Hjärthälsa                             │
+├─────────────────────────────────────────┤
+│  📊 Dina värden                         │
+│  ┌─────────────┐  ┌─────────────┐       │
+│  │  Kolesterol │  │  Blodtryck  │       │
+│  │  5.2 mmol/L │  │  128/82     │       │
+│  │  Mål: <5.0  │  │  Mål: <130  │       │
+│  └─────────────┘  └─────────────┘       │
+├─────────────────────────────────────────┤
+│  🥗 Medelhavspoäng                      │
+│  [████████████░░░░] 72/100              │
+│  Denna vecka vs förra: ↑ +5             │
+├─────────────────────────────────────────┤
+│  📈 Kolesteroltrend (6 mån)             │
+│  [Graf med mål markerat]                │
+├─────────────────────────────────────────┤
+│  ✅ Hjärtvänliga val denna vecka        │
+│  • 4 portioner fet fisk                 │
+│  • 12 portioner grönsaker               │
+│  • 3 portioner baljväxter               │
+└─────────────────────────────────────────┘
+```
+
+---
+
+### Implementation - Nya filer
 
 ```text
 src/
 ├── pages/
-│   └── Recipes.tsx                      (uppdateras - ny vy-logik)
+│   └── Progress.tsx                  (uppdateras - routing-logik)
 │
-├── components/recipes/
-│   ├── RecipeSearchView.tsx             (NY - sökvy med kategorier)
-│   ├── CuisineCategoryGrid.tsx          (NY - 2-kolumns grid med bilder)
-│   ├── MealTypeCategoryGrid.tsx         (NY - 2-kolumns grid med bilder)
-│   ├── RecipeSearchBar.tsx              (uppdateras - fokushantering)
-│   ├── RecipeSearchResults.tsx          (uppdateras - utökade filter)
-│   ├── RecipeFiltersBar.tsx             (NY - filterknappar med dropdowns)
-│   └── FilterDropdown.tsx               (NY - återanvändbar filterdropdown)
+├── components/progress/
+│   ├── ProgressRouter.tsx            (NY - väljer layout)
+│   ├── WeightLossProgress.tsx        (NY)
+│   ├── DiabetesProgress.tsx          (NY)
+│   ├── GutHealthProgress.tsx         (NY)
+│   ├── EatingDisorderProgress.tsx    (NY)
+│   ├── HeartHealthProgress.tsx       (NY)
+│   ├── WomensHealthProgress.tsx      (NY)
+│   ├── GeneralHealthProgress.tsx     (NY)
+│   │
+│   └── shared/
+│       ├── ProgressHeader.tsx        (NY - gemensam header)
+│       ├── MetricCard.tsx            (NY - enskilt mätvärde)
+│       ├── TrendChart.tsx            (NY - linjediagram med recharts)
+│       ├── MilestoneList.tsx         (NY - prestationer/mål)
+│       ├── WeeklyHeatmap.tsx         (NY - aktivitetsöversikt)
+│       └── LogMetricSheet.tsx        (NY - logga värden)
 │
 ├── hooks/
-│   └── useRecipeSearch.ts               (NY - söklogik med alla filter)
+│   └── useProgressData.ts            (NY - hämtar relevant data)
+│
+└── types/
+    └── progress.ts                   (NY - typdefinitioner)
 ```
 
 ---
 
-### Komponentdetaljer
+### Databas-ändringar
 
-**RecipeSearchView.tsx** (Ny dedikerad sökvy)
+1. **Ny tabell: health_tracking_entries**
+   - Lagrar blodsocker, vikt, HbA1c, blodtryck etc.
+   - RLS-policies för att endast användaren kan se sina egna mätvärden
+   - Dietister kan se tilldelade patienters mätvärden
 
-```text
-┌─────────────────────────────────────────┐
-│  [🔍 Vad vill du laga?]      [Avbryt]  │
-├─────────────────────────────────────────┤
-│                                         │
-│  POPULARA KOK                           │
-│  ┌───────────────┐ ┌───────────────┐    │
-│  │   [Bild]      │ │   [Bild]      │    │
-│  │   Medelhav    │ │   Asiatiskt   │    │
-│  └───────────────┘ └───────────────┘    │
-│  ┌───────────────┐ ┌───────────────┐    │
-│  │   [Bild]      │ │   [Bild]      │    │
-│  │   Mexikanskt  │ │   Svenskt     │    │
-│  └───────────────┘ └───────────────┘    │
-│         ...                             │
-│                                         │
-│  MALTIDSTYPER                           │
-│  ┌───────────────┐ ┌───────────────┐    │
-│  │   [Bild]      │ │   [Bild]      │    │
-│  │   Frukost     │ │   Lunch       │    │
-│  └───────────────┘ └───────────────┘    │
-│         ...                             │
-└─────────────────────────────────────────┘
-```
-
-**RecipeFiltersBar.tsx** (Filtrering vid textsökning)
-
-```text
-┌─────────────────────────────────────────────────────┐
-│  [Kök ▼]  [Måltid ▼]  [Hälsa ▼]  [Kost ▼]  [...]   │
-└─────────────────────────────────────────────────────┘
-
-När expanderad:
-┌─────────────────┐
-│ ☐ Medelhav      │
-│ ☐ Asiatiskt     │
-│ ☐ Svenskt       │
-│ ☐ Mexikanskt    │
-│ ☐ Italienskt    │
-│ ☐ Indiskt       │
-└─────────────────┘
-```
+2. **Ny tabell: treatment_milestones**
+   - Definierar milstolpar per behandlingstyp
+   - Spårar användarens framsteg
 
 ---
 
-### Tillståndshantering i Recipes.tsx
+### Hook: useProgressData.ts
 
 ```typescript
-// Tre vylägen
-type ViewMode = "default" | "search-browse" | "search-results";
-
-// default: Normala vyn med Dagens tips, Mina recept, etc.
-// search-browse: Sökvyn med kategorikort (när sökfältet är fokuserat men tomt)
-// search-results: Sökresultat med filterbar (när text skrivits in)
-
-interface FilterState {
-  cuisineTypes: string[];
-  mealTypes: string[];
-  healthPlans: string[];
-  dietaryNeeds: string[];
-  allergenFree: string[];
+interface ProgressData {
+  intakeProfile: IntakeProfile | null;
+  healthEntries: HealthEntry[];
+  milestones: Milestone[];
+  weeklyStats: WeeklyStats;
+  treatmentPhase: TreatmentPhase;
 }
-```
 
----
-
-### Kategoribildhantering
-
-Eftersom vi inte har faktiska bilder för kategorierna, använder vi:
-1. **Platsbilder via Unsplash/gradient-bakgrunder** med textöverlägg
-2. **Emojis som visuell representation** i en stiliserad kortdesign
-
-```typescript
-const cuisineCategories = [
-  { id: "medelhav", label: "Medelhav", gradient: "from-amber-500 to-orange-600" },
-  { id: "asiatiskt", label: "Asiatiskt", gradient: "from-red-500 to-pink-600" },
-  { id: "svenskt", label: "Svenskt", gradient: "from-blue-500 to-yellow-400" },
-  { id: "mexikanskt", label: "Mexikanskt", gradient: "from-green-500 to-red-500" },
-  { id: "italienskt", label: "Italienskt", gradient: "from-green-600 to-red-600" },
-  { id: "indiskt", label: "Indiskt", gradient: "from-orange-500 to-yellow-500" },
-];
+// Returnerar data baserat på användarens primaryConcernCategory
+export function useProgressData() {
+  const { user } = useAuth();
+  const { profile } = useIntakeProfile();
+  
+  // Hämta relevanta metriker baserat på tillstånd
+  // T.ex. för diabetes: blood_sugar, hba1c
+  // För viktminskning: weight
+  // För IBS: symptom_entries
+}
 ```
 
 ---
 
 ### Implementationsordning
 
-1. **Skapa RecipeSearchView.tsx**
-   - Sökvyn med kategorier i 2-kolumns grid
-   - Hantera klick på kategori som sätter filter
+1. **Skapa databastabeller**
+   - health_tracking_entries med RLS
+   - treatment_milestones (valfritt, kan vara hårdkodat initialt)
 
-2. **Skapa CuisineCategoryGrid.tsx och MealTypeCategoryGrid.tsx**
-   - Visuella kort med gradient-bakgrund och text
-   - Klickbara för att välja filter
+2. **Skapa typer och hook**
+   - types/progress.ts
+   - hooks/useProgressData.ts
 
-3. **Skapa RecipeFiltersBar.tsx och FilterDropdown.tsx**
-   - Horisontell scrollbar med filter-knappar
-   - Dropdown med checkboxar för multi-select
+3. **Skapa delade komponenter**
+   - MetricCard, TrendChart, MilestoneList, LogMetricSheet
 
-4. **Uppdatera RecipeSearchBar.tsx**
-   - Lägg till fokus/blur-hantering
-   - Visa Avbryt-knapp vid fokus
-   - Clear-knapp när text finns
+4. **Skapa ProgressRouter.tsx**
+   - Läser intake_profiles.primary_concern_category
+   - Renderar rätt layout-komponent
 
-5. **Skapa useRecipeSearch.ts hook**
-   - Hantera alla filtertyper
-   - Bygg Supabase-query med array-contains
+5. **Implementera layouts i prioritetsordning:**
+   - GeneralHealthProgress (fallback)
+   - WeightLossProgress
+   - DiabetesProgress
+   - GutHealthProgress
+   - Övriga efter behov
 
-6. **Uppdatera Recipes.tsx**
-   - Implementera tre vylägen (default/search-browse/search-results)
-   - Koordinera mellan komponenter
-
-7. **Uppdatera RecipeSearchResults.tsx**
-   - Integrera med nya filter
-   - Visa aktiva filter som borttagbara chips
+6. **Uppdatera Progress.tsx**
+   - Ersätt nuvarande statiska innehåll med ProgressRouter
 
 ---
 
-### Tekniska detaljer
+### Särskilda överväganden
 
-**Array-filtrering i Supabase:**
+**Ätstörning:**
+- Ingen kalorivisning överhuvudtaget
+- Fokus på regelbundenhet och positiva beteenden
+- Mjukare språk och ingen "prestationspress"
 
-```typescript
-// Filtrera på array-kolumner med contains
-let query = supabase.from("recipes").select("*");
+**Diabetes:**
+- Möjlighet att logga blodsocker direkt i appen
+- Integration med CGM-data (framtida feature)
 
-if (filters.cuisineTypes.length > 0) {
-  query = query.contains("cuisine_types", filters.cuisineTypes);
-}
-if (filters.mealTypes.length > 0) {
-  query = query.contains("meal_types", filters.mealTypes);
-}
-// ... etc för övriga filter
-```
-
-**Fokushantering för sökfält:**
-
-```typescript
-const [isSearchFocused, setIsSearchFocused] = useState(false);
-
-// Visa search-browse vy när fokuserat men ingen text
-const viewMode = isSearchFocused && !searchQuery 
-  ? "search-browse" 
-  : searchQuery.length > 0 || hasActiveFilters
-    ? "search-results"
-    : "default";
-```
+**IBS/FODMAP:**
+- Strukturerat fas-system
+- Koppling till symptom_entries-tabellen
 
