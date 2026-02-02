@@ -91,19 +91,41 @@ export function DailyPicksSection({ onRecipeSelect }: DailyPicksSectionProps) {
           )}
         </div>
       ) : (
-        <div className="relative">
-          {/* Stack effect - show cards behind */}
-          {picks.slice(currentIndex + 1, currentIndex + 3).map((recipe, i) => (
-            <div
-              key={recipe.id}
-              className="absolute inset-0 bg-card rounded-lg shadow-sm"
-              style={{
-                transform: `translateY(${(i + 1) * 8}px) scale(${1 - (i + 1) * 0.03})`,
-                zIndex: -i - 1,
-                opacity: 0.5 - i * 0.2,
-              }}
-            />
-          ))}
+        <div className="relative" style={{ marginBottom: "16px" }}>
+          {/* Stack effect - show actual cards behind */}
+          {picks
+            .slice(currentIndex + 1, currentIndex + 3)
+            .reverse()
+            .map((recipe, reverseIndex) => {
+              const i = picks.slice(currentIndex + 1, currentIndex + 3).length - 1 - reverseIndex;
+              return (
+                <div
+                  key={recipe.id}
+                  className="absolute inset-x-0 top-0 bg-card rounded-xl shadow-soft border border-border overflow-hidden"
+                  style={{
+                    transform: `translateY(${(i + 1) * 12}px) scale(${1 - (i + 1) * 0.04})`,
+                    zIndex: -i - 1,
+                  }}
+                >
+                  {/* Show preview of stacked card */}
+                  <div className="h-48 bg-muted relative">
+                    {recipe.image_url ? (
+                      <img
+                        src={recipe.image_url}
+                        alt={recipe.title}
+                        className="w-full h-full object-cover opacity-60"
+                        draggable={false}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted" />
+                    )}
+                  </div>
+                  <div className="p-4 bg-card">
+                    <div className="h-6 bg-muted/50 rounded w-3/4" />
+                  </div>
+                </div>
+              );
+            })}
 
           <SwipeableRecipeCard
             recipe={currentRecipe}
