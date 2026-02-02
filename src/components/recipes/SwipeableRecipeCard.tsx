@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Clock, Users, Leaf, Heart, X, Flame, Dumbbell } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,81 +23,150 @@ export function SwipeableRecipeCard({
 }: SwipeableRecipeCardProps) {
   const [swipeX, setSwipeX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const startX = useRef(0);
+  const startY = useRef(0);
+  const isHorizontalSwipe = useRef<boolean | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const hasMoved = useRef(false);
 
-  const SWIPE_THRESHOLD = 100;
+  const SWIPE_THRESHOLD = 80;
+  const EXIT_DISTANCE = 400;
+
+  const handleSwipeComplete = useCallback((direction: "left" | "right") => {
+    setIsExiting(true);
+    setExitDirection(direction);
+    
+    // Animate off-screen then trigger callback
+    setTimeout(() => {
+      if (direction === "right") {
+        onSave();
+      } else {
+        onSkip();
+      }
+      // Reset state after callback
+      setSwipeX(0);
+      setIsExiting(false);
+      setExitDirection(null);
+    }, 250);
+  }, [onSave, onSkip]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (disabled) return;
+    if (disabled || isExiting) return;
     startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = null;
+    hasMoved.current = false;
     setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || disabled) return;
+    if (!isDragging || disabled || isExiting) return;
+    
     const currentX = e.touches[0].clientX;
-    const diff = currentX - startX.current;
-    setSwipeX(diff);
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - startX.current;
+    const diffY = currentY - startY.current;
+
+    // Determine swipe direction on first significant movement
+    if (isHorizontalSwipe.current === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+      isHorizontalSwipe.current = Math.abs(diffX) > Math.abs(diffY);
+    }
+
+    // Only track horizontal swipes
+    if (isHorizontalSwipe.current) {
+      e.preventDefault();
+      hasMoved.current = true;
+      setSwipeX(diffX);
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging || disabled) return;
+    if (!isDragging || disabled || isExiting) return;
     setIsDragging(false);
+    isHorizontalSwipe.current = null;
 
     if (swipeX > SWIPE_THRESHOLD) {
-      onSave();
+      handleSwipeComplete("right");
     } else if (swipeX < -SWIPE_THRESHOLD) {
-      onSkip();
-    }
-    setSwipeX(0);
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (disabled) return;
-    startX.current = e.clientX;
-    setIsDragging(true);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || disabled) return;
-    const diff = e.clientX - startX.current;
-    setSwipeX(diff);
-  };
-
-  const handleMouseUp = () => {
-    if (!isDragging || disabled) return;
-    setIsDragging(false);
-
-    if (swipeX > SWIPE_THRESHOLD) {
-      onSave();
-    } else if (swipeX < -SWIPE_THRESHOLD) {
-      onSkip();
-    }
-    setSwipeX(0);
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
+      handleSwipeComplete("left");
+    } else {
+      // Spring back to center
       setSwipeX(0);
     }
   };
 
-  const rotation = swipeX / 20;
-  const opacity = Math.max(0.5, 1 - Math.abs(swipeX) / 300);
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (disabled || isExiting) return;
+    startX.current = e.clientX;
+    hasMoved.current = false;
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || disabled || isExiting) return;
+    const diff = e.clientX - startX.current;
+    if (Math.abs(diff) > 5) {
+      hasMoved.current = true;
+    }
+    setSwipeX(diff);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging || disabled || isExiting) return;
+    setIsDragging(false);
+
+    if (swipeX > SWIPE_THRESHOLD) {
+      handleSwipeComplete("right");
+    } else if (swipeX < -SWIPE_THRESHOLD) {
+      handleSwipeComplete("left");
+    } else {
+      setSwipeX(0);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging && !isExiting) {
+      setIsDragging(false);
+      if (swipeX > SWIPE_THRESHOLD) {
+        handleSwipeComplete("right");
+      } else if (swipeX < -SWIPE_THRESHOLD) {
+        handleSwipeComplete("left");
+      } else {
+        setSwipeX(0);
+      }
+    }
+  };
+
+  const handleCardClick = () => {
+    if (!hasMoved.current && !isDragging && !isExiting) {
+      onTap();
+    }
+  };
+
+  // Calculate visual effects
+  const displayX = isExiting 
+    ? (exitDirection === "right" ? EXIT_DISTANCE : -EXIT_DISTANCE) 
+    : swipeX;
+  const rotation = displayX / 25;
+  const opacity = isExiting ? 0 : Math.max(0.6, 1 - Math.abs(swipeX) / 400);
+
+  // Progress towards threshold (0 to 1)
+  const swipeProgress = Math.min(1, Math.abs(swipeX) / SWIPE_THRESHOLD);
 
   return (
     <Card
       ref={cardRef}
       className={cn(
-        "shadow-elevated overflow-hidden cursor-grab active:cursor-grabbing transition-shadow",
-        isDragging && "shadow-lg"
+        "shadow-elevated overflow-hidden cursor-grab active:cursor-grabbing select-none touch-pan-y",
+        isDragging && "shadow-lg",
+        isExiting && "pointer-events-none"
       )}
       style={{
-        transform: `translateX(${swipeX}px) rotate(${rotation}deg)`,
+        transform: `translateX(${displayX}px) rotate(${rotation}deg)`,
         opacity,
-        transition: isDragging ? "none" : "transform 0.3s ease, opacity 0.3s ease",
+        transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -110,8 +179,8 @@ export function SwipeableRecipeCard({
       <CardContent className="p-0">
         {/* Image */}
         <div
-          className="relative h-48 bg-muted cursor-pointer"
-          onClick={() => !isDragging && onTap()}
+          className="relative h-48 bg-muted"
+          onClick={handleCardClick}
         >
           {recipe.image_url ? (
             <img
@@ -126,21 +195,29 @@ export function SwipeableRecipeCard({
             </div>
           )}
 
-          {/* Swipe indicators */}
-          {swipeX > 50 && (
-            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-              <div className="bg-primary text-primary-foreground rounded-full p-4">
-                <Heart className="w-8 h-8" />
-              </div>
+          {/* Swipe indicators with progressive opacity */}
+          <div 
+            className="absolute inset-0 bg-primary/30 flex items-center justify-center transition-opacity duration-150"
+            style={{ opacity: swipeX > 30 ? swipeProgress : 0 }}
+          >
+            <div 
+              className="bg-primary text-primary-foreground rounded-full p-4 transition-transform duration-150"
+              style={{ transform: `scale(${0.8 + swipeProgress * 0.4})` }}
+            >
+              <Heart className="w-8 h-8" />
             </div>
-          )}
-          {swipeX < -50 && (
-            <div className="absolute inset-0 bg-destructive/20 flex items-center justify-center">
-              <div className="bg-destructive text-destructive-foreground rounded-full p-4">
-                <X className="w-8 h-8" />
-              </div>
+          </div>
+          <div 
+            className="absolute inset-0 bg-destructive/30 flex items-center justify-center transition-opacity duration-150"
+            style={{ opacity: swipeX < -30 ? swipeProgress : 0 }}
+          >
+            <div 
+              className="bg-destructive text-destructive-foreground rounded-full p-4 transition-transform duration-150"
+              style={{ transform: `scale(${0.8 + swipeProgress * 0.4})` }}
+            >
+              <X className="w-8 h-8" />
             </div>
-          )}
+          </div>
 
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-wrap gap-1.5">
@@ -159,7 +236,7 @@ export function SwipeableRecipeCard({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-3" onClick={() => !isDragging && onTap()}>
+        <div className="p-4 space-y-3" onClick={handleCardClick}>
           <h3 className="font-semibold text-lg text-foreground line-clamp-2">
             {recipe.title}
           </h3>
@@ -228,9 +305,9 @@ export function SwipeableRecipeCard({
             className="flex-1 gap-2"
             onClick={(e) => {
               e.stopPropagation();
-              onSkip();
+              if (!isExiting) handleSwipeComplete("left");
             }}
-            disabled={disabled}
+            disabled={disabled || isExiting}
           >
             <X className="w-4 h-4" />
             Hoppa över
@@ -239,9 +316,9 @@ export function SwipeableRecipeCard({
             className="flex-1 gap-2"
             onClick={(e) => {
               e.stopPropagation();
-              onSave();
+              if (!isExiting) handleSwipeComplete("right");
             }}
-            disabled={disabled}
+            disabled={disabled || isExiting}
           >
             <Heart className="w-4 h-4" />
             Spara
