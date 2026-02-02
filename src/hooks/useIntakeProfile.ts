@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { IntakeFormData, PrimaryConcernCategory, CareSeekerType, RelationshipType, MotivationLevel, ActivityLevel } from '@/types/intake';
+import { 
+  IntakeFormData, 
+  PrimaryConcernCategory, 
+  CareSeekerType, 
+  RelationshipType, 
+  MotivationLevel, 
+  ActivityLevel,
+  RedFlagSymptom,
+  PregnancyStatus,
+  PregnancyTriageReason,
+  TriageResult,
+  TriageReasonCode,
+  ProviderCategory,
+  CoachConcernCategory,
+} from '@/types/intake';
 import { toast } from 'sonner';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
@@ -49,6 +63,17 @@ export function useIntakeProfile() {
           aiParsedFields: data.ai_parsed_fields as IntakeFormData['aiParsedFields'],
           currentStep: data.current_step || 0,
           completedAt: data.completed_at ?? undefined,
+          // New triage fields
+          redFlagSymptoms: (data.red_flag_symptoms || []) as RedFlagSymptom[],
+          pregnancyStatus: (data as any).pregnancy_status as PregnancyStatus | undefined,
+          pregnancyTriageReason: (data as any).pregnancy_triage_reason as PregnancyTriageReason | undefined,
+          pregnancyReferredByCare: (data as any).pregnancy_referred_by_care as boolean | undefined,
+          triageResult: (data as any).triage_result as TriageResult | undefined,
+          triageReasonCode: (data as any).triage_reason_code as TriageReasonCode | undefined,
+          providerCategory: (data as any).provider_category as ProviderCategory | undefined,
+          coachConcernCategory: (data as any).coach_concern_category as CoachConcernCategory | undefined,
+          coachConcernSubcategory: (data as any).coach_concern_subcategory as string | undefined,
+          preferenceTags: (data as any).preference_tags || [],
         });
       }
     } catch (error) {
@@ -105,6 +130,38 @@ export function useIntakeProfile() {
       }
       if (complete) {
         updateData.completed_at = new Date().toISOString();
+      }
+      
+      // New triage fields
+      if (data.redFlagSymptoms !== undefined) {
+        updateData.red_flag_symptoms = data.redFlagSymptoms;
+      }
+      if (data.pregnancyStatus !== undefined) {
+        (updateData as any).pregnancy_status = data.pregnancyStatus;
+      }
+      if (data.pregnancyTriageReason !== undefined) {
+        (updateData as any).pregnancy_triage_reason = data.pregnancyTriageReason;
+      }
+      if (data.pregnancyReferredByCare !== undefined) {
+        (updateData as any).pregnancy_referred_by_care = data.pregnancyReferredByCare;
+      }
+      if (data.triageResult !== undefined) {
+        (updateData as any).triage_result = data.triageResult;
+      }
+      if (data.triageReasonCode !== undefined) {
+        (updateData as any).triage_reason_code = data.triageReasonCode;
+      }
+      if (data.providerCategory !== undefined) {
+        (updateData as any).provider_category = data.providerCategory;
+      }
+      if (data.coachConcernCategory !== undefined) {
+        (updateData as any).coach_concern_category = data.coachConcernCategory;
+      }
+      if (data.coachConcernSubcategory !== undefined) {
+        (updateData as any).coach_concern_subcategory = data.coachConcernSubcategory;
+      }
+      if (data.preferenceTags !== undefined) {
+        (updateData as any).preference_tags = data.preferenceTags;
       }
 
       const { error } = await supabase

@@ -1,5 +1,7 @@
 import { StepLayout } from './StepLayout';
+import { TriageResultCard } from './TriageResultCard';
 import { Check } from 'lucide-react';
+import { TriageResult, TriageReasonCode } from '@/types/intake';
 
 interface SummaryStepProps {
   currentStep: number;
@@ -7,12 +9,20 @@ interface SummaryStepProps {
   onNext: () => void;
   onBack: () => void;
   isLoading?: boolean;
+  triageResult?: TriageResult;
+  triageReasonCode?: TriageReasonCode;
 }
 
-const benefits = [
+const dietistBenefits = [
   'Regelbundna besök, 0 kr i patientavgift',
   'Obegränsad meddelandekontakt med din dietist',
   'Konkreta råd, coachning och rekommendationer',
+];
+
+const coachBenefits = [
+  'Personlig kostrådgivning anpassad för dig',
+  'Flexibel kontakt och uppföljning',
+  'Praktiska verktyg för vardagliga kostval',
 ];
 
 export function SummaryStep({
@@ -21,22 +31,37 @@ export function SummaryStep({
   onNext,
   onBack,
   isLoading = false,
+  triageResult = 'dietist',
+  triageReasonCode = 'SAFE_COACH',
 }: SummaryStepProps) {
+  const isDietist = triageResult === 'dietist';
+  const benefits = isDietist ? dietistBenefits : coachBenefits;
+  const title = isDietist 
+    ? 'Vi har en plan för dig'
+    : 'Din kostrådgivare väntar';
+  const description = isDietist
+    ? 'Dina mål är närmare än du tror, och du behöver inte nå dem ensam. Våra dietister tar fram individanpassade kost- och nutritionsplaner som leder till varaktig förändring.'
+    : 'En kostrådgivare hjälper dig att hitta hållbara vanor och praktiska lösningar för din vardag. Tillsammans skapar ni en plan som passar just ditt liv.';
+
   return (
     <StepLayout
       currentStep={currentStep}
       totalSteps={totalSteps}
-      title="Vi har en plan för dig"
+      title={title}
       onBack={onBack}
       onNext={onNext}
       nextLabel="Fortsätt"
       isLoading={isLoading}
     >
       <div className="space-y-6">
+        {/* Triage Result Card */}
+        <TriageResultCard 
+          result={triageResult} 
+          reasonCode={triageReasonCode}
+        />
+
         <p className="text-muted-foreground leading-relaxed">
-          Dina mål är närmare än du tror, och du behöver inte nå dem ensam. 
-          Våra dietister tar fram individanpassade kost- och nutritionsplaner 
-          som leder till varaktig förändring.
+          {description}
         </p>
 
         <div className="space-y-4">
@@ -53,7 +78,10 @@ export function SummaryStep({
         {/* Value illustration placeholder */}
         <div className="bg-primary-soft rounded-2xl p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Din personliga dietist väntar på dig
+            {isDietist 
+              ? 'Din personliga dietist väntar på dig'
+              : 'Din kostrådgivare är redo att hjälpa dig'
+            }
           </p>
         </div>
       </div>
