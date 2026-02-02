@@ -1,354 +1,356 @@
 
 
-## Anpassningsbar Utvecklingssida
+## Triagesystem: Dietist eller Kostrådgivare
 
-### Bakgrund
+### Sammanfattning
 
-Utvecklingssidan behöver visa olika innehåll beroende på användarens hälsobehov som anges i kvalificeringsflödet. Olika tillstånd kräver olika behandlingsmodeller:
-
-| Tillstånd | Behandlingsmodell | Fokusområden |
-|-----------|-------------------|--------------|
-| **Viktminskning** | 12-veckors fasindelad plan | BMI-trend, kalorimål, vikt-loggning, milstolpar |
-| **Diabetes** | Kontinuerlig övervakning | Blodsockernivåer, HbA1c-trender, kolhydratintag |
-| **Tarmhälsa (IBS)** | 3-fas FODMAP-protokoll | Eliminering, återintroduktion, personalisering |
-| **Ätstörning** | Stadiebaserad återhämtning | Psykologisk trygghet, regelbundna måltider |
-| **Hjärthälsa** | Livsstilsförändring | Kolesterol, blodtryck, kostmönster |
-| **Kvinnohälsa (PCOS)** | Hormonbalans-fokus | Insulin, androgener, vikthantering |
-| **Allmän hälsa** | Balanserat näringsfokus | Kalorier, makros, aktivitet |
+Implementera ett intelligent triagesystem som avgör om användaren ska matchas med en dietist (primärvård, 0 kr) eller en kostrådgivare (marknadspris) baserat på deras svar under qualifying-flödet.
 
 ---
 
-### Arkitektur
+### Flödesarkitektur
 
 ```text
-Progress.tsx
-    │
-    ├── useProgressData.ts (NY hook)
-    │       └── Hämtar intake_profiles + relevanta metrics
-    │
-    ├── ProgressRouter.tsx (NY)
-    │       └── Väljer rätt layout baserat på primaryConcernCategory
-    │
-    └── Layouts per tillstånd:
-            ├── WeightLossProgress.tsx
-            ├── DiabetesProgress.tsx
-            ├── GutHealthProgress.tsx
-            ├── EatingDisorderProgress.tsx
-            ├── HeartHealthProgress.tsx
-            ├── WomensHealthProgress.tsx
-            └── GeneralHealthProgress.tsx
+Nuvarande flöde (9 steg):
+┌─────────────────────────────────────────────────────────────┐
+│ 0. AI Input → 1. Vårdtagare → 2. Problem → 3. Recensioner   │
+│ → 4. Aktivitet → 5. Motivation → 6. Stödområden             │
+│ → 7. Sammanfattning → 8. Bokning                            │
+└─────────────────────────────────────────────────────────────┘
+
+Nytt flöde (11 steg):
+┌─────────────────────────────────────────────────────────────┐
+│ 0. AI Input                                                 │
+│ 1. Vårdtagare                                               │
+│ 2. SCREENING (NY) ← Röda flaggor                            │
+│    ↓                                                        │
+│    [Om gravid] → 2b. GRAVIDTRIAGE (NY)                      │
+│    ↓                                                        │
+│ 3. Problem/Behov (uppdaterad med coach-alternativ)          │
+│ 4. Underkategori (dynamisk)                                 │
+│ 5. Taggar/Preferenser (NY multi-select)                     │
+│ 6. Aktivitet                                                │
+│ 7. Motivation                                               │
+│ 8. Stödområden                                              │
+│ 9. Sammanfattning (visar triage-resultat)                   │
+│ 10. Bokning (anpassad text beroende på dietist/coach)       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Datamodell - Ny tabell
+### Datamodell - Nya fält i intake_profiles
 
-Eftersom olika tillstånd kräver olika metriker (blodsocker, vikt, HbA1c, etc.), behövs en ny tabell för att lagra dessa värden:
-
-```sql
-CREATE TABLE health_tracking_entries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  metric_type TEXT NOT NULL,  -- 'blood_sugar', 'weight', 'hba1c', 'blood_pressure', etc.
-  value NUMERIC NOT NULL,
-  unit TEXT,                  -- 'mmol/L', 'kg', '%', 'mmHg'
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(user_id, entry_date, metric_type)
-);
-```
+| Fält | Typ | Beskrivning |
+|------|-----|-------------|
+| `has_medical_diagnosis` | boolean | Medicinsk diagnos som påverkar kost |
+| `is_pregnant` | text (enum) | 'pregnant', 'postpartum', 'no', 'unsure' |
+| `pregnancy_triage_reason` | text | Om gravid: anledning till besök |
+| `pregnancy_referred_by_care` | boolean | Om gravid: hänvisad av vården? |
+| `has_red_flag_symptoms` | boolean | Röda flaggor (viktminskning, blod etc) |
+| `red_flag_symptoms` | text[] | Vilka röda flaggor |
+| `has_eating_disorder_risk` | boolean | Misstänkt ätstörningsrisk |
+| `has_medication_risk` | boolean | Mediciner som påverkar kost |
+| `triage_result` | text (enum) | 'dietist', 'coach', 'pending' |
+| `triage_reason_code` | text | Anledningskod för triage |
+| `provider_category` | text (enum) | 'medical', 'wellness' |
 
 ---
 
-### Layouter per tillstånd
+### Screeningsteg (ScreeningStep.tsx)
 
-#### 1. Viktminskning (WeightLossProgress.tsx)
+**Rubrik:** "Innan vi matchar dig - gäller något av detta?"
+
+**Frågor (kryssrutor):**
+1. Jag har fått en medicinsk diagnos som påverkar kosten (t.ex. diabetes, celiaki, IBD, hjärt-kärlsjukdom)
+2. Jag är gravid eller har nyligen varit gravid
+3. Jag har ofrivillig viktminskning eller kraftiga magsymtom
+4. Jag har eller misstänker en ätstörning
+5. Jag tar mediciner där kosten kan påverka behandling (osäker → dietist)
+6. Inget av ovanstående
+
+**Routing-logik:**
+- Om #1, #3, #4, #5 → `triage_result = 'dietist'`
+- Om #2 → Visa GravidTriageStep
+- Om #6 → Fortsätt till problemval (coach-flöde öppet)
+
+---
+
+### Gravidtriage (PregnancyTriageStep.tsx)
+
+**Steg 1 - Rubrik:** "Vad vill du ha hjälp med under graviditeten?"
+
+**Alternativ (radioknappar):**
+1. Allmän kostplanering (näring, måltidsstruktur, tips)
+2. Illamående/cravings/mataversioner (utan komplikation)
+3. Viktuppgång som oroar mig (utan diagnos)
+4. Jag har fått graviditetsdiabetes eller är under utredning
+5. Jag har diabetes typ 1 eller typ 2
+6. Jag har näringsbrist (t.ex. järnbrist) eller misstänker brist
+7. Jag har andra medicinska komplikationer
+8. Osäker / vill att vården bedömer
+
+**Routing:**
+- #4-8 → `triage_result = 'dietist'`
+- #1-3 → Visa "Har vården bett dig kontakta dietist?"
+
+**Steg 2 (om #1-3):**
+- Ja → `dietist`
+- Nej → `coach`
+- Osäker → `dietist`
+
+---
+
+### Uppdaterat Problemsteg (ProblemStep.tsx)
+
+Två "spår" baserat på screeningresultat:
+
+**Dietist-spår (nuvarande kategorier):**
+- Diabetes eller fördiabetes
+- Tarmhälsa (IBD, Crohns, UC, SIBO)
+- Hjärthälsa
+- Ätstörning
+- Kvinnohälsa (PCOS med medicinsk behandling)
+- Övrigt medicinskt
+
+**Coach-spår (NYA kategorier):**
+- Gå ner i vikt (utan diagnos)
+- Bygga muskler / gå upp i vikt
+- Hälsosamma vanor & struktur
+- Träning, prestation & återhämtning
+- Energi, fokus & mättnad
+- Vegetariskt/veganskt eller balanserad kost
+- Känsloätande & cravings (utan ätstörning)
+- Matplanering: matlådor, budget, tid
+- Mat i sociala situationer
+- Kosttillskott (generell vägledning)
+
+---
+
+### Routing-engine (triageEngine.ts)
+
+Prioriterad regelordning:
 
 ```text
-┌─────────────────────────────────────────┐
-│  Din viktresa                           │
-│  ──────────────────────────────────     │
-│  Vecka 3 av 12                          │
-│  [████████░░░░░░░░░░░░░░░] 25%          │
-├─────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐       │
-│  │  Startvikt  │  │  Nu         │       │
-│  │  85.2 kg    │  │  83.1 kg    │       │
-│  └─────────────┘  └─────────────┘       │
-│                                         │
-│  ┌─────────────┐  ┌─────────────┐       │
-│  │  Mål        │  │  Kvar       │       │
-│  │  75 kg      │  │  8.1 kg     │       │
-│  └─────────────┘  └─────────────┘       │
-├─────────────────────────────────────────┤
-│  📈 Viktutveckling (graf senaste 4 v)   │
-├─────────────────────────────────────────┤
-│  🏆 MILSTOLPAR                          │
-│  ✅ Första kilo                         │
-│  ✅ 5% av målvikt                       │
-│  ○  10% av målvikt                      │
-│  ○  Halvvägs                            │
-├─────────────────────────────────────────┤
-│  📊 Denna vecka                         │
-│  Kalorimål: 1650 / 1800 (92%)           │
-│  Aktiva dagar: 5/7                      │
-└─────────────────────────────────────────┘
+1. MEDICINSK DIAGNOS
+   → main_choice i dietist-spår → DIETIST
+
+2. RÖDA FLAGGOR
+   → ofrivillig viktminskning, blod i avföring, svår buksmärta,
+     kräkningar, sväljsvårigheter, långvarig diarré → DIETIST
+
+3. ÄTSTÖRNINGSRISK
+   → bulimi, anorexi, kompenserar, självframkallade kräkningar,
+     extrem restriktion → DIETIST
+
+4. GRAVIDITET MED KOMPLIKATION
+   → GDM, diabetes, näringsbrist, medicinska komplikationer → DIETIST
+
+5. OSÄKER/OTILLRÄCKLIG DATA
+   → main_choice är null eller "Annat" utan beskrivning → DIETIST
+
+6. MILD TARM (SOFT RULE)
+   → IBS-liknande, milt/ibland, kort duration → COACH
+   → Pågår >4 veckor eller påverkar mycket → DIETIST
+
+7. HETSÄTNING (SOFT RULE)
+   → "Ibland tappar kontrollen" → COACH
+   → Flera gånger/vecka eller kompensation → DIETIST
+
+8. DEFAULT
+   → Ingen flagga triggered → COACH
 ```
 
 ---
 
-#### 2. Diabetes (DiabetesProgress.tsx)
+### Nya typer (types/intake.ts tillägg)
 
-```text
-┌─────────────────────────────────────────┐
-│  Blodsockerkontroll                     │
-│  ──────────────────────────────────     │
-│  Senaste HbA1c: 6.8%                    │
-│  Mål: <7.0%                             │
-├─────────────────────────────────────────┤
-│  📊 Dagsöversikt                        │
-│  ┌─────────────┐  ┌─────────────┐       │
-│  │  Morgon     │  │  Efter mat  │       │
-│  │  5.4 mmol/L │  │  7.2 mmol/L │       │
-│  │  ✅ I mål   │  │  ✅ I mål   │       │
-│  └─────────────┘  └─────────────┘       │
-├─────────────────────────────────────────┤
-│  📈 Blodsocker senaste 7 dagar          │
-│  [Graf med normalgräns markerat]        │
-├─────────────────────────────────────────┤
-│  🍽️ Kolhydratintag idag                │
-│  [████████████░░░░░] 145g / 180g        │
-├─────────────────────────────────────────┤
-│  📆 Tid i målintervall (4-10 mmol/L)    │
-│  Denna vecka: 78%                       │
-│  Förra veckan: 72%                      │
-│  [Trend: ↑ +6%]                         │
-├─────────────────────────────────────────┤
-│  🎯 FOKUSOMRÅDEN                        │
-│  • Håll kolhydraterna jämna över dagen  │
-│  • Logga blodsocker efter måltid        │
-└─────────────────────────────────────────┘
+```typescript
+export type TriageResult = 'dietist' | 'coach' | 'pending';
+
+export type ProviderCategory = 'medical' | 'wellness';
+
+export type PregnancyStatus = 'pregnant' | 'postpartum' | 'no' | 'unsure';
+
+export type PregnancyTriageReason = 
+  | 'general_planning'
+  | 'nausea_cravings'
+  | 'weight_concern'
+  | 'gdm_risk_or_dx'
+  | 'diabetes'
+  | 'nutrient_deficiency'
+  | 'medical_complication'
+  | 'unsure';
+
+export type TriageReasonCode =
+  | 'DIAGNOSIS_SELECTED'
+  | 'RED_FLAG_SYMPTOM'
+  | 'EATING_DISORDER'
+  | 'PREGNANCY_MEDICAL'
+  | 'PREGNANCY_REFERRED_OR_UNSURE'
+  | 'PREGNANCY_GENERAL'
+  | 'UNCERTAIN'
+  | 'GI_PERSISTENT'
+  | 'SAFE_COACH';
+
+// Coach-specifika huvudkategorier
+export type CoachConcernCategory =
+  | 'weight_loss_general'
+  | 'muscle_building'
+  | 'healthy_habits'
+  | 'training_nutrition'
+  | 'energy_focus'
+  | 'plant_based'
+  | 'emotional_eating_mild'
+  | 'meal_planning'
+  | 'social_eating'
+  | 'supplements';
 ```
 
 ---
 
-#### 3. Tarmhälsa / IBS (GutHealthProgress.tsx)
+### Taggar/Preferenser (TagsStep.tsx)
 
-```text
-┌─────────────────────────────────────────┐
-│  FODMAP-resan                           │
-│  ──────────────────────────────────     │
-│  Fas 2: Återintroduktion                │
-├─────────────────────────────────────────┤
-│  📊 Fasöversikt                         │
-│  [1. Eliminering ✅] [2. Åter... ●] [3. Personalisering ○] │
-├─────────────────────────────────────────┤
-│  📝 Aktuell utmaning                    │
-│  ┌─────────────────────────────────┐    │
-│  │  Testar: Laktos (mjölk)         │    │
-│  │  Dag 2 av 3                     │    │
-│  │  [Logga reaktion]               │    │
-│  └─────────────────────────────────┘    │
-├─────────────────────────────────────────┤
-│  🔍 Identifierade triggers              │
-│  ⚠️  Lök (oligosackarider)              │
-│  ⚠️  Äpple (fruktos)                    │
-│  ✅ Laktosfria mejerier                 │
-├─────────────────────────────────────────┤
-│  📆 Symptomfria dagar                   │
-│  Denna vecka: 5/7 dagar                 │
-│  Trend: ↑ bättre än förra veckan        │
-├─────────────────────────────────────────┤
-│  📋 Nästa steg                          │
-│  • Slutför laktostest                   │
-│  • Börja testa fruktan (bröd)           │
-└─────────────────────────────────────────┘
-```
+Multi-select grupperade efter kategori:
 
----
+**Mål:**
+- Gå ner i vikt
+- Bygga muskler
+- Äta mer regelbundet
+- Få mer energi
+- Minska sötsug/snacks
+- Bli bättre på matplanering
 
-#### 4. Ätstörning (EatingDisorderProgress.tsx)
+**Vardag & begränsningar:**
+- Oregelbundna tider (skift/resa)
+- Jobbar mycket, lite tid
+- Budgetvänliga upplägg
+- Äter ofta ute
+- Enkla standardmåltider
 
-```text
-┌─────────────────────────────────────────┐
-│  Din återhämtning                       │
-│  ──────────────────────────────────     │
-│  En dag i taget                         │
-├─────────────────────────────────────────┤
-│  💚 Dagens fokus                        │
-│  ┌─────────────────────────────────┐    │
-│  │  "Lyssna på din kropp och       │    │
-│  │   var snäll mot dig själv"      │    │
-│  └─────────────────────────────────┘    │
-├─────────────────────────────────────────┤
-│  🍽️ Måltidsrytm                        │
-│  ☑️ Frukost                             │
-│  ☑️ Lunch                               │
-│  ○  Middag                              │
-│  ○  Mellanmål                           │
-├─────────────────────────────────────────┤
-│  📈 Regelbundenhet (30 dagar)           │
-│  [Heatmap utan kalorier]                │
-│  Dagar med 3+ måltider: 24/30           │
-├─────────────────────────────────────────┤
-│  🎯 Veckomål från dietist               │
-│  ✅ Äta frukost varje dag               │
-│  ○  Prova en ny maträtt                 │
-│  ○  Äta tillsammans med någon           │
-├─────────────────────────────────────────┤
-│  📅 Nästa samtal                        │
-│  Onsdag 5 feb kl 14:00                  │
-│  [Boka om] [Förbered anteckningar]      │
-└─────────────────────────────────────────┘
-```
+**Preferenser:**
+- Vegetarisk
+- Vegansk
+- Mycket protein
+- Minska socker
+- Mer fiber/grönsaker
+- Undvika kaloriräkning
 
-**Viktigt:** Ingen kalorivisning, fokus på regelbundenhet och positiva beteenden.
+**Beteenden:**
+- Kvällsätande
+- Småätande på jobbet
+- Sug/cravings
+- Stressätande
+- "Allt eller inget"-tänk
+
+**Träning:**
+- Tränar 1-2 ggr/vecka
+- Tränar 3-5 ggr/vecka
+- Styrketräning
+- Kondition/löpning
+- Pre-/post-workout strategi
 
 ---
 
-#### 5. Hjärthälsa (HeartHealthProgress.tsx)
-
-```text
-┌─────────────────────────────────────────┐
-│  Hjärthälsa                             │
-├─────────────────────────────────────────┤
-│  📊 Dina värden                         │
-│  ┌─────────────┐  ┌─────────────┐       │
-│  │  Kolesterol │  │  Blodtryck  │       │
-│  │  5.2 mmol/L │  │  128/82     │       │
-│  │  Mål: <5.0  │  │  Mål: <130  │       │
-│  └─────────────┘  └─────────────┘       │
-├─────────────────────────────────────────┤
-│  🥗 Medelhavspoäng                      │
-│  [████████████░░░░] 72/100              │
-│  Denna vecka vs förra: ↑ +5             │
-├─────────────────────────────────────────┤
-│  📈 Kolesteroltrend (6 mån)             │
-│  [Graf med mål markerat]                │
-├─────────────────────────────────────────┤
-│  ✅ Hjärtvänliga val denna vecka        │
-│  • 4 portioner fet fisk                 │
-│  • 12 portioner grönsaker               │
-│  • 3 portioner baljväxter               │
-└─────────────────────────────────────────┘
-```
-
----
-
-### Implementation - Nya filer
+### Filstruktur
 
 ```text
 src/
-├── pages/
-│   └── Progress.tsx                  (uppdateras - routing-logik)
+├── types/
+│   └── intake.ts                     (utökas med triage-typer)
 │
-├── components/progress/
-│   ├── ProgressRouter.tsx            (NY - väljer layout)
-│   ├── WeightLossProgress.tsx        (NY)
-│   ├── DiabetesProgress.tsx          (NY)
-│   ├── GutHealthProgress.tsx         (NY)
-│   ├── EatingDisorderProgress.tsx    (NY)
-│   ├── HeartHealthProgress.tsx       (NY)
-│   ├── WomensHealthProgress.tsx      (NY)
-│   ├── GeneralHealthProgress.tsx     (NY)
-│   │
-│   └── shared/
-│       ├── ProgressHeader.tsx        (NY - gemensam header)
-│       ├── MetricCard.tsx            (NY - enskilt mätvärde)
-│       ├── TrendChart.tsx            (NY - linjediagram med recharts)
-│       ├── MilestoneList.tsx         (NY - prestationer/mål)
-│       ├── WeeklyHeatmap.tsx         (NY - aktivitetsöversikt)
-│       └── LogMetricSheet.tsx        (NY - logga värden)
+├── lib/
+│   └── triageEngine.ts               (NY - routing-logik)
+│
+├── components/qualifying/
+│   ├── ScreeningStep.tsx             (NY)
+│   ├── PregnancyTriageStep.tsx       (NY)
+│   ├── ProblemStep.tsx               (uppdateras med coach-spår)
+│   ├── SubcategoryStep.tsx           (NY - dynamiska underkategorier)
+│   ├── TagsStep.tsx                  (NY - multi-select preferenser)
+│   ├── QualifyingFlow.tsx            (uppdateras med nya steg)
+│   └── TriageResultCard.tsx          (NY - visar resultat i sammanfattning)
 │
 ├── hooks/
-│   └── useProgressData.ts            (NY - hämtar relevant data)
+│   └── useIntakeProfile.ts           (utökas med nya fält)
 │
-└── types/
-    └── progress.ts                   (NY - typdefinitioner)
+└── data/
+    ├── screeningQuestions.ts         (NY - screening-frågor)
+    ├── coachCategories.ts            (NY - coach-kategorier)
+    └── triageRules.ts                (NY - regeldata)
 ```
 
 ---
 
-### Databas-ändringar
+### Databasändringar
 
-1. **Ny tabell: health_tracking_entries**
-   - Lagrar blodsocker, vikt, HbA1c, blodtryck etc.
-   - RLS-policies för att endast användaren kan se sina egna mätvärden
-   - Dietister kan se tilldelade patienters mätvärden
-
-2. **Ny tabell: treatment_milestones**
-   - Definierar milstolpar per behandlingstyp
-   - Spårar användarens framsteg
-
----
-
-### Hook: useProgressData.ts
-
-```typescript
-interface ProgressData {
-  intakeProfile: IntakeProfile | null;
-  healthEntries: HealthEntry[];
-  milestones: Milestone[];
-  weeklyStats: WeeklyStats;
-  treatmentPhase: TreatmentPhase;
-}
-
-// Returnerar data baserat på användarens primaryConcernCategory
-export function useProgressData() {
-  const { user } = useAuth();
-  const { profile } = useIntakeProfile();
-  
-  // Hämta relevanta metriker baserat på tillstånd
-  // T.ex. för diabetes: blood_sugar, hba1c
-  // För viktminskning: weight
-  // För IBS: symptom_entries
-}
+**Nya kolumner i intake_profiles:**
+```sql
+ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
+  pregnancy_status TEXT DEFAULT NULL;
+ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
+  pregnancy_triage_reason TEXT DEFAULT NULL;
+ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
+  pregnancy_referred_by_care BOOLEAN DEFAULT NULL;
+ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
+  red_flag_symptoms TEXT[] DEFAULT '{}';
+ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
+  triage_result TEXT DEFAULT 'pending';
+ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
+  triage_reason_code TEXT DEFAULT NULL;
+ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
+  provider_category TEXT DEFAULT NULL;
 ```
 
 ---
 
 ### Implementationsordning
 
-1. **Skapa databastabeller**
-   - health_tracking_entries med RLS
-   - treatment_milestones (valfritt, kan vara hårdkodat initialt)
-
-2. **Skapa typer och hook**
-   - types/progress.ts
-   - hooks/useProgressData.ts
-
-3. **Skapa delade komponenter**
-   - MetricCard, TrendChart, MilestoneList, LogMetricSheet
-
-4. **Skapa ProgressRouter.tsx**
-   - Läser intake_profiles.primary_concern_category
-   - Renderar rätt layout-komponent
-
-5. **Implementera layouts i prioritetsordning:**
-   - GeneralHealthProgress (fallback)
-   - WeightLossProgress
-   - DiabetesProgress
-   - GutHealthProgress
-   - Övriga efter behov
-
-6. **Uppdatera Progress.tsx**
-   - Ersätt nuvarande statiska innehåll med ProgressRouter
+1. **Databas:** Lägg till nya kolumner i intake_profiles
+2. **Typer:** Uppdatera types/intake.ts med nya typer
+3. **Engine:** Skapa triageEngine.ts med routing-logik
+4. **Data:** Skapa datafiler för frågor och kategorier
+5. **Komponenter:**
+   - ScreeningStep.tsx
+   - PregnancyTriageStep.tsx
+   - Uppdatera ProblemStep.tsx
+   - SubcategoryStep.tsx
+   - TagsStep.tsx
+   - TriageResultCard.tsx
+6. **Uppdatera QualifyingFlow.tsx** med nya steg och routing
+7. **Uppdatera useIntakeProfile.ts** för att hantera nya fält
+8. **Uppdatera SummaryStep** för att visa triage-resultat
+9. **Uppdatera BookingStep** med anpassad text
 
 ---
 
-### Särskilda överväganden
+### Användarupplevelse
 
-**Ätstörning:**
-- Ingen kalorivisning överhuvudtaget
-- Fokus på regelbundenhet och positiva beteenden
-- Mjukare språk och ingen "prestationspress"
+**Om användaren matchas med DIETIST:**
+- Sammanfattning visar: "Du kommer att träffa en legitimerad dietist"
+- Text: "Ditt behov täcks av primärvården. Kostnad: 0 kr (frikort gäller)"
+- Bokning: "Boka tid med dietist"
 
-**Diabetes:**
-- Möjlighet att logga blodsocker direkt i appen
-- Integration med CGM-data (framtida feature)
+**Om användaren matchas med COACH:**
+- Sammanfattning visar: "Du kommer att träffa en kostrådgivare"
+- Text: "Pris från 100 kr/samtal. Kan betalas med friskvårdsbidrag."
+- Bokning: "Boka tid med kostrådgivare"
 
-**IBS/FODMAP:**
-- Strukturerat fas-system
-- Koppling till symptom_entries-tabellen
+---
+
+### Tekniska överväganden
+
+**Säkerhet:**
+- All routing-logik körs på frontend initialt
+- Slutligt triage-resultat valideras vid bokning (edge function)
+- Röda flaggor loggas för uppföljning
+
+**Felhantering:**
+- Om triagen inte kan avgöras → default till dietist (säkrare)
+- Om användaren hoppar över screening → visa varning
+
+**UX:**
+- Användare med röda flaggor ser inte coach-alternativ alls
+- Tydlig förklaring varför de matchas med dietist/coach
+- Möjlighet att "överklaga" till dietist om man vill
 
