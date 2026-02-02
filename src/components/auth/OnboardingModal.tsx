@@ -7,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
 interface OnboardingModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
+export function OnboardingModal({
+  open,
+  onClose
+}: OnboardingModalProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -21,37 +22,34 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const navigate = useNavigate();
-  const { signUp } = useAuth();
-
+  const {
+    signUp
+  } = useAuth();
   if (!open) return null;
-
   const handleNext = () => {
     if (currentPage < 2) {
       setCurrentPage(currentPage + 1);
     }
   };
-
   const handleGetStarted = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!email || !password) {
       toast.error("Fyll i e-post och lösenord");
       return;
     }
-    
     if (password !== confirmPassword) {
       toast.error("Lösenorden matchar inte");
       return;
     }
-    
     if (password.length < 6) {
       toast.error("Lösenordet måste vara minst 6 tecken");
       return;
     }
-    
     setIsLoading(true);
     try {
-      const { error } = await signUp(email, password);
+      const {
+        error
+      } = await signUp(email, password);
       if (error) {
         toast.error(error.message || "Registreringen misslyckades");
         return;
@@ -66,11 +64,9 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
       setIsLoading(false);
     }
   };
-
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX);
   };
-
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStart === null) return;
     const touchEnd = e.changedTouches[0].clientX;
@@ -84,7 +80,6 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
     }
     setTouchStart(null);
   };
-
   const handleClose = () => {
     setCurrentPage(0);
     setEmail("");
@@ -92,28 +87,17 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
     setConfirmPassword("");
     onClose();
   };
-
-  return (
-    <div className="fixed inset-0 z-50 bg-white safe-area-inset flex flex-col">
+  return <div className="fixed inset-0 z-50 bg-white safe-area-inset flex flex-col">
       {/* Close button */}
-      <button
-        onClick={handleClose}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-muted transition-colors"
-        aria-label="Stäng"
-      >
+      <button onClick={handleClose} className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-muted transition-colors" aria-label="Stäng">
         <X className="h-6 w-6 text-foreground" />
       </button>
 
       {/* Swipeable content */}
-      <div
-        className="flex-1 overflow-hidden touch-pan-y"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div
-          className="flex h-full transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${currentPage * 100}%)` }}
-        >
+      <div className="flex-1 overflow-hidden touch-pan-y" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+        <div className="flex h-full transition-transform duration-300 ease-out" style={{
+        transform: `translateX(-${currentPage * 100}%)`
+      }}>
           {/* Page 1 */}
           <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto">
             <OnboardingPage1 onNext={handleNext} />
@@ -126,41 +110,23 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
 
           {/* Page 3 - Registration */}
           <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto">
-            <OnboardingPage3 
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              confirmPassword={confirmPassword}
-              setConfirmPassword={setConfirmPassword}
-              onGetStarted={handleGetStarted} 
-              isLoading={isLoading} 
-            />
+            <OnboardingPage3 email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} onGetStarted={handleGetStarted} isLoading={isLoading} />
           </div>
         </div>
       </div>
 
       {/* Page indicators - fixed at bottom */}
       <div className="flex-shrink-0 py-4 flex justify-center gap-2 pb-safe">
-        {[0, 1, 2].map((index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentPage(index)}
-            className={cn(
-              "w-2 h-2 rounded-full transition-colors",
-              currentPage === index ? "bg-primary" : "bg-muted"
-            )}
-            aria-label={`Gå till sida ${index + 1}`}
-          />
-        ))}
+        {[0, 1, 2].map(index => <button key={index} onClick={() => setCurrentPage(index)} className={cn("w-2 h-2 rounded-full transition-colors", currentPage === index ? "bg-primary" : "bg-muted")} aria-label={`Gå till sida ${index + 1}`} />)}
       </div>
-    </div>
-  );
+    </div>;
 }
-
-function OnboardingPage1({ onNext }: { onNext: () => void }) {
-  return (
-    <div className="flex-1 flex flex-col px-6 pt-16">
+function OnboardingPage1({
+  onNext
+}: {
+  onNext: () => void;
+}) {
+  return <div className="flex-1 flex flex-col px-6 pt-16">
       {/* Illustration placeholder */}
       <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8">
         <div className="text-primary/50 text-sm">
@@ -170,9 +136,7 @@ function OnboardingPage1({ onNext }: { onNext: () => void }) {
 
       {/* Content */}
       <div className="flex-1">
-        <h2 className="text-2xl font-semibold text-foreground mb-8">
-          Dietist i mobilen
-        </h2>
+        <h2 className="text-2xl font-semibold text-foreground mb-8">Dietist eller kostrådgivning i mobilen</h2>
 
         {/* Stats */}
         <div className="space-y-6">
@@ -188,13 +152,14 @@ function OnboardingPage1({ onNext }: { onNext: () => void }) {
           Nästa
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 }
-
-function OnboardingPage2({ onNext }: { onNext: () => void }) {
-  return (
-    <div className="flex-1 flex flex-col px-6 pt-16">
+function OnboardingPage2({
+  onNext
+}: {
+  onNext: () => void;
+}) {
+  return <div className="flex-1 flex flex-col px-6 pt-16">
       {/* Illustration placeholder */}
       <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8">
         <div className="text-primary/50 text-sm text-center px-4">
@@ -251,10 +216,8 @@ function OnboardingPage2({ onNext }: { onNext: () => void }) {
           Skapa konto
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 }
-
 function OnboardingPage3({
   email,
   setEmail,
@@ -263,7 +226,7 @@ function OnboardingPage3({
   confirmPassword,
   setConfirmPassword,
   onGetStarted,
-  isLoading,
+  isLoading
 }: {
   email: string;
   setEmail: (v: string) => void;
@@ -274,8 +237,7 @@ function OnboardingPage3({
   onGetStarted: (e: React.FormEvent) => void;
   isLoading: boolean;
 }) {
-  return (
-    <div className="flex-1 flex flex-col px-6 pt-16">
+  return <div className="flex-1 flex flex-col px-6 pt-16">
       {/* Content */}
       <div className="flex-1">
         <h2 className="text-2xl font-semibold text-foreground mb-2">
@@ -288,67 +250,38 @@ function OnboardingPage3({
         <form onSubmit={onGetStarted} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="signup-email">E-post</Label>
-            <Input
-              id="signup-email"
-              type="email"
-              placeholder="din@epost.se"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              required
-            />
+            <Input id="signup-email" type="email" placeholder="din@epost.se" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} required />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="signup-password">Lösenord</Label>
-            <Input
-              id="signup-password"
-              type="password"
-              placeholder="Minst 6 tecken"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
-              minLength={6}
-            />
+            <Input id="signup-password" type="password" placeholder="Minst 6 tecken" value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} required minLength={6} />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="signup-confirm">Bekräfta lösenord</Label>
-            <Input
-              id="signup-confirm"
-              type="password"
-              placeholder="Upprepa lösenord"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={isLoading}
-              required
-              minLength={6}
-            />
+            <Input id="signup-confirm" type="password" placeholder="Upprepa lösenord" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} disabled={isLoading} required minLength={6} />
           </div>
 
           {/* CTA */}
           <div className="pt-4">
-            <Button
-              type="submit"
-              size="xl"
-              className="w-full h-14 text-base font-medium"
-              disabled={isLoading}
-            >
+            <Button type="submit" size="xl" className="w-full h-14 text-base font-medium" disabled={isLoading}>
               {isLoading ? "Skapar konto…" : "Kom igång"}
             </Button>
           </div>
         </form>
       </div>
-    </div>
-  );
+    </div>;
 }
-
-function StatRow({ number, text }: { number: string; text: string }) {
-  return (
-    <div>
+function StatRow({
+  number,
+  text
+}: {
+  number: string;
+  text: string;
+}) {
+  return <div>
       <div className="text-2xl font-semibold text-primary">{number}</div>
       <div className="text-sm text-muted-foreground">{text}</div>
-    </div>
-  );
+    </div>;
 }
