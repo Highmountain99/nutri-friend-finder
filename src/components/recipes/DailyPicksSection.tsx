@@ -91,37 +91,40 @@ export function DailyPicksSection({ onRecipeSelect }: DailyPicksSectionProps) {
           )}
         </div>
       ) : (
-        <div className="relative" style={{ marginBottom: "16px" }}>
+        <div className="relative pb-6">
           {/* Stack effect - show actual cards behind */}
           {picks
             .slice(currentIndex + 1, currentIndex + 3)
             .reverse()
             .map((recipe, reverseIndex) => {
-              const i = picks.slice(currentIndex + 1, currentIndex + 3).length - 1 - reverseIndex;
+              const stackSize = Math.min(picks.length - currentIndex - 1, 2);
+              const i = stackSize - 1 - reverseIndex;
               return (
                 <div
                   key={recipe.id}
-                  className="absolute inset-x-0 top-0 bg-card rounded-xl shadow-soft border border-border overflow-hidden"
+                  className="absolute inset-x-0 top-0 bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden pointer-events-none"
                   style={{
-                    transform: `translateY(${(i + 1) * 12}px) scale(${1 - (i + 1) * 0.04})`,
+                    transform: `translateY(${(i + 1) * 16}px) scale(${1 - (i + 1) * 0.05})`,
                     zIndex: -i - 1,
                   }}
                 >
-                  {/* Show preview of stacked card */}
+                  {/* Show preview of stacked card image */}
                   <div className="h-48 bg-muted relative">
                     {recipe.image_url ? (
                       <img
                         src={recipe.image_url}
-                        alt={recipe.title}
-                        className="w-full h-full object-cover opacity-60"
+                        alt=""
+                        className="w-full h-full object-cover opacity-70"
                         draggable={false}
                       />
                     ) : (
                       <div className="w-full h-full bg-muted" />
                     )}
                   </div>
+                  {/* Placeholder content area */}
                   <div className="p-4 bg-card">
-                    <div className="h-6 bg-muted/50 rounded w-3/4" />
+                    <div className="h-5 bg-muted/30 rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-muted/20 rounded w-1/2" />
                   </div>
                 </div>
               );
