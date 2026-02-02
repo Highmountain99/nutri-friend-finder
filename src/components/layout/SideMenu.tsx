@@ -73,29 +73,6 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-3">
-              Navigering
-            </p>
-            {mainNavItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                    isActive
-                      ? "bg-primary-soft text-primary font-medium"
-                      : "text-foreground hover:bg-muted"
-                  )
-                }
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
-
-            <div className="h-px bg-border my-4" />
 
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-3">
               Konto
