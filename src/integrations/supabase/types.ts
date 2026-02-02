@@ -172,6 +172,8 @@ export type Database = {
           care_seeker_type:
             | Database["public"]["Enums"]["care_seeker_type"]
             | null
+          coach_concern_category: string | null
+          coach_concern_subcategory: string | null
           completed_at: string | null
           concern_tags: string[] | null
           created_at: string
@@ -180,14 +182,22 @@ export type Database = {
           motivation_level:
             | Database["public"]["Enums"]["motivation_level"]
             | null
+          preference_tags: string[] | null
+          pregnancy_referred_by_care: boolean | null
+          pregnancy_status: string | null
+          pregnancy_triage_reason: string | null
           primary_concern_category:
             | Database["public"]["Enums"]["primary_concern_category"]
             | null
           primary_concern_subcategory: string | null
+          provider_category: string | null
+          red_flag_symptoms: string[] | null
           relationship_if_other:
             | Database["public"]["Enums"]["relationship_type"]
             | null
           support_areas: string[] | null
+          triage_reason_code: string | null
+          triage_result: string | null
           updated_at: string
           user_id: string
         }
@@ -198,6 +208,8 @@ export type Database = {
           care_seeker_type?:
             | Database["public"]["Enums"]["care_seeker_type"]
             | null
+          coach_concern_category?: string | null
+          coach_concern_subcategory?: string | null
           completed_at?: string | null
           concern_tags?: string[] | null
           created_at?: string
@@ -206,14 +218,22 @@ export type Database = {
           motivation_level?:
             | Database["public"]["Enums"]["motivation_level"]
             | null
+          preference_tags?: string[] | null
+          pregnancy_referred_by_care?: boolean | null
+          pregnancy_status?: string | null
+          pregnancy_triage_reason?: string | null
           primary_concern_category?:
             | Database["public"]["Enums"]["primary_concern_category"]
             | null
           primary_concern_subcategory?: string | null
+          provider_category?: string | null
+          red_flag_symptoms?: string[] | null
           relationship_if_other?:
             | Database["public"]["Enums"]["relationship_type"]
             | null
           support_areas?: string[] | null
+          triage_reason_code?: string | null
+          triage_result?: string | null
           updated_at?: string
           user_id: string
         }
@@ -224,6 +244,8 @@ export type Database = {
           care_seeker_type?:
             | Database["public"]["Enums"]["care_seeker_type"]
             | null
+          coach_concern_category?: string | null
+          coach_concern_subcategory?: string | null
           completed_at?: string | null
           concern_tags?: string[] | null
           created_at?: string
@@ -232,14 +254,22 @@ export type Database = {
           motivation_level?:
             | Database["public"]["Enums"]["motivation_level"]
             | null
+          preference_tags?: string[] | null
+          pregnancy_referred_by_care?: boolean | null
+          pregnancy_status?: string | null
+          pregnancy_triage_reason?: string | null
           primary_concern_category?:
             | Database["public"]["Enums"]["primary_concern_category"]
             | null
           primary_concern_subcategory?: string | null
+          provider_category?: string | null
+          red_flag_symptoms?: string[] | null
           relationship_if_other?:
             | Database["public"]["Enums"]["relationship_type"]
             | null
           support_areas?: string[] | null
+          triage_reason_code?: string | null
+          triage_result?: string | null
           updated_at?: string
           user_id?: string
         }

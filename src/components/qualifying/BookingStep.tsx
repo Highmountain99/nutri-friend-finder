@@ -3,10 +3,11 @@ import { StepLayout } from './StepLayout';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Video, AlertTriangle } from 'lucide-react';
+import { Check, Video, AlertTriangle, Heart } from 'lucide-react';
 import { format, addDays, setHours, setMinutes } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { TriageResult } from '@/types/intake';
 
 interface BookingStepProps {
   currentStep: number;
@@ -15,6 +16,7 @@ interface BookingStepProps {
   onBack: () => void;
   onSkip: () => void;
   isLoading?: boolean;
+  triageResult?: TriageResult;
 }
 
 const timeSlots = [
@@ -34,9 +36,14 @@ export function BookingStep({
   onBack,
   onSkip,
   isLoading = false,
+  triageResult = 'dietist',
 }: BookingStepProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<{ hour: number; minute: number } | null>(null);
+
+  const isDietist = triageResult === 'dietist';
+  const providerLabel = isDietist ? 'dietist' : 'kostrådgivare';
+  const Icon = isDietist ? Video : Heart;
 
   const handleNext = () => {
     if (selectedDate && selectedTime) {
@@ -54,7 +61,7 @@ export function BookingStep({
     <StepLayout
       currentStep={currentStep}
       totalSteps={totalSteps}
-      title="Boka ditt första videosamtal"
+      title={`Boka ditt första samtal med ${providerLabel}`}
       onBack={onBack}
       onNext={handleNext}
       nextDisabled={isNextDisabled}
@@ -63,13 +70,26 @@ export function BookingStep({
     >
       <div className="space-y-6">
         {/* Video call info */}
-        <div className="flex items-center gap-3 p-4 bg-primary-soft rounded-xl">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Video className="w-5 h-5 text-primary" />
+        <div className={cn(
+          "flex items-center gap-3 p-4 rounded-xl",
+          isDietist ? "bg-primary-soft" : "bg-accent/10"
+        )}>
+          <div className={cn(
+            "w-10 h-10 rounded-full flex items-center justify-center",
+            isDietist ? "bg-primary/10" : "bg-accent/20"
+          )}>
+            <Icon className={cn(
+              "w-5 h-5",
+              isDietist ? "text-primary" : "text-accent"
+            )} />
           </div>
           <div>
-            <p className="font-medium text-foreground">Videosamtal med dietist</p>
-            <p className="text-sm text-muted-foreground">30 minuter</p>
+            <p className="font-medium text-foreground">
+              {isDietist ? 'Videosamtal med dietist' : 'Samtal med kostrådgivare'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isDietist ? '30 minuter • 0 kr' : '30 minuter • från 100 kr'}
+            </p>
           </div>
         </div>
 
@@ -119,10 +139,16 @@ export function BookingStep({
 
         {/* Selected summary */}
         {selectedDate && selectedTime && (
-          <Card className="border-primary/30 bg-primary/5 animate-fade-in">
+          <Card className={cn(
+            "animate-fade-in",
+            isDietist ? "border-primary/30 bg-primary/5" : "border-accent/30 bg-accent/5"
+          )}>
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <Check className="w-4 h-4 text-primary-foreground" />
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center",
+                isDietist ? "bg-primary" : "bg-accent"
+              )}>
+                <Check className="w-4 h-4 text-white" />
               </div>
               <div>
                 <p className="font-medium text-foreground capitalize">
