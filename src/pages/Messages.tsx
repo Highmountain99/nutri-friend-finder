@@ -2,9 +2,12 @@ import { useState } from "react";
 import { Send, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
+import { useAppointments } from "@/hooks/useAppointments";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Message {
   id: string;
@@ -13,17 +16,29 @@ interface Message {
   timestamp: Date;
 }
 
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    text: "Hej! Välkommen till EatSuite. Jag är Anna, din personliga dietist. Hur kan jag hjälpa dig idag?",
-    sender: "dietitian",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-];
-
 export default function Messages() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { getUpcomingAppointment, loading } = useAppointments();
+  const upcomingAppointment = getUpcomingAppointment();
+
+  // Get dietitian info from appointment
+  const dietitian = upcomingAppointment?.dietitian;
+  const dietitianName = dietitian
+    ? `${dietitian.firstName} ${dietitian.lastName}`
+    : "Din dietist";
+  const dietitianTitle = dietitian?.title || "Legitimerad dietist";
+  const dietitianAvatar = dietitian?.avatarUrl;
+  const dietitianInitials = dietitian
+    ? `${dietitian.firstName[0]}${dietitian.lastName[0]}`.toUpperCase()
+    : "DD";
+
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      text: `Hej! Välkommen till EatSuite. Jag är ${dietitian?.firstName || "din dietist"}. Hur kan jag hjälpa dig idag?`,
+      sender: "dietitian",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    },
+  ]);
   const [newMessage, setNewMessage] = useState("");
 
   const handleSend = () => {
@@ -55,15 +70,34 @@ export default function Messages() {
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       {/* Chat Header */}
       <div className="px-4 py-3 border-b border-border bg-card">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center text-primary-foreground font-semibold">
-            AL
+        {loading ? (
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-20" />
+            </div>
           </div>
-          <div>
-            <h2 className="font-semibold text-foreground">Anna Lindström</h2>
-            <p className="text-xs text-muted-foreground">Din dietist</p>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Avatar className="w-10 h-10 border-2 border-primary/20">
+              {dietitianAvatar ? (
+                <AvatarImage
+                  src={dietitianAvatar}
+                  alt={dietitianName}
+                  className="object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="bg-primary-soft text-primary font-semibold text-sm">
+                {dietitianInitials}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h2 className="font-semibold text-foreground">{dietitianName}</h2>
+              <p className="text-xs text-muted-foreground">{dietitianTitle}</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Messages */}
