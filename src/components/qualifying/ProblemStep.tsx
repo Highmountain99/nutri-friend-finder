@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { StepLayout } from './StepLayout';
 import { UnifiedConcernCategory, unifiedCategoryLabels } from '@/types/intake';
 import { cn } from '@/lib/utils';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 
 interface ProblemStepProps {
   currentStep: number;
@@ -11,13 +9,11 @@ interface ProblemStepProps {
   onNext: (data: { 
     unifiedConcernCategory?: UnifiedConcernCategory;
     isPregnant: boolean;
-    takesMedication: boolean;
   }) => void;
   onBack: () => void;
   initialCategory?: UnifiedConcernCategory;
   suggestedCategory?: UnifiedConcernCategory;
   initialIsPregnant?: boolean;
-  initialTakesMedication?: boolean;
 }
 
 export function ProblemStep({
@@ -28,31 +24,33 @@ export function ProblemStep({
   initialCategory,
   suggestedCategory,
   initialIsPregnant = false,
-  initialTakesMedication = false,
 }: ProblemStepProps) {
   const [category, setCategory] = useState<UnifiedConcernCategory | undefined>(
     initialCategory || suggestedCategory
   );
   const [isPregnant, setIsPregnant] = useState(initialIsPregnant);
-  const [takesMedication, setTakesMedication] = useState(initialTakesMedication);
 
   const handleCategorySelect = (cat: UnifiedConcernCategory) => {
     setCategory(cat);
+    setIsPregnant(false); // Deselect pregnancy if a category is selected
+  };
+
+  const handlePregnancySelect = () => {
+    setIsPregnant(true);
+    setCategory(undefined); // Deselect category if pregnancy is selected
   };
 
   const handleNext = () => {
     onNext({
       unifiedConcernCategory: category,
       isPregnant,
-      takesMedication,
     });
   };
 
   const handleSkip = () => {
     onNext({
       unifiedConcernCategory: undefined,
-      isPregnant,
-      takesMedication,
+      isPregnant: false,
     });
   };
 
@@ -69,45 +67,25 @@ export function ProblemStep({
       onSkip={handleSkip}
       skipLabel="Hoppa över"
     >
-      <div className="space-y-6">
-        {/* Screening checkboxes at top */}
-        <div className="space-y-3 pb-4 border-b border-border">
-          <div className="flex items-start gap-3">
-            <Checkbox
-              id="pregnant"
-              checked={isPregnant}
-              onCheckedChange={(checked) => setIsPregnant(checked === true)}
-              className="mt-0.5"
-            />
-            <Label 
-              htmlFor="pregnant" 
-              className="text-sm font-normal leading-relaxed cursor-pointer"
-            >
-              Jag är gravid eller har nyligen varit gravid
-            </Label>
-          </div>
-          
-          <div className="flex items-start gap-3">
-            <Checkbox
-              id="medication"
-              checked={takesMedication}
-              onCheckedChange={(checked) => setTakesMedication(checked === true)}
-              className="mt-0.5"
-            />
-            <Label 
-              htmlFor="medication" 
-              className="text-sm font-normal leading-relaxed cursor-pointer"
-            >
-              Jag tar mediciner som kan påverka kosten
-            </Label>
-          </div>
-        </div>
-
+      <div className="space-y-4">
         {/* Category selection */}
         <div className="grid grid-cols-1 gap-3">
+          {/* Pregnancy option as a button */}
+          <button
+            onClick={handlePregnancySelect}
+            className={cn(
+              "flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all",
+              isPregnant
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
+            )}
+          >
+            <span className="font-medium flex-1">Jag är gravid eller har nyligen varit gravid</span>
+          </button>
+
           {(Object.keys(unifiedCategoryLabels) as UnifiedConcernCategory[]).map((cat) => {
-            const isSelected = category === cat;
-            const isSuggested = suggestedCategory === cat && !category;
+            const isSelected = category === cat && !isPregnant;
+            const isSuggested = suggestedCategory === cat && !category && !isPregnant;
             
             return (
               <button

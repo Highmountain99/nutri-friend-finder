@@ -317,7 +317,6 @@ export function QualifyingFlow() {
           initialCategory={formData.unifiedConcernCategory}
           suggestedCategory={suggestedCategory}
           initialIsPregnant={formData.isPregnant}
-          initialTakesMedication={formData.takesMedication}
         />
       )}
 
