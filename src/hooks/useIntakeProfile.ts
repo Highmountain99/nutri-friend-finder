@@ -64,9 +64,10 @@ export function useIntakeProfile() {
           aiParsedFields: data.ai_parsed_fields as IntakeFormData['aiParsedFields'],
           currentStep: data.current_step || 0,
           completedAt: data.completed_at ?? undefined,
-          // New triage fields
+          // Screening fields (now in ProblemStep)
           redFlagSymptoms: (data.red_flag_symptoms || []) as RedFlagSymptom[],
-          wantsDietist: (data as any).wants_dietist as boolean | undefined,
+          isPregnant: (data as any).pregnancy_status === 'pregnant',
+          takesMedication: data.red_flag_symptoms?.includes('medication_risk') || false,
           pregnancyStatus: (data as any).pregnancy_status as PregnancyStatus | undefined,
           pregnancyTriageReason: (data as any).pregnancy_triage_reason as PregnancyTriageReason | undefined,
           pregnancyReferredByCare: (data as any).pregnancy_referred_by_care as boolean | undefined,
@@ -135,12 +136,19 @@ export function useIntakeProfile() {
         updateData.completed_at = new Date().toISOString();
       }
       
-      // New triage fields
+      // Screening/triage fields
       if (data.redFlagSymptoms !== undefined) {
         updateData.red_flag_symptoms = data.redFlagSymptoms;
       }
-      if (data.wantsDietist !== undefined) {
-        (updateData as any).wants_dietist = data.wantsDietist;
+      if (data.isPregnant !== undefined) {
+        (updateData as any).pregnancy_status = data.isPregnant ? 'pregnant' : null;
+      }
+      if (data.takesMedication !== undefined) {
+        // Store in red_flag_symptoms array
+        const symptoms = updateData.red_flag_symptoms || [];
+        if (data.takesMedication && !symptoms.includes('medication_risk')) {
+          updateData.red_flag_symptoms = [...symptoms, 'medication_risk'];
+        }
       }
       if (data.pregnancyStatus !== undefined) {
         (updateData as any).pregnancy_status = data.pregnancyStatus;

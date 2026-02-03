@@ -4,10 +4,8 @@ import { useIntakeProfile } from '@/hooks/useIntakeProfile';
 import { useAppointments } from '@/hooks/useAppointments';
 import { AIInputStep } from './AIInputStep';
 import { CareSeekerStep } from './CareSeekerStep';
-import { ScreeningStep } from './ScreeningStep';
 import { PregnancyTriageStep } from './PregnancyTriageStep';
 import { ProblemStep } from './ProblemStep';
-import { TagsStep } from './TagsStep';
 import { ReviewsStep } from './ReviewsStep';
 import { ActivityStep } from './ActivityStep';
 import { MotivationStep } from './MotivationStep';
@@ -22,28 +20,25 @@ import {
   UnifiedConcernCategory,
   ActivityLevel,
   MotivationLevel,
-  RedFlagSymptom,
   PregnancyTriageReason,
 } from '@/types/intake';
 import { Loader2 } from 'lucide-react';
 
-// Step indices for the new flow
+// Step indices for the simplified flow (9 steps total)
 const STEPS = {
   AI_INPUT: 0,
   CARE_SEEKER: 1,
-  SCREENING: 2,
+  PROBLEM: 2,
   PREGNANCY_TRIAGE: 2.5, // Sub-step, not counted in total
-  PROBLEM: 3,
-  TAGS: 4,
-  REVIEWS: 5,
-  ACTIVITY: 6,
-  MOTIVATION: 7,
-  SUPPORT_AREAS: 8,
-  SUMMARY: 9,
-  BOOKING: 10,
+  REVIEWS: 3,
+  ACTIVITY: 4,
+  MOTIVATION: 5,
+  SUPPORT_AREAS: 6,
+  SUMMARY: 7,
+  BOOKING: 8,
 } as const;
 
-const TOTAL_STEPS = 11;
+const TOTAL_STEPS = 9;
 
 export function QualifyingFlow() {
   const navigate = useNavigate();
@@ -74,7 +69,8 @@ export function QualifyingFlow() {
         aiFreeText: profile.aiFreeText,
         aiParsedFields: profile.aiParsedFields,
         redFlagSymptoms: profile.redFlagSymptoms || [],
-        wantsDietist: profile.wantsDietist,
+        isPregnant: profile.isPregnant,
+        takesMedication: profile.takesMedication,
         pregnancyStatus: profile.pregnancyStatus,
         pregnancyTriageReason: profile.pregnancyTriageReason,
         pregnancyReferredByCare: profile.pregnancyReferredByCare,
@@ -86,9 +82,19 @@ export function QualifyingFlow() {
         preferenceTags: profile.preferenceTags || [],
       });
       
-      // Resume from saved step
+      // Resume from saved step - map old step indices to new ones
       if (profile.currentStep > 0 && !profile.completedAt) {
-        setCurrentStep(profile.currentStep);
+        // Handle step migration: old steps 3+ need adjustment since SCREENING and TAGS are removed
+        let mappedStep = profile.currentStep;
+        if (profile.currentStep >= 3) {
+          // Steps after SCREENING need to be decremented
+          mappedStep = Math.min(profile.currentStep - 1, STEPS.BOOKING);
+        }
+        if (mappedStep >= 4) {
+          // Steps after TAGS need to be decremented again
+          mappedStep = Math.min(mappedStep - 1, STEPS.BOOKING);
+        }
+        setCurrentStep(mappedStep);
       }
     }
   }, [profile]);
@@ -119,24 +125,6 @@ export function QualifyingFlow() {
     navigate('/auth', { replace: true });
   };
 
-  // Restart with dietist - called from summary step
-  const handleRestartWithDietist = async () => {
-    // Set wantsDietist and recalculate triage
-    const newFormData = { ...formData, wantsDietist: true };
-    setFormData(newFormData);
-    
-    const triageDecision = calculateTriage(newFormData);
-    
-    await saveProfile({
-      wantsDietist: true,
-      triageResult: triageDecision.result,
-      triageReasonCode: triageDecision.reasonCode,
-      providerCategory: triageDecision.providerCategory,
-    });
-    
-    // Stay on summary - it will now show dietist result
-  };
-
   // Step handlers
   const handleAIInput = async (data: {
     aiFreeText: string;
@@ -157,36 +145,40 @@ export function QualifyingFlow() {
   }) => {
     setFormData((prev) => ({ ...prev, ...data }));
     await saveProfile(data);
-    goToStep(STEPS.SCREENING);
+    goToStep(STEPS.PROBLEM);
   };
 
-  const handleScreening = async (data: {
-    redFlagSymptoms: RedFlagSymptom[];
-    showPregnancyTriage: boolean;
-    wantsDietist: boolean;
+  const handleProblem = async (data: {
+    unifiedConcernCategory?: UnifiedConcernCategory;
+    isPregnant: boolean;
+    takesMedication: boolean;
   }) => {
     const newFormData = { 
       ...formData, 
-      redFlagSymptoms: data.redFlagSymptoms,
-      wantsDietist: data.wantsDietist,
+      ...data,
+      // If pregnant, set pregnancy status
+      pregnancyStatus: data.isPregnant ? 'pregnant' as const : undefined,
     };
     setFormData(newFormData);
     
-    if (data.showPregnancyTriage) {
-      // Show pregnancy triage sub-step
+    // If pregnant checkbox is checked, show pregnancy triage sub-step
+    if (data.isPregnant) {
       setShowPregnancyTriage(true);
-      await saveProfile({ 
-        redFlagSymptoms: data.redFlagSymptoms,
-        wantsDietist: data.wantsDietist,
+      await saveProfile({
+        ...data,
         pregnancyStatus: 'pregnant',
       });
     } else {
-      // Continue to problem step - no gatekeeping
-      await saveProfile({ 
-        redFlagSymptoms: data.redFlagSymptoms,
-        wantsDietist: data.wantsDietist,
+      // Calculate triage based on all collected data
+      const triageDecision = calculateTriage(newFormData);
+      
+      await saveProfile({
+        ...data,
+        triageResult: triageDecision.result,
+        triageReasonCode: triageDecision.reasonCode,
+        providerCategory: triageDecision.providerCategory,
       });
-      goToStep(STEPS.PROBLEM);
+      goToStep(STEPS.REVIEWS);
     }
   };
 
@@ -201,7 +193,7 @@ export function QualifyingFlow() {
     };
     setFormData(newFormData);
     
-    // Calculate triage for informational purposes
+    // Calculate triage
     const triageDecision = calculateTriage(newFormData);
     
     await saveProfile({
@@ -213,30 +205,6 @@ export function QualifyingFlow() {
     });
     
     setShowPregnancyTriage(false);
-    goToStep(STEPS.PROBLEM);
-  };
-
-  const handleProblem = async (data: {
-    unifiedConcernCategory?: UnifiedConcernCategory;
-  }) => {
-    const newFormData = { ...formData, ...data };
-    setFormData(newFormData);
-    
-    // Calculate triage based on all collected data
-    const triageDecision = calculateTriage(newFormData);
-    
-    await saveProfile({
-      ...data,
-      triageResult: triageDecision.result,
-      triageReasonCode: triageDecision.reasonCode,
-      providerCategory: triageDecision.providerCategory,
-    });
-    goToStep(STEPS.TAGS);
-  };
-
-  const handleTags = async (data: { preferenceTags: string[] }) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-    await saveProfile(data);
     goToStep(STEPS.REVIEWS);
   };
 
@@ -305,7 +273,7 @@ export function QualifyingFlow() {
   if (showPregnancyTriage) {
     return (
       <PregnancyTriageStep
-        currentStep={STEPS.SCREENING}
+        currentStep={STEPS.PROBLEM}
         totalSteps={TOTAL_STEPS}
         onNext={handlePregnancyTriage}
         onBack={handleBack}
@@ -339,17 +307,6 @@ export function QualifyingFlow() {
         />
       )}
 
-      {currentStep === STEPS.SCREENING && (
-        <ScreeningStep
-          currentStep={currentStep}
-          totalSteps={TOTAL_STEPS}
-          onNext={handleScreening}
-          onBack={handleBack}
-          initialSymptoms={formData.redFlagSymptoms}
-          initialWantsDietist={formData.wantsDietist}
-        />
-      )}
-
       {currentStep === STEPS.PROBLEM && (
         <ProblemStep
           currentStep={currentStep}
@@ -358,16 +315,8 @@ export function QualifyingFlow() {
           onBack={handleBack}
           initialCategory={formData.unifiedConcernCategory}
           suggestedCategory={suggestedCategory}
-        />
-      )}
-
-      {currentStep === STEPS.TAGS && (
-        <TagsStep
-          currentStep={currentStep}
-          totalSteps={TOTAL_STEPS}
-          onNext={handleTags}
-          onBack={handleBack}
-          initialTags={formData.preferenceTags}
+          initialIsPregnant={formData.isPregnant}
+          initialTakesMedication={formData.takesMedication}
         />
       )}
 
@@ -417,7 +366,6 @@ export function QualifyingFlow() {
           totalSteps={TOTAL_STEPS}
           onNext={handleSummary}
           onBack={handleBack}
-          onRestartWithDietist={handleRestartWithDietist}
           isLoading={saving}
           triageResult={formData.triageResult}
           triageReasonCode={formData.triageReasonCode}
