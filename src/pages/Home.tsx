@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { getUpcomingAppointment, loading } = useAppointments();
+  const { getUpcomingAppointment, cancelAppointment, loading } = useAppointments();
 
   const upcomingAppointment = getUpcomingAppointment();
 
@@ -23,6 +23,12 @@ export default function Home() {
       }
     : undefined;
 
+  const handleCancel = async () => {
+    if (upcomingAppointment) {
+      await cancelAppointment(upcomingAppointment.id);
+    }
+  };
+
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
       {/* Appointment Section */}
@@ -37,6 +43,7 @@ export default function Home() {
             appointment={formattedAppointment}
             onRebook={() => navigate("/booking", { state: { mode: "rebook" } })}
             onBook={() => navigate("/booking", { state: { mode: "new" } })}
+            onCancel={handleCancel}
           />
         )}
       </section>

@@ -1,8 +1,24 @@
-import { Calendar, Clock, Video } from "lucide-react";
+import { Calendar, Clock, Video, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { format } from "date-fns";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format, differenceInHours } from "date-fns";
 import { sv } from "date-fns/locale";
 
 interface AppointmentCardProps {
@@ -14,9 +30,10 @@ interface AppointmentCardProps {
   };
   onRebook?: () => void;
   onBook?: () => void;
+  onCancel?: () => void;
 }
 
-export function AppointmentCard({ appointment, onRebook, onBook }: AppointmentCardProps) {
+export function AppointmentCard({ appointment, onRebook, onBook, onCancel }: AppointmentCardProps) {
   if (!appointment) {
     return (
       <Card className="shadow-soft border-2 border-dashed border-primary/20 bg-primary-soft/30">
@@ -52,8 +69,29 @@ export function AppointmentCard({ appointment, onRebook, onBook }: AppointmentCa
     .slice(0, 2)
     .toUpperCase();
 
+  // Check if within 24h of appointment
+  const hoursUntilAppointment = differenceInHours(appointment.date, new Date());
+  const isWithin24Hours = hoursUntilAppointment <= 24 && hoursUntilAppointment >= 0;
+
   return (
-    <Card className="shadow-elevated overflow-hidden bg-card">
+    <Card className="shadow-elevated overflow-hidden bg-card relative">
+      {/* Info icon for 24h policy */}
+      {isWithin24Hours && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="absolute top-3 right-3 w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+              <Info className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 text-sm" align="end">
+            <p className="font-medium mb-1">Avbokning ej möjlig</p>
+            <p className="text-muted-foreground">
+              Du kan avboka/omboka fram till 24h innan. No show-avgift debiteras med 275 kr.
+            </p>
+          </PopoverContent>
+        </Popover>
+      )}
+
       <CardContent className="p-5">
         {/* Dietitian info section */}
         <div className="flex items-center gap-4 mb-6">
@@ -101,16 +139,43 @@ export function AppointmentCard({ appointment, onRebook, onBook }: AppointmentCa
           </div>
         </div>
 
-        {/* Rebook button */}
-        {onRebook && (
+        {/* Action buttons */}
+        <div className="flex gap-3 mt-5">
           <Button
             variant="outline"
             onClick={onRebook}
-            className="w-full mt-5"
+            disabled={isWithin24Hours}
+            className="flex-1"
           >
             Ändra tid
           </Button>
-        )}
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={isWithin24Hours}
+                className="flex-1"
+              >
+                Avboka
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Avboka möte</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Är du säker på att du vill avboka ditt möte med {appointment.dietitianName} den {dateFormatted} kl {time}?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                <AlertDialogAction onClick={onCancel}>
+                  Ja, avboka
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </CardContent>
     </Card>
   );
