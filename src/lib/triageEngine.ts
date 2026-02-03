@@ -5,7 +5,7 @@ import {
   ProviderCategory,
   RedFlagSymptom,
   PregnancyTriageReason,
-  PrimaryConcernCategory,
+  UnifiedConcernCategory,
 } from '@/types/intake';
 
 export interface TriageDecision {
@@ -14,7 +14,7 @@ export interface TriageDecision {
   providerCategory: ProviderCategory;
 }
 
-// Red flag symptoms that always route to dietist
+// Red flag symptoms that suggest dietist (but don't force it)
 const RED_FLAG_SYMPTOMS: RedFlagSymptom[] = [
   'medical_diagnosis',
   'involuntary_weight_loss',
@@ -31,41 +31,36 @@ const PREGNANCY_MEDICAL_REASONS: PregnancyTriageReason[] = [
   'unsure',
 ];
 
-// Dietist-only primary concern categories
-const DIETIST_CATEGORIES: PrimaryConcernCategory[] = [
+// Categories that typically need dietist (medical focus)
+const DIETIST_CATEGORIES: UnifiedConcernCategory[] = [
   'diabetes',
   'gut_health',
   'heart_health',
   'eating_disorder',
 ];
 
-// Subcategories within gut_health that require dietist
-const DIETIST_GUT_SUBCATEGORIES = [
-  'crohns',
-  'ulcerative_colitis',
-  'sibo',
-];
-
-// Eating disorder subcategories that require dietist
-const DIETIST_ED_SUBCATEGORIES = [
-  'bulimia',
-  'anorexia',
-  'arfid',
-  'osfed',
-];
-
 /**
- * Main triage function that determines if user should see dietist or coach
+ * Main triage function - now recommendation-based, not gatekeeping
+ * 
  * Priority order:
- * 1. Red flag symptoms → DIETIST
- * 2. Pregnancy with medical reason → DIETIST
- * 3. Dietist-specific categories → DIETIST
- * 4. Eating disorder indicators → DIETIST
- * 5. Uncertain/insufficient data → DIETIST (safety default)
- * 6. All else → COACH
+ * 1. User explicitly requested dietist → DIETIST
+ * 2. Red flag symptoms → DIETIST (recommendation)
+ * 3. Pregnancy with medical reason → DIETIST
+ * 4. Medical categories → DIETIST
+ * 5. General wellness categories → COACH
+ * 6. No category selected → Recommendation based on other factors
  */
 export function calculateTriage(data: IntakeFormData): TriageDecision {
-  // Rule 1: Check for red flag symptoms (excluding pregnancy which has separate handling)
+  // Rule 1: User explicitly requested dietist
+  if (data.wantsDietist) {
+    return {
+      result: 'dietist',
+      reasonCode: 'USER_REQUESTED_DIETIST',
+      providerCategory: 'medical',
+    };
+  }
+
+  // Rule 2: Check for red flag symptoms (these strongly suggest dietist)
   const hasRedFlags = data.redFlagSymptoms?.some(
     symptom => RED_FLAG_SYMPTOMS.includes(symptom) && symptom !== 'pregnancy'
   );
@@ -86,7 +81,7 @@ export function calculateTriage(data: IntakeFormData): TriageDecision {
     };
   }
 
-  // Rule 2: Pregnancy triage
+  // Rule 3: Pregnancy triage
   if (data.pregnancyStatus === 'pregnant' || data.pregnancyStatus === 'postpartum' || data.pregnancyStatus === 'unsure') {
     // Check if pregnancy reason requires dietist
     if (data.pregnancyTriageReason && PREGNANCY_MEDICAL_REASONS.includes(data.pregnancyTriageReason)) {
@@ -114,68 +109,54 @@ export function calculateTriage(data: IntakeFormData): TriageDecision {
     };
   }
 
-  // Rule 3: Check if user selected a dietist-only category
-  if (data.primaryConcernCategory && DIETIST_CATEGORIES.includes(data.primaryConcernCategory)) {
-    // Special handling for gut_health - only certain subcategories require dietist
-    if (data.primaryConcernCategory === 'gut_health') {
-      if (data.primaryConcernSubcategory && DIETIST_GUT_SUBCATEGORIES.includes(data.primaryConcernSubcategory)) {
+  // Rule 4: Check unified category selection
+  if (data.unifiedConcernCategory) {
+    if (DIETIST_CATEGORIES.includes(data.unifiedConcernCategory)) {
+      return {
+        result: 'dietist',
+        reasonCode: 'DIAGNOSIS_SELECTED',
+        providerCategory: 'medical',
+      };
+    }
+
+    // Womens health - depends on context
+    if (data.unifiedConcernCategory === 'womens_health') {
+      // If they have medical symptoms, recommend dietist
+      if (data.redFlagSymptoms && data.redFlagSymptoms.length > 0) {
         return {
           result: 'dietist',
           reasonCode: 'DIAGNOSIS_SELECTED',
           providerCategory: 'medical',
         };
       }
-      // IBS and mild gut issues can go to coach
-      if (data.primaryConcernSubcategory === 'ibs' || data.primaryConcernSubcategory === 'reflux') {
-        // Could be either depending on severity - default to coach for mild cases
-        // This is a "soft rule" - the flow can ask follow-up questions
-        return {
-          result: 'coach',
-          reasonCode: 'SAFE_COACH',
-          providerCategory: 'wellness',
-        };
-      }
+      // Otherwise coach is fine
+      return {
+        result: 'coach',
+        reasonCode: 'SAFE_COACH',
+        providerCategory: 'wellness',
+      };
     }
-    
+
+    // All other categories → coach
     return {
-      result: 'dietist',
-      reasonCode: 'DIAGNOSIS_SELECTED',
-      providerCategory: 'medical',
+      result: 'coach',
+      reasonCode: 'SAFE_COACH',
+      providerCategory: 'wellness',
     };
   }
 
-  // Rule 4: Check for eating disorder subcategories
-  if (data.primaryConcernCategory === 'emotional_eating') {
-    if (data.primaryConcernSubcategory && DIETIST_ED_SUBCATEGORIES.includes(data.primaryConcernSubcategory)) {
+  // Rule 5: Fallback for legacy category system
+  if (data.primaryConcernCategory) {
+    const medicalCategories = ['diabetes', 'gut_health', 'heart_health', 'eating_disorder'];
+    if (medicalCategories.includes(data.primaryConcernCategory)) {
       return {
         result: 'dietist',
-        reasonCode: 'EATING_DISORDER',
-        providerCategory: 'medical',
-      };
-    }
-    // Mild emotional eating without ED indicators → coach
-    if (data.primaryConcernSubcategory === 'binge_eating') {
-      // Binge eating is borderline - could need psychological support
-      // Default to dietist for safety
-      return {
-        result: 'dietist',
-        reasonCode: 'EATING_DISORDER',
+        reasonCode: 'DIAGNOSIS_SELECTED',
         providerCategory: 'medical',
       };
     }
   }
 
-  // Rule 5: Check for insufficient data
-  if (!data.primaryConcernCategory && !data.coachConcernCategory) {
-    // No category selected - need more info, default to dietist for safety
-    return {
-      result: 'dietist',
-      reasonCode: 'UNCERTAIN',
-      providerCategory: 'medical',
-    };
-  }
-
-  // Rule 6: If user selected a coach category, they go to coach
   if (data.coachConcernCategory) {
     return {
       result: 'coach',
@@ -184,55 +165,27 @@ export function calculateTriage(data: IntakeFormData): TriageDecision {
     };
   }
 
-  // Rule 7: Default - remaining dietist categories that aren't strictly medical
-  // (weight_loss, general_health, womens_health without medical complications)
-  if (data.primaryConcernCategory === 'weight_loss' || 
-      data.primaryConcernCategory === 'general_health') {
-    // These could go either way - but since user went through dietist flow, keep them there
-    return {
-      result: 'dietist',
-      reasonCode: 'DIAGNOSIS_SELECTED',
-      providerCategory: 'medical',
-    };
-  }
-
-  // Womens health - depends on subcategory
-  if (data.primaryConcernCategory === 'womens_health') {
-    const medicalSubcategories = ['pcos', 'endometriosis'];
-    if (data.primaryConcernSubcategory && medicalSubcategories.includes(data.primaryConcernSubcategory)) {
-      return {
-        result: 'dietist',
-        reasonCode: 'DIAGNOSIS_SELECTED',
-        providerCategory: 'medical',
-      };
-    }
-    // General womens health → could be coach
-    return {
-      result: 'coach',
-      reasonCode: 'SAFE_COACH',
-      providerCategory: 'wellness',
-    };
-  }
-
-  // Final fallback - default to dietist for safety
+  // Rule 6: No category selected - default based on screening
+  // If they went through without selecting anything specific, default to coach
+  // (they can always switch to dietist via the summary page)
   return {
-    result: 'dietist',
-    reasonCode: 'UNCERTAIN',
-    providerCategory: 'medical',
+    result: 'coach',
+    reasonCode: 'SAFE_COACH',
+    providerCategory: 'wellness',
   };
 }
 
 /**
- * Check if any red flags are present that should force dietist path
+ * Check if any red flags are present that suggest dietist
  */
 export function hasRedFlagSymptoms(symptoms: RedFlagSymptom[]): boolean {
   return symptoms.some(symptom => RED_FLAG_SYMPTOMS.includes(symptom));
 }
 
 /**
- * Check if screening indicates user should skip to dietist path
+ * Check if screening indicates user should be recommended dietist
  */
-export function shouldRouteToDietist(data: IntakeFormData): boolean {
+export function shouldRecommendDietist(data: IntakeFormData): boolean {
   const decision = calculateTriage(data);
   return decision.result === 'dietist';
 }
@@ -243,18 +196,20 @@ export function shouldRouteToDietist(data: IntakeFormData): boolean {
 export function getTriageExplanation(reasonCode: TriageReasonCode, result: TriageResult): string {
   if (result === 'dietist') {
     switch (reasonCode) {
+      case 'USER_REQUESTED_DIETIST':
+        return 'Du valde att träffa en dietist - ett utmärkt val för professionell vägledning.';
       case 'DIAGNOSIS_SELECTED':
-        return 'Baserat på dina svar behöver du träffa en legitimerad dietist som är specialiserad på ditt tillstånd.';
+        return 'Baserat på dina svar rekommenderar vi en legitimerad dietist som är specialiserad på ditt behov.';
       case 'RED_FLAG_SYMPTOM':
-        return 'Dina symptom kräver en medicinsk bedömning av en legitimerad dietist.';
+        return 'Baserat på din situation rekommenderar vi att du träffar en dietist för en professionell bedömning.';
       case 'EATING_DISORDER':
-        return 'För din säkerhet rekommenderar vi att du träffar en dietist med specialistkompetens inom ätstörningar.';
+        return 'Vi rekommenderar att du träffar en dietist med specialistkompetens inom ätstörningar.';
       case 'PREGNANCY_MEDICAL':
         return 'Under graviditeten med medicinska överväganden bör du träffa en dietist.';
       case 'PREGNANCY_REFERRED_OR_UNSURE':
-        return 'Eftersom vården har hänvisat dig eller du är osäker, rekommenderar vi en dietist.';
+        return 'Vi rekommenderar en dietist för trygg vägledning under din graviditet.';
       case 'UNCERTAIN':
-        return 'Vi behöver mer information för att ge dig rätt stöd. En dietist kan hjälpa dig vidare.';
+        return 'En dietist kan hjälpa dig att reda ut vilken typ av stöd som passar bäst.';
       case 'GI_PERSISTENT':
         return 'Långvariga magbesvär bör utredas av en dietist.';
       default:

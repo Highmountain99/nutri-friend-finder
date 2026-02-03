@@ -15,6 +15,9 @@ interface StepLayoutProps {
   nextDisabled?: boolean;
   isLoading?: boolean;
   showBackButton?: boolean;
+  showSkip?: boolean;
+  onSkip?: () => void;
+  skipLabel?: string;
 }
 
 export function StepLayout({
@@ -29,6 +32,9 @@ export function StepLayout({
   nextDisabled = false,
   isLoading = false,
   showBackButton = true,
+  showSkip = false,
+  onSkip,
+  skipLabel = 'Hoppa över',
 }: StepLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col safe-area-inset">
@@ -65,7 +71,7 @@ export function StepLayout({
 
       {/* Footer with CTA */}
       <div className="flex-shrink-0 p-4 border-t border-border bg-background pb-safe">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto space-y-2">
           <Button
             onClick={onNext}
             size="xl"
@@ -74,6 +80,16 @@ export function StepLayout({
           >
             {isLoading ? 'Sparar...' : nextLabel}
           </Button>
+          {showSkip && onSkip && (
+            <Button
+              variant="ghost"
+              onClick={onSkip}
+              className="w-full text-muted-foreground"
+              disabled={isLoading}
+            >
+              {skipLabel}
+            </Button>
+          )}
         </div>
       </div>
     </div>

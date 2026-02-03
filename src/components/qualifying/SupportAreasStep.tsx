@@ -37,14 +37,21 @@ export function SupportAreasStep({
     onNext({ supportAreas: selectedAreas });
   };
 
+  const handleSkip = () => {
+    onNext({ supportAreas: [] });
+  };
+
   return (
     <StepLayout
       currentStep={currentStep}
       totalSteps={totalSteps}
       title="Vilka områden vill du ha mer stöd inom?"
-      subtitle="Hälsosamma livsstilsförändringar ger bestående resultat. Din dietist kommer att arbeta tillsammans med dig för att individanpassa din plan utifrån dina behov!"
+      subtitle="Markera de som intresserar dig eller hoppa över om du är osäker. Din rådgivare kommer att arbeta tillsammans med dig för att anpassa planen."
       onBack={onBack}
       onNext={handleNext}
+      showSkip
+      onSkip={handleSkip}
+      skipLabel="Hoppa över"
     >
       <div className="space-y-3">
         {supportAreaOptions.map((option) => {

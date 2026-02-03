@@ -1,13 +1,15 @@
 import { StepLayout } from './StepLayout';
 import { TriageResultCard } from './TriageResultCard';
-import { Check } from 'lucide-react';
+import { Check, RotateCcw } from 'lucide-react';
 import { TriageResult, TriageReasonCode } from '@/types/intake';
+import { Button } from '@/components/ui/button';
 
 interface SummaryStepProps {
   currentStep: number;
   totalSteps: number;
   onNext: () => void;
   onBack: () => void;
+  onRestartWithDietist?: () => void;
   isLoading?: boolean;
   triageResult?: TriageResult;
   triageReasonCode?: TriageReasonCode;
@@ -30,6 +32,7 @@ export function SummaryStep({
   totalSteps,
   onNext,
   onBack,
+  onRestartWithDietist,
   isLoading = false,
   triageResult = 'dietist',
   triageReasonCode = 'SAFE_COACH',
@@ -84,6 +87,23 @@ export function SummaryStep({
             }
           </p>
         </div>
+
+        {/* Switch to dietist option - only shown for coach result */}
+        {!isDietist && onRestartWithDietist && (
+          <div className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-5 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Tror du att du är i behov av att träffa en dietist? Vi kan ha tagit fel.
+            </p>
+            <Button
+              variant="outline"
+              onClick={onRestartWithDietist}
+              className="w-full gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Börja om med dietist-spår
+            </Button>
+          </div>
+        )}
       </div>
     </StepLayout>
   );
