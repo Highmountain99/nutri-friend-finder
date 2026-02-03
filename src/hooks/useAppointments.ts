@@ -3,16 +3,33 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+export interface DietitianInfo {
+  id: string;
+  firstName: string;
+  lastName: string;
+  title: string;
+  avatarUrl: string | null;
+}
+
 export interface Appointment {
   id: string;
   userId: string;
   dietitianId: string | null;
+  dietitian: DietitianInfo | null;
   appointmentDate: Date;
   status: 'booked' | 'completed' | 'cancelled' | 'no_show';
   appointmentType: 'video' | 'phone' | 'in_person';
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface DbDietitianProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  title: string;
+  avatar_url: string | null;
 }
 
 interface DbAppointment {
@@ -25,6 +42,7 @@ interface DbAppointment {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  dietitian_profiles: DbDietitianProfile | null;
 }
 
 function mapDbToAppointment(db: DbAppointment): Appointment {
@@ -32,6 +50,13 @@ function mapDbToAppointment(db: DbAppointment): Appointment {
     id: db.id,
     userId: db.user_id,
     dietitianId: db.dietitian_id,
+    dietitian: db.dietitian_profiles ? {
+      id: db.dietitian_profiles.id,
+      firstName: db.dietitian_profiles.first_name,
+      lastName: db.dietitian_profiles.last_name,
+      title: db.dietitian_profiles.title,
+      avatarUrl: db.dietitian_profiles.avatar_url,
+    } : null,
     appointmentDate: new Date(db.appointment_date),
     status: db.status as Appointment['status'],
     appointmentType: db.appointment_type as Appointment['appointmentType'],
@@ -60,13 +85,22 @@ export function useAppointments() {
     try {
       const { data, error } = await supabase
         .from('appointments')
-        .select('*')
+        .select(`
+          *,
+          dietitian_profiles (
+            id,
+            first_name,
+            last_name,
+            title,
+            avatar_url
+          )
+        `)
         .eq('user_id', user.id)
         .order('appointment_date', { ascending: true });
 
       if (error) throw error;
 
-      setAppointments((data || []).map(mapDbToAppointment));
+      setAppointments((data || []).map((d) => mapDbToAppointment(d as unknown as DbAppointment)));
     } catch (error) {
       console.error('Error fetching appointments:', error);
     } finally {
@@ -104,7 +138,18 @@ export function useAppointments() {
 
       if (error) throw error;
 
-      const newAppointment = mapDbToAppointment(data);
+      const newAppointment: Appointment = {
+        id: data.id,
+        userId: data.user_id,
+        dietitianId: data.dietitian_id,
+        dietitian: null,
+        appointmentDate: new Date(data.appointment_date),
+        status: data.status as Appointment['status'],
+        appointmentType: data.appointment_type as Appointment['appointmentType'],
+        notes: data.notes,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at),
+      };
       setAppointments((prev) => [...prev, newAppointment].sort(
         (a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime()
       ));
