@@ -82,19 +82,46 @@ export function QualifyingFlow() {
         preferenceTags: profile.preferenceTags || [],
       });
       
-      // Resume from saved step - map old step indices to new ones
+      // Resume from saved step.
+      // NOTE: We only migrate step indices when we detect a legacy (pre-simplification) profile.
+      // Otherwise we'd incorrectly map new step indices (e.g. 3 -> 2) and the user gets stuck.
       if (profile.currentStep > 0 && !profile.completedAt) {
-        // Handle step migration: old steps 3+ need adjustment since SCREENING and TAGS are removed
-        let mappedStep = profile.currentStep;
-        if (profile.currentStep >= 3) {
-          // Steps after SCREENING need to be decremented
-          mappedStep = Math.min(profile.currentStep - 1, STEPS.BOOKING);
+        const rawStep = profile.currentStep;
+
+        const isLikelyLegacyProgress = (() => {
+          if (rawStep > STEPS.BOOKING) return true;
+          // In the new flow, triage is calculated in Problem (step 2), so at Reviews (3) it should exist.
+          if (rawStep === STEPS.REVIEWS && !profile.triageResult) return true;
+          // In the new flow you can't reach step 5+ without having set activityLevel in step 4.
+          if (rawStep >= STEPS.MOTIVATION && !profile.activityLevel) return true;
+          // In the new flow you can't reach step 6+ without having set motivationLevel in step 5.
+          if (rawStep >= STEPS.SUPPORT_AREAS && !profile.motivationLevel) return true;
+          return false;
+        })();
+
+        const migrateLegacyStep = (legacyStep: number) => {
+          let mappedStep = legacyStep;
+          if (legacyStep >= 3) {
+            // After legacy SCREENING step removal
+            mappedStep = Math.min(legacyStep - 1, STEPS.BOOKING);
+          }
+          if (mappedStep >= 4) {
+            // After legacy TAGS step removal
+            mappedStep = Math.min(mappedStep - 1, STEPS.BOOKING);
+          }
+          return mappedStep;
+        };
+
+        const resolvedStep = isLikelyLegacyProgress
+          ? migrateLegacyStep(rawStep)
+          : Math.min(rawStep, STEPS.BOOKING);
+
+        setCurrentStep(resolvedStep);
+
+        // Persist migration once so we don't keep remapping forever.
+        if (isLikelyLegacyProgress && resolvedStep !== rawStep) {
+          void saveProfile({ currentStep: resolvedStep });
         }
-        if (mappedStep >= 4) {
-          // Steps after TAGS need to be decremented again
-          mappedStep = Math.min(mappedStep - 1, STEPS.BOOKING);
-        }
-        setCurrentStep(mappedStep);
       }
     }
   }, [profile]);
@@ -151,7 +178,6 @@ export function QualifyingFlow() {
   const handleProblem = async (data: {
     unifiedConcernCategory?: UnifiedConcernCategory;
     isPregnant: boolean;
-    takesMedication: boolean;
   }) => {
     const newFormData = { 
       ...formData, 
