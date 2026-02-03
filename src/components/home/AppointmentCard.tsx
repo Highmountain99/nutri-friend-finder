@@ -1,6 +1,7 @@
 import { Calendar, Clock, Video, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 
@@ -43,14 +44,30 @@ export function AppointmentCard({ appointment, onRebook, onBook }: AppointmentCa
   const dateFormatted = format(appointment.date, "d MMMM", { locale: sv });
   const time = format(appointment.date, "HH:mm");
 
+  const initials = appointment.dietitianName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <Card className="shadow-elevated overflow-hidden">
       <div className="h-1.5 gradient-hero" />
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary-soft flex items-center justify-center flex-shrink-0">
-            <Video className="w-6 h-6 text-primary" />
-          </div>
+          {appointment.dietitianImage ? (
+            <Avatar className="w-12 h-12 flex-shrink-0">
+              <AvatarImage src={appointment.dietitianImage} alt={appointment.dietitianName} />
+              <AvatarFallback className="bg-primary-soft text-primary font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-primary-soft flex items-center justify-center flex-shrink-0">
+              <Video className="w-6 h-6 text-primary" />
+            </div>
+          )}
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground">Kommande videosamtal</h3>

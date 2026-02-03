@@ -15,7 +15,10 @@ export default function Home() {
   const formattedAppointment = upcomingAppointment
     ? {
         date: upcomingAppointment.appointmentDate,
-        dietitianName: "Din dietist", // Will be populated when dietitian matching is implemented
+        dietitianName: upcomingAppointment.dietitian
+          ? `${upcomingAppointment.dietitian.firstName} ${upcomingAppointment.dietitian.lastName}`
+          : "Din dietist",
+        dietitianImage: upcomingAppointment.dietitian?.avatarUrl || undefined,
       }
     : undefined;
 
