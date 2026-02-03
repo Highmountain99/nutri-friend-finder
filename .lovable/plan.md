@@ -1,156 +1,156 @@
 
 
-## Förbättringar av Qualifying-flödet
+## Förenkling av Qualifying-flödet
 
-### Problem som åtgärdas
+### Ändringar som ska göras
 
-| Steg | Problem | Lösning |
-|------|---------|---------|
-| 3 (Screening) | För ledande - man behöver inte ha diagnos för att träffa dietist | Omformulera till informationsinsamling, inte gate-keeping. Alla ska kunna välja dietist oavsett svar |
-| 4 (Problem) | Endast coach-alternativ visas, måste välja något | Lägg till "Annat/vet inte" + möjlighet att hoppa över |
-| 5 (Tags) | Känns irrelevant, borde vara i annat steg | Ta bort som separat steg - integrera i problemsteget eller gör helt valfritt |
-| 9 (Stödområden) | Dietist-fokuserad, borde ha skip-alternativ | Gör valfritt med "Hoppa över"-knapp |
-| Resultat | Om coach: borde kunna byta till dietist | Lägg till "Tror du att du behöver träffa en dietist?" |
+| Nuvarande | Ändring |
+|-----------|---------|
+| Steg 3 (Screening) | **Ta bort helt** - gör ej gate-keeping |
+| "Jag vill träffa en dietist oavsett" | **Ta bort** alternativet |
+| Gravid-frågan | **Flytta** till ProblemStep som extra fråga |
+| Medicinerfrågan | **Flytta** till ProblemStep som extra fråga |
+| Steg 5 (TagsStep) | **Ta bort helt** |
 
 ---
 
-### Ny flödeslogik
+### Nytt flöde
 
 ```text
-NUVARANDE LOGIK:
-Röda flaggor → Dietist-spår
-Inga röda flaggor → Coach-spår (låst)
+NUVARANDE FLÖDE (11 steg):
+0. AI Input
+1. Vårdtagare
+2. Screening ← TA BORT
+   2b. Gravidtriage (sub-step)
+3. Problem
+4. Tags ← TA BORT
+5. Reviews
+6. Activity
+7. Motivation
+8. Support Areas
+9. Summary
+10. Booking
 
-NY LOGIK:
-Screening samlar information men låser INTE användaren
-Användaren kan ALLTID välja dietist via "Jag vill träffa en dietist"
-Triagen blir en REKOMMENDATION, inte ett tvång
+NYTT FLÖDE (9 steg):
+0. AI Input
+1. Vårdtagare
+2. Problem (+ gravid/medicin-frågor överst)
+   2b. Gravidtriage (sub-step om gravid)
+3. Reviews
+4. Activity
+5. Motivation
+6. Support Areas
+7. Summary
+8. Booking
 ```
 
 ---
 
-### Ändringar per steg
+### ProblemStep - ny struktur
 
-**Steg 3 - Screening (ScreeningStep.tsx)**
-- Ändra rubrik från "Innan vi matchar dig" till "Berätta lite om din situation"
-- Ta bort "gate-keeping"-logiken - samla bara information
-- Lägg till alternativ: "Jag vill prata med en dietist oavsett"
-- Alla svar leder vidare till samma flöde (unified problem step)
+**Överst i ProblemStep (före kategorilistan):**
+1. Kryssruta: "Jag är gravid eller har nyligen varit gravid"
+2. Kryssruta: "Jag tar mediciner som kan påverka kosten"
 
-**Steg 4 - Problem (ProblemStep.tsx)**
-- Slå ihop dietist- och coach-kategorier till EN lista
-- Lägg till "Annat / vet inte än" som alltid går att välja
-- Gör det möjligt att gå vidare utan att välja något ("Hoppa över")
-- Ta bort kravet på underkategori
-
-**Steg 5 - Tags**
-- Ta bort som separat steg helt
-- Flytta relevant data till problemsteget (valfritt multi-select i slutet)
-- Alternativt: behåll men gör tydligt valfritt med "Hoppa över"
-
-**Steg 9 - Stödområden (SupportAreasStep.tsx)**
-- Lägg till "Hoppa över"-knapp
-- Ändra texten så den passar både dietist och coach
-- Gör det tydligt att det är valfritt
-
-**Sammanfattning (SummaryStep.tsx)**
-- Om coach-resultat: lägg till prominent knapp "Tror du att du behöver träffa en dietist? Börja om"
-- Vid klick: återställ triage och gå till steg 3
-
----
-
-### Uppdaterade filer
-
-| Fil | Ändring |
-|-----|---------|
-| `ScreeningStep.tsx` | Ny rubrik, lägg till "vill ha dietist oavsett"-alternativ, ta bort routing-logik |
-| `ProblemStep.tsx` | Unified kategorilista, "Annat"-alternativ, optional skip |
-| `CoachProblemStep.tsx` | Ta bort (slå ihop med ProblemStep) |
-| `TagsStep.tsx` | Gör valfritt eller ta bort helt |
-| `SupportAreasStep.tsx` | Lägg till skip-knapp, neutral text |
-| `SummaryStep.tsx` | Lägg till "Tror du att du behöver dietist?"-knapp för coach-resultat |
-| `QualifyingFlow.tsx` | Uppdatera steg-logik, ta bort isCoachPath-lock, lägg till restart-funktion |
-| `triageEngine.ts` | Ändra till rekommendationsbaserad logik istället för tvång |
-| `types/intake.ts` | Lägg till unified kategorier |
-| `screeningQuestions.ts` | Lägg till "vill ha dietist oavsett"-alternativ |
-
----
-
-### Ny kategorilista (unified)
-
-**Sammanslagna kategorier för alla användare:**
+**Kategorilista (samma som nu):**
 - Gå ner i vikt
 - Bygga muskler / gå upp i vikt
 - Hälsosamma vanor & struktur
-- Träning, prestation & återhämtning
-- Energi, fokus & mättnad
-- Vegetariskt/veganskt eller balanserad kost
-- Tarmhälsa (IBS, mage, etc.)
-- Diabetes eller blodsockerhantering
-- Hjärthälsa
-- Kvinnohälsa (PCOS, fertilitet, klimakteriet)
-- Ätstörning eller svår relation till mat
+- etc.
 - Annat / vet inte än
 
----
-
-### Nytt ScreeningStep-beteende
-
-**Nya alternativ:**
-1. Jag har en medicinsk diagnos som kan påverka kosten
-2. Jag är gravid eller nyligen gravid
-3. Jag har symptom som oroar mig (viktnedgång, magproblem)
-4. Jag har eller misstänker en ätstörning
-5. Jag tar mediciner som kan påverka kosten
-6. **Jag vill träffa en dietist oavsett**
-7. Inget av ovanstående / osäker
-
 **Logik:**
-- Alternativ 1-5: Sparas som info, påverkar rekommendation
-- Alternativ 6: Sätter triageResult = 'dietist' direkt
-- Alternativ 7: Neutral, fortsätt till problemval
-- ALLA går till samma nästa steg (unified problem)
+- Om gravid kryssas i → visa gravidtriage-substeget efter submit
+- Medicin-info sparas för triage-beräkning
+- Kategorival är valfritt (kan hoppa över)
 
 ---
 
-### Nytt SummaryStep med "byt till dietist"
+### Filändringar
 
-**Om triageResult === 'coach':**
+| Fil | Ändring |
+|-----|---------|
+| `QualifyingFlow.tsx` | Ta bort SCREENING och TAGS steg, uppdatera step indices (9 steg totalt), flytta pregnancy-check till ProblemStep |
+| `ProblemStep.tsx` | Lägg till gravid- och medicinsfrågor överst, hantera showPregnancyTriage-logik |
+| `ScreeningStep.tsx` | Kan tas bort helt eller behållas för framtida användning |
+| `TagsStep.tsx` | Kan tas bort helt eller behållas för framtida användning |
+| `screeningQuestions.ts` | Ta bort `wantDietistOption`, behåll bara pregnancy och medication info |
+| `types/intake.ts` | Ta bort `wantsDietist` flag |
+| `triageEngine.ts` | Ta bort logik för `wantsDietist` |
+
+---
+
+### Ny ProblemStep-layout
+
 ```text
-┌────────────────────────────────────────────────┐
-│  Din kostrådgivare väntar                      │
-│  [Befintligt innehåll...]                      │
-│                                                │
-│  ┌──────────────────────────────────────────┐  │
-│  │ Tror du att du är i behov av att träffa  │  │
-│  │ en dietist? Vi kan ha tagit fel.         │  │
-│  │                                           │  │
-│  │ [Börja om med dietist-spår]              │  │
-│  └──────────────────────────────────────────┘  │
-└────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  Vad kan vi hjälpa dig med?                          │
+│  Välj det som bäst beskriver ditt primära fokus      │
+├──────────────────────────────────────────────────────┤
+│  ┌────────────────────────────────────────────────┐  │
+│  │ ☐ Jag är gravid eller har nyligen varit gravid │  │
+│  └────────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────────┐  │
+│  │ ☐ Jag tar mediciner som kan påverka kosten    │  │
+│  └────────────────────────────────────────────────┘  │
+├──────────────────────────────────────────────────────┤
+│  [Gå ner i vikt]                                     │
+│  [Bygga muskler / gå upp i vikt]                     │
+│  [Hälsosamma vanor & struktur]                       │
+│  [Träning, prestation & återhämtning]               │
+│  [Energi, fokus & mättnad]                           │
+│  [Vegetariskt/veganskt eller balanserad kost]        │
+│  [Tarmhälsa (IBS, mage, etc.)]                       │
+│  [Diabetes eller blodsockerhantering]                │
+│  [Hjärthälsa]                                        │
+│  [Kvinnohälsa (PCOS, fertilitet, klimakteriet)]      │
+│  [Ätstörning eller svår relation till mat]           │
+│  [Annat / vet inte än]                               │
+├──────────────────────────────────────────────────────┤
+│                    [Hoppa över]                      │
+│                    [Nästa →]                         │
+└──────────────────────────────────────────────────────┘
 ```
+
+---
+
+### Step indices update
+
+```typescript
+const STEPS = {
+  AI_INPUT: 0,
+  CARE_SEEKER: 1,
+  PROBLEM: 2,
+  PREGNANCY_TRIAGE: 2.5, // Sub-step
+  REVIEWS: 3,
+  ACTIVITY: 4,
+  MOTIVATION: 5,
+  SUPPORT_AREAS: 6,
+  SUMMARY: 7,
+  BOOKING: 8,
+} as const;
+
+const TOTAL_STEPS = 9;
+```
+
+---
+
+### Triage-logik (uppdaterad)
+
+Utan `wantsDietist`, baseras triage på:
+1. **Graviditet med komplikation** → dietist
+2. **Mediciner som påverkar kost** → dietist (rekommendation)
+3. **Vald kategori** (diabetes, ätstörning, hjärthälsa etc.) → dietist
+4. **Wellness-kategorier** → coach
+5. **Inget val** → rekommendation baserad på övrig data
 
 ---
 
 ### Implementationsordning
 
-1. Uppdatera `screeningQuestions.ts` med nya alternativ
-2. Uppdatera `types/intake.ts` med unified kategorier
-3. Uppdatera `ScreeningStep.tsx` - ny logik och alternativ
-4. Slå ihop `ProblemStep.tsx` och `CoachProblemStep.tsx`
-5. Gör `TagsStep.tsx` valfritt eller ta bort
-6. Uppdatera `SupportAreasStep.tsx` med skip-knapp
-7. Uppdatera `SummaryStep.tsx` med "byt till dietist"-knapp
-8. Uppdatera `QualifyingFlow.tsx` med ny flödeslogik
-9. Uppdatera `triageEngine.ts` till rekommendationsbaserad
-
----
-
-### UX-principer
-
-- Användaren ska ALDRIG känna sig låst i ett spår
-- Screening samlar info, bestämmer INTE
-- Triagen är en hjälpsam rekommendation
-- "Vet inte" och "Hoppa över" är alltid OK
-- Möjlighet att ändra sig finns alltid
+1. Uppdatera `types/intake.ts` - ta bort `wantsDietist`
+2. Uppdatera `triageEngine.ts` - ta bort wantsDietist-logik
+3. Uppdatera `ProblemStep.tsx` - lägg till gravid/medicin-frågor
+4. Uppdatera `QualifyingFlow.tsx` - ta bort SCREENING och TAGS steg
+5. Rensa upp oanvända komponenter och data
 
