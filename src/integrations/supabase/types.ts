@@ -75,7 +75,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "appointments_dietitian_id_fkey"
+            columns: ["dietitian_id"]
+            isOneToOne: false
+            referencedRelation: "dietitian_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_health_metrics: {
         Row: {
