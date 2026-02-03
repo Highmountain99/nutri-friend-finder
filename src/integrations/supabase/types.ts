@@ -411,6 +411,39 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_import_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          parsed_data: Json | null
+          processed_at: string | null
+          scraped_data: Json | null
+          source_url: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          parsed_data?: Json | null
+          processed_at?: string | null
+          scraped_data?: Json | null
+          source_url: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          parsed_data?: Json | null
+          processed_at?: string | null
+          scraped_data?: Json | null
+          source_url?: string
+          status?: string
+        }
+        Relationships: []
+      }
       recipe_ratings: {
         Row: {
           created_at: string | null
