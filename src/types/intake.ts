@@ -28,9 +28,10 @@ export type TriageReasonCode =
   | 'PREGNANCY_GENERAL'
   | 'UNCERTAIN'
   | 'GI_PERSISTENT'
-  | 'SAFE_COACH';
+  | 'SAFE_COACH'
+  | 'USER_REQUESTED_DIETIST';
 
-// Red flag symptoms that require dietist
+// Red flag symptoms for screening (informational)
 export type RedFlagSymptom =
   | 'medical_diagnosis'
   | 'pregnancy'
@@ -38,7 +39,22 @@ export type RedFlagSymptom =
   | 'eating_disorder_risk'
   | 'medication_risk';
 
-// Dietist-specific primary concern categories (medical)
+// Unified concern categories for all users
+export type UnifiedConcernCategory = 
+  | 'weight_loss'
+  | 'muscle_building'
+  | 'healthy_habits'
+  | 'training_nutrition'
+  | 'energy_focus'
+  | 'plant_based'
+  | 'gut_health'
+  | 'diabetes'
+  | 'heart_health'
+  | 'womens_health'
+  | 'eating_disorder'
+  | 'other';
+
+// Legacy types kept for backward compatibility
 export type PrimaryConcernCategory = 
   | 'weight_loss'
   | 'diabetes'
@@ -50,7 +66,6 @@ export type PrimaryConcernCategory =
   | 'heart_health'
   | 'other';
 
-// Coach-specific concern categories (wellness)
 export type CoachConcernCategory =
   | 'weight_loss_general'
   | 'muscle_building'
@@ -76,20 +91,22 @@ export interface IntakeFormData {
   
   // Screening data
   redFlagSymptoms: RedFlagSymptom[];
+  wantsDietist?: boolean; // User explicitly requested dietist
   pregnancyStatus?: PregnancyStatus;
   pregnancyTriageReason?: PregnancyTriageReason;
   pregnancyReferredByCare?: boolean;
   
-  // Dietist path (medical)
+  // Unified problem category
+  unifiedConcernCategory?: UnifiedConcernCategory;
+  
+  // Legacy fields for backward compatibility
   primaryConcernCategory?: PrimaryConcernCategory;
   primaryConcernSubcategory?: string;
   concernTags: string[];
-  
-  // Coach path (wellness)
   coachConcernCategory?: CoachConcernCategory;
   coachConcernSubcategory?: string;
   
-  // Preference tags (multi-select)
+  // Preference tags (optional multi-select)
   preferenceTags: string[];
   
   // Triage result
@@ -119,7 +136,23 @@ export interface IntakeProfile extends IntakeFormData {
   updatedAt: string;
 }
 
-// Category display labels in Swedish - Dietist path
+// Unified category labels for all users
+export const unifiedCategoryLabels: Record<UnifiedConcernCategory, string> = {
+  weight_loss: 'Gå ner i vikt',
+  muscle_building: 'Bygga muskler / gå upp i vikt',
+  healthy_habits: 'Hälsosamma vanor & struktur',
+  training_nutrition: 'Träning, prestation & återhämtning',
+  energy_focus: 'Energi, fokus & mättnad',
+  plant_based: 'Vegetariskt/veganskt eller balanserad kost',
+  gut_health: 'Tarmhälsa (IBS, mage, etc.)',
+  diabetes: 'Diabetes eller blodsockerhantering',
+  heart_health: 'Hjärthälsa',
+  womens_health: 'Kvinnohälsa (PCOS, fertilitet, klimakteriet)',
+  eating_disorder: 'Ätstörning eller svår relation till mat',
+  other: 'Annat / vet inte än',
+};
+
+// Legacy category labels - kept for backward compatibility
 export const categoryLabels: Record<PrimaryConcernCategory, string> = {
   weight_loss: 'Gå ner i vikt',
   diabetes: 'Diabetes eller fördiabetes',

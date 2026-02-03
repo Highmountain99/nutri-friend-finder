@@ -15,6 +15,7 @@ import {
   TriageReasonCode,
   ProviderCategory,
   CoachConcernCategory,
+  UnifiedConcernCategory,
 } from '@/types/intake';
 import { toast } from 'sonner';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -65,6 +66,7 @@ export function useIntakeProfile() {
           completedAt: data.completed_at ?? undefined,
           // New triage fields
           redFlagSymptoms: (data.red_flag_symptoms || []) as RedFlagSymptom[],
+          wantsDietist: (data as any).wants_dietist as boolean | undefined,
           pregnancyStatus: (data as any).pregnancy_status as PregnancyStatus | undefined,
           pregnancyTriageReason: (data as any).pregnancy_triage_reason as PregnancyTriageReason | undefined,
           pregnancyReferredByCare: (data as any).pregnancy_referred_by_care as boolean | undefined,
@@ -74,6 +76,7 @@ export function useIntakeProfile() {
           coachConcernCategory: (data as any).coach_concern_category as CoachConcernCategory | undefined,
           coachConcernSubcategory: (data as any).coach_concern_subcategory as string | undefined,
           preferenceTags: (data as any).preference_tags || [],
+          unifiedConcernCategory: (data as any).unified_concern_category as UnifiedConcernCategory | undefined,
         });
       }
     } catch (error) {
@@ -136,6 +139,9 @@ export function useIntakeProfile() {
       if (data.redFlagSymptoms !== undefined) {
         updateData.red_flag_symptoms = data.redFlagSymptoms;
       }
+      if (data.wantsDietist !== undefined) {
+        (updateData as any).wants_dietist = data.wantsDietist;
+      }
       if (data.pregnancyStatus !== undefined) {
         (updateData as any).pregnancy_status = data.pregnancyStatus;
       }
@@ -162,6 +168,9 @@ export function useIntakeProfile() {
       }
       if (data.preferenceTags !== undefined) {
         (updateData as any).preference_tags = data.preferenceTags;
+      }
+      if (data.unifiedConcernCategory !== undefined) {
+        (updateData as any).unified_concern_category = data.unifiedConcernCategory;
       }
 
       const { error } = await supabase

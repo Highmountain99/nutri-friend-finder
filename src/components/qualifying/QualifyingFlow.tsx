@@ -7,7 +7,6 @@ import { CareSeekerStep } from './CareSeekerStep';
 import { ScreeningStep } from './ScreeningStep';
 import { PregnancyTriageStep } from './PregnancyTriageStep';
 import { ProblemStep } from './ProblemStep';
-import { CoachProblemStep } from './CoachProblemStep';
 import { TagsStep } from './TagsStep';
 import { ReviewsStep } from './ReviewsStep';
 import { ActivityStep } from './ActivityStep';
@@ -20,8 +19,7 @@ import {
   IntakeFormData, 
   CareSeekerType, 
   RelationshipType, 
-  PrimaryConcernCategory,
-  CoachConcernCategory,
+  UnifiedConcernCategory,
   ActivityLevel,
   MotivationLevel,
   RedFlagSymptom,
@@ -60,15 +58,13 @@ export function QualifyingFlow() {
     preferenceTags: [],
   });
 
-  // Track if user should follow coach path (no red flags)
-  const [isCoachPath, setIsCoachPath] = useState(false);
-
   // Initialize form data from profile
   useEffect(() => {
     if (profile) {
       setFormData({
         careSeekerType: profile.careSeekerType,
         relationshipIfOther: profile.relationshipIfOther,
+        unifiedConcernCategory: profile.unifiedConcernCategory,
         primaryConcernCategory: profile.primaryConcernCategory,
         primaryConcernSubcategory: profile.primaryConcernSubcategory,
         concernTags: profile.concernTags || [],
@@ -78,6 +74,7 @@ export function QualifyingFlow() {
         aiFreeText: profile.aiFreeText,
         aiParsedFields: profile.aiParsedFields,
         redFlagSymptoms: profile.redFlagSymptoms || [],
+        wantsDietist: profile.wantsDietist,
         pregnancyStatus: profile.pregnancyStatus,
         pregnancyTriageReason: profile.pregnancyTriageReason,
         pregnancyReferredByCare: profile.pregnancyReferredByCare,
@@ -88,12 +85,6 @@ export function QualifyingFlow() {
         coachConcernSubcategory: profile.coachConcernSubcategory,
         preferenceTags: profile.preferenceTags || [],
       });
-      
-      // Determine if on coach path based on saved data
-      const hasRedFlags = (profile.redFlagSymptoms || []).some(
-        s => s !== 'pregnancy' && ['medical_diagnosis', 'involuntary_weight_loss', 'eating_disorder_risk', 'medication_risk'].includes(s)
-      );
-      setIsCoachPath(!hasRedFlags && profile.redFlagSymptoms?.length === 0);
       
       // Resume from saved step
       if (profile.currentStep > 0 && !profile.completedAt) {
@@ -128,6 +119,24 @@ export function QualifyingFlow() {
     navigate('/auth', { replace: true });
   };
 
+  // Restart with dietist - called from summary step
+  const handleRestartWithDietist = async () => {
+    // Set wantsDietist and recalculate triage
+    const newFormData = { ...formData, wantsDietist: true };
+    setFormData(newFormData);
+    
+    const triageDecision = calculateTriage(newFormData);
+    
+    await saveProfile({
+      wantsDietist: true,
+      triageResult: triageDecision.result,
+      triageReasonCode: triageDecision.reasonCode,
+      providerCategory: triageDecision.providerCategory,
+    });
+    
+    // Stay on summary - it will now show dietist result
+  };
+
   // Step handlers
   const handleAIInput = async (data: {
     aiFreeText: string;
@@ -154,31 +163,29 @@ export function QualifyingFlow() {
   const handleScreening = async (data: {
     redFlagSymptoms: RedFlagSymptom[];
     showPregnancyTriage: boolean;
+    wantsDietist: boolean;
   }) => {
-    const newFormData = { ...formData, redFlagSymptoms: data.redFlagSymptoms };
+    const newFormData = { 
+      ...formData, 
+      redFlagSymptoms: data.redFlagSymptoms,
+      wantsDietist: data.wantsDietist,
+    };
     setFormData(newFormData);
-    
-    // Check if user has red flags (excluding pregnancy)
-    const hasNonPregnancyRedFlags = data.redFlagSymptoms.some(
-      s => s !== 'pregnancy' && ['medical_diagnosis', 'involuntary_weight_loss', 'eating_disorder_risk', 'medication_risk'].includes(s)
-    );
     
     if (data.showPregnancyTriage) {
       // Show pregnancy triage sub-step
       setShowPregnancyTriage(true);
       await saveProfile({ 
         redFlagSymptoms: data.redFlagSymptoms,
+        wantsDietist: data.wantsDietist,
         pregnancyStatus: 'pregnant',
       });
-    } else if (hasNonPregnancyRedFlags) {
-      // User has red flags → dietist path
-      setIsCoachPath(false);
-      await saveProfile({ redFlagSymptoms: data.redFlagSymptoms });
-      goToStep(STEPS.PROBLEM);
     } else {
-      // No red flags → coach path
-      setIsCoachPath(true);
-      await saveProfile({ redFlagSymptoms: data.redFlagSymptoms });
+      // Continue to problem step - no gatekeeping
+      await saveProfile({ 
+        redFlagSymptoms: data.redFlagSymptoms,
+        wantsDietist: data.wantsDietist,
+      });
       goToStep(STEPS.PROBLEM);
     }
   };
@@ -194,9 +201,8 @@ export function QualifyingFlow() {
     };
     setFormData(newFormData);
     
-    // Calculate if this leads to dietist or coach
+    // Calculate triage for informational purposes
     const triageDecision = calculateTriage(newFormData);
-    setIsCoachPath(triageDecision.result === 'coach');
     
     await saveProfile({
       pregnancyTriageReason: data.pregnancyTriageReason,
@@ -211,23 +217,12 @@ export function QualifyingFlow() {
   };
 
   const handleProblem = async (data: {
-    primaryConcernCategory: PrimaryConcernCategory;
-    primaryConcernSubcategory?: string;
-    concernTags: string[];
-  }) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-    await saveProfile(data);
-    goToStep(STEPS.TAGS);
-  };
-
-  const handleCoachProblem = async (data: {
-    coachConcernCategory: CoachConcernCategory;
-    coachConcernSubcategory?: string;
+    unifiedConcernCategory?: UnifiedConcernCategory;
   }) => {
     const newFormData = { ...formData, ...data };
     setFormData(newFormData);
     
-    // Calculate triage result
+    // Calculate triage based on all collected data
     const triageDecision = calculateTriage(newFormData);
     
     await saveProfile({
@@ -303,8 +298,7 @@ export function QualifyingFlow() {
   }
 
   // Get AI-suggested values for pre-filling
-  const suggestedCategory = formData.aiParsedFields?.primaryConcernCategory as PrimaryConcernCategory | undefined;
-  const suggestedSubcategory = formData.aiParsedFields?.primaryConcernSubcategory;
+  const suggestedCategory = formData.aiParsedFields?.primaryConcernCategory as UnifiedConcernCategory | undefined;
   const suggestedSupportAreas = formData.aiParsedFields?.supportAreas || [];
 
   // Pregnancy triage sub-step
@@ -352,32 +346,19 @@ export function QualifyingFlow() {
           onNext={handleScreening}
           onBack={handleBack}
           initialSymptoms={formData.redFlagSymptoms}
+          initialWantsDietist={formData.wantsDietist}
         />
       )}
 
       {currentStep === STEPS.PROBLEM && (
-        isCoachPath ? (
-          <CoachProblemStep
-            currentStep={currentStep}
-            totalSteps={TOTAL_STEPS}
-            onNext={handleCoachProblem}
-            onBack={handleBack}
-            initialCategory={formData.coachConcernCategory}
-            initialSubcategory={formData.coachConcernSubcategory}
-          />
-        ) : (
-          <ProblemStep
-            currentStep={currentStep}
-            totalSteps={TOTAL_STEPS}
-            onNext={handleProblem}
-            onBack={handleBack}
-            initialCategory={formData.primaryConcernCategory}
-            initialSubcategory={formData.primaryConcernSubcategory}
-            initialTags={formData.concernTags}
-            suggestedCategory={suggestedCategory}
-            suggestedSubcategory={suggestedSubcategory}
-          />
-        )
+        <ProblemStep
+          currentStep={currentStep}
+          totalSteps={TOTAL_STEPS}
+          onNext={handleProblem}
+          onBack={handleBack}
+          initialCategory={formData.unifiedConcernCategory}
+          suggestedCategory={suggestedCategory}
+        />
       )}
 
       {currentStep === STEPS.TAGS && (
@@ -436,6 +417,7 @@ export function QualifyingFlow() {
           totalSteps={TOTAL_STEPS}
           onNext={handleSummary}
           onBack={handleBack}
+          onRestartWithDietist={handleRestartWithDietist}
           isLoading={saving}
           triageResult={formData.triageResult}
           triageReasonCode={formData.triageReasonCode}
