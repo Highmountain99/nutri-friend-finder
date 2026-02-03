@@ -163,11 +163,11 @@ export function QualifyingFlow() {
     
     // If pregnant checkbox is checked, show pregnancy triage sub-step
     if (data.isPregnant) {
-      setShowPregnancyTriage(true);
       await saveProfile({
         ...data,
         pregnancyStatus: 'pregnant',
       });
+      setShowPregnancyTriage(true);
     } else {
       // Calculate triage based on all collected data
       const triageDecision = calculateTriage(newFormData);
@@ -177,8 +177,9 @@ export function QualifyingFlow() {
         triageResult: triageDecision.result,
         triageReasonCode: triageDecision.reasonCode,
         providerCategory: triageDecision.providerCategory,
+        currentStep: STEPS.REVIEWS,
       });
-      goToStep(STEPS.REVIEWS);
+      setCurrentStep(STEPS.REVIEWS);
     }
   };
 
