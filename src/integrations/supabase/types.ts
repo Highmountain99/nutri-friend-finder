@@ -198,8 +198,10 @@ export type Database = {
           support_areas: string[] | null
           triage_reason_code: string | null
           triage_result: string | null
+          unified_concern_category: string | null
           updated_at: string
           user_id: string
+          wants_dietist: boolean | null
         }
         Insert: {
           activity_level?: Database["public"]["Enums"]["activity_level"] | null
@@ -234,8 +236,10 @@ export type Database = {
           support_areas?: string[] | null
           triage_reason_code?: string | null
           triage_result?: string | null
+          unified_concern_category?: string | null
           updated_at?: string
           user_id: string
+          wants_dietist?: boolean | null
         }
         Update: {
           activity_level?: Database["public"]["Enums"]["activity_level"] | null
@@ -270,8 +274,10 @@ export type Database = {
           support_areas?: string[] | null
           triage_reason_code?: string | null
           triage_result?: string | null
+          unified_concern_category?: string | null
           updated_at?: string
           user_id?: string
+          wants_dietist?: boolean | null
         }
         Relationships: []
       }
