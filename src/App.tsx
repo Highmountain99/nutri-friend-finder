@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import Frikort from "./pages/Frikort";
 import Koder from "./pages/Koder";
 import SEBForsakring from "./pages/SEBForsakring";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="/frikort" element={<Frikort />} />
                 <Route path="/koder" element={<Koder />} />
                 <Route path="/seb-forsakring" element={<SEBForsakring />} />
+                <Route path="/admin" element={<Admin />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

@@ -11,3 +11,15 @@ verify_jwt = false
 [functions.elevenlabs-scribe-token]
 enabled = true
 verify_jwt = false
+
+[functions.recipe-discover]
+enabled = true
+verify_jwt = false
+
+[functions.recipe-scrape]
+enabled = true
+verify_jwt = false
+
+[functions.recipe-parse]
+enabled = true
+verify_jwt = false
