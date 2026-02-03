@@ -1,356 +1,156 @@
 
 
-## Triagesystem: Dietist eller Kostrådgivare
+## Förbättringar av Qualifying-flödet
 
-### Sammanfattning
+### Problem som åtgärdas
 
-Implementera ett intelligent triagesystem som avgör om användaren ska matchas med en dietist (primärvård, 0 kr) eller en kostrådgivare (marknadspris) baserat på deras svar under qualifying-flödet.
+| Steg | Problem | Lösning |
+|------|---------|---------|
+| 3 (Screening) | För ledande - man behöver inte ha diagnos för att träffa dietist | Omformulera till informationsinsamling, inte gate-keeping. Alla ska kunna välja dietist oavsett svar |
+| 4 (Problem) | Endast coach-alternativ visas, måste välja något | Lägg till "Annat/vet inte" + möjlighet att hoppa över |
+| 5 (Tags) | Känns irrelevant, borde vara i annat steg | Ta bort som separat steg - integrera i problemsteget eller gör helt valfritt |
+| 9 (Stödområden) | Dietist-fokuserad, borde ha skip-alternativ | Gör valfritt med "Hoppa över"-knapp |
+| Resultat | Om coach: borde kunna byta till dietist | Lägg till "Tror du att du behöver träffa en dietist?" |
 
 ---
 
-### Flödesarkitektur
+### Ny flödeslogik
 
 ```text
-Nuvarande flöde (9 steg):
-┌─────────────────────────────────────────────────────────────┐
-│ 0. AI Input → 1. Vårdtagare → 2. Problem → 3. Recensioner   │
-│ → 4. Aktivitet → 5. Motivation → 6. Stödområden             │
-│ → 7. Sammanfattning → 8. Bokning                            │
-└─────────────────────────────────────────────────────────────┘
+NUVARANDE LOGIK:
+Röda flaggor → Dietist-spår
+Inga röda flaggor → Coach-spår (låst)
 
-Nytt flöde (11 steg):
-┌─────────────────────────────────────────────────────────────┐
-│ 0. AI Input                                                 │
-│ 1. Vårdtagare                                               │
-│ 2. SCREENING (NY) ← Röda flaggor                            │
-│    ↓                                                        │
-│    [Om gravid] → 2b. GRAVIDTRIAGE (NY)                      │
-│    ↓                                                        │
-│ 3. Problem/Behov (uppdaterad med coach-alternativ)          │
-│ 4. Underkategori (dynamisk)                                 │
-│ 5. Taggar/Preferenser (NY multi-select)                     │
-│ 6. Aktivitet                                                │
-│ 7. Motivation                                               │
-│ 8. Stödområden                                              │
-│ 9. Sammanfattning (visar triage-resultat)                   │
-│ 10. Bokning (anpassad text beroende på dietist/coach)       │
-└─────────────────────────────────────────────────────────────┘
+NY LOGIK:
+Screening samlar information men låser INTE användaren
+Användaren kan ALLTID välja dietist via "Jag vill träffa en dietist"
+Triagen blir en REKOMMENDATION, inte ett tvång
 ```
 
 ---
 
-### Datamodell - Nya fält i intake_profiles
+### Ändringar per steg
 
-| Fält | Typ | Beskrivning |
-|------|-----|-------------|
-| `has_medical_diagnosis` | boolean | Medicinsk diagnos som påverkar kost |
-| `is_pregnant` | text (enum) | 'pregnant', 'postpartum', 'no', 'unsure' |
-| `pregnancy_triage_reason` | text | Om gravid: anledning till besök |
-| `pregnancy_referred_by_care` | boolean | Om gravid: hänvisad av vården? |
-| `has_red_flag_symptoms` | boolean | Röda flaggor (viktminskning, blod etc) |
-| `red_flag_symptoms` | text[] | Vilka röda flaggor |
-| `has_eating_disorder_risk` | boolean | Misstänkt ätstörningsrisk |
-| `has_medication_risk` | boolean | Mediciner som påverkar kost |
-| `triage_result` | text (enum) | 'dietist', 'coach', 'pending' |
-| `triage_reason_code` | text | Anledningskod för triage |
-| `provider_category` | text (enum) | 'medical', 'wellness' |
+**Steg 3 - Screening (ScreeningStep.tsx)**
+- Ändra rubrik från "Innan vi matchar dig" till "Berätta lite om din situation"
+- Ta bort "gate-keeping"-logiken - samla bara information
+- Lägg till alternativ: "Jag vill prata med en dietist oavsett"
+- Alla svar leder vidare till samma flöde (unified problem step)
 
----
+**Steg 4 - Problem (ProblemStep.tsx)**
+- Slå ihop dietist- och coach-kategorier till EN lista
+- Lägg till "Annat / vet inte än" som alltid går att välja
+- Gör det möjligt att gå vidare utan att välja något ("Hoppa över")
+- Ta bort kravet på underkategori
 
-### Screeningsteg (ScreeningStep.tsx)
+**Steg 5 - Tags**
+- Ta bort som separat steg helt
+- Flytta relevant data till problemsteget (valfritt multi-select i slutet)
+- Alternativt: behåll men gör tydligt valfritt med "Hoppa över"
 
-**Rubrik:** "Innan vi matchar dig - gäller något av detta?"
+**Steg 9 - Stödområden (SupportAreasStep.tsx)**
+- Lägg till "Hoppa över"-knapp
+- Ändra texten så den passar både dietist och coach
+- Gör det tydligt att det är valfritt
 
-**Frågor (kryssrutor):**
-1. Jag har fått en medicinsk diagnos som påverkar kosten (t.ex. diabetes, celiaki, IBD, hjärt-kärlsjukdom)
-2. Jag är gravid eller har nyligen varit gravid
-3. Jag har ofrivillig viktminskning eller kraftiga magsymtom
-4. Jag har eller misstänker en ätstörning
-5. Jag tar mediciner där kosten kan påverka behandling (osäker → dietist)
-6. Inget av ovanstående
-
-**Routing-logik:**
-- Om #1, #3, #4, #5 → `triage_result = 'dietist'`
-- Om #2 → Visa GravidTriageStep
-- Om #6 → Fortsätt till problemval (coach-flöde öppet)
+**Sammanfattning (SummaryStep.tsx)**
+- Om coach-resultat: lägg till prominent knapp "Tror du att du behöver träffa en dietist? Börja om"
+- Vid klick: återställ triage och gå till steg 3
 
 ---
 
-### Gravidtriage (PregnancyTriageStep.tsx)
+### Uppdaterade filer
 
-**Steg 1 - Rubrik:** "Vad vill du ha hjälp med under graviditeten?"
-
-**Alternativ (radioknappar):**
-1. Allmän kostplanering (näring, måltidsstruktur, tips)
-2. Illamående/cravings/mataversioner (utan komplikation)
-3. Viktuppgång som oroar mig (utan diagnos)
-4. Jag har fått graviditetsdiabetes eller är under utredning
-5. Jag har diabetes typ 1 eller typ 2
-6. Jag har näringsbrist (t.ex. järnbrist) eller misstänker brist
-7. Jag har andra medicinska komplikationer
-8. Osäker / vill att vården bedömer
-
-**Routing:**
-- #4-8 → `triage_result = 'dietist'`
-- #1-3 → Visa "Har vården bett dig kontakta dietist?"
-
-**Steg 2 (om #1-3):**
-- Ja → `dietist`
-- Nej → `coach`
-- Osäker → `dietist`
+| Fil | Ändring |
+|-----|---------|
+| `ScreeningStep.tsx` | Ny rubrik, lägg till "vill ha dietist oavsett"-alternativ, ta bort routing-logik |
+| `ProblemStep.tsx` | Unified kategorilista, "Annat"-alternativ, optional skip |
+| `CoachProblemStep.tsx` | Ta bort (slå ihop med ProblemStep) |
+| `TagsStep.tsx` | Gör valfritt eller ta bort helt |
+| `SupportAreasStep.tsx` | Lägg till skip-knapp, neutral text |
+| `SummaryStep.tsx` | Lägg till "Tror du att du behöver dietist?"-knapp för coach-resultat |
+| `QualifyingFlow.tsx` | Uppdatera steg-logik, ta bort isCoachPath-lock, lägg till restart-funktion |
+| `triageEngine.ts` | Ändra till rekommendationsbaserad logik istället för tvång |
+| `types/intake.ts` | Lägg till unified kategorier |
+| `screeningQuestions.ts` | Lägg till "vill ha dietist oavsett"-alternativ |
 
 ---
 
-### Uppdaterat Problemsteg (ProblemStep.tsx)
+### Ny kategorilista (unified)
 
-Två "spår" baserat på screeningresultat:
-
-**Dietist-spår (nuvarande kategorier):**
-- Diabetes eller fördiabetes
-- Tarmhälsa (IBD, Crohns, UC, SIBO)
-- Hjärthälsa
-- Ätstörning
-- Kvinnohälsa (PCOS med medicinsk behandling)
-- Övrigt medicinskt
-
-**Coach-spår (NYA kategorier):**
-- Gå ner i vikt (utan diagnos)
+**Sammanslagna kategorier för alla användare:**
+- Gå ner i vikt
 - Bygga muskler / gå upp i vikt
 - Hälsosamma vanor & struktur
 - Träning, prestation & återhämtning
 - Energi, fokus & mättnad
 - Vegetariskt/veganskt eller balanserad kost
-- Känsloätande & cravings (utan ätstörning)
-- Matplanering: matlådor, budget, tid
-- Mat i sociala situationer
-- Kosttillskott (generell vägledning)
+- Tarmhälsa (IBS, mage, etc.)
+- Diabetes eller blodsockerhantering
+- Hjärthälsa
+- Kvinnohälsa (PCOS, fertilitet, klimakteriet)
+- Ätstörning eller svår relation till mat
+- Annat / vet inte än
 
 ---
 
-### Routing-engine (triageEngine.ts)
+### Nytt ScreeningStep-beteende
 
-Prioriterad regelordning:
+**Nya alternativ:**
+1. Jag har en medicinsk diagnos som kan påverka kosten
+2. Jag är gravid eller nyligen gravid
+3. Jag har symptom som oroar mig (viktnedgång, magproblem)
+4. Jag har eller misstänker en ätstörning
+5. Jag tar mediciner som kan påverka kosten
+6. **Jag vill träffa en dietist oavsett**
+7. Inget av ovanstående / osäker
 
+**Logik:**
+- Alternativ 1-5: Sparas som info, påverkar rekommendation
+- Alternativ 6: Sätter triageResult = 'dietist' direkt
+- Alternativ 7: Neutral, fortsätt till problemval
+- ALLA går till samma nästa steg (unified problem)
+
+---
+
+### Nytt SummaryStep med "byt till dietist"
+
+**Om triageResult === 'coach':**
 ```text
-1. MEDICINSK DIAGNOS
-   → main_choice i dietist-spår → DIETIST
-
-2. RÖDA FLAGGOR
-   → ofrivillig viktminskning, blod i avföring, svår buksmärta,
-     kräkningar, sväljsvårigheter, långvarig diarré → DIETIST
-
-3. ÄTSTÖRNINGSRISK
-   → bulimi, anorexi, kompenserar, självframkallade kräkningar,
-     extrem restriktion → DIETIST
-
-4. GRAVIDITET MED KOMPLIKATION
-   → GDM, diabetes, näringsbrist, medicinska komplikationer → DIETIST
-
-5. OSÄKER/OTILLRÄCKLIG DATA
-   → main_choice är null eller "Annat" utan beskrivning → DIETIST
-
-6. MILD TARM (SOFT RULE)
-   → IBS-liknande, milt/ibland, kort duration → COACH
-   → Pågår >4 veckor eller påverkar mycket → DIETIST
-
-7. HETSÄTNING (SOFT RULE)
-   → "Ibland tappar kontrollen" → COACH
-   → Flera gånger/vecka eller kompensation → DIETIST
-
-8. DEFAULT
-   → Ingen flagga triggered → COACH
-```
-
----
-
-### Nya typer (types/intake.ts tillägg)
-
-```typescript
-export type TriageResult = 'dietist' | 'coach' | 'pending';
-
-export type ProviderCategory = 'medical' | 'wellness';
-
-export type PregnancyStatus = 'pregnant' | 'postpartum' | 'no' | 'unsure';
-
-export type PregnancyTriageReason = 
-  | 'general_planning'
-  | 'nausea_cravings'
-  | 'weight_concern'
-  | 'gdm_risk_or_dx'
-  | 'diabetes'
-  | 'nutrient_deficiency'
-  | 'medical_complication'
-  | 'unsure';
-
-export type TriageReasonCode =
-  | 'DIAGNOSIS_SELECTED'
-  | 'RED_FLAG_SYMPTOM'
-  | 'EATING_DISORDER'
-  | 'PREGNANCY_MEDICAL'
-  | 'PREGNANCY_REFERRED_OR_UNSURE'
-  | 'PREGNANCY_GENERAL'
-  | 'UNCERTAIN'
-  | 'GI_PERSISTENT'
-  | 'SAFE_COACH';
-
-// Coach-specifika huvudkategorier
-export type CoachConcernCategory =
-  | 'weight_loss_general'
-  | 'muscle_building'
-  | 'healthy_habits'
-  | 'training_nutrition'
-  | 'energy_focus'
-  | 'plant_based'
-  | 'emotional_eating_mild'
-  | 'meal_planning'
-  | 'social_eating'
-  | 'supplements';
-```
-
----
-
-### Taggar/Preferenser (TagsStep.tsx)
-
-Multi-select grupperade efter kategori:
-
-**Mål:**
-- Gå ner i vikt
-- Bygga muskler
-- Äta mer regelbundet
-- Få mer energi
-- Minska sötsug/snacks
-- Bli bättre på matplanering
-
-**Vardag & begränsningar:**
-- Oregelbundna tider (skift/resa)
-- Jobbar mycket, lite tid
-- Budgetvänliga upplägg
-- Äter ofta ute
-- Enkla standardmåltider
-
-**Preferenser:**
-- Vegetarisk
-- Vegansk
-- Mycket protein
-- Minska socker
-- Mer fiber/grönsaker
-- Undvika kaloriräkning
-
-**Beteenden:**
-- Kvällsätande
-- Småätande på jobbet
-- Sug/cravings
-- Stressätande
-- "Allt eller inget"-tänk
-
-**Träning:**
-- Tränar 1-2 ggr/vecka
-- Tränar 3-5 ggr/vecka
-- Styrketräning
-- Kondition/löpning
-- Pre-/post-workout strategi
-
----
-
-### Filstruktur
-
-```text
-src/
-├── types/
-│   └── intake.ts                     (utökas med triage-typer)
-│
-├── lib/
-│   └── triageEngine.ts               (NY - routing-logik)
-│
-├── components/qualifying/
-│   ├── ScreeningStep.tsx             (NY)
-│   ├── PregnancyTriageStep.tsx       (NY)
-│   ├── ProblemStep.tsx               (uppdateras med coach-spår)
-│   ├── SubcategoryStep.tsx           (NY - dynamiska underkategorier)
-│   ├── TagsStep.tsx                  (NY - multi-select preferenser)
-│   ├── QualifyingFlow.tsx            (uppdateras med nya steg)
-│   └── TriageResultCard.tsx          (NY - visar resultat i sammanfattning)
-│
-├── hooks/
-│   └── useIntakeProfile.ts           (utökas med nya fält)
-│
-└── data/
-    ├── screeningQuestions.ts         (NY - screening-frågor)
-    ├── coachCategories.ts            (NY - coach-kategorier)
-    └── triageRules.ts                (NY - regeldata)
-```
-
----
-
-### Databasändringar
-
-**Nya kolumner i intake_profiles:**
-```sql
-ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
-  pregnancy_status TEXT DEFAULT NULL;
-ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
-  pregnancy_triage_reason TEXT DEFAULT NULL;
-ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
-  pregnancy_referred_by_care BOOLEAN DEFAULT NULL;
-ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
-  red_flag_symptoms TEXT[] DEFAULT '{}';
-ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
-  triage_result TEXT DEFAULT 'pending';
-ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
-  triage_reason_code TEXT DEFAULT NULL;
-ALTER TABLE intake_profiles ADD COLUMN IF NOT EXISTS 
-  provider_category TEXT DEFAULT NULL;
+┌────────────────────────────────────────────────┐
+│  Din kostrådgivare väntar                      │
+│  [Befintligt innehåll...]                      │
+│                                                │
+│  ┌──────────────────────────────────────────┐  │
+│  │ Tror du att du är i behov av att träffa  │  │
+│  │ en dietist? Vi kan ha tagit fel.         │  │
+│  │                                           │  │
+│  │ [Börja om med dietist-spår]              │  │
+│  └──────────────────────────────────────────┘  │
+└────────────────────────────────────────────────┘
 ```
 
 ---
 
 ### Implementationsordning
 
-1. **Databas:** Lägg till nya kolumner i intake_profiles
-2. **Typer:** Uppdatera types/intake.ts med nya typer
-3. **Engine:** Skapa triageEngine.ts med routing-logik
-4. **Data:** Skapa datafiler för frågor och kategorier
-5. **Komponenter:**
-   - ScreeningStep.tsx
-   - PregnancyTriageStep.tsx
-   - Uppdatera ProblemStep.tsx
-   - SubcategoryStep.tsx
-   - TagsStep.tsx
-   - TriageResultCard.tsx
-6. **Uppdatera QualifyingFlow.tsx** med nya steg och routing
-7. **Uppdatera useIntakeProfile.ts** för att hantera nya fält
-8. **Uppdatera SummaryStep** för att visa triage-resultat
-9. **Uppdatera BookingStep** med anpassad text
+1. Uppdatera `screeningQuestions.ts` med nya alternativ
+2. Uppdatera `types/intake.ts` med unified kategorier
+3. Uppdatera `ScreeningStep.tsx` - ny logik och alternativ
+4. Slå ihop `ProblemStep.tsx` och `CoachProblemStep.tsx`
+5. Gör `TagsStep.tsx` valfritt eller ta bort
+6. Uppdatera `SupportAreasStep.tsx` med skip-knapp
+7. Uppdatera `SummaryStep.tsx` med "byt till dietist"-knapp
+8. Uppdatera `QualifyingFlow.tsx` med ny flödeslogik
+9. Uppdatera `triageEngine.ts` till rekommendationsbaserad
 
 ---
 
-### Användarupplevelse
+### UX-principer
 
-**Om användaren matchas med DIETIST:**
-- Sammanfattning visar: "Du kommer att träffa en legitimerad dietist"
-- Text: "Ditt behov täcks av primärvården. Kostnad: 0 kr (frikort gäller)"
-- Bokning: "Boka tid med dietist"
-
-**Om användaren matchas med COACH:**
-- Sammanfattning visar: "Du kommer att träffa en kostrådgivare"
-- Text: "Pris från 100 kr/samtal. Kan betalas med friskvårdsbidrag."
-- Bokning: "Boka tid med kostrådgivare"
-
----
-
-### Tekniska överväganden
-
-**Säkerhet:**
-- All routing-logik körs på frontend initialt
-- Slutligt triage-resultat valideras vid bokning (edge function)
-- Röda flaggor loggas för uppföljning
-
-**Felhantering:**
-- Om triagen inte kan avgöras → default till dietist (säkrare)
-- Om användaren hoppar över screening → visa varning
-
-**UX:**
-- Användare med röda flaggor ser inte coach-alternativ alls
-- Tydlig förklaring varför de matchas med dietist/coach
-- Möjlighet att "överklaga" till dietist om man vill
+- Användaren ska ALDRIG känna sig låst i ett spår
+- Screening samlar info, bestämmer INTE
+- Triagen är en hjälpsam rekommendation
+- "Vet inte" och "Hoppa över" är alltid OK
+- Möjlighet att ändra sig finns alltid
 
