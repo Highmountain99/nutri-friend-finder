@@ -128,6 +128,83 @@ export type Database = {
         }
         Relationships: []
       }
+      dietitian_availability: {
+        Row: {
+          available_date: string
+          created_at: string
+          dietitian_id: string
+          id: string
+          time_slots: Json
+        }
+        Insert: {
+          available_date: string
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          time_slots?: Json
+        }
+        Update: {
+          available_date?: string
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          time_slots?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dietitian_availability_dietitian_id_fkey"
+            columns: ["dietitian_id"]
+            isOneToOne: false
+            referencedRelation: "dietitian_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dietitian_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          first_name: string
+          id: string
+          is_available: boolean | null
+          languages: string[] | null
+          last_name: string
+          specializations: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          first_name: string
+          id?: string
+          is_available?: boolean | null
+          languages?: string[] | null
+          last_name: string
+          specializations?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          is_available?: boolean | null
+          languages?: string[] | null
+          last_name?: string
+          specializations?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_tracking_entries: {
         Row: {
           created_at: string
