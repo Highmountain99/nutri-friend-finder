@@ -66,8 +66,8 @@ export default function Booking() {
     const appointmentDate = new Date(date);
     appointmentDate.setHours(slot.hour, slot.minute, 0, 0);
 
-    // Book the appointment
-    const result = await bookAppointment(appointmentDate, 'video');
+    // Book the appointment with dietitian_id
+    const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
 
     if (result) {
       setSelectedDietitian(dietitian);

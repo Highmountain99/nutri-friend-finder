@@ -118,6 +118,7 @@ export function useAppointments() {
   const bookAppointment = async (
     appointmentDate: Date,
     appointmentType: Appointment['appointmentType'] = 'video',
+    dietitianId?: string,
     notes?: string
   ): Promise<Appointment | null> => {
     if (!user) return null;
@@ -128,28 +129,27 @@ export function useAppointments() {
         .from('appointments')
         .insert({
           user_id: user.id,
+          dietitian_id: dietitianId || null,
           appointment_date: appointmentDate.toISOString(),
           appointment_type: appointmentType,
           notes: notes || null,
           status: 'booked',
         })
-        .select()
+        .select(`
+          *,
+          dietitian_profiles (
+            id,
+            first_name,
+            last_name,
+            title,
+            avatar_url
+          )
+        `)
         .single();
 
       if (error) throw error;
 
-      const newAppointment: Appointment = {
-        id: data.id,
-        userId: data.user_id,
-        dietitianId: data.dietitian_id,
-        dietitian: null,
-        appointmentDate: new Date(data.appointment_date),
-        status: data.status as Appointment['status'],
-        appointmentType: data.appointment_type as Appointment['appointmentType'],
-        notes: data.notes,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
-      };
+      const newAppointment = mapDbToAppointment(data as unknown as DbAppointment);
       setAppointments((prev) => [...prev, newAppointment].sort(
         (a, b) => a.appointmentDate.getTime() - b.appointmentDate.getTime()
       ));
