@@ -18,6 +18,7 @@ export default function Home() {
         dietitianName: upcomingAppointment.dietitian
           ? `${upcomingAppointment.dietitian.firstName} ${upcomingAppointment.dietitian.lastName}`
           : "Din dietist",
+        dietitianTitle: upcomingAppointment.dietitian?.title || "Legitimerad dietist",
         dietitianImage: upcomingAppointment.dietitian?.avatarUrl || undefined,
       }
     : undefined;

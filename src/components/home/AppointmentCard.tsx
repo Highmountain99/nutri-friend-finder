@@ -1,4 +1,4 @@
-import { Calendar, Clock, Video, RefreshCw } from "lucide-react";
+import { Calendar, Clock, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ interface AppointmentCardProps {
   appointment?: {
     date: Date;
     dietitianName: string;
+    dietitianTitle?: string;
     dietitianImage?: string;
   };
   onRebook?: () => void;
@@ -41,7 +42,7 @@ export function AppointmentCard({ appointment, onRebook, onBook }: AppointmentCa
   }
 
   const dayName = format(appointment.date, "EEEE", { locale: sv });
-  const dateFormatted = format(appointment.date, "d MMMM", { locale: sv });
+  const dateFormatted = format(appointment.date, "d MMMM yyyy", { locale: sv });
   const time = format(appointment.date, "HH:mm");
 
   const initials = appointment.dietitianName
@@ -52,50 +53,64 @@ export function AppointmentCard({ appointment, onRebook, onBook }: AppointmentCa
     .toUpperCase();
 
   return (
-    <Card className="shadow-elevated overflow-hidden">
-      <div className="h-1.5 gradient-hero" />
+    <Card className="shadow-elevated overflow-hidden bg-card">
       <CardContent className="p-5">
-        <div className="flex items-start gap-4">
-          {appointment.dietitianImage ? (
-            <Avatar className="w-12 h-12 flex-shrink-0">
-              <AvatarImage src={appointment.dietitianImage} alt={appointment.dietitianName} />
-              <AvatarFallback className="bg-primary-soft text-primary font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-primary-soft flex items-center justify-center flex-shrink-0">
-              <Video className="w-6 h-6 text-primary" />
-            </div>
-          )}
+        {/* Dietitian info section */}
+        <div className="flex items-center gap-4 mb-6">
+          <Avatar className="w-14 h-14 flex-shrink-0 border-2 border-primary/20">
+            {appointment.dietitianImage ? (
+              <AvatarImage 
+                src={appointment.dietitianImage} 
+                alt={appointment.dietitianName}
+                className="object-cover"
+              />
+            ) : null}
+            <AvatarFallback className="bg-primary-soft text-primary font-semibold text-lg">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
           
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground">Kommande videosamtal</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              med {appointment.dietitianName}
+            <h3 className="font-semibold text-foreground text-lg">
+              {appointment.dietitianName}
+            </h3>
+            <p className="text-sm text-primary font-medium">
+              {appointment.dietitianTitle || "Legitimerad dietist"}
             </p>
-            
-            <div className="flex items-center gap-4 mt-3 text-sm">
-              <div className="flex items-center gap-1.5 text-foreground">
-                <Calendar className="w-4 h-4 text-primary" />
-                <span className="capitalize">{dayName}, {dateFormatted}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-foreground">
-                <Clock className="w-4 h-4 text-primary" />
-                <span>{time}</span>
-              </div>
-            </div>
           </div>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={onRebook}
-          className="w-full mt-4"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Omboka tid
-        </Button>
+        {/* Date and time section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Calendar className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-foreground font-medium capitalize">
+              {dayName} {dateFormatted}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-primary font-semibold text-lg">
+              {time}
+            </span>
+          </div>
+        </div>
+
+        {/* Rebook button */}
+        {onRebook && (
+          <Button
+            variant="outline"
+            onClick={onRebook}
+            className="w-full mt-5"
+          >
+            Ändra tid
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
