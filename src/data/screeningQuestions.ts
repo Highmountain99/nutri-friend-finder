@@ -33,12 +33,6 @@ export const screeningOptions: ScreeningOption[] = [
   },
 ];
 
-// Special option to force dietist path
-export const wantDietistOption = {
-  value: 'want_dietist' as const,
-  label: 'Jag vill träffa en dietist oavsett',
-};
-
 export const noneOfTheAboveOption = {
   value: 'none' as const,
   label: 'Inget av ovanstående / osäker',

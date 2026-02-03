@@ -29,7 +29,7 @@ export type TriageReasonCode =
   | 'UNCERTAIN'
   | 'GI_PERSISTENT'
   | 'SAFE_COACH'
-  | 'USER_REQUESTED_DIETIST';
+  | 'MEDICATION_RISK';
 
 // Red flag symptoms for screening (informational)
 export type RedFlagSymptom =
@@ -89,9 +89,10 @@ export interface IntakeFormData {
   careSeekerType?: CareSeekerType;
   relationshipIfOther?: RelationshipType;
   
-  // Screening data
+  // Screening data (now collected in ProblemStep)
   redFlagSymptoms: RedFlagSymptom[];
-  wantsDietist?: boolean; // User explicitly requested dietist
+  isPregnant?: boolean; // Checkbox in ProblemStep
+  takesMedication?: boolean; // Checkbox in ProblemStep
   pregnancyStatus?: PregnancyStatus;
   pregnancyTriageReason?: PregnancyTriageReason;
   pregnancyReferredByCare?: boolean;

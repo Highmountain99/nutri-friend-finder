@@ -43,7 +43,7 @@ const DIETIST_CATEGORIES: UnifiedConcernCategory[] = [
  * Main triage function - now recommendation-based, not gatekeeping
  * 
  * Priority order:
- * 1. User explicitly requested dietist → DIETIST
+ * 1. Medication that affects diet → DIETIST (recommendation)
  * 2. Red flag symptoms → DIETIST (recommendation)
  * 3. Pregnancy with medical reason → DIETIST
  * 4. Medical categories → DIETIST
@@ -51,11 +51,11 @@ const DIETIST_CATEGORIES: UnifiedConcernCategory[] = [
  * 6. No category selected → Recommendation based on other factors
  */
 export function calculateTriage(data: IntakeFormData): TriageDecision {
-  // Rule 1: User explicitly requested dietist
-  if (data.wantsDietist) {
+  // Rule 1: Takes medication that affects diet → recommend dietist
+  if (data.takesMedication) {
     return {
       result: 'dietist',
-      reasonCode: 'USER_REQUESTED_DIETIST',
+      reasonCode: 'MEDICATION_RISK',
       providerCategory: 'medical',
     };
   }
@@ -81,8 +81,8 @@ export function calculateTriage(data: IntakeFormData): TriageDecision {
     };
   }
 
-  // Rule 3: Pregnancy triage
-  if (data.pregnancyStatus === 'pregnant' || data.pregnancyStatus === 'postpartum' || data.pregnancyStatus === 'unsure') {
+  // Rule 3: Pregnancy triage (triggered by isPregnant checkbox)
+  if (data.isPregnant || data.pregnancyStatus === 'pregnant' || data.pregnancyStatus === 'postpartum' || data.pregnancyStatus === 'unsure') {
     // Check if pregnancy reason requires dietist
     if (data.pregnancyTriageReason && PREGNANCY_MEDICAL_REASONS.includes(data.pregnancyTriageReason)) {
       return {
@@ -196,8 +196,8 @@ export function shouldRecommendDietist(data: IntakeFormData): boolean {
 export function getTriageExplanation(reasonCode: TriageReasonCode, result: TriageResult): string {
   if (result === 'dietist') {
     switch (reasonCode) {
-      case 'USER_REQUESTED_DIETIST':
-        return 'Du valde att träffa en dietist - ett utmärkt val för professionell vägledning.';
+      case 'MEDICATION_RISK':
+        return 'Baserat på att du tar mediciner som kan påverka kosten rekommenderar vi en dietist.';
       case 'DIAGNOSIS_SELECTED':
         return 'Baserat på dina svar rekommenderar vi en legitimerad dietist som är specialiserad på ditt behov.';
       case 'RED_FLAG_SYMPTOM':
