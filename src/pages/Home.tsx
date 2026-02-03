@@ -35,8 +35,8 @@ export default function Home() {
         ) : (
           <AppointmentCard
             appointment={formattedAppointment}
-            onRebook={() => navigate("/booking")}
-            onBook={() => navigate("/booking")}
+            onRebook={() => navigate("/booking", { state: { mode: "rebook" } })}
+            onBook={() => navigate("/booking", { state: { mode: "new" } })}
           />
         )}
       </section>

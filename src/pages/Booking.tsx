@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { DietitianSelectionStep } from "@/components/booking/DietitianSelectionStep";
 import { DietitianCalendarStep } from "@/components/booking/DietitianCalendarStep";
 import { DietitianRecommendations } from "@/components/booking/DietitianRecommendations";
@@ -18,7 +18,10 @@ type BookingPhase =
 
 export default function Booking() {
   const navigate = useNavigate();
-  const { bookAppointment } = useAppointments();
+  const location = useLocation();
+  const { bookAppointment, cancelUpcomingBookedAppointments } = useAppointments();
+
+  const isRebook = (location.state as { mode?: string } | null)?.mode === 'rebook';
   
   const [phase, setPhase] = useState<BookingPhase>('selection');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -65,6 +68,12 @@ export default function Booking() {
     // Create the appointment datetime
     const appointmentDate = new Date(date);
     appointmentDate.setHours(slot.hour, slot.minute, 0, 0);
+
+    // If user arrived here from "Ändra tid", replace any existing upcoming booking
+    // so the home screen always reflects the latest chosen dietitian.
+    if (isRebook) {
+      await cancelUpcomingBookedAppointments();
+    }
 
     // Book the appointment with dietitian_id
     const result = await bookAppointment(appointmentDate, 'video', dietitian.id);

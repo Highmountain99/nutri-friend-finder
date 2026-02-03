@@ -96,7 +96,9 @@ export function useAppointments() {
           )
         `)
         .eq('user_id', user.id)
-        .order('appointment_date', { ascending: true });
+        // If multiple bookings exist on the same time, prefer the most recently updated.
+        .order('appointment_date', { ascending: true })
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
@@ -105,6 +107,45 @@ export function useAppointments() {
       console.error('Error fetching appointments:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cancelUpcomingBookedAppointments = async (): Promise<boolean> => {
+    if (!user) return false;
+
+    setSaving(true);
+    const nowIso = new Date().toISOString();
+
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('user_id', user.id)
+        .eq('status', 'booked')
+        .gte('appointment_date', nowIso);
+
+      if (error) throw error;
+
+      const now = new Date(nowIso);
+      setAppointments((prev) =>
+        prev.map((apt) =>
+          apt.status === 'booked' && apt.appointmentDate >= now
+            ? { ...apt, status: 'cancelled' as const }
+            : apt
+        )
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Error cancelling upcoming appointments:', error);
+      toast({
+        title: 'Något gick fel',
+        description: 'Kunde inte avboka tidigare tider. Försök igen.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -218,6 +259,7 @@ export function useAppointments() {
     getUpcomingAppointment,
     bookAppointment,
     cancelAppointment,
+    cancelUpcomingBookedAppointments,
     refetch: fetchAppointments,
   };
 }
