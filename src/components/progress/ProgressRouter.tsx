@@ -26,22 +26,38 @@ export function ProgressRouter() {
     );
   }
 
-  // Route to appropriate layout based on primary concern
+  // Route to appropriate layout based on concern category (unified or legacy)
   switch (progressData.concernCategory) {
+    // Weight-related categories
     case 'weight_loss':
       return <WeightLossProgress data={progressData} />;
+    
+    // Training/nutrition categories -> general health with weight focus
+    case 'muscle_building':
+    case 'training_nutrition':
+    case 'energy_focus':
+    case 'healthy_habits':
+    case 'plant_based':
+      return <GeneralHealthProgress data={progressData} />;
+    
+    // Medical categories
     case 'diabetes':
       return <DiabetesProgress data={progressData} />;
     case 'gut_health':
       return <GutHealthProgress data={progressData} />;
-    case 'eating_disorder':
-      return <EatingDisorderProgress data={progressData} />;
-    case 'emotional_eating':
-      return <EatingDisorderProgress data={progressData} />;
     case 'heart_health':
       return <HeartHealthProgress data={progressData} />;
+    
+    // Sensitive categories
+    case 'eating_disorder':
+    case 'emotional_eating':
+      return <EatingDisorderProgress data={progressData} />;
+    
+    // Women's health
     case 'womens_health':
       return <WomensHealthProgress data={progressData} />;
+    
+    // Default/legacy
     case 'general_health':
     case 'other':
     default:

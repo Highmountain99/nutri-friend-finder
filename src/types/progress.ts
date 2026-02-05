@@ -1,4 +1,7 @@
-import { PrimaryConcernCategory } from './intake';
+import { PrimaryConcernCategory, UnifiedConcernCategory } from './intake';
+
+// Map unified categories to legacy categories for metric configs
+export type ProgressConcernCategory = PrimaryConcernCategory | UnifiedConcernCategory;
 
 export type MetricType = 
   | 'weight'
@@ -52,7 +55,7 @@ export interface TreatmentPhase {
 }
 
 export interface ProgressData {
-  concernCategory: PrimaryConcernCategory | null;
+  concernCategory: ProgressConcernCategory | null;
   healthEntries: HealthEntry[];
   milestones: Milestone[];
   weeklyStats: WeeklyStats;
@@ -60,17 +63,24 @@ export interface ProgressData {
   loading: boolean;
 }
 
-// Metric configurations per condition
-export const METRIC_CONFIGS: Record<PrimaryConcernCategory, MetricType[]> = {
+// Metric configurations per condition (supports both unified and legacy categories)
+export const METRIC_CONFIGS: Record<string, MetricType[]> = {
+  // Unified categories
   weight_loss: ['weight', 'waist_circumference'],
-  diabetes: ['blood_sugar_fasting', 'blood_sugar_post_meal', 'hba1c'],
+  muscle_building: ['weight'],
+  healthy_habits: ['weight'],
+  training_nutrition: ['weight'],
+  energy_focus: ['weight'],
+  plant_based: ['weight'],
   gut_health: [], // Uses symptom_entries instead
-  general_health: ['weight'],
-  womens_health: ['weight', 'waist_circumference'],
-  emotional_eating: [], // No weight/calorie tracking
-  eating_disorder: [], // No weight/calorie tracking - focus on meal regularity
+  diabetes: ['blood_sugar_fasting', 'blood_sugar_post_meal', 'hba1c'],
   heart_health: ['blood_pressure_systolic', 'blood_pressure_diastolic', 'cholesterol_total', 'cholesterol_ldl', 'cholesterol_hdl'],
+  womens_health: ['weight', 'waist_circumference'],
+  eating_disorder: [], // No weight/calorie tracking - focus on meal regularity
   other: ['weight'],
+  // Legacy categories
+  general_health: ['weight'],
+  emotional_eating: [], // No weight/calorie tracking
 };
 
 export const METRIC_LABELS: Record<MetricType, { label: string; unit: string }> = {
