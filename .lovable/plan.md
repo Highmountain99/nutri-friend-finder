@@ -1,177 +1,196 @@
 
-# Integration av ICA:s Receptdatabas
+# Plan: Hälsoprofil med redigerbar data
 
 ## Översikt
 
-ICA har **23 564 recept** i sin databas. Din app har redan en väl strukturerad `recipes`-tabell med 20 recept. Planen är att skapa ett automatiserat system som kan hämta, transformera och lagra ICA-recept i din databas.
+Profilsidan ska visa verklig användardata istället för hårdkodade värden, med möjlighet att redigera varje värde direkt via en penna-ikon. Data hämtas från olika delar av appen:
 
-## Juridiska Överväganden (Viktigt!)
+- **Vikt & Längd**: från AI-näringsspårning (`user_nutrition_settings`)
+- **Blodtryck**: från hälsolokaliseringar (`health_tracking_entries`), förberett för Apple Health
+- **Aktivitetsnivå**: från kvalificeringssteget (`intake_profiles`)
+- **Diagnoser & Tillstånd**: från kvalificeringssteget, med framtida dietist-överskrivning
 
-Innan vi implementerar detta måste du överväga:
+## Datakällor
 
-1. **Upphovsrätt**: ICA:s recept kan vara upphovsrättsskyddade
-2. **Användarvillkor**: ICA:s webbplats kan ha restriktioner mot scraping
-3. **Rekommendation**: Kontakta ICA för att undersöka om det finns ett officiellt API eller partneravtal
+| Värde | Tabell | Kolumn |
+|-------|--------|--------|
+| Vikt | user_nutrition_settings | weight_kg |
+| Längd | user_nutrition_settings | height_cm |
+| Blodtryck | health_tracking_entries | blood_pressure_systolic/diastolic |
+| Aktivitetsnivå | intake_profiles | activity_level |
+| Diagnoser | intake_profiles | unified_concern_category, primary_concern_subcategory, concern_tags |
+| Mål | intake_profiles | preference_tags |
 
-Om du får tillstånd eller beslutar att gå vidare, här är den tekniska planen:
+## Ändringar
 
----
+### 1. Skapa en ny hook: `useHealthProfile`
 
-## Teknisk Arkitektur
+En ny hook som aggregerar all hälsodata från olika källor:
+
+- Hämtar vikt/längd från `user_nutrition_settings`
+- Hämtar aktivitetsnivå och diagnoser från `intake_profiles`
+- Hämtar senaste blodtryck från `health_tracking_entries`
+- Tillhandahåller uppdateringsfunktioner för varje värde
+
+### 2. Skapa redigeringskomponenter
+
+**EditableHealthCard** - En generisk kortkomponent med:
+- Värdevisning
+- Penna-ikon i övre högra hörnet
+- Sheet/modal för redigering vid klick
+
+**EditSheets för varje typ:**
+- `EditWeightSheet` - Numerisk input för vikt (kg)
+- `EditHeightSheet` - Numerisk input för längd (cm)
+- `EditBloodPressureSheet` - Två inputs (systoliskt/diastoliskt)
+- `EditActivityLevelSheet` - RadioGroup med aktivitetsnivåer
+- `EditConditionsSheet` - Redigera taggar/diagnoser
+
+### 3. Uppdatera Profile.tsx
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│                    Admin Dashboard                       │
-│         (Starta import, visa progress, statistik)       │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────┐
-│              Edge Function: recipe-import               │
-│                                                         │
-│  1. Firecrawl MAP → Hämta alla recept-URLer            │
-│  2. Firecrawl SCRAPE → Hämta receptdetaljer            │
-│  3. AI PARSE → Strukturera data                         │
-│  4. INSERT → Spara till recipes-tabell                  │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────┐
-│                   Lovable Cloud DB                      │
-│                     recipes-tabell                       │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  ← Min hälsoprofil                      │
+│     Din hälsoinformation                │
+├─────────────────────────────────────────┤
+│                                         │
+│  GRUNDLÄGGANDE INFORMATION              │
+│                                         │
+│  ┌────────────┐ ┌────────────┐          │
+│  │ ⚖️ Vikt  ✏️│ │ 📏 Längd ✏️│          │
+│  │ 72 kg     │ │ 175 cm    │          │
+│  └────────────┘ └────────────┘          │
+│  ┌────────────┐ ┌────────────┐          │
+│  │ ❤️ Blod  ✏️│ │ 🏃 Aktiv ✏️│          │
+│  │ 120/80    │ │ Måttlig   │          │
+│  └────────────┘ └────────────┘          │
+│                                         │
+│  DIAGNOSER & TILLSTÅND              ✏️  │
+│  ┌─────────────────────────────────────┐│
+│  │ [IBS] [Tarmhälsa]                  ││
+│  └─────────────────────────────────────┘│
+│                                         │
+│  DINA MÅL                           ✏️  │
+│  ┌─────────────────────────────────────┐│
+│  │ • Gå ner i vikt                    ││
+│  │ • Mer energi                       ││
+│  └─────────────────────────────────────┘│
+│                                         │
+│  ⚠️ Din information är skyddad         │
+│                                         │
+└─────────────────────────────────────────┘
 ```
 
----
+### 4. Dataflöde
 
-## Steg 1: Anslut Firecrawl
+```text
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│                  │     │                  │     │                  │
+│  AI-närings-     │────▶│ user_nutrition_  │────▶│                  │
+│  spårning        │     │ settings         │     │                  │
+│  (onboarding)    │     │ (vikt, längd)    │     │                  │
+│                  │     │                  │     │   Profile.tsx    │
+└──────────────────┘     └──────────────────┘     │                  │
+                                                  │   Läser +        │
+┌──────────────────┐     ┌──────────────────┐     │   uppdaterar     │
+│                  │     │                  │     │   alla värden    │
+│  Kvalificering   │────▶│ intake_profiles  │────▶│                  │
+│  (onboarding)    │     │ (aktivitet,      │     │                  │
+│                  │     │  diagnoser, mål) │     │                  │
+└──────────────────┘     └──────────────────┘     │                  │
+                                                  │                  │
+┌──────────────────┐     ┌──────────────────┐     │                  │
+│                  │     │                  │     │                  │
+│  Manuell log /   │────▶│ health_tracking_ │────▶│                  │
+│  Apple Health*   │     │ entries          │     │                  │
+│                  │     │ (blodtryck)      │     │                  │
+└──────────────────┘     └──────────────────┘     └──────────────────┘
+                         * Apple Health ej byggd
+```
 
-Firecrawl är ett verktyg för att scrapa webbsidor på ett strukturerat sätt. Det behöver kopplas till projektet via Connectors.
+## Tekniska detaljer
 
-**Åtgärd**: Anslut Firecrawl-connector i inställningarna.
+### Ny hook: useHealthProfile.ts
 
----
+```typescript
+interface HealthProfileData {
+  // Från user_nutrition_settings
+  weightKg?: number;
+  heightCm?: number;
+  
+  // Från intake_profiles
+  activityLevel?: ActivityLevel;
+  conditions: string[];  // Mappade från unified_concern_category + subcategory
+  goals: string[];       // Mappade från preference_tags
+  
+  // Från health_tracking_entries
+  bloodPressure?: { systolic: number; diastolic: number };
+}
 
-## Steg 2: Skapa Edge Functions
+interface UseHealthProfile {
+  data: HealthProfileData;
+  loading: boolean;
+  
+  updateWeight: (kg: number) => Promise<void>;
+  updateHeight: (cm: number) => Promise<void>;
+  updateBloodPressure: (systolic: number, diastolic: number) => Promise<void>;
+  updateActivityLevel: (level: ActivityLevel) => Promise<void>;
+  updateConditions: (conditions: string[]) => Promise<void>;
+  updateGoals: (goals: string[]) => Promise<void>;
+}
+```
 
-### 2.1 `recipe-discover` - Hitta alla recept-URLer
+### Mappning av diagnoser
 
-Använder Firecrawl MAP för att snabbt hitta alla recept-URLer på ica.se/recept/:
+Diagnoser visas baserat på användarens `unified_concern_category` och `primary_concern_subcategory`:
 
-- Input: Bas-URL (`https://www.ica.se/recept/`)
-- Output: Lista med upp till 5000 recept-URLer
-- Sparar URLer till en ny tabell `recipe_import_queue`
+| Kategori | Visas som |
+|----------|-----------|
+| gut_health + ibs | "IBS" |
+| gut_health + crohns | "Crohns sjukdom" |
+| diabetes + type2 | "Typ 2-diabetes" |
+| heart_health + high_blood_pressure | "Högt blodtryck" |
+| womens_health + pcos | "PCOS" |
 
-### 2.2 `recipe-scrape` - Hämta receptdata
+### Mappning av mål
 
-Hämtar detaljer från enskilda recept:
+Mål hämtas från `preference_tags` i intake_profiles och mappas till svenska etiketter:
 
-- Tar recept-URL från kön
-- Scrapar med Firecrawl SCRAPE (markdown-format)
-- Skickar till AI för strukturering
+| Tag | Visas som |
+|-----|-----------|
+| goal_weight_loss | "Gå ner i vikt" |
+| goal_energy | "Få mer energi" |
+| goal_muscle | "Bygga muskler" |
+| goal_regular_eating | "Äta mer regelbundet" |
 
-### 2.3 `recipe-parse` - AI-strukturering
+## Nya filer
 
-Använder Lovable AI (Gemini) för att:
+1. `src/hooks/useHealthProfile.ts` - Aggregerar all hälsodata
+2. `src/components/profile/EditableHealthCard.tsx` - Kort med penna-ikon
+3. `src/components/profile/EditWeightSheet.tsx` - Redigera vikt
+4. `src/components/profile/EditHeightSheet.tsx` - Redigera längd
+5. `src/components/profile/EditBloodPressureSheet.tsx` - Redigera blodtryck
+6. `src/components/profile/EditActivitySheet.tsx` - Redigera aktivitetsnivå
+7. `src/components/profile/EditConditionsSheet.tsx` - Redigera diagnoser
+8. `src/components/profile/EditGoalsSheet.tsx` - Redigera mål
 
-- Extrahera ingredienser med mängd, enhet, och namn
-- Extrahera instruktionssteg
-- Kategorisera kök, måltidstyp, allergener
-- Identifiera näringsvärden om tillgängligt
+## Uppdaterade filer
 
----
+1. `src/pages/Profile.tsx` - Använder ny hook och redigerbara komponenter
 
-## Steg 3: Databas-uppdateringar
+## Om data saknas
 
-### Ny tabell: `recipe_import_queue`
+Om ett värde inte finns ifyllt visas:
+- "–" eller "Ej angivet" som placeholder
+- Penna-ikonen är fortfarande klickbar för att lägga till värdet
+- Ett subtilt meddelande kan visas: "Lägg till din vikt för att förbättra dina personliga rekommendationer"
 
-| Kolumn | Typ | Beskrivning |
-|--------|-----|-------------|
-| id | uuid | Primärnyckel |
-| source_url | text | ICA recept-URL |
-| status | text | pending/processing/completed/failed |
-| scraped_data | jsonb | Rå markdown-data |
-| parsed_data | jsonb | AI-strukturerad data |
-| error_message | text | Eventuellt fel |
-| created_at | timestamp | Skapad |
-| processed_at | timestamp | Bearbetad |
+## Framtida förberedelser
 
-### Uppdatering av `recipes`-tabell
+**Apple Health-integration (ej i denna plan):**
+- Blodtrycksrutan förbereds för att visa "Synkad från Apple Health" när integrationen är byggd
+- `apple_health_settings`-tabellen finns redan för att spåra kopplingsstatusen
 
-Lägg till kolumn:
-- `source_url` (redan finns!) - för att spåra ursprung och undvika dubbletter
-
----
-
-## Steg 4: Datamappning ICA → EatSuite
-
-| ICA-data | Din kolumn | Transformation |
-|----------|------------|----------------|
-| Titel | `title` | Direkt |
-| Beskrivning | `description` | Första stycket |
-| Bild-URL | `image_url` | Direkt |
-| Tid | `time_minutes` | Parsa "Under 45 min" → 45 |
-| Portioner | `servings` | Parsa "ca 8 bitar" → 8 |
-| Svårighetsgrad | `difficulty` | Mappa: Enkel/Medel/Svår |
-| Ingredienser | `ingredients` | JSON-array med mängd, enhet, namn |
-| Instruktioner | `instructions` | JSON-array med steg |
-| Betyg | `rating` | Direkt |
-| Taggar | `tags`, `meal_types`, `cuisine_types` | AI-kategorisering |
-| Allergener | `allergen_free`, `dietary_needs` | AI-analys av "Innehåller..." |
-
----
-
-## Steg 5: Admin-gränssnitt
-
-En enkel admin-sida för att:
-
-1. **Starta import** - Knapp för att köra recipe-discover
-2. **Visa kö** - Status på recept i kön
-3. **Batch-bearbetning** - Kör recipe-scrape + recipe-parse
-4. **Statistik** - Antal importerade, misslyckade, etc.
-
----
-
-## Implementeringsordning
-
-1. **Anslut Firecrawl-connector**
-2. **Skapa databas-tabell** för importkö
-3. **Skapa Edge Function: recipe-discover** (MAP)
-4. **Skapa Edge Function: recipe-scrape** (SCRAPE)
-5. **Skapa Edge Function: recipe-parse** (AI)
-6. **Skapa Admin-sida** för att hantera import
-7. **Testa med 10-20 recept** innan full import
-8. **Kör batch-import** (chunked för att undvika rate limits)
-
----
-
-## Tidsuppskattning
-
-- Steg 1-3: ~30 min
-- Steg 4-5: ~1 timme
-- Steg 6: ~30 min
-- Steg 7-8: ~2 timmar (beroende på rate limits)
-
----
-
-## Alternativa Lösningar
-
-### Alternativ A: Manuell CSV-import
-Om scraping inte är tillåtet kan du:
-1. Exportera recept manuellt (om ICA erbjuder detta)
-2. Ladda upp CSV via admin
-3. Parsa och importera
-
-### Alternativ B: Begränsad import
-Importera endast:
-- Topp 500 mest populära recept
-- Specifika kategorier (svenska klassiker, snabba middagar)
-
----
-
-## Kostnad och Rate Limits
-
-- **Firecrawl**: Har användningsbegränsningar baserat på plan
-- **Lovable AI**: Ingår i projektet utan extra kostnad
-- **Rekommendation**: Importera i batches om 50-100 recept åt gången
-
+**Dietist-överskrivning:**
+- Diagnosfältet är förberett för att markeras med "Satt av dietist" i framtiden
+- Användaren kan fortfarande se men inte redigera dietist-satta diagnoser
