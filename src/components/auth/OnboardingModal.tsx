@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import onboardingSofa from "@/assets/onboarding-sofa.png";
+import onboardingHealth from "@/assets/onboarding-health.png";
 interface OnboardingModalProps {
   open: boolean;
   onClose: () => void;
@@ -127,11 +129,13 @@ function OnboardingPage1({
   onNext: () => void;
 }) {
   return <div className="flex-1 flex flex-col px-6 pt-16">
-      {/* Illustration placeholder */}
-      <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8">
-        <div className="text-primary/50 text-sm">
-          Illustration: Person i soffa med mobil
-        </div>
+      {/* Illustration */}
+      <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8 overflow-hidden">
+        <img 
+          src={onboardingSofa} 
+          alt="Person i soffa med mobil" 
+          className="h-full w-auto object-contain"
+        />
       </div>
 
       {/* Content */}
@@ -160,11 +164,13 @@ function OnboardingPage2({
   onNext: () => void;
 }) {
   return <div className="flex-1 flex flex-col px-6 pt-16">
-      {/* Illustration placeholder */}
-      <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8">
-        <div className="text-primary/50 text-sm text-center px-4">
-          Illustration: Person med mobil, grönsaker och hälsa
-        </div>
+      {/* Illustration */}
+      <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8 overflow-hidden">
+        <img 
+          src={onboardingHealth} 
+          alt="Person med mobil, grönsaker och hälsa" 
+          className="h-full w-auto object-contain"
+        />
       </div>
 
       {/* Content */}
