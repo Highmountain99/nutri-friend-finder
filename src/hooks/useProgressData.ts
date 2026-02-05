@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIntakeProfile } from './useIntakeProfile';
 import { supabase } from '@/integrations/supabase/client';
-import { ProgressData, HealthEntry, WeeklyStats, METRIC_CONFIGS, MetricType } from '@/types/progress';
-import { PrimaryConcernCategory } from '@/types/intake';
+import { ProgressData, HealthEntry, WeeklyStats, METRIC_CONFIGS, MetricType, ProgressConcernCategory } from '@/types/progress';
 import { startOfWeek, endOfWeek, subDays, format } from 'date-fns';
 
 export function useProgressData(): ProgressData {
@@ -16,7 +15,9 @@ export function useProgressData(): ProgressData {
   });
   const [loading, setLoading] = useState(true);
 
-  const concernCategory = profile?.primaryConcernCategory || null;
+  // Use unifiedConcernCategory first, fallback to primaryConcernCategory for legacy profiles
+  const concernCategory: ProgressConcernCategory | null = 
+    profile?.unifiedConcernCategory || profile?.primaryConcernCategory || null;
 
   useEffect(() => {
     if (!user || profileLoading) return;
