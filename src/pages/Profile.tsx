@@ -1,21 +1,58 @@
-import { ArrowLeft, Heart, Activity, Ruler, Scale, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Heart, Activity, Ruler, Scale, AlertCircle, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EditableHealthCard } from "@/components/profile/EditableHealthCard";
+import { EditWeightSheet } from "@/components/profile/EditWeightSheet";
+import { EditHeightSheet } from "@/components/profile/EditHeightSheet";
+import { EditBloodPressureSheet } from "@/components/profile/EditBloodPressureSheet";
+import { EditActivitySheet } from "@/components/profile/EditActivitySheet";
+import { EditConditionsSheet } from "@/components/profile/EditConditionsSheet";
+import { EditGoalsSheet } from "@/components/profile/EditGoalsSheet";
+import { useHealthProfile, activityLevelLabels } from "@/hooks/useHealthProfile";
 
-const healthInfo = [
-  { icon: Scale, label: "Vikt", value: "72 kg" },
-  { icon: Ruler, label: "Längd", value: "175 cm" },
-  { icon: Heart, label: "Blodtryck", value: "120/80" },
-  { icon: Activity, label: "Aktivitetsnivå", value: "Måttlig" },
-];
-
-const conditions = ["IBS", "Glutenintolerans"];
-const goals = ["Minska magbesvär", "Mer energi", "Bättre sömn"];
+type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "conditions" | "goals" | null;
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { data, loading, updateWeight, updateHeight, updateBloodPressure, updateActivityLevel } = useHealthProfile();
+  const [openSheet, setOpenSheet] = useState<EditSheet>(null);
+
+  const formatBloodPressure = () => {
+    if (!data.bloodPressure) return undefined;
+    return `${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}`;
+  };
+
+  const formatActivityLevel = () => {
+    if (!data.activityLevel) return undefined;
+    return activityLevelLabels[data.activityLevel];
+  };
+
+  if (loading) {
+    return (
+      <div className="px-4 py-6 space-y-6 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Min hälsoprofil</h1>
+            <p className="text-sm text-muted-foreground">Din hälsoinformation</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-20 rounded-lg" />
+        <Skeleton className="h-24 rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
@@ -36,51 +73,94 @@ export default function Profile() {
           Grundläggande information
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          {healthInfo.map((info) => (
-            <Card key={info.label} className="shadow-soft">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <info.icon className="w-4 h-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">{info.label}</span>
-                </div>
-                <p className="font-semibold text-foreground">{info.value}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <EditableHealthCard
+            icon={Scale}
+            label="Vikt"
+            value={data.weightKg ? `${data.weightKg} kg` : undefined}
+            onEdit={() => setOpenSheet("weight")}
+          />
+          <EditableHealthCard
+            icon={Ruler}
+            label="Längd"
+            value={data.heightCm ? `${data.heightCm} cm` : undefined}
+            onEdit={() => setOpenSheet("height")}
+          />
+          <EditableHealthCard
+            icon={Heart}
+            label="Blodtryck"
+            value={formatBloodPressure()}
+            onEdit={() => setOpenSheet("bloodPressure")}
+          />
+          <EditableHealthCard
+            icon={Activity}
+            label="Aktivitetsnivå"
+            value={formatActivityLevel()}
+            onEdit={() => setOpenSheet("activity")}
+          />
         </div>
       </section>
 
       {/* Conditions */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-          Diagnoser & tillstånd
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            Diagnoser & tillstånd
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            onClick={() => setOpenSheet("conditions")}
+            aria-label="Visa diagnoser"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+        </div>
         <Card className="shadow-soft">
           <CardContent className="p-4">
-            <div className="flex flex-wrap gap-2">
-              {conditions.map((condition) => (
-                <Badge key={condition} variant="secondary" className="px-3 py-1">
-                  {condition}
-                </Badge>
-              ))}
-            </div>
+            {data.conditions.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {data.conditions.map((condition) => (
+                  <Badge key={condition} variant="secondary" className="px-3 py-1">
+                    {condition}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm italic">Inga diagnoser registrerade</p>
+            )}
           </CardContent>
         </Card>
       </section>
 
       {/* Goals */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-          Dina mål
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+            Dina mål
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            onClick={() => setOpenSheet("goals")}
+            aria-label="Visa mål"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+        </div>
         <Card className="shadow-soft">
           <CardContent className="p-4 space-y-2">
-            {goals.map((goal) => (
-              <div key={goal} className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-foreground">{goal}</span>
-              </div>
-            ))}
+            {data.goals.length > 0 ? (
+              data.goals.map((goal) => (
+                <div key={goal} className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-foreground">{goal}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-sm italic">Inga mål registrerade</p>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -98,10 +178,41 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* Edit Button */}
-      <Button variant="outline" className="w-full">
-        Redigera hälsoprofil
-      </Button>
+      {/* Edit Sheets */}
+      <EditWeightSheet
+        open={openSheet === "weight"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        currentValue={data.weightKg}
+        onSave={updateWeight}
+      />
+      <EditHeightSheet
+        open={openSheet === "height"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        currentValue={data.heightCm}
+        onSave={updateHeight}
+      />
+      <EditBloodPressureSheet
+        open={openSheet === "bloodPressure"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        currentValue={data.bloodPressure}
+        onSave={updateBloodPressure}
+      />
+      <EditActivitySheet
+        open={openSheet === "activity"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        currentValue={data.activityLevel}
+        onSave={updateActivityLevel}
+      />
+      <EditConditionsSheet
+        open={openSheet === "conditions"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        conditions={data.conditions}
+      />
+      <EditGoalsSheet
+        open={openSheet === "goals"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        goals={data.goals}
+      />
     </div>
   );
 }
