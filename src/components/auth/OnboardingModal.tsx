@@ -128,18 +128,18 @@ function OnboardingPage1({
 }: {
   onNext: () => void;
 }) {
-  return <div className="flex-1 flex flex-col px-6 pt-16">
+  return <div className="flex-1 flex flex-col pt-16">
       {/* Illustration */}
-      <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8 overflow-hidden">
+      <div className="flex-shrink-0 h-48 bg-primary-soft flex items-center justify-center mb-8 overflow-hidden">
         <img 
           src={onboardingSofa} 
           alt="Person i soffa med mobil" 
-          className="h-full w-auto object-contain"
+          className="w-full h-full object-cover"
         />
       </div>
 
       {/* Content */}
-      <div className="flex-1">
+      <div className="flex-1 px-6">
         <h2 className="text-2xl font-semibold text-foreground mb-8">Dietist eller kostrådgivning i mobilen</h2>
 
         {/* Stats */}
@@ -151,7 +151,7 @@ function OnboardingPage1({
       </div>
 
       {/* CTA */}
-      <div className="flex-shrink-0 py-6">
+      <div className="flex-shrink-0 py-6 px-6">
         <Button onClick={onNext} size="xl" className="w-full h-14 text-base font-medium">
           Nästa
         </Button>
@@ -163,18 +163,18 @@ function OnboardingPage2({
 }: {
   onNext: () => void;
 }) {
-  return <div className="flex-1 flex flex-col px-6 pt-16">
+  return <div className="flex-1 flex flex-col pt-16">
       {/* Illustration */}
-      <div className="flex-shrink-0 h-48 bg-primary-soft rounded-2xl flex items-center justify-center mb-8 overflow-hidden">
+      <div className="flex-shrink-0 h-48 bg-primary-soft flex items-center justify-center mb-8 overflow-hidden">
         <img 
           src={onboardingHealth} 
           alt="Person med mobil, grönsaker och hälsa" 
-          className="h-full w-auto object-contain"
+          className="w-full h-full object-cover"
         />
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto px-6">
         <h2 className="text-2xl font-semibold text-foreground mb-6">
           Så här fungerar det
         </h2>
@@ -217,7 +217,7 @@ function OnboardingPage2({
       </div>
 
       {/* CTA */}
-      <div className="flex-shrink-0 py-6">
+      <div className="flex-shrink-0 py-6 px-6">
         <Button onClick={onNext} size="xl" className="w-full h-14 text-base font-medium">
           Skapa konto
         </Button>
