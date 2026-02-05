@@ -1,5 +1,4 @@
-import { ArrowLeft, CreditCard, Edit } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { CreditCard, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -10,21 +9,11 @@ import {
 } from "@/components/ui/accordion";
 
 export default function Frikort() {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
-        <div className="flex items-center gap-3 p-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+        <div className="p-4">
           <h1 className="text-lg font-semibold text-foreground">Frikort</h1>
         </div>
       </div>

@@ -1,5 +1,4 @@
-import { ArrowLeft, HelpCircle, Shield } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { HelpCircle, Shield } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +15,6 @@ import {
 import { toast } from "sonner";
 
 export default function SEBForsakring() {
-  const navigate = useNavigate();
   const [claimNumber, setClaimNumber] = useState("");
 
   const handleSave = () => {
@@ -31,15 +29,7 @@ export default function SEBForsakring() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
-        <div className="flex items-center gap-3 p-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+        <div className="p-4">
           <h1 className="text-lg font-semibold text-foreground">SEB Försäkring</h1>
         </div>
       </div>

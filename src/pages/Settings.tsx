@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, User, Bell, Shield, CreditCard, HelpCircle, ChevronRight, Flame, Sparkles, Target, LogOut } from "lucide-react";
+import { User, Bell, Shield, CreditCard, HelpCircle, ChevronRight, Sparkles, Target, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -252,14 +252,9 @@ export default function Settings() {
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Inställningar</h1>
-          <p className="text-sm text-muted-foreground">Hantera ditt konto</p>
-        </div>
+      <div>
+        <h1 className="text-xl font-bold text-foreground">Inställningar</h1>
+        <p className="text-sm text-muted-foreground">Hantera ditt konto</p>
       </div>
 
       {/* Profile Card */}

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Heart, Activity, Ruler, Scale, AlertCircle, Pencil } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +16,6 @@ import { useHealthProfile, activityLevelLabels } from "@/hooks/useHealthProfile"
 type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "conditions" | "goals" | null;
 
 export default function Profile() {
-  const navigate = useNavigate();
   const { data, loading, updateWeight, updateHeight, updateBloodPressure, updateActivityLevel } = useHealthProfile();
   const [openSheet, setOpenSheet] = useState<EditSheet>(null);
 
@@ -34,14 +32,9 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="px-4 py-6 space-y-6 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Min hälsoprofil</h1>
-            <p className="text-sm text-muted-foreground">Din hälsoinformation</p>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Min hälsoprofil</h1>
+          <p className="text-sm text-muted-foreground">Din hälsoinformation</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
@@ -57,14 +50,9 @@ export default function Profile() {
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Min hälsoprofil</h1>
-          <p className="text-sm text-muted-foreground">Din hälsoinformation</p>
-        </div>
+      <div>
+        <h1 className="text-xl font-bold text-foreground">Min hälsoprofil</h1>
+        <p className="text-sm text-muted-foreground">Din hälsoinformation</p>
       </div>
 
       {/* Basic Info */}
