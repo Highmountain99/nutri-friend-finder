@@ -1,4 +1,4 @@
-import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, ExternalLink, CreditCard, KeyRound, Shield } from "lucide-react";
+import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, ExternalLink, CreditCard, KeyRound, Shield, History } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -135,6 +135,22 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
             >
               <HelpCircle className="w-5 h-5" />
               <span>Hjälp & Support</span>
+            </NavLink>
+
+            <NavLink
+              to="/meeting-history"
+              onClick={onClose}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                  isActive
+                    ? "bg-primary-soft text-primary font-medium"
+                    : "text-foreground hover:bg-muted"
+                )
+              }
+            >
+              <History className="w-5 h-5" />
+              <span>Möteshistorik</span>
             </NavLink>
 
             <div className="h-px bg-border my-4" />
