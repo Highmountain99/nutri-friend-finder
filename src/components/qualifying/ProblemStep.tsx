@@ -67,49 +67,46 @@ export function ProblemStep({
       onSkip={handleSkip}
       skipLabel="Hoppa över"
     >
-      <div className="space-y-4">
-        {/* Category selection */}
-        <div className="grid grid-cols-1 gap-3">
-          {/* Pregnancy option as a button */}
-          <button
-            onClick={handlePregnancySelect}
-            className={cn(
-              "flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all",
-              isPregnant
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            )}
-          >
-            <span className="font-medium flex-1">Jag är gravid eller har nyligen varit gravid</span>
-          </button>
+      <div className="grid grid-cols-2 gap-2">
+        {/* Pregnancy option */}
+        <button
+          onClick={handlePregnancySelect}
+          className={cn(
+            "p-3 rounded-lg border text-left transition-all text-sm",
+            isPregnant
+              ? "border-primary bg-primary/10 text-primary font-medium"
+              : "border-border hover:border-primary/50"
+          )}
+        >
+          Gravid/nyligen gravid
+        </button>
 
-          {(Object.keys(unifiedCategoryLabels) as UnifiedConcernCategory[]).map((cat) => {
-            const isSelected = category === cat && !isPregnant;
-            const isSuggested = suggestedCategory === cat && !category && !isPregnant;
-            
-            return (
-              <button
-                key={cat}
-                onClick={() => handleCategorySelect(cat)}
-                className={cn(
-                  "flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all",
-                  isSelected
-                    ? "border-primary bg-primary/5"
-                    : isSuggested
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-border hover:border-primary/50"
-                )}
-              >
-                <span className="font-medium flex-1">{unifiedCategoryLabels[cat]}</span>
-                {isSuggested && !isSelected && (
-                  <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                    Föreslaget
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {(Object.keys(unifiedCategoryLabels) as UnifiedConcernCategory[]).map((cat) => {
+          const isSelected = category === cat && !isPregnant;
+          const isSuggested = suggestedCategory === cat && !category && !isPregnant;
+          
+          return (
+            <button
+              key={cat}
+              onClick={() => handleCategorySelect(cat)}
+              className={cn(
+                "p-3 rounded-lg border text-left transition-all text-sm",
+                isSelected
+                  ? "border-primary bg-primary/10 text-primary font-medium"
+                  : isSuggested
+                  ? "border-primary/30 bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              )}
+            >
+              {unifiedCategoryLabels[cat]}
+              {isSuggested && !isSelected && (
+                <span className="block text-xs text-primary mt-0.5">
+                  Föreslaget
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </StepLayout>
   );
