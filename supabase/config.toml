@@ -23,3 +23,7 @@ verify_jwt = false
 [functions.recipe-parse]
 enabled = true
 verify_jwt = false
+
+[functions.chat-assistant]
+enabled = true
+verify_jwt = false
