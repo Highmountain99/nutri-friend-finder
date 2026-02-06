@@ -1,125 +1,110 @@
 
-# Plan: Förbättra AI-chattens ton och kontext
 
-## Översikt
+# Plan: Stripe-betalningsintegration för bokningar
 
-Chatten ska visa dietistens namn i headern (inte "EatSuite Assistenten"), ta bort AI-bannern, och ge AI:n en mer mänsklig ton med tillgång till patientens fullständiga journal, sparade recept, utvecklingsdata och hälsoinformation.
+## Sammanfattning
 
-## Ändringar
+Implementera en betalningssida som visas när användaren klickar "Bekräfta bokning". Även om besöket är kostnadsfritt (0 kr) måste användaren registrera sitt kort för att möjliggöra debitering av no-show-avgiften på 275 kr.
 
-### 1. Header – Visa alltid dietistens namn (inte AI-robot)
+## Lösningsöversikt
 
-**Fil:** `src/components/messages/ChatHeader.tsx`
+Stripes **Setup Mode** används för att:
+- Validera och spara kortuppgifter utan att debitera
+- Koppla kortet till en Stripe Customer
+- Möjliggöra framtida debiteringar (t.ex. no-show-avgift)
 
-- Ta bort Bot-ikonen och "EatSuite Assistenten"-texten
-- Visa dietistens namn, titel och avatar i alla lägen (inte bara vid eskalering)
-- Ta bort bannern "🤖 AI-assistenten hjälper dig snabbt..."
-- Behåll eskaleringsmeddelandet vid behov (men diskretare)
+## Flöde
 
-### 2. Välkomstmeddelande – Mer mänsklig ton
+```text
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Välj tid       │ --> │  Stripe         │ --> │  Bekräftelse    │
+│  "Bekräfta      │     │  Checkout       │     │  Tid bokad!     │
+│   bokning"      │     │  (lägg in kort) │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
 
-**Fil:** `src/pages/Messages.tsx`
+## Steg
 
-- Ändra tom-chattmeddelandet till något i stil med:
-  - "Hej! Innan vi loopar in [Dietistens namn] kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!"
-- Ta bort robota-emojin och AI-referenserna
+### 1. Skapa Edge Function: `create-booking-checkout`
 
-### 3. AI-meddelanden – Visa dietistens avatar istället för robot
+Skapar en Stripe Checkout-session i **setup mode** för att samla in kortuppgifter.
 
-**Fil:** `src/components/messages/ChatMessage.tsx`
+**Funktionalitet:**
+- Kontrollera om användaren redan är Stripe-kund
+- Skapa en ny kund om inte
+- Skapa Checkout-session med `mode: "setup"`
+- Returnera URL till Stripe Checkout
 
-- Ändra så att AI-meddelanden visar dietistens avatar (inte Bot-ikon)
-- Behåll samma styling men gör det mer sömlöst
+### 2. Uppdatera bokningskomponenter
 
-### 4. Edge function – Utöka kontexten med patientdata
+**ChatBookingSheet.tsx och DietitianDetailSheet.tsx:**
+- När användaren klickar "Bekräfta bokning", anropa edge function
+- Öppna Stripe Checkout i ny flik
+- Vid framgång, redirect till en callback-sida
 
-**Fil:** `supabase/functions/chat-assistant/index.ts`
+### 3. Skapa callback-sida för lyckad kortregistrering
 
-Hämta och inkludera i systemprompt:
-- **Journal (nutrition_entries):** Senaste 7 dagarnas måltider
-- **Symtom (symptom_entries):** Senaste veckan
-- **Sparade recept (user_recipe_interactions + recipes):** Recepttitlar
-- **Utveckling (health_tracking_entries):** Senaste viktmätningar, blodtryck etc.
-- **Hälsoinställningar (user_nutrition_settings):** Vikt, längd, aktivitetsnivå
-- **Näringmål (user_nutrition_goals):** Dagliga mål
+**Ny sida:** `/booking-success`
+- Hämta bokningsdetaljer från URL-parametrar eller session
+- Slutför bokningen i databasen
+- Visa bekräftelse
 
-Uppdatera systemprompt:
-- Mer mänsklig ton, som om det vore dietistens assistent
-- Instruktioner att svara naturligt, inte robota
-- Möjlighet att dela upp svar i kortare meddelanden
-- Referera till specifik data från journalen
+### 4. Uppdatera appointments-tabellen
 
----
+Lägg till fält för att spara Stripe-kundens ID och Setup Intent-referens.
 
 ## Tekniska detaljer
 
-### Header-förändringar
-
-```
-Före:
-┌──────────────────────────────────┐
-│ 🤖 EatSuite Assistenten          │
-│ AI-driven kostrådgivning         │
-├──────────────────────────────────┤
-│ 🤖 AI-assistenten hjälper dig... │
-└──────────────────────────────────┘
-
-Efter:
-┌──────────────────────────────────┐
-│ 👤 Anna Lindberg                 │
-│ Legitimerad dietist              │
-└──────────────────────────────────┘
-```
-
-### Ny data i systemprompt
+### Edge Function: create-booking-checkout
 
 ```text
-PATIENTENS JOURNAL (senaste 7 dagar):
-- Måndag: Frukost (havregrynsgröt), Lunch (kycklingsallad), Middag (laxpasta)
-- Tisdag: Frukost (yoghurt), Lunch (soppa)...
+Endpoint: POST /create-booking-checkout
+Body: {
+  dietitian_id: string,
+  appointment_date: ISO string,
+  appointment_type: string
+}
 
-RAPPORTERADE SYMTOM:
-- 2 feb: "Uppblåst mage efter middag"
-- 31 jan: "Ont i magen på morgonen"
-
-SPARADE RECEPT:
-- Ugnsbakad lax med grönsaker
-- Kycklingwok med nudlar
-
-HÄLSODATA:
-- Vikt: 78 kg (senast mätt 1 feb)
-- Längd: 172 cm
-- Aktivitetsnivå: Måttligt aktiv
-- Mål: 2000 kcal/dag, 50g protein
-
-BEHANDLINGSKONTEXT:
-- Genomgår FODMAP-eliminering för IBS
+Response: { url: string }
 ```
 
-### Mer mänsklig ton i systemprompt
+### Databasändringar
 
-```text
-Du är en stöttande assistent som hjälper patienter medan 
-de väntar på att prata med sin dietist {dietitianName}. 
+Lägg till i appointments-tabellen:
+- `stripe_customer_id` (text, nullable) - Stripe-kund-ID
+- `stripe_setup_intent_id` (text, nullable) - Setup Intent för referens
+- `payment_method_saved` (boolean, default false) - Om kort är sparat
 
-Svara som en varm, kunnig person – inte som en robot.
-- Använd ett naturligt, vardagligt språk
-- Du kan ställa följdfrågor för att förstå bättre
-- Referera gärna till patientens journal: "Jag ser att du åt 
-  laxpasta igår – undrar du om något specifikt med den måltiden?"
-- Håll svaren korta och personliga
+### UI-ändringar
 
-Om du behöver dela upp information i flera delar, gör det naturligt.
-```
+1. **ChatBookingSheet.tsx**: 
+   - Byt ut direkt bokning mot Stripe-redirect
+   - Spara bokningsdata temporärt
 
----
+2. **DietitianDetailSheet.tsx**:
+   - Samma ändring för det fullständiga bokningsflödet
 
-## Filer som ändras
+3. **BookingStep.tsx** (qualifying flow):
+   - Integrera samma logik för nya användare
 
-| Fil | Ändring |
-|-----|---------|
-| `src/components/messages/ChatHeader.tsx` | Visa alltid dietistens info, ta bort AI-banner |
-| `src/components/messages/ChatMessage.tsx` | AI-meddelanden visar dietistens avatar |
-| `src/pages/Messages.tsx` | Nytt välkomstmeddelande med dietistens namn |
-| `supabase/functions/chat-assistant/index.ts` | Utökad kontext + mänskligare prompt |
+4. **Ny sida: BookingSuccess.tsx**:
+   - Hantera Stripe-callback
+   - Slutför bokning
+   - Visa bekräftelse
+
+## Användarupplevelse
+
+1. Användaren väljer tid och klickar "Bekräfta bokning"
+2. Informationsruta visas: "Besöket kostar 0 kr. Vi behöver dina kortuppgifter för eventuell no-show-avgift (275 kr)"
+3. Redirect till Stripe Checkout
+4. Användaren fyller i kortuppgifter
+5. Redirect tillbaka till appen
+6. Bokningen slutförs och bekräftelse visas
+
+## Fördelar med denna lösning
+
+- **Säkerhet**: Stripe hanterar all kortdata (PCI-compliant)
+- **Enkelhet**: Ingen egen betalningsformulär behövs
+- **Flexibilitet**: Kan enkelt debitera no-show-avgift senare
+- **Spårbarhet**: Alla kort kopplas till Stripe-kunder
 
