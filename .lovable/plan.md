@@ -1,139 +1,125 @@
 
-# Plan: AI-chattbot för meddelandesidan
+# Plan: Förbättra AI-chattens ton och kontext
 
 ## Översikt
 
-Den nya meddelandesidan får en intelligent AI-assistent som är specialanpassad efter användarens behandlingsplan och hälsoprofil. AI:n kan snabbt svara på vanliga frågor (t.ex. "Kan jag dricka laktosfri mjölk under FODMAP?") och eskalerar automatiskt till dietisten när frågan är för komplex eller medicinsk.
+Chatten ska visa dietistens namn i headern (inte "EatSuite Assistenten"), ta bort AI-bannern, och ge AI:n en mer mänsklig ton med tillgång till patientens fullständiga journal, sparade recept, utvecklingsdata och hälsoinformation.
 
-## Hur det fungerar
+## Ändringar
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                     Meddelandesidan                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────┐    Användaren skriver fråga    ┌───────────┐  │
-│  │ Patient │ ───────────────────────────────▶│ AI-bot    │  │
-│  └─────────┘                                 └─────┬─────┘  │
-│                                                    │        │
-│                              ┌─────────────────────┼────────┤
-│                              │                     │        │
-│                              ▼                     ▼        │
-│                     ┌───────────────┐     ┌──────────────┐  │
-│                     │ Kan AI svara? │     │ Hämtar:      │  │
-│                     │ säkert?       │     │ • Profil     │  │
-│                     └───────┬───────┘     │ • Diagnos    │  │
-│                             │             │ • Behandling │  │
-│               ┌─────────────┴────────┐    └──────────────┘  │
-│               │                      │                      │
-│               ▼                      ▼                      │
-│      ┌─────────────────┐    ┌───────────────────┐          │
-│      │ JA: AI svarar   │    │ NEJ: Eskalera     │          │
-│      │ direkt          │    │ till dietist      │          │
-│      └─────────────────┘    └───────────────────┘          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+### 1. Header – Visa alltid dietistens namn (inte AI-robot)
 
-## Exempel på interaktion
+**Fil:** `src/components/messages/ChatHeader.tsx`
 
-**Användare:** "Är laktosfri mjölk okej på FODMAP?"  
-**AI:** "Ja, laktosfri mjölk är helt okej under lågFODMAP-fasen! Laktos är den FODMAP som tas bort, så laktosfri fungerar bra. 🥛"
+- Ta bort Bot-ikonen och "EatSuite Assistenten"-texten
+- Visa dietistens namn, titel och avatar i alla lägen (inte bara vid eskalering)
+- Ta bort bannern "🤖 AI-assistenten hjälper dig snabbt..."
+- Behåll eskaleringsmeddelandet vid behov (men diskretare)
 
-**Användare:** "Jag har ont i magen efter varje måltid och blod i avföringen"  
-**AI:** "Jag förstår att du är orolig. Det här är något jag vill att din dietist Anna ska bedöma direkt. Jag har skickat ditt meddelande till henne, och hon återkommer så snart som möjligt. ❤️"
+### 2. Välkomstmeddelande – Mer mänsklig ton
+
+**Fil:** `src/pages/Messages.tsx`
+
+- Ändra tom-chattmeddelandet till något i stil med:
+  - "Hej! Innan vi loopar in [Dietistens namn] kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!"
+- Ta bort robota-emojin och AI-referenserna
+
+### 3. AI-meddelanden – Visa dietistens avatar istället för robot
+
+**Fil:** `src/components/messages/ChatMessage.tsx`
+
+- Ändra så att AI-meddelanden visar dietistens avatar (inte Bot-ikon)
+- Behåll samma styling men gör det mer sömlöst
+
+### 4. Edge function – Utöka kontexten med patientdata
+
+**Fil:** `supabase/functions/chat-assistant/index.ts`
+
+Hämta och inkludera i systemprompt:
+- **Journal (nutrition_entries):** Senaste 7 dagarnas måltider
+- **Symtom (symptom_entries):** Senaste veckan
+- **Sparade recept (user_recipe_interactions + recipes):** Recepttitlar
+- **Utveckling (health_tracking_entries):** Senaste viktmätningar, blodtryck etc.
+- **Hälsoinställningar (user_nutrition_settings):** Vikt, längd, aktivitetsnivå
+- **Näringmål (user_nutrition_goals):** Dagliga mål
+
+Uppdatera systemprompt:
+- Mer mänsklig ton, som om det vore dietistens assistent
+- Instruktioner att svara naturligt, inte robota
+- Möjlighet att dela upp svar i kortare meddelanden
+- Referera till specifik data från journalen
 
 ---
 
 ## Tekniska detaljer
 
-### 1. Ny databastabell för meddelanden
+### Header-förändringar
 
-En ny tabell `chat_messages` för att spara konversationshistorik:
-
-| Kolumn | Typ | Beskrivning |
-|--------|-----|-------------|
-| id | uuid | Primärnyckel |
-| user_id | uuid | Koppling till användare |
-| conversation_type | text | "ai" eller "dietitian" |
-| sender | text | "user", "ai", eller "dietitian" |
-| content | text | Meddelandetext |
-| escalated | boolean | Om AI eskalerat till dietist |
-| escalation_reason | text | Varför AI eskalerade |
-| created_at | timestamp | Tidsstämpel |
-
-RLS-policyer säkerställer att användare bara ser sina egna meddelanden och att dietister kan se sina patienters meddelanden.
-
-### 2. Ny edge function: `chat-assistant`
-
-En backend-funktion som:
-- Hämtar användarens intake-profil (diagnos, behandlingsplan, concern category)
-- Skapar en kontextrik systemprompt baserat på profilen
-- Använder Lovable AI (google/gemini-3-flash-preview) för att generera svar
-- Returnerar en "confidence score" och eskaleringsrekommendation
-- Streamar svaret för snabb respons
-
-**Systemprompt-exempel för FODMAP-patient:**
 ```
-Du är en AI-assistent för EatSuite som hjälper patienter med dietistfrågor.
+Före:
+┌──────────────────────────────────┐
+│ 🤖 EatSuite Assistenten          │
+│ AI-driven kostrådgivning         │
+├──────────────────────────────────┤
+│ 🤖 AI-assistenten hjälper dig... │
+└──────────────────────────────────┘
 
-PATIENTENS PROFIL:
-- Huvudområde: Tarmhälsa (IBS)
-- Behandling: FODMAP-elimination
-- Aktivitetsnivå: Medel
-
-RIKTLINJER:
-- Svara på enkla FODMAP-frågor (godkända livsmedel, portionsstorlekar)
-- Eskalera vid: medicinska symtom, blod, smärta, viktnedgång, osäkerhet
-- Ton: Varm, stöttande, aldrig uppfordrande
+Efter:
+┌──────────────────────────────────┐
+│ 👤 Anna Lindberg                 │
+│ Legitimerad dietist              │
+└──────────────────────────────────┘
 ```
 
-### 3. Uppdaterad Messages-sida
+### Ny data i systemprompt
 
-**Ny design:**
-- Header visar "EatSuite Assistent" med AI-ikon
-- En liten banner under headern: "AI-assistenten hjälper dig snabbt. Din dietist tar vid när det behövs."
-- Meddelanden har olika styling för AI vs dietist
-- Vid eskalering visas ett tydligt statusmeddelande
+```text
+PATIENTENS JOURNAL (senaste 7 dagar):
+- Måndag: Frukost (havregrynsgröt), Lunch (kycklingsallad), Middag (laxpasta)
+- Tisdag: Frukost (yoghurt), Lunch (soppa)...
 
-**Ny funktionalitet:**
-- Skriv meddelande → Skickas till edge function
-- AI svarar med streaming (token-by-token)
-- Om AI eskalerar visas: "Jag har kopplat på [Dietistens namn]. Hon återkommer snart."
+RAPPORTERADE SYMTOM:
+- 2 feb: "Uppblåst mage efter middag"
+- 31 jan: "Ont i magen på morgonen"
 
-### 4. Eskaleringslogik
+SPARADE RECEPT:
+- Ugnsbakad lax med grönsaker
+- Kycklingwok med nudlar
 
-AI:n instrueras att eskalera när:
-- Medicinska symtom nämns (blod, smärta, yrsel, kraftig viktnedgång)
-- Patienten uttrycker stark oro
-- Frågan är utanför AI:ns kunskapsområde
-- AI:n är osäker på svaret (confidence < 0.7)
-- Patienten explicit ber om dietisten
+HÄLSODATA:
+- Vikt: 78 kg (senast mätt 1 feb)
+- Längd: 172 cm
+- Aktivitetsnivå: Måttligt aktiv
+- Mål: 2000 kcal/dag, 50g protein
 
-Vid eskalering:
-1. Meddelandet markeras som `escalated = true`
-2. Dietisten får en notifikation (framtida funktion)
-3. Patienten ser bekräftelse att dietisten kontaktats
+BEHANDLINGSKONTEXT:
+- Genomgår FODMAP-eliminering för IBS
+```
+
+### Mer mänsklig ton i systemprompt
+
+```text
+Du är en stöttande assistent som hjälper patienter medan 
+de väntar på att prata med sin dietist {dietitianName}. 
+
+Svara som en varm, kunnig person – inte som en robot.
+- Använd ett naturligt, vardagligt språk
+- Du kan ställa följdfrågor för att förstå bättre
+- Referera gärna till patientens journal: "Jag ser att du åt 
+  laxpasta igår – undrar du om något specifikt med den måltiden?"
+- Håll svaren korta och personliga
+
+Om du behöver dela upp information i flera delar, gör det naturligt.
+```
 
 ---
 
-## Filer som skapas/ändras
+## Filer som ändras
 
-| Fil | Åtgärd |
-|-----|--------|
-| `supabase/functions/chat-assistant/index.ts` | Ny edge function |
-| `src/pages/Messages.tsx` | Ombyggd med AI-chattlogik |
-| `src/hooks/useChatMessages.ts` | Ny hook för meddelanden |
-| `src/components/messages/ChatMessage.tsx` | Meddelandekomponent |
-| `src/components/messages/ChatHeader.tsx` | Header med AI/dietist-info |
-| `supabase/config.toml` | Registrera ny funktion |
-| Databasmigration | Ny tabell + RLS |
+| Fil | Ändring |
+|-----|---------|
+| `src/components/messages/ChatHeader.tsx` | Visa alltid dietistens info, ta bort AI-banner |
+| `src/components/messages/ChatMessage.tsx` | AI-meddelanden visar dietistens avatar |
+| `src/pages/Messages.tsx` | Nytt välkomstmeddelande med dietistens namn |
+| `supabase/functions/chat-assistant/index.ts` | Utökad kontext + mänskligare prompt |
 
----
-
-## Säkerhetsaspekter
-
-- **RLS-policyer:** Användare ser endast sina meddelanden; dietister endast tilldelade patienter
-- **Promptsäkerhet:** Sanitisering av input för att förhindra prompt injection
-- **Autentisering:** Edge function kräver giltig JWT-token
-- **Dataminimering:** AI ser bara relevant profilinformation, inte hela journalen
