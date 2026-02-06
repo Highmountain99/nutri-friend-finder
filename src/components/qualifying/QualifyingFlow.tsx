@@ -271,12 +271,9 @@ export function QualifyingFlow() {
     goToStep(STEPS.BOOKING);
   };
 
-  const handleBooking = async (appointmentDate: Date) => {
-    const result = await bookAppointment(appointmentDate, 'video');
-    if (result) {
-      await saveProfile({}, true);
-      navigate('/', { replace: true });
-    }
+  const handleBookingComplete = async () => {
+    await saveProfile({}, true);
+    navigate('/', { replace: true });
   };
 
   const handleSkipBooking = async () => {
@@ -402,7 +399,7 @@ export function QualifyingFlow() {
         <BookingStep
           currentStep={currentStep}
           totalSteps={TOTAL_STEPS}
-          onNext={handleBooking}
+          onComplete={handleBookingComplete}
           onBack={handleBack}
           onSkip={handleSkipBooking}
           isLoading={bookingSaving || saving}
