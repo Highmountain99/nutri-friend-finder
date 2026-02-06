@@ -85,6 +85,39 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_type: string
+          created_at: string
+          escalated: boolean | null
+          escalation_reason: string | null
+          id: string
+          sender: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_type?: string
+          created_at?: string
+          escalated?: boolean | null
+          escalation_reason?: string | null
+          id?: string
+          sender: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_type?: string
+          created_at?: string
+          escalated?: boolean | null
+          escalation_reason?: string | null
+          id?: string
+          sender?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_health_metrics: {
         Row: {
           active_energy_kcal: number | null
