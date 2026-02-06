@@ -86,10 +86,10 @@ export default function Messages() {
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <span className="text-3xl">💬</span>
+              <span className="text-2xl font-medium text-primary">?</span>
             </div>
             <h3 className="font-semibold text-foreground mb-2">
-              Hej! 👋
+              Hej!
             </h3>
             <p className="text-sm text-muted-foreground max-w-xs">
               Innan vi loopar in {dietitianInfo ? `${dietitianInfo.firstName}` : "din dietist"} kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!
