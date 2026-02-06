@@ -1,8 +1,10 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import ReactMarkdown from "react-markdown";
+import { Calendar } from "lucide-react";
 
 interface ChatMessageProps {
   sender: "user" | "ai" | "dietitian";
@@ -14,6 +16,7 @@ interface ChatMessageProps {
     avatarUrl?: string | null;
   } | null;
   escalated?: boolean;
+  onBookingRequest?: () => void;
 }
 
 export function ChatMessage({
@@ -22,6 +25,7 @@ export function ChatMessage({
   timestamp,
   dietitian,
   escalated,
+  onBookingRequest,
 }: ChatMessageProps) {
   const isUser = sender === "user";
 
@@ -67,6 +71,19 @@ export function ChatMessage({
             <p className="text-sm whitespace-pre-wrap">{content}</p>
           )}
         </div>
+
+        {/* Booking CTA for escalated messages */}
+        {escalated && !isUser && onBookingRequest && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onBookingRequest}
+            className="mt-2 gap-2"
+          >
+            <Calendar className="w-4 h-4" />
+            Boka möte
+          </Button>
+        )}
 
         {/* Timestamp */}
         <p
