@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Globe, Calendar as CalendarIcon, Check } from "lucide-react";
+import { Globe, Calendar as CalendarIcon, CreditCard } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TimeSlotPicker } from "./TimeSlotPicker";
 import { DietitianProfile, specializationLabels, languageLabels, TimeSlot } from "@/types/dietitian";
 import { useDietitianAvailability } from "@/hooks/useDietitianAvailability";
+import { useBookingCheckout } from "@/hooks/useBookingCheckout";
 import { sv } from "date-fns/locale";
 import { format, addDays } from "date-fns";
 
@@ -21,7 +22,7 @@ interface DietitianDetailSheetProps {
   dietitian: DietitianProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onBook: (dietitian: DietitianProfile, date: Date, slot: TimeSlot) => void;
+  onBook?: (dietitian: DietitianProfile, date: Date, slot: TimeSlot) => void;
   initialDate?: Date;
 }
 
@@ -38,6 +39,7 @@ export function DietitianDetailSheet({
     dietitian?.id,
     selectedDate
   );
+  const { createCheckoutFromSlot, loading: checkoutLoading } = useBookingCheckout();
 
   useEffect(() => {
     if (initialDate) {
@@ -54,9 +56,21 @@ export function DietitianDetailSheet({
   const initials = `${dietitian.firstName[0]}${dietitian.lastName[0]}`;
   const availableSlots = getAvailableTimeSlots();
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (selectedDate && selectedSlot) {
-      onBook(dietitian, selectedDate, selectedSlot);
+      const dietitianName = `${dietitian.firstName} ${dietitian.lastName}`;
+      const success = await createCheckoutFromSlot(
+        dietitian.id,
+        dietitianName,
+        selectedDate,
+        selectedSlot,
+        'video'
+      );
+
+      if (success) {
+        // Close sheet - user will be redirected to Stripe checkout
+        onOpenChange(false);
+      }
     }
   };
 
@@ -148,16 +162,25 @@ export function DietitianDetailSheet({
             </div>
           )}
 
+          {/* Info about card requirement */}
+          <div className="bg-muted rounded-xl p-4">
+            <p className="text-sm text-muted-foreground">
+              <strong>Besöket kostar 0 kr.</strong> Vi behöver dina kortuppgifter för eventuell no-show-avgift på 275 kr om du uteblir utan att avboka.
+            </p>
+          </div>
+
           {/* Book Button */}
           <Button
             size="lg"
             className="w-full"
-            disabled={!selectedDate || !selectedSlot}
+            disabled={!selectedDate || !selectedSlot || checkoutLoading}
             onClick={handleBook}
           >
-            {selectedSlot ? (
+            {checkoutLoading ? (
+              "Förbereder..."
+            ) : selectedSlot ? (
               <>
-                <Check className="h-4 w-4 mr-2" />
+                <CreditCard className="h-4 w-4 mr-2" />
                 Bekräfta bokning
               </>
             ) : (

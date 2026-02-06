@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Check, Clock } from "lucide-react";
+import { ArrowLeft, Clock, CreditCard } from "lucide-react";
 import { TimeSlotPicker } from "@/components/booking/TimeSlotPicker";
 import { TimeSlot } from "@/types/dietitian";
-import { useAppointments } from "@/hooks/useAppointments";
 import { useDietitianAvailability } from "@/hooks/useDietitianAvailability";
+import { useBookingCheckout } from "@/hooks/useBookingCheckout";
 import { format, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 
-type BookingPhase = 'calendar' | 'time' | 'confirm';
+type BookingPhase = 'calendar' | 'time';
 
 interface ChatBookingSheetProps {
   open: boolean;
@@ -27,12 +27,11 @@ interface ChatBookingSheetProps {
 }
 
 export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingSheetProps) {
-  const { bookAppointment, cancelUpcomingBookedAppointments } = useAppointments();
+  const { createCheckoutFromSlot, loading: checkoutLoading } = useBookingCheckout();
 
   const [phase, setPhase] = useState<BookingPhase>('calendar');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [booking, setBooking] = useState(false);
 
   const { availability, loading: availabilityLoading } = useDietitianAvailability(
     dietitian?.id || '',
@@ -43,7 +42,6 @@ export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingS
     setPhase('calendar');
     setSelectedDate(undefined);
     setSelectedSlot(null);
-    setBooking(false);
   };
 
   const handleClose = () => {
@@ -75,20 +73,19 @@ export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingS
   const handleBook = async () => {
     if (!dietitian || !selectedDate || !selectedSlot) return;
     
-    setBooking(true);
-    
-    const appointmentDate = new Date(selectedDate);
-    appointmentDate.setHours(selectedSlot.hour, selectedSlot.minute, 0, 0);
+    const dietitianName = `${dietitian.firstName} ${dietitian.lastName}`;
+    const success = await createCheckoutFromSlot(
+      dietitian.id,
+      dietitianName,
+      selectedDate,
+      selectedSlot,
+      'video'
+    );
 
-    // Cancel any existing upcoming appointments first
-    await cancelUpcomingBookedAppointments();
-
-    const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
-
-    if (result) {
-      setPhase('confirm');
+    if (success) {
+      // Close sheet - user will be redirected to Stripe
+      handleClose();
     }
-    setBooking(false);
   };
 
   if (!dietitian) {
@@ -209,36 +206,18 @@ export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingS
                 size="lg"
                 className="w-full mt-4"
                 onClick={handleBook}
-                disabled={booking}
+                disabled={checkoutLoading}
               >
-                {booking ? "Bokar..." : "Bekräfta bokning"}
+                {checkoutLoading ? (
+                  "Förbereder..."
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Bekräfta bokning
+                  </>
+                )}
               </Button>
             )}
-          </div>
-        );
-
-      case 'confirm':
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Check className="w-8 h-8 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Möte bokat!</h2>
-              <p className="text-muted-foreground">
-                Du har bokat ett möte med {dietitian.firstName} {dietitian.lastName}
-              </p>
-              {selectedDate && selectedSlot && (
-                <p className="text-sm text-muted-foreground">
-                  {format(selectedDate, "EEEE d MMMM", { locale: sv })} kl.{" "}
-                  {String(selectedSlot.hour).padStart(2, "0")}:
-                  {String(selectedSlot.minute).padStart(2, "0")}
-                </p>
-              )}
-            </div>
-            <Button onClick={handleClose} className="w-full max-w-xs">
-              Stäng
-            </Button>
           </div>
         );
 

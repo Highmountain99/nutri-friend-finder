@@ -5,9 +5,7 @@ import { DietitianCalendarStep } from '@/components/booking/DietitianCalendarSte
 import { DietitianRecommendations } from '@/components/booking/DietitianRecommendations';
 import { DietitianList } from '@/components/booking/DietitianList';
 import { DietitianDetailSheet } from '@/components/booking/DietitianDetailSheet';
-import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
 import { DietitianProfile, TimeSlot } from '@/types/dietitian';
-import { useAppointments } from '@/hooks/useAppointments';
 import { Button } from '@/components/ui/button';
 import { TriageResult } from '@/types/intake';
 
@@ -15,8 +13,7 @@ type BookingPhase =
   | 'selection'      
   | 'calendar'       
   | 'recommendations'
-  | 'all'            
-  | 'confirm';       
+  | 'all';
 
 interface BookingStepProps {
   currentStep: number;
@@ -37,11 +34,9 @@ export function BookingStep({
   isLoading = false,
   triageResult = 'dietist',
 }: BookingStepProps) {
-  const { bookAppointment } = useAppointments();
   const [phase, setPhase] = useState<BookingPhase>('selection');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedDietitian, setSelectedDietitian] = useState<DietitianProfile | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const handlePhaseBack = () => {
@@ -80,25 +75,6 @@ export function BookingStep({
   const handleSelectDietitian = (dietitian: DietitianProfile) => {
     setSelectedDietitian(dietitian);
     setSheetOpen(true);
-  };
-
-  const handleBook = async (dietitian: DietitianProfile, date: Date, slot: TimeSlot) => {
-    const appointmentDate = new Date(date);
-    appointmentDate.setHours(slot.hour, slot.minute, 0, 0);
-
-    const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
-
-    if (result) {
-      setSelectedDietitian(dietitian);
-      setSelectedDate(date);
-      setSelectedSlot(slot);
-      setSheetOpen(false);
-      setPhase('confirm');
-    }
-  };
-
-  const handleConfirmComplete = () => {
-    onComplete();
   };
 
   // Render based on current phase
@@ -146,7 +122,6 @@ export function BookingStep({
             dietitian={selectedDietitian}
             open={sheetOpen}
             onOpenChange={setSheetOpen}
-            onBook={handleBook}
             initialDate={selectedDate}
           />
         </>
@@ -163,20 +138,9 @@ export function BookingStep({
             dietitian={selectedDietitian}
             open={sheetOpen}
             onOpenChange={setSheetOpen}
-            onBook={handleBook}
             initialDate={selectedDate}
           />
         </>
-      );
-
-    case 'confirm':
-      return (
-        <BookingConfirmation
-          dietitian={selectedDietitian!}
-          date={selectedDate!}
-          slot={selectedSlot!}
-          onGoHome={handleConfirmComplete}
-        />
       );
 
     default:
