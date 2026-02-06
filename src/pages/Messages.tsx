@@ -23,6 +23,7 @@ export default function Messages() {
   const dietitian = upcomingAppointment?.dietitian;
   const dietitianInfo = dietitian
     ? {
+        id: upcomingAppointment.dietitianId || '',
         firstName: dietitian.firstName,
         lastName: dietitian.lastName,
         title: dietitian.title || "Legitimerad dietist",
@@ -195,6 +196,7 @@ export default function Messages() {
       <ChatBookingSheet
         open={bookingSheetOpen}
         onOpenChange={setBookingSheetOpen}
+        dietitian={dietitianInfo}
       />
     </>
   );
