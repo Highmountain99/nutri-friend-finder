@@ -1,196 +1,139 @@
 
-# Plan: Hälsoprofil med redigerbar data
+# Plan: AI-chattbot för meddelandesidan
 
 ## Översikt
 
-Profilsidan ska visa verklig användardata istället för hårdkodade värden, med möjlighet att redigera varje värde direkt via en penna-ikon. Data hämtas från olika delar av appen:
+Den nya meddelandesidan får en intelligent AI-assistent som är specialanpassad efter användarens behandlingsplan och hälsoprofil. AI:n kan snabbt svara på vanliga frågor (t.ex. "Kan jag dricka laktosfri mjölk under FODMAP?") och eskalerar automatiskt till dietisten när frågan är för komplex eller medicinsk.
 
-- **Vikt & Längd**: från AI-näringsspårning (`user_nutrition_settings`)
-- **Blodtryck**: från hälsolokaliseringar (`health_tracking_entries`), förberett för Apple Health
-- **Aktivitetsnivå**: från kvalificeringssteget (`intake_profiles`)
-- **Diagnoser & Tillstånd**: från kvalificeringssteget, med framtida dietist-överskrivning
-
-## Datakällor
-
-| Värde | Tabell | Kolumn |
-|-------|--------|--------|
-| Vikt | user_nutrition_settings | weight_kg |
-| Längd | user_nutrition_settings | height_cm |
-| Blodtryck | health_tracking_entries | blood_pressure_systolic/diastolic |
-| Aktivitetsnivå | intake_profiles | activity_level |
-| Diagnoser | intake_profiles | unified_concern_category, primary_concern_subcategory, concern_tags |
-| Mål | intake_profiles | preference_tags |
-
-## Ändringar
-
-### 1. Skapa en ny hook: `useHealthProfile`
-
-En ny hook som aggregerar all hälsodata från olika källor:
-
-- Hämtar vikt/längd från `user_nutrition_settings`
-- Hämtar aktivitetsnivå och diagnoser från `intake_profiles`
-- Hämtar senaste blodtryck från `health_tracking_entries`
-- Tillhandahåller uppdateringsfunktioner för varje värde
-
-### 2. Skapa redigeringskomponenter
-
-**EditableHealthCard** - En generisk kortkomponent med:
-- Värdevisning
-- Penna-ikon i övre högra hörnet
-- Sheet/modal för redigering vid klick
-
-**EditSheets för varje typ:**
-- `EditWeightSheet` - Numerisk input för vikt (kg)
-- `EditHeightSheet` - Numerisk input för längd (cm)
-- `EditBloodPressureSheet` - Två inputs (systoliskt/diastoliskt)
-- `EditActivityLevelSheet` - RadioGroup med aktivitetsnivåer
-- `EditConditionsSheet` - Redigera taggar/diagnoser
-
-### 3. Uppdatera Profile.tsx
+## Hur det fungerar
 
 ```text
-┌─────────────────────────────────────────┐
-│  ← Min hälsoprofil                      │
-│     Din hälsoinformation                │
-├─────────────────────────────────────────┤
-│                                         │
-│  GRUNDLÄGGANDE INFORMATION              │
-│                                         │
-│  ┌────────────┐ ┌────────────┐          │
-│  │ ⚖️ Vikt  ✏️│ │ 📏 Längd ✏️│          │
-│  │ 72 kg     │ │ 175 cm    │          │
-│  └────────────┘ └────────────┘          │
-│  ┌────────────┐ ┌────────────┐          │
-│  │ ❤️ Blod  ✏️│ │ 🏃 Aktiv ✏️│          │
-│  │ 120/80    │ │ Måttlig   │          │
-│  └────────────┘ └────────────┘          │
-│                                         │
-│  DIAGNOSER & TILLSTÅND              ✏️  │
-│  ┌─────────────────────────────────────┐│
-│  │ [IBS] [Tarmhälsa]                  ││
-│  └─────────────────────────────────────┘│
-│                                         │
-│  DINA MÅL                           ✏️  │
-│  ┌─────────────────────────────────────┐│
-│  │ • Gå ner i vikt                    ││
-│  │ • Mer energi                       ││
-│  └─────────────────────────────────────┘│
-│                                         │
-│  ⚠️ Din information är skyddad         │
-│                                         │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Meddelandesidan                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────┐    Användaren skriver fråga    ┌───────────┐  │
+│  │ Patient │ ───────────────────────────────▶│ AI-bot    │  │
+│  └─────────┘                                 └─────┬─────┘  │
+│                                                    │        │
+│                              ┌─────────────────────┼────────┤
+│                              │                     │        │
+│                              ▼                     ▼        │
+│                     ┌───────────────┐     ┌──────────────┐  │
+│                     │ Kan AI svara? │     │ Hämtar:      │  │
+│                     │ säkert?       │     │ • Profil     │  │
+│                     └───────┬───────┘     │ • Diagnos    │  │
+│                             │             │ • Behandling │  │
+│               ┌─────────────┴────────┐    └──────────────┘  │
+│               │                      │                      │
+│               ▼                      ▼                      │
+│      ┌─────────────────┐    ┌───────────────────┐          │
+│      │ JA: AI svarar   │    │ NEJ: Eskalera     │          │
+│      │ direkt          │    │ till dietist      │          │
+│      └─────────────────┘    └───────────────────┘          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 4. Dataflöde
+## Exempel på interaktion
 
-```text
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│                  │     │                  │     │                  │
-│  AI-närings-     │────▶│ user_nutrition_  │────▶│                  │
-│  spårning        │     │ settings         │     │                  │
-│  (onboarding)    │     │ (vikt, längd)    │     │                  │
-│                  │     │                  │     │   Profile.tsx    │
-└──────────────────┘     └──────────────────┘     │                  │
-                                                  │   Läser +        │
-┌──────────────────┐     ┌──────────────────┐     │   uppdaterar     │
-│                  │     │                  │     │   alla värden    │
-│  Kvalificering   │────▶│ intake_profiles  │────▶│                  │
-│  (onboarding)    │     │ (aktivitet,      │     │                  │
-│                  │     │  diagnoser, mål) │     │                  │
-└──────────────────┘     └──────────────────┘     │                  │
-                                                  │                  │
-┌──────────────────┐     ┌──────────────────┐     │                  │
-│                  │     │                  │     │                  │
-│  Manuell log /   │────▶│ health_tracking_ │────▶│                  │
-│  Apple Health*   │     │ entries          │     │                  │
-│                  │     │ (blodtryck)      │     │                  │
-└──────────────────┘     └──────────────────┘     └──────────────────┘
-                         * Apple Health ej byggd
-```
+**Användare:** "Är laktosfri mjölk okej på FODMAP?"  
+**AI:** "Ja, laktosfri mjölk är helt okej under lågFODMAP-fasen! Laktos är den FODMAP som tas bort, så laktosfri fungerar bra. 🥛"
+
+**Användare:** "Jag har ont i magen efter varje måltid och blod i avföringen"  
+**AI:** "Jag förstår att du är orolig. Det här är något jag vill att din dietist Anna ska bedöma direkt. Jag har skickat ditt meddelande till henne, och hon återkommer så snart som möjligt. ❤️"
+
+---
 
 ## Tekniska detaljer
 
-### Ny hook: useHealthProfile.ts
+### 1. Ny databastabell för meddelanden
 
-```typescript
-interface HealthProfileData {
-  // Från user_nutrition_settings
-  weightKg?: number;
-  heightCm?: number;
-  
-  // Från intake_profiles
-  activityLevel?: ActivityLevel;
-  conditions: string[];  // Mappade från unified_concern_category + subcategory
-  goals: string[];       // Mappade från preference_tags
-  
-  // Från health_tracking_entries
-  bloodPressure?: { systolic: number; diastolic: number };
-}
+En ny tabell `chat_messages` för att spara konversationshistorik:
 
-interface UseHealthProfile {
-  data: HealthProfileData;
-  loading: boolean;
-  
-  updateWeight: (kg: number) => Promise<void>;
-  updateHeight: (cm: number) => Promise<void>;
-  updateBloodPressure: (systolic: number, diastolic: number) => Promise<void>;
-  updateActivityLevel: (level: ActivityLevel) => Promise<void>;
-  updateConditions: (conditions: string[]) => Promise<void>;
-  updateGoals: (goals: string[]) => Promise<void>;
-}
+| Kolumn | Typ | Beskrivning |
+|--------|-----|-------------|
+| id | uuid | Primärnyckel |
+| user_id | uuid | Koppling till användare |
+| conversation_type | text | "ai" eller "dietitian" |
+| sender | text | "user", "ai", eller "dietitian" |
+| content | text | Meddelandetext |
+| escalated | boolean | Om AI eskalerat till dietist |
+| escalation_reason | text | Varför AI eskalerade |
+| created_at | timestamp | Tidsstämpel |
+
+RLS-policyer säkerställer att användare bara ser sina egna meddelanden och att dietister kan se sina patienters meddelanden.
+
+### 2. Ny edge function: `chat-assistant`
+
+En backend-funktion som:
+- Hämtar användarens intake-profil (diagnos, behandlingsplan, concern category)
+- Skapar en kontextrik systemprompt baserat på profilen
+- Använder Lovable AI (google/gemini-3-flash-preview) för att generera svar
+- Returnerar en "confidence score" och eskaleringsrekommendation
+- Streamar svaret för snabb respons
+
+**Systemprompt-exempel för FODMAP-patient:**
+```
+Du är en AI-assistent för EatSuite som hjälper patienter med dietistfrågor.
+
+PATIENTENS PROFIL:
+- Huvudområde: Tarmhälsa (IBS)
+- Behandling: FODMAP-elimination
+- Aktivitetsnivå: Medel
+
+RIKTLINJER:
+- Svara på enkla FODMAP-frågor (godkända livsmedel, portionsstorlekar)
+- Eskalera vid: medicinska symtom, blod, smärta, viktnedgång, osäkerhet
+- Ton: Varm, stöttande, aldrig uppfordrande
 ```
 
-### Mappning av diagnoser
+### 3. Uppdaterad Messages-sida
 
-Diagnoser visas baserat på användarens `unified_concern_category` och `primary_concern_subcategory`:
+**Ny design:**
+- Header visar "EatSuite Assistent" med AI-ikon
+- En liten banner under headern: "AI-assistenten hjälper dig snabbt. Din dietist tar vid när det behövs."
+- Meddelanden har olika styling för AI vs dietist
+- Vid eskalering visas ett tydligt statusmeddelande
 
-| Kategori | Visas som |
-|----------|-----------|
-| gut_health + ibs | "IBS" |
-| gut_health + crohns | "Crohns sjukdom" |
-| diabetes + type2 | "Typ 2-diabetes" |
-| heart_health + high_blood_pressure | "Högt blodtryck" |
-| womens_health + pcos | "PCOS" |
+**Ny funktionalitet:**
+- Skriv meddelande → Skickas till edge function
+- AI svarar med streaming (token-by-token)
+- Om AI eskalerar visas: "Jag har kopplat på [Dietistens namn]. Hon återkommer snart."
 
-### Mappning av mål
+### 4. Eskaleringslogik
 
-Mål hämtas från `preference_tags` i intake_profiles och mappas till svenska etiketter:
+AI:n instrueras att eskalera när:
+- Medicinska symtom nämns (blod, smärta, yrsel, kraftig viktnedgång)
+- Patienten uttrycker stark oro
+- Frågan är utanför AI:ns kunskapsområde
+- AI:n är osäker på svaret (confidence < 0.7)
+- Patienten explicit ber om dietisten
 
-| Tag | Visas som |
-|-----|-----------|
-| goal_weight_loss | "Gå ner i vikt" |
-| goal_energy | "Få mer energi" |
-| goal_muscle | "Bygga muskler" |
-| goal_regular_eating | "Äta mer regelbundet" |
+Vid eskalering:
+1. Meddelandet markeras som `escalated = true`
+2. Dietisten får en notifikation (framtida funktion)
+3. Patienten ser bekräftelse att dietisten kontaktats
 
-## Nya filer
+---
 
-1. `src/hooks/useHealthProfile.ts` - Aggregerar all hälsodata
-2. `src/components/profile/EditableHealthCard.tsx` - Kort med penna-ikon
-3. `src/components/profile/EditWeightSheet.tsx` - Redigera vikt
-4. `src/components/profile/EditHeightSheet.tsx` - Redigera längd
-5. `src/components/profile/EditBloodPressureSheet.tsx` - Redigera blodtryck
-6. `src/components/profile/EditActivitySheet.tsx` - Redigera aktivitetsnivå
-7. `src/components/profile/EditConditionsSheet.tsx` - Redigera diagnoser
-8. `src/components/profile/EditGoalsSheet.tsx` - Redigera mål
+## Filer som skapas/ändras
 
-## Uppdaterade filer
+| Fil | Åtgärd |
+|-----|--------|
+| `supabase/functions/chat-assistant/index.ts` | Ny edge function |
+| `src/pages/Messages.tsx` | Ombyggd med AI-chattlogik |
+| `src/hooks/useChatMessages.ts` | Ny hook för meddelanden |
+| `src/components/messages/ChatMessage.tsx` | Meddelandekomponent |
+| `src/components/messages/ChatHeader.tsx` | Header med AI/dietist-info |
+| `supabase/config.toml` | Registrera ny funktion |
+| Databasmigration | Ny tabell + RLS |
 
-1. `src/pages/Profile.tsx` - Använder ny hook och redigerbara komponenter
+---
 
-## Om data saknas
+## Säkerhetsaspekter
 
-Om ett värde inte finns ifyllt visas:
-- "–" eller "Ej angivet" som placeholder
-- Penna-ikonen är fortfarande klickbar för att lägga till värdet
-- Ett subtilt meddelande kan visas: "Lägg till din vikt för att förbättra dina personliga rekommendationer"
-
-## Framtida förberedelser
-
-**Apple Health-integration (ej i denna plan):**
-- Blodtrycksrutan förbereds för att visa "Synkad från Apple Health" när integrationen är byggd
-- `apple_health_settings`-tabellen finns redan för att spåra kopplingsstatusen
-
-**Dietist-överskrivning:**
-- Diagnosfältet är förberett för att markeras med "Satt av dietist" i framtiden
-- Användaren kan fortfarande se men inte redigera dietist-satta diagnoser
+- **RLS-policyer:** Användare ser endast sina meddelanden; dietister endast tilldelade patienter
+- **Promptsäkerhet:** Sanitisering av input för att förhindra prompt injection
+- **Autentisering:** Edge function kräver giltig JWT-token
+- **Dataminimering:** AI ser bara relevant profilinformation, inte hela journalen
