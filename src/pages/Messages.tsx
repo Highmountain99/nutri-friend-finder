@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Loader2 } from "lucide-react";
+import { Send, Paperclip, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,6 +7,7 @@ import { useAppointments } from "@/hooks/useAppointments";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import { ChatHeader } from "@/components/messages/ChatHeader";
 import { ChatMessage } from "@/components/messages/ChatMessage";
+import { ChatBookingSheet } from "@/components/messages/ChatBookingSheet";
 
 export default function Messages() {
   const { getUpcomingAppointment, loading: appointmentLoading } = useAppointments();
@@ -14,6 +15,7 @@ export default function Messages() {
   const { messages, loading: messagesLoading, sending, error, sendMessage } = useChatMessages();
 
   const [inputValue, setInputValue] = useState("");
+  const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -58,117 +60,142 @@ export default function Messages() {
     }
   };
 
+  const handleBookingRequest = () => {
+    setBookingSheetOpen(true);
+  };
+
   const loading = appointmentLoading || messagesLoading;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      {/* Chat Header */}
-      <ChatHeader
-        loading={loading}
-        dietitian={dietitianInfo}
-        isEscalated={hasEscalation}
-      />
+    <>
+      <div className="flex flex-col h-[calc(100vh-8rem)]">
+        {/* Chat Header */}
+        <ChatHeader
+          loading={loading}
+          dietitian={dietitianInfo}
+          isEscalated={hasEscalation}
+        />
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messagesLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex gap-2">
-                <Skeleton className="w-8 h-8 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-16 w-48 rounded-2xl" />
-                  <Skeleton className="h-3 w-12" />
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {messagesLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-2">
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-16 w-48 rounded-2xl" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center px-8">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <span className="text-2xl font-medium text-primary">?</span>
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">
+                Hej!
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Innan vi loopar in {dietitianInfo ? `${dietitianInfo.firstName}` : "din dietist"} kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!
+              </p>
+              
+              {/* Quick action to book if no appointment */}
+              {!upcomingAppointment && (
+                <Button
+                  variant="outline"
+                  className="mt-6 gap-2"
+                  onClick={handleBookingRequest}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Boka möte med dietist
+                </Button>
+              )}
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                sender={msg.sender}
+                content={msg.content}
+                timestamp={msg.created_at}
+                dietitian={dietitianInfo}
+                escalated={msg.escalated}
+                onBookingRequest={handleBookingRequest}
+              />
+            ))
+          )}
+
+          {/* Streaming indicator */}
+          {sending && (
+            <div className="flex gap-2 justify-start">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+              </div>
+              <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               </div>
-            ))}
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-8">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <span className="text-2xl font-medium text-primary">?</span>
             </div>
-            <h3 className="font-semibold text-foreground mb-2">
-              Hej!
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Innan vi loopar in {dietitianInfo ? `${dietitianInfo.firstName}` : "din dietist"} kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!
-            </p>
-          </div>
-        ) : (
-          messages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              sender={msg.sender}
-              content={msg.content}
-              timestamp={msg.created_at}
-              dietitian={dietitianInfo}
-              escalated={msg.escalated}
+          )}
+
+          {/* Error message */}
+          {error && (
+            <div className="px-4 py-2 bg-destructive/10 text-destructive text-sm rounded-lg text-center">
+              {error}
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="px-4 py-3 border-t border-border bg-card">
+          <div className="flex items-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground flex-shrink-0"
+              disabled
+            >
+              <Paperclip className="w-5 h-5" />
+            </Button>
+            <Textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Skriv ett meddelande..."
+              className="flex-1 min-h-[40px] max-h-[120px] resize-none py-2"
+              rows={1}
+              disabled={sending}
             />
-          ))
-        )}
-
-        {/* Streaming indicator */}
-        {sending && (
-          <div className="flex gap-2 justify-start">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
-            </div>
-            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
-            </div>
+            <Button
+              onClick={handleSend}
+              size="icon"
+              disabled={!inputValue.trim() || sending}
+              className="flex-shrink-0"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
           </div>
-        )}
-
-        {/* Error message */}
-        {error && (
-          <div className="px-4 py-2 bg-destructive/10 text-destructive text-sm rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <div className="px-4 py-3 border-t border-border bg-card">
-        <div className="flex items-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground flex-shrink-0"
-            disabled
-          >
-            <Paperclip className="w-5 h-5" />
-          </Button>
-          <Textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Skriv ett meddelande..."
-            className="flex-1 min-h-[40px] max-h-[120px] resize-none py-2"
-            rows={1}
-            disabled={sending}
-          />
-          <Button
-            onClick={handleSend}
-            size="icon"
-            disabled={!inputValue.trim() || sending}
-            className="flex-shrink-0"
-          >
-            {sending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Booking Sheet */}
+      <ChatBookingSheet
+        open={bookingSheetOpen}
+        onOpenChange={setBookingSheetOpen}
+      />
+    </>
   );
 }

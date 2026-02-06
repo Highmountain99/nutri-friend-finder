@@ -163,7 +163,9 @@ ESKALERA till ${dietitianName} när:
 - Du är osäker på svaret
 - Patienten explicit ber om att prata med dietisten
 
-När du eskalerar, säg något i stil med: "Det här vill jag att ${dietitianName} får titta på. Jag ser till att hen får ditt meddelande direkt."`;
+När du eskalerar, säg något i stil med: "Det här vill jag att ${dietitianName} får titta på. Jag ser till att hen får ditt meddelande direkt."
+
+VIKTIGT: När du eskalerar till dietisten, rekommendera också alltid att boka in ett möte om patienten inte redan har ett kommande möte. Säg något som: "Om du inte redan har ett möte inbokat så rekommenderar jag att du bokar in ett så att ${dietitianName} kan gå igenom detta ordentligt med dig."`;
 }
 
 serve(async (req) => {
