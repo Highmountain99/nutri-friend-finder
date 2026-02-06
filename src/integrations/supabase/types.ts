@@ -49,7 +49,10 @@ export type Database = {
           dietitian_id: string | null
           id: string
           notes: string | null
+          payment_method_saved: boolean | null
           status: string
+          stripe_customer_id: string | null
+          stripe_setup_intent_id: string | null
           updated_at: string
           user_id: string
         }
@@ -60,7 +63,10 @@ export type Database = {
           dietitian_id?: string | null
           id?: string
           notes?: string | null
+          payment_method_saved?: boolean | null
           status?: string
+          stripe_customer_id?: string | null
+          stripe_setup_intent_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -71,7 +77,10 @@ export type Database = {
           dietitian_id?: string | null
           id?: string
           notes?: string | null
+          payment_method_saved?: boolean | null
           status?: string
+          stripe_customer_id?: string | null
+          stripe_setup_intent_id?: string | null
           updated_at?: string
           user_id?: string
         }

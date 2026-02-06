@@ -25,6 +25,7 @@ import Koder from "./pages/Koder";
 import SEBForsakring from "./pages/SEBForsakring";
 import Admin from "./pages/Admin";
 import MeetingHistory from "./pages/MeetingHistory";
+import BookingSuccess from "./pages/BookingSuccess";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,9 @@ const App = () => (
             
             {/* Protected app routes with layout - requires completed qualifying */}
             <Route element={<QualifyingRoute />}>
+              {/* Booking success page - no layout needed */}
+              <Route path="/booking-success" element={<BookingSuccess />} />
+              
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/booking" element={<Booking />} />
