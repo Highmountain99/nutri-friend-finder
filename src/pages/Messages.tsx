@@ -86,13 +86,13 @@ export default function Messages() {
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <span className="text-3xl">🥗</span>
+              <span className="text-3xl">💬</span>
             </div>
             <h3 className="font-semibold text-foreground mb-2">
-              Välkommen till EatSuite Assistenten!
+              Hej! 👋
             </h3>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Ställ frågor om din kost och behandling. Jag hjälper dig snabbt med vanliga frågor, och din dietist tar vid vid behov.
+              Innan vi loopar in {dietitianInfo ? `${dietitianInfo.firstName}` : "din dietist"} kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!
             </p>
           </div>
         ) : (
