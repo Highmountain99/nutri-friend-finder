@@ -135,7 +135,7 @@ ${subcategory ? `Specifikt fokus: ${subcategory}` : ""}
 ${supportAreas !== "ej specificerat" ? `Stödområden: ${supportAreas}` : ""}
 ${concernTags ? `Intresseområden: ${concernTags}` : ""}
 
-PATIENTENS JOURNAL (senaste 7 dagar):
+PATIENTENS JOURNAL (senaste 14 dagarna):
 ${mealsContext}
 
 RAPPORTERADE SYMTOM:
@@ -217,10 +217,10 @@ serve(async (req) => {
     const userId = claimsData.claims.sub as string;
     const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Calculate date 7 days ago
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0];
+    // Calculate date 14 days ago (to ensure we have enough context)
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().split("T")[0];
 
     // Fetch all patient data in parallel
     const [
@@ -249,14 +249,14 @@ serve(async (req) => {
         .from("nutrition_entries")
         .select("entry_date, meal_type, meal_name")
         .eq("user_id", userId)
-        .gte("entry_date", sevenDaysAgoStr)
+        .gte("entry_date", fourteenDaysAgoStr)
         .order("entry_date", { ascending: false })
         .limit(30),
       supabaseService
         .from("symptom_entries")
         .select("entry_date, description")
         .eq("user_id", userId)
-        .gte("entry_date", sevenDaysAgoStr)
+        .gte("entry_date", fourteenDaysAgoStr)
         .order("entry_date", { ascending: false })
         .limit(10),
       supabaseService
