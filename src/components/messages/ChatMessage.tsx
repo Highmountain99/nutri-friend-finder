@@ -1,4 +1,3 @@
-import { Bot } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -12,7 +11,7 @@ interface ChatMessageProps {
   dietitian?: {
     firstName: string;
     lastName: string;
-    avatarUrl?: string;
+    avatarUrl?: string | null;
   } | null;
   escalated?: boolean;
 }
@@ -25,63 +24,42 @@ export function ChatMessage({
   escalated,
 }: ChatMessageProps) {
   const isUser = sender === "user";
-  const isAi = sender === "ai";
-  const isDietitian = sender === "dietitian";
 
   const time = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  
+  const initials = dietitian
+    ? `${dietitian.firstName[0]}${dietitian.lastName[0]}`
+    : "DD";
 
   return (
     <div className={cn("flex gap-2", isUser ? "justify-end" : "justify-start")}>
-      {/* Avatar for non-user messages */}
+      {/* Avatar for non-user messages – always show dietitian avatar */}
       {!isUser && (
-        <div className="flex-shrink-0">
-          {isAi ? (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-primary-foreground" />
-            </div>
-          ) : isDietitian && dietitian ? (
-            <Avatar className="w-8 h-8">
-              {dietitian.avatarUrl ? (
-                <AvatarImage
-                  src={dietitian.avatarUrl}
-                  alt={`${dietitian.firstName} ${dietitian.lastName}`}
-                  className="object-cover"
-                />
-              ) : null}
-              <AvatarFallback className="bg-primary-soft text-primary text-xs">
-                {dietitian.firstName[0]}
-                {dietitian.lastName[0]}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-xs text-muted-foreground">?</span>
-            </div>
-          )}
-        </div>
+        <Avatar className="w-8 h-8 flex-shrink-0">
+          {dietitian?.avatarUrl ? (
+            <AvatarImage
+              src={dietitian.avatarUrl}
+              alt={`${dietitian.firstName} ${dietitian.lastName}`}
+              className="object-cover"
+            />
+          ) : null}
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
       )}
 
       <div className={cn("max-w-[80%] space-y-1", isUser && "items-end")}>
-        {/* Escalation badge */}
-        {escalated && isAi && (
-          <div className="flex items-center gap-1 text-xs text-warning-foreground">
-            <span className="inline-block w-2 h-2 rounded-full bg-warning" />
-            Dietist kontaktad
-          </div>
-        )}
-
         {/* Message bubble */}
         <div
           className={cn(
             "rounded-2xl px-4 py-2.5",
             isUser
               ? "bg-primary text-primary-foreground rounded-br-md"
-              : isAi
-              ? "bg-muted text-foreground rounded-bl-md"
-              : "bg-accent text-accent-foreground rounded-bl-md border border-primary/20"
+              : "bg-muted text-foreground rounded-bl-md"
           )}
         >
-          {isAi ? (
+          {!isUser ? (
             <div className="text-sm prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
               <ReactMarkdown>{content}</ReactMarkdown>
             </div>
@@ -100,6 +78,13 @@ export function ChatMessage({
           {format(time, "HH:mm", { locale: sv })}
         </p>
       </div>
+
+      {/* User avatar placeholder on the right */}
+      {isUser && (
+        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+          <span className="text-xs font-medium text-secondary-foreground">Du</span>
+        </div>
+      )}
     </div>
   );
 }

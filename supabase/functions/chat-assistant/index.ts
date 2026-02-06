@@ -15,98 +15,155 @@ interface IntakeProfile {
   concern_tags: string[] | null;
 }
 
-function buildSystemPrompt(profile: IntakeProfile | null, dietitianName: string): string {
+interface PatientContext {
+  recentMeals: Array<{ date: string; meal_type: string; meal_name: string }>;
+  recentSymptoms: Array<{ date: string; description: string }>;
+  savedRecipes: string[];
+  healthMetrics: Array<{ type: string; value: number; unit: string; date: string }>;
+  nutritionSettings: { weight_kg: number | null; height_cm: number | null; activity_level: string | null } | null;
+  nutritionGoals: { calories: number | null; protein: number | null; carbs: number | null; fat: number | null } | null;
+}
+
+function formatMealsContext(meals: PatientContext["recentMeals"]): string {
+  if (meals.length === 0) return "Inga måltider loggade senaste veckan.";
+  
+  const grouped: Record<string, string[]> = {};
+  for (const meal of meals) {
+    const date = new Date(meal.date).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "short" });
+    if (!grouped[date]) grouped[date] = [];
+    const mealTypeSv: Record<string, string> = { breakfast: "Frukost", lunch: "Lunch", dinner: "Middag", snack: "Mellanmål" };
+    grouped[date].push(`${mealTypeSv[meal.meal_type] || meal.meal_type}: ${meal.meal_name || "oklart"}`);
+  }
+  
+  return Object.entries(grouped)
+    .map(([date, meals]) => `- ${date}: ${meals.join(", ")}`)
+    .join("\n");
+}
+
+function formatSymptomsContext(symptoms: PatientContext["recentSymptoms"]): string {
+  if (symptoms.length === 0) return "Inga symtom rapporterade senaste veckan.";
+  
+  return symptoms
+    .map(s => {
+      const date = new Date(s.date).toLocaleDateString("sv-SE", { day: "numeric", month: "short" });
+      return `- ${date}: "${s.description}"`;
+    })
+    .join("\n");
+}
+
+function buildSystemPrompt(
+  profile: IntakeProfile | null,
+  dietitianName: string,
+  patientContext: PatientContext
+): string {
   const concernCategory = profile?.unified_concern_category || profile?.primary_concern_category || "allmän hälsa";
   const subcategory = profile?.primary_concern_subcategory || "";
-  const activityLevel = profile?.activity_level || "okänd";
+  const activityLevel = profile?.activity_level || patientContext.nutritionSettings?.activity_level || "okänd";
   const supportAreas = profile?.support_areas?.join(", ") || "ej specificerat";
   const concernTags = profile?.concern_tags?.join(", ") || "";
 
-  // Build treatment context based on concern category
+  // Build treatment context
   let treatmentContext = "";
   switch (concernCategory) {
     case "gut_health":
-      treatmentContext = `
-BEHANDLINGSKONTEXT: Tarmhälsa/IBS
-- Patienten kan genomgå FODMAP-elimination eller annan tarmbehandling
-- Du kan svara på frågor om: godkända/icke-godkända livsmedel, portionsstorlekar, elimineringsfaser
-- Vanliga frågor: laktosfri mjölk (JA, okej), glutenfritt (beror på), lök/vitlök (NEJ i eliminering)`;
+      treatmentContext = `Patienten arbetar med tarmhälsa, troligtvis FODMAP-eliminering eller annan IBS-behandling.`;
       break;
     case "weight_loss":
-      treatmentContext = `
-BEHANDLINGSKONTEXT: Viktnedgång
-- Fokus på hållbar viktminskning och bättre matvanor
-- Du kan svara på frågor om: kalorideficit, proteinintag, måltidsplanering
-- Undvik: extrema dieter, snabba lösningar`;
+      treatmentContext = `Patienten fokuserar på hållbar viktnedgång.`;
       break;
     case "diabetes":
-      treatmentContext = `
-BEHANDLINGSKONTEXT: Diabetes
-- Fokus på blodsockerkontroll och kolhydrathantering
-- Du kan svara på frågor om: GI-värden, kolhydraträkning, måltidsfördelning
-- Eskalera vid: insulinjusteringar, medicinfrågor`;
+      treatmentContext = `Patienten har diabetes och arbetar med blodsockerkontroll.`;
       break;
     case "eating_disorder":
     case "emotional_eating":
-      treatmentContext = `
-BEHANDLINGSKONTEXT: Ätstörning/Emotionellt ätande
-- Extra varsam och stöttande ton
-- Fokus på relationen till mat, inte kalorier
-- Eskalera vid: ångest kring mat, skuldkänslor, restriktivt beteende`;
+      treatmentContext = `Patienten arbetar med sin relation till mat. Var extra varsam och stöttande, fokusera inte på kalorier.`;
       break;
     case "heart_health":
-      treatmentContext = `
-BEHANDLINGSKONTEXT: Hjärthälsa
-- Fokus på hjärtvänlig kost, saltreduktion, fiberintag
-- Du kan svara på frågor om: omega-3, nötter, grönsaker
-- Eskalera vid: bröstsmärtor, andfåddhet`;
+      treatmentContext = `Patienten fokuserar på hjärthälsa.`;
       break;
     case "womens_health":
-      treatmentContext = `
-BEHANDLINGSKONTEXT: Kvinnohälsa
-- Kan inkludera graviditet, PCOS, klimakteriet
-- Du kan svara på allmänna näringsfrågor
-- Eskalera vid: graviditetsspecifika frågor, hormonella bekymmer`;
+      treatmentContext = `Patienten arbetar med kvinnohälsa (kan inkludera graviditet, PCOS, klimakteriet).`;
       break;
     default:
-      treatmentContext = `
-BEHANDLINGSKONTEXT: Allmän hälsa
-- Fokus på balanserad kost och goda matvanor
-- Du kan svara på allmänna näringsfrågor`;
+      treatmentContext = `Patienten fokuserar på allmän hälsa och bättre matvanor.`;
   }
 
-  return `Du är EatSuite Assistenten, en AI-assistent för EatSuite som hjälper patienter med dietistfrågor. Du är varm, stöttande och kunnig.
+  // Build journal context
+  const mealsContext = formatMealsContext(patientContext.recentMeals);
+  const symptomsContext = formatSymptomsContext(patientContext.recentSymptoms);
+  const recipesContext = patientContext.savedRecipes.length > 0
+    ? patientContext.savedRecipes.join(", ")
+    : "Inga sparade recept.";
 
-PATIENTENS PROFIL:
-- Huvudområde: ${concernCategory}${subcategory ? ` (${subcategory})` : ""}
-- Aktivitetsnivå: ${activityLevel}
-- Stödområden: ${supportAreas}
-${concernTags ? `- Intresseområden: ${concernTags}` : ""}
+  // Health data
+  let healthDataContext = "";
+  if (patientContext.nutritionSettings) {
+    const ns = patientContext.nutritionSettings;
+    const parts = [];
+    if (ns.weight_kg) parts.push(`Vikt: ${ns.weight_kg} kg`);
+    if (ns.height_cm) parts.push(`Längd: ${ns.height_cm} cm`);
+    if (ns.activity_level) {
+      const activityLabels: Record<string, string> = {
+        sedentary: "Stillasittande",
+        lightly_active: "Lätt aktiv",
+        moderately_active: "Måttligt aktiv",
+        active: "Aktiv",
+        very_active: "Mycket aktiv"
+      };
+      parts.push(`Aktivitet: ${activityLabels[ns.activity_level] || ns.activity_level}`);
+    }
+    healthDataContext = parts.length > 0 ? parts.join(" | ") : "Inga uppgifter";
+  }
+
+  // Nutrition goals
+  let goalsContext = "";
+  if (patientContext.nutritionGoals) {
+    const g = patientContext.nutritionGoals;
+    const parts = [];
+    if (g.calories) parts.push(`${g.calories} kcal`);
+    if (g.protein) parts.push(`${g.protein}g protein`);
+    goalsContext = parts.length > 0 ? `Dagliga mål: ${parts.join(", ")}` : "";
+  }
+
+  return `Du är en stöttande assistent som hjälper patienter med kostfrågor innan de pratar med sin dietist ${dietitianName}.
+
+VIKTIGT: Svara som en varm, kunnig person – inte som en robot. Du är ${dietitianName}s assistent.
+
+PATIENTENS BEHANDLING:
 ${treatmentContext}
+${subcategory ? `Specifikt fokus: ${subcategory}` : ""}
+${supportAreas !== "ej specificerat" ? `Stödområden: ${supportAreas}` : ""}
+${concernTags ? `Intresseområden: ${concernTags}` : ""}
 
-RIKTLINJER FÖR DINA SVAR:
-1. Svara ALLTID på svenska
-2. Var varm och stöttande, aldrig uppfordrande eller dömande
-3. Ge konkreta, praktiska råd när det är möjligt
-4. Håll svaren lagom korta men informativa (2-4 meningar vanligtvis)
-5. Använd gärna emojis sparsamt för att vara vänlig 🌿
+PATIENTENS JOURNAL (senaste 7 dagar):
+${mealsContext}
 
-ESKALERING - Eskalera ALLTID till dietisten ${dietitianName} när:
+RAPPORTERADE SYMTOM:
+${symptomsContext}
+
+SPARADE RECEPT:
+${recipesContext}
+
+HÄLSODATA:
+${healthDataContext}
+${goalsContext}
+
+RIKTLINJER:
+1. Svara ALLTID på svenska med ett naturligt, vardagligt språk
+2. Var varm och stöttande – aldrig uppfordrande eller dömande
+3. Referera gärna till patientens journal: "Jag ser att du åt X igår – har du frågor om det?"
+4. Håll svaren korta och personliga (2-4 meningar vanligtvis)
+5. Du kan ställa följdfrågor för att förstå bättre
+6. Använd gärna emojis sparsamt för att vara vänlig
+
+ESKALERA till ${dietitianName} när:
 - Patienten nämner: blod, kraftig smärta, yrsel, svimning, kraftig viktnedgång
 - Patienten uttrycker stark oro eller ångest
 - Frågan handlar om mediciner eller dosering
 - Du är osäker på svaret
 - Patienten explicit ber om att prata med dietisten
 
-När du eskalerar, svara med medkänsla och förklara att du kopplar på dietisten.
-
-EXEMPEL PÅ BRA SVAR:
-Fråga: "Kan jag äta laktosfri mjölk på FODMAP?"
-Svar: "Ja, laktosfri mjölk fungerar utmärkt under FODMAP-eliminering! 🥛 Laktos är den FODMAP som tas bort i laktosfria produkter, så du kan dricka den utan problem."
-
-EXEMPEL PÅ ESKALERING:
-Fråga: "Jag har haft blod i avföringen och ont i magen hela veckan"
-Svar: "Jag förstår att du är orolig, och det är viktigt att vi tar det här på allvar. Det du beskriver behöver bedömas av ${dietitianName} så snart som möjligt. Jag har skickat ditt meddelande till hen direkt. ❤️"`;
+När du eskalerar, säg något i stil med: "Det här vill jag att ${dietitianName} får titta på. Jag ser till att hen får ditt meddelande direkt."`;
 }
 
 serve(async (req) => {
@@ -124,7 +181,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate and sanitize input to prevent prompt injection
     const sanitizedMessage = message.trim().slice(0, 2000);
 
     const authHeader = req.headers.get("Authorization");
@@ -144,7 +200,6 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Create client with user's token for auth verification
     const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
@@ -160,30 +215,102 @@ serve(async (req) => {
     }
 
     const userId = claimsData.claims.sub as string;
-
-    // Create service role client for database operations
     const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch user's intake profile for context
-    const { data: intakeProfile } = await supabaseService
-      .from("intake_profiles")
-      .select("unified_concern_category, primary_concern_category, primary_concern_subcategory, activity_level, support_areas, concern_tags")
-      .eq("user_id", userId)
-      .single();
+    // Calculate date 7 days ago
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0];
 
-    // Fetch the user's dietitian from appointments
-    const { data: appointment } = await supabaseService
-      .from("appointments")
-      .select("dietitian_id, dietitian_profiles(first_name, last_name)")
-      .eq("user_id", userId)
-      .eq("status", "booked")
-      .order("appointment_date", { ascending: true })
-      .limit(1)
-      .single();
+    // Fetch all patient data in parallel
+    const [
+      intakeProfileResult,
+      appointmentResult,
+      mealsResult,
+      symptomsResult,
+      recipesResult,
+      settingsResult,
+      goalsResult
+    ] = await Promise.all([
+      supabaseService
+        .from("intake_profiles")
+        .select("unified_concern_category, primary_concern_category, primary_concern_subcategory, activity_level, support_areas, concern_tags")
+        .eq("user_id", userId)
+        .single(),
+      supabaseService
+        .from("appointments")
+        .select("dietitian_id, dietitian_profiles(first_name, last_name)")
+        .eq("user_id", userId)
+        .eq("status", "booked")
+        .order("appointment_date", { ascending: true })
+        .limit(1)
+        .single(),
+      supabaseService
+        .from("nutrition_entries")
+        .select("entry_date, meal_type, meal_name")
+        .eq("user_id", userId)
+        .gte("entry_date", sevenDaysAgoStr)
+        .order("entry_date", { ascending: false })
+        .limit(30),
+      supabaseService
+        .from("symptom_entries")
+        .select("entry_date, description")
+        .eq("user_id", userId)
+        .gte("entry_date", sevenDaysAgoStr)
+        .order("entry_date", { ascending: false })
+        .limit(10),
+      supabaseService
+        .from("user_recipe_interactions")
+        .select("recipe_id, recipes(title)")
+        .eq("user_id", userId)
+        .eq("status", "saved")
+        .limit(10),
+      supabaseService
+        .from("user_nutrition_settings")
+        .select("weight_kg, height_cm, activity_level")
+        .eq("user_id", userId)
+        .single(),
+      supabaseService
+        .from("user_nutrition_goals")
+        .select("calories_goal, protein_goal, carbs_goal, fat_goal")
+        .eq("user_id", userId)
+        .single()
+    ]);
+
+    const intakeProfile = intakeProfileResult.data;
+    const appointment = appointmentResult.data;
 
     const dietitianName = appointment?.dietitian_profiles 
       ? `${(appointment.dietitian_profiles as any).first_name} ${(appointment.dietitian_profiles as any).last_name}`
       : "din dietist";
+
+    // Build patient context
+    const patientContext: PatientContext = {
+      recentMeals: (mealsResult.data || []).map(m => ({
+        date: m.entry_date,
+        meal_type: m.meal_type || "unknown",
+        meal_name: m.meal_name || ""
+      })),
+      recentSymptoms: (symptomsResult.data || []).map(s => ({
+        date: s.entry_date,
+        description: s.description
+      })),
+      savedRecipes: (recipesResult.data || [])
+        .map(r => (r.recipes as any)?.title)
+        .filter(Boolean),
+      healthMetrics: [],
+      nutritionSettings: settingsResult.data ? {
+        weight_kg: settingsResult.data.weight_kg,
+        height_cm: settingsResult.data.height_cm,
+        activity_level: settingsResult.data.activity_level
+      } : null,
+      nutritionGoals: goalsResult.data ? {
+        calories: goalsResult.data.calories_goal,
+        protein: goalsResult.data.protein_goal,
+        carbs: goalsResult.data.carbs_goal,
+        fat: goalsResult.data.fat_goal
+      } : null
+    };
 
     // Save user message to database
     await supabaseService.from("chat_messages").insert({
@@ -194,13 +321,13 @@ serve(async (req) => {
     });
 
     // Build messages array for AI
-    const systemPrompt = buildSystemPrompt(intakeProfile, dietitianName);
+    const systemPrompt = buildSystemPrompt(intakeProfile, dietitianName, patientContext);
     
     const messages: Array<{ role: string; content: string }> = [
       { role: "system", content: systemPrompt }
     ];
 
-    // Add conversation history if provided (limit to last 10 messages for context)
+    // Add conversation history if provided (limit to last 10 messages)
     if (conversationHistory && Array.isArray(conversationHistory)) {
       const recentHistory = conversationHistory.slice(-10);
       for (const msg of recentHistory) {
@@ -249,12 +376,11 @@ serve(async (req) => {
       );
     }
 
-    // Create a TransformStream to collect the full response while streaming
+    // Stream response and collect for DB save
     let fullResponse = "";
     const { readable, writable } = new TransformStream({
       transform(chunk, controller) {
         const text = new TextDecoder().decode(chunk);
-        // Parse SSE to extract content
         const lines = text.split("\n");
         for (const line of lines) {
           if (line.startsWith("data: ") && line !== "data: [DONE]") {
@@ -272,10 +398,8 @@ serve(async (req) => {
         controller.enqueue(chunk);
       },
       async flush() {
-        // Save AI response to database after streaming completes
         if (fullResponse.trim()) {
-          // Check for escalation keywords in the response
-          const escalationKeywords = ["dietist", "kopplat på", "skickat ditt meddelande", "återkommer"];
+          const escalationKeywords = ["dietist", "kopplat på", "skickat ditt meddelande", "får titta på", "återkommer"];
           const isEscalated = escalationKeywords.some(keyword => 
             fullResponse.toLowerCase().includes(keyword.toLowerCase())
           );
@@ -292,7 +416,6 @@ serve(async (req) => {
       }
     });
 
-    // Pipe the response through our transform
     response.body?.pipeTo(writable);
 
     return new Response(readable, {
