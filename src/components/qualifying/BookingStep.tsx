@@ -1,189 +1,185 @@
 import { useState } from 'react';
 import { StepLayout } from './StepLayout';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent } from '@/components/ui/card';
+import { DietitianSelectionStep } from '@/components/booking/DietitianSelectionStep';
+import { DietitianCalendarStep } from '@/components/booking/DietitianCalendarStep';
+import { DietitianRecommendations } from '@/components/booking/DietitianRecommendations';
+import { DietitianList } from '@/components/booking/DietitianList';
+import { DietitianDetailSheet } from '@/components/booking/DietitianDetailSheet';
+import { BookingConfirmation } from '@/components/booking/BookingConfirmation';
+import { DietitianProfile, TimeSlot } from '@/types/dietitian';
+import { useAppointments } from '@/hooks/useAppointments';
 import { Button } from '@/components/ui/button';
-import { Check, Video, AlertTriangle, Heart } from 'lucide-react';
-import { format, addDays, setHours, setMinutes } from 'date-fns';
-import { sv } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { TriageResult } from '@/types/intake';
+
+type BookingPhase = 
+  | 'selection'      
+  | 'calendar'       
+  | 'recommendations'
+  | 'all'            
+  | 'confirm';       
 
 interface BookingStepProps {
   currentStep: number;
   totalSteps: number;
-  onNext: (appointmentDate: Date) => void;
+  onComplete: () => void;
   onBack: () => void;
   onSkip: () => void;
   isLoading?: boolean;
   triageResult?: TriageResult;
 }
 
-const timeSlots = [
-  { hour: 9, minute: 0 },
-  { hour: 10, minute: 0 },
-  { hour: 11, minute: 0 },
-  { hour: 13, minute: 0 },
-  { hour: 14, minute: 0 },
-  { hour: 15, minute: 0 },
-  { hour: 16, minute: 0 },
-];
-
 export function BookingStep({
   currentStep,
   totalSteps,
-  onNext,
+  onComplete,
   onBack,
   onSkip,
   isLoading = false,
   triageResult = 'dietist',
 }: BookingStepProps) {
+  const { bookAppointment } = useAppointments();
+  const [phase, setPhase] = useState<BookingPhase>('selection');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedTime, setSelectedTime] = useState<{ hour: number; minute: number } | null>(null);
+  const [selectedDietitian, setSelectedDietitian] = useState<DietitianProfile | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
-  const isDietist = triageResult === 'dietist';
-  const providerLabel = isDietist ? 'dietist' : 'kostrådgivare';
-  const Icon = isDietist ? Video : Heart;
-
-  const handleNext = () => {
-    if (selectedDate && selectedTime) {
-      const appointmentDate = setMinutes(
-        setHours(selectedDate, selectedTime.hour),
-        selectedTime.minute
-      );
-      onNext(appointmentDate);
+  const handlePhaseBack = () => {
+    switch (phase) {
+      case 'calendar':
+        setPhase('selection');
+        break;
+      case 'recommendations':
+        setPhase('calendar');
+        break;
+      case 'all':
+        setPhase('selection');
+        break;
+      case 'selection':
+        onBack();
+        break;
+      default:
+        break;
     }
   };
 
-  const isNextDisabled = !selectedDate || !selectedTime;
+  const handleRecommend = () => {
+    setPhase('calendar');
+  };
 
-  return (
-    <StepLayout
-      currentStep={currentStep}
-      totalSteps={totalSteps}
-      title={`Boka ditt första samtal med ${providerLabel}`}
-      onBack={onBack}
-      onNext={handleNext}
-      nextDisabled={isNextDisabled}
-      nextLabel="Bekräfta bokning"
-      isLoading={isLoading}
-    >
-      <div className="space-y-6">
-        {/* Video call info */}
-        <div className={cn(
-          "flex items-center gap-3 p-4 rounded-xl",
-          isDietist ? "bg-primary-soft" : "bg-accent/10"
-        )}>
-          <div className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center",
-            isDietist ? "bg-primary/10" : "bg-accent/20"
-          )}>
-            <Icon className={cn(
-              "w-5 h-5",
-              isDietist ? "text-primary" : "text-accent"
-            )} />
-          </div>
-          <div>
-            <p className="font-medium text-foreground">
-              {isDietist ? 'Videosamtal med dietist' : 'Samtal med kostrådgivare'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {isDietist ? '30 minuter • 0 kr' : '30 minuter • från 100 kr'}
-            </p>
+  const handleShowAll = () => {
+    setPhase('all');
+  };
+
+  const handleDateSelected = () => {
+    if (selectedDate) {
+      setPhase('recommendations');
+    }
+  };
+
+  const handleSelectDietitian = (dietitian: DietitianProfile) => {
+    setSelectedDietitian(dietitian);
+    setSheetOpen(true);
+  };
+
+  const handleBook = async (dietitian: DietitianProfile, date: Date, slot: TimeSlot) => {
+    const appointmentDate = new Date(date);
+    appointmentDate.setHours(slot.hour, slot.minute, 0, 0);
+
+    const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
+
+    if (result) {
+      setSelectedDietitian(dietitian);
+      setSelectedDate(date);
+      setSelectedSlot(slot);
+      setSheetOpen(false);
+      setPhase('confirm');
+    }
+  };
+
+  const handleConfirmComplete = () => {
+    onComplete();
+  };
+
+  // Render based on current phase
+  switch (phase) {
+    case 'selection':
+      return (
+        <div className="min-h-screen bg-background">
+          <DietitianSelectionStep
+            onBack={handlePhaseBack}
+            onRecommend={handleRecommend}
+            onShowAll={handleShowAll}
+          />
+          <div className="px-4 pb-6">
+            <Button
+              variant="ghost"
+              onClick={onSkip}
+              className="w-full text-muted-foreground"
+            >
+              Boka senare
+            </Button>
           </div>
         </div>
+      );
 
-        {/* Calendar */}
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => {
-                setSelectedDate(date);
-                setSelectedTime(null);
-              }}
-              disabled={(date) => date < new Date() || date > addDays(new Date(), 30)}
-              locale={sv}
-              className="pointer-events-auto"
-            />
-          </CardContent>
-        </Card>
+    case 'calendar':
+      return (
+        <DietitianCalendarStep
+          selectedDate={selectedDate}
+          onDateSelect={setSelectedDate}
+          onBack={handlePhaseBack}
+          onNext={handleDateSelected}
+        />
+      );
 
-        {/* Time Slots */}
-        {selectedDate && (
-          <div className="space-y-3 animate-fade-in">
-            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Tillgängliga tider {format(selectedDate, "d MMMM", { locale: sv })}
-            </h2>
-            <div className="grid grid-cols-3 gap-2">
-              {timeSlots.map((slot) => {
-                const isSelected = selectedTime?.hour === slot.hour && selectedTime?.minute === slot.minute;
-                return (
-                  <Button
-                    key={`${slot.hour}-${slot.minute}`}
-                    variant={isSelected ? "default" : "outline"}
-                    onClick={() => setSelectedTime(slot)}
-                    className={cn(
-                      "h-12",
-                      isSelected && "ring-2 ring-primary ring-offset-2"
-                    )}
-                  >
-                    {String(slot.hour).padStart(2, "0")}:{String(slot.minute).padStart(2, "0")}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+    case 'recommendations':
+      return (
+        <>
+          <DietitianRecommendations
+            selectedDate={selectedDate!}
+            onBack={handlePhaseBack}
+            onSelectDietitian={handleSelectDietitian}
+            onShowAll={handleShowAll}
+          />
+          <DietitianDetailSheet
+            dietitian={selectedDietitian}
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}
+            onBook={handleBook}
+            initialDate={selectedDate}
+          />
+        </>
+      );
 
-        {/* Selected summary */}
-        {selectedDate && selectedTime && (
-          <Card className={cn(
-            "animate-fade-in",
-            isDietist ? "border-primary/30 bg-primary/5" : "border-accent/30 bg-accent/5"
-          )}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center",
-                isDietist ? "bg-primary" : "bg-accent"
-              )}>
-                <Check className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground capitalize">
-                  {format(selectedDate, "EEEE d MMMM", { locale: sv })}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  kl. {String(selectedTime.hour).padStart(2, "0")}:{String(selectedTime.minute).padStart(2, "0")}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+    case 'all':
+      return (
+        <>
+          <DietitianList
+            onBack={handlePhaseBack}
+            onSelectDietitian={handleSelectDietitian}
+          />
+          <DietitianDetailSheet
+            dietitian={selectedDietitian}
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}
+            onBook={handleBook}
+            initialDate={selectedDate}
+          />
+        </>
+      );
 
-        {/* Warning */}
-        <Card className="border-accent/30 bg-accent/5">
-          <CardContent className="p-4 flex gap-3">
-            <AlertTriangle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium text-foreground">Observera</p>
-              <p className="text-muted-foreground">
-                No-show debiteras med 275 kr. Avboka senast 24h innan.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+    case 'confirm':
+      return (
+        <BookingConfirmation
+          dietitian={selectedDietitian!}
+          date={selectedDate!}
+          slot={selectedSlot!}
+          onGoHome={handleConfirmComplete}
+        />
+      );
 
-        {/* Skip option */}
-        <Button
-          variant="ghost"
-          onClick={onSkip}
-          className="w-full text-muted-foreground"
-        >
-          Boka senare
-        </Button>
-      </div>
-    </StepLayout>
-  );
+    default:
+      return null;
+  }
 }
