@@ -184,7 +184,7 @@ export function EatingDisorderProgress({ data }: EatingDisorderProgressProps) {
                 onClick={() => navigate('/messages')}
               >
                 <MessageSquare className="w-4 h-4" />
-                Anteckningar
+                Chatta
               </Button>
             </div>
           </CardContent>
