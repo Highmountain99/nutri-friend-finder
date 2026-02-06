@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { StepLayout } from './StepLayout';
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ReviewsStepProps {
@@ -51,12 +51,12 @@ export function ReviewsStep({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev > 0 ? prev - 1 : reviews.length - 1));
+  const goToPrev = () => {
+    setActiveIndex((prev) => (prev > 0 ? prev - 1 : 0));
   };
 
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev < reviews.length - 1 ? prev + 1 : 0));
+  const goToNext = () => {
+    setActiveIndex((prev) => (prev < reviews.length - 1 ? prev + 1 : reviews.length - 1));
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -69,9 +69,9 @@ export function ReviewsStep({
     const diff = touchStart - touchEnd;
     if (Math.abs(diff) > 50) {
       if (diff > 0) {
-        handleNext();
+        goToNext();
       } else {
-        handlePrev();
+        goToPrev();
       }
     }
     setTouchStart(null);
@@ -102,7 +102,7 @@ export function ReviewsStep({
                 key={review.id}
                 className="w-full flex-shrink-0 px-1"
               >
-                <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+                <div className="bg-card border border-border rounded-2xl p-6 space-y-4 min-h-[200px] flex flex-col">
                   {/* Stars */}
                   <div className="flex gap-1">
                     {[...Array(review.rating)].map((_, i) => (
@@ -114,12 +114,12 @@ export function ReviewsStep({
                   </div>
 
                   {/* Review text */}
-                  <p className="text-foreground leading-relaxed">
+                  <p className="text-foreground leading-relaxed flex-1">
                     "{review.text}"
                   </p>
 
                   {/* Author */}
-                  <div className="flex justify-between items-center text-sm text-muted-foreground">
+                  <div className="flex justify-between items-center text-sm text-muted-foreground mt-auto">
                     <span className="font-medium">{review.name}</span>
                     <span>{review.date}</span>
                   </div>
@@ -127,22 +127,6 @@ export function ReviewsStep({
               </div>
             ))}
           </div>
-
-          {/* Navigation arrows */}
-          <button
-            onClick={handlePrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow-md hover:bg-background transition-colors"
-            aria-label="Föregående recension"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={handleNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 p-2 bg-background/80 rounded-full shadow-md hover:bg-background transition-colors"
-            aria-label="Nästa recension"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
         </div>
 
         {/* Dots indicator */}
