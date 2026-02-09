@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Clock, CreditCard } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { TimeSlotPicker } from "@/components/booking/TimeSlotPicker";
 import { TimeSlot } from "@/types/dietitian";
 import { useDietitianAvailability } from "@/hooks/useDietitianAvailability";
-import { useBookingCheckout } from "@/hooks/useBookingCheckout";
+import { useAppointments } from "@/hooks/useAppointments";
 import { format, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 
@@ -27,7 +27,7 @@ interface ChatBookingSheetProps {
 }
 
 export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingSheetProps) {
-  const { createCheckoutFromSlot, loading: checkoutLoading } = useBookingCheckout();
+  const { bookAppointment, cancelUpcomingBookedAppointments, saving: bookingLoading } = useAppointments();
 
   const [phase, setPhase] = useState<BookingPhase>('calendar');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -73,17 +73,13 @@ export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingS
   const handleBook = async () => {
     if (!dietitian || !selectedDate || !selectedSlot) return;
     
-    const dietitianName = `${dietitian.firstName} ${dietitian.lastName}`;
-    const success = await createCheckoutFromSlot(
-      dietitian.id,
-      dietitianName,
-      selectedDate,
-      selectedSlot,
-      'video'
-    );
+    const appointmentDate = new Date(selectedDate);
+    appointmentDate.setHours(selectedSlot.hour, selectedSlot.minute, 0, 0);
 
-    if (success) {
-      // Close sheet - user will be redirected to Stripe
+    await cancelUpcomingBookedAppointments();
+    const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
+
+    if (result) {
       handleClose();
     }
   };
@@ -206,16 +202,9 @@ export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingS
                 size="lg"
                 className="w-full mt-4"
                 onClick={handleBook}
-                disabled={checkoutLoading}
+                disabled={bookingLoading}
               >
-                {checkoutLoading ? (
-                  "Förbereder..."
-                ) : (
-                  <>
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Bekräfta bokning
-                  </>
-                )}
+                {bookingLoading ? "Bokar..." : "Bekräfta bokning"}
               </Button>
             )}
           </div>
