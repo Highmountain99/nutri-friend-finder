@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Globe, Calendar as CalendarIcon, CreditCard } from "lucide-react";
+import { Globe, Calendar as CalendarIcon } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TimeSlotPicker } from "./TimeSlotPicker";
 import { DietitianProfile, specializationLabels, languageLabels, TimeSlot } from "@/types/dietitian";
 import { useDietitianAvailability } from "@/hooks/useDietitianAvailability";
-import { useBookingCheckout } from "@/hooks/useBookingCheckout";
+import { useAppointments } from "@/hooks/useAppointments";
 import { sv } from "date-fns/locale";
 import { format, addDays } from "date-fns";
 
@@ -39,7 +39,7 @@ export function DietitianDetailSheet({
     dietitian?.id,
     selectedDate
   );
-  const { createCheckoutFromSlot, loading: checkoutLoading } = useBookingCheckout();
+  const { bookAppointment, cancelUpcomingBookedAppointments, saving: bookingLoading } = useAppointments();
 
   useEffect(() => {
     if (initialDate) {
@@ -58,17 +58,13 @@ export function DietitianDetailSheet({
 
   const handleBook = async () => {
     if (selectedDate && selectedSlot) {
-      const dietitianName = `${dietitian.firstName} ${dietitian.lastName}`;
-      const success = await createCheckoutFromSlot(
-        dietitian.id,
-        dietitianName,
-        selectedDate,
-        selectedSlot,
-        'video'
-      );
+      const appointmentDate = new Date(selectedDate);
+      appointmentDate.setHours(selectedSlot.hour, selectedSlot.minute, 0, 0);
 
-      if (success) {
-        // Close sheet - user will be redirected to Stripe checkout
+      await cancelUpcomingBookedAppointments();
+      const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
+
+      if (result) {
         onOpenChange(false);
       }
     }
@@ -162,27 +158,17 @@ export function DietitianDetailSheet({
             </div>
           )}
 
-          {/* Info about card requirement */}
-          <div className="bg-muted rounded-xl p-4">
-            <p className="text-sm text-muted-foreground">
-              <strong>Besöket kostar 0 kr.</strong> Vi behöver dina kortuppgifter för eventuell no-show-avgift på 275 kr om du uteblir utan att avboka.
-            </p>
-          </div>
-
           {/* Book Button */}
           <Button
             size="lg"
             className="w-full"
-            disabled={!selectedDate || !selectedSlot || checkoutLoading}
+            disabled={!selectedDate || !selectedSlot || bookingLoading}
             onClick={handleBook}
           >
-            {checkoutLoading ? (
-              "Förbereder..."
+            {bookingLoading ? (
+              "Bokar..."
             ) : selectedSlot ? (
-              <>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Bekräfta bokning
-              </>
+              'Bekräfta bokning'
             ) : (
               'Välj tid för att boka'
             )}
