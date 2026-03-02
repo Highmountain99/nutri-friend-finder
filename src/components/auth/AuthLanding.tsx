@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BankIdLogo } from "./BankIdLogo";
 import { OnboardingModal } from "./OnboardingModal";
@@ -8,6 +8,7 @@ import { LoginSheet } from "./LoginSheet";
 export function AuthLanding() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white flex flex-col safe-area-inset">
@@ -60,6 +61,14 @@ export function AuthLanding() {
           </Link>
           .
         </p>
+
+        <button
+          onClick={() => navigate("/dietitian")}
+          className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+        >
+          Logga in som dietist
+        </button>
+        
       </div>
 
       {/* Modals */}
