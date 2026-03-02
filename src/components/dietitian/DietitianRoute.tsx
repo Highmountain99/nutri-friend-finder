@@ -28,7 +28,7 @@ export function DietitianRoute() {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/dietitian/login" replace />;
   if (!isDietist) return <Navigate to="/" replace />;
 
   return <Outlet />;

@@ -63,7 +63,7 @@ export function AuthLanding() {
         </p>
 
         <button
-          onClick={() => navigate("/dietitian")}
+          onClick={() => navigate("/dietitian/login")}
           className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
         >
           Logga in som dietist
