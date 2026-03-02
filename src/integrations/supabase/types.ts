@@ -453,6 +453,36 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_progress_config: {
+        Row: {
+          concern_category_override: string | null
+          created_at: string | null
+          dietitian_id: string
+          id: string
+          patient_id: string
+          updated_at: string | null
+          visible_metrics: string[] | null
+        }
+        Insert: {
+          concern_category_override?: string | null
+          created_at?: string | null
+          dietitian_id: string
+          id?: string
+          patient_id: string
+          updated_at?: string | null
+          visible_metrics?: string[] | null
+        }
+        Update: {
+          concern_category_override?: string | null
+          created_at?: string | null
+          dietitian_id?: string
+          id?: string
+          patient_id?: string
+          updated_at?: string | null
+          visible_metrics?: string[] | null
+        }
+        Relationships: []
+      }
       recipe_import_queue: {
         Row: {
           created_at: string
@@ -531,6 +561,7 @@ export type Database = {
           carbs_per_serving: number | null
           category: string | null
           created_at: string | null
+          created_by: string | null
           cuisine_types: string[] | null
           description: string | null
           dietary_needs: string[] | null
@@ -562,6 +593,7 @@ export type Database = {
           carbs_per_serving?: number | null
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
           cuisine_types?: string[] | null
           description?: string | null
           dietary_needs?: string[] | null
@@ -593,6 +625,7 @@ export type Database = {
           carbs_per_serving?: number | null
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
           cuisine_types?: string[] | null
           description?: string | null
           dietary_needs?: string[] | null
