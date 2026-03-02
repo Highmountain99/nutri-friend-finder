@@ -26,6 +26,15 @@ import SEBForsakring from "./pages/SEBForsakring";
 import Admin from "./pages/Admin";
 import MeetingHistory from "./pages/MeetingHistory";
 import BookingSuccess from "./pages/BookingSuccess";
+import { DietitianRoute } from "@/components/dietitian/DietitianRoute";
+import { DietitianLayout } from "@/components/dietitian/DietitianLayout";
+import DietitianDashboard from "./pages/dietitian/DietitianDashboard";
+import DietitianPatients from "./pages/dietitian/DietitianPatients";
+import DietitianPatientDetail from "./pages/dietitian/DietitianPatientDetail";
+import DietitianSchedule from "./pages/dietitian/DietitianSchedule";
+import DietitianRecipes from "./pages/dietitian/DietitianRecipes";
+import DietitianMessages from "./pages/dietitian/DietitianMessages";
+import DietitianProfile from "./pages/dietitian/DietitianProfile";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +77,18 @@ const App = () => (
                 <Route path="/seb-forsakring" element={<SEBForsakring />} />
                 <Route path="/meeting-history" element={<MeetingHistory />} />
                 <Route path="/admin" element={<Admin />} />
+              </Route>
+            </Route>
+            {/* Dietitian dashboard routes */}
+            <Route element={<DietitianRoute />}>
+              <Route element={<DietitianLayout />}>
+                <Route path="/dietitian" element={<DietitianDashboard />} />
+                <Route path="/dietitian/patients" element={<DietitianPatients />} />
+                <Route path="/dietitian/patients/:id" element={<DietitianPatientDetail />} />
+                <Route path="/dietitian/schedule" element={<DietitianSchedule />} />
+                <Route path="/dietitian/recipes" element={<DietitianRecipes />} />
+                <Route path="/dietitian/messages" element={<DietitianMessages />} />
+                <Route path="/dietitian/profile" element={<DietitianProfile />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
