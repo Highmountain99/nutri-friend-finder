@@ -68,11 +68,26 @@ export function mapDbToDietitianProfile(db: DbDietitianProfile): DietitianProfil
 }
 
 export function mapDbToDietitianAvailability(db: DbDietitianAvailability): DietitianAvailability {
+  const rawSlots = db.time_slots || [];
+  const timeSlots: TimeSlot[] = rawSlots.map((slot: any) => {
+    // Handle string format "HH:MM" from dietitian schedule
+    if (typeof slot === 'string') {
+      const [h, m] = slot.split(':').map(Number);
+      return { hour: h, minute: m || 0, booked: false };
+    }
+    // Already a TimeSlot object
+    return {
+      hour: Number(slot.hour),
+      minute: Number(slot.minute) || 0,
+      booked: Boolean(slot.booked),
+    };
+  });
+
   return {
     id: db.id,
     dietitianId: db.dietitian_id,
     availableDate: new Date(db.available_date),
-    timeSlots: db.time_slots || [],
+    timeSlots,
     createdAt: new Date(db.created_at),
   };
 }
