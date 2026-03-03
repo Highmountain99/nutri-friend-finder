@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, Video } from "lucide-react";
+import { Loader2, Plus, Trash2, Video, Clock } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState } from "react";
@@ -109,11 +109,11 @@ export default function DietitianSchedule() {
                         return (
                           <div
                             key={day.toISOString()}
-                            className={`border-l p-1 min-h-[48px] ${hasSlot && !apptAtHour ? "bg-muted/30" : ""}`}
+                            className={`border-l p-1 min-h-[48px] relative ${hasSlot && !apptAtHour ? "bg-primary/5" : ""}`}
                           >
-                            {apptAtHour && (
+                            {apptAtHour ? (
                               <div
-                                className={`text-xs p-1 rounded ${
+                                className={`text-xs p-1.5 rounded ${
                                   apptAtHour.appointment_type === "initial"
                                     ? "bg-primary/15 text-primary"
                                     : "bg-blue-100 text-blue-700"
@@ -124,7 +124,12 @@ export default function DietitianSchedule() {
                                 </p>
                                 <p className="truncate">Pat. {apptAtHour.user_id?.slice(0, 6)}</p>
                               </div>
-                            )}
+                            ) : hasSlot ? (
+                              <div className="flex items-center gap-1 text-xs text-primary/60 p-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                                <span className="hidden xl:inline">Ledig</span>
+                              </div>
+                            ) : null}
                           </div>
                         );
                       })}
@@ -163,8 +168,9 @@ export default function DietitianSchedule() {
                             </Badge>
                           </div>
                         ) : hasSlot ? (
-                          <div className="p-2 rounded border border-dashed border-muted-foreground/30 text-xs text-muted-foreground">
-                            Ledig tid
+                          <div className="p-2 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary/70 flex items-center gap-2">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>Ledig tid</span>
                           </div>
                         ) : null}
                       </div>
