@@ -2,59 +2,123 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
-  UtensilsCrossed,
   MessageSquare,
-  UserCircle,
+  BarChart3,
+  Settings,
   LogOut,
+  ChevronsUpDown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDietitianProfile } from "@/hooks/dietitian/useDietitianProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const items = [
-  { title: "Översikt", url: "/dietitian", icon: LayoutDashboard },
+  { title: "Översikt", url: "/dietitian", icon: LayoutDashboard, end: true },
   { title: "Patienter", url: "/dietitian/patients", icon: Users },
-  { title: "Schema", url: "/dietitian/schedule", icon: CalendarDays },
-  { title: "Recept", url: "/dietitian/recipes", icon: UtensilsCrossed },
+  { title: "Kalender", url: "/dietitian/schedule", icon: CalendarDays },
   { title: "Meddelanden", url: "/dietitian/messages", icon: MessageSquare },
-  { title: "Min profil", url: "/dietitian/profile", icon: UserCircle },
+  { title: "Statistik", url: "/dietitian/statistics", icon: BarChart3 },
+  { title: "Inställningar", url: "/dietitian/profile", icon: Settings },
 ];
 
 export function DietitianSidebar() {
   const { signOut } = useAuth();
+  const { data: profile } = useDietitianProfile();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
+
+  const initials = profile
+    ? `${profile.first_name?.[0] ?? ""}${profile.last_name?.[0] ?? ""}`
+    : "D";
 
   return (
-    <nav className="w-60 shrink-0 border-r border-border bg-card flex flex-col h-screen sticky top-0">
-      <div className="px-5 py-6">
-        <span className="text-sm font-bold tracking-wide text-foreground uppercase">
-          EatSuite Pro
-        </span>
-      </div>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        {!collapsed ? (
+          <span className="text-sm font-bold tracking-wide text-sidebar-foreground uppercase">
+            EatSuite Pro
+          </span>
+        ) : (
+          <span className="text-xs font-bold text-sidebar-foreground">ES</span>
+        )}
+      </SidebarHeader>
 
-      <ul className="flex-1 space-y-1 px-3">
-        {items.map((item) => (
-          <li key={item.title}>
-            <NavLink
-              to={item.url}
-              end={item.url === "/dietitian"}
-              className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              activeClassName="bg-primary/10 text-primary font-medium"
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.title}</span>
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end={item.end}
+                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      activeClassName="bg-sidebar-primary/10 text-sidebar-primary font-medium"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-      <div className="border-t border-border p-3">
-        <button
-          onClick={() => signOut()}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Logga ut</span>
-        </button>
-      </div>
-    </nav>
+      <SidebarFooter className="border-t border-sidebar-border p-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors">
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarImage src={profile?.avatar_url ?? undefined} />
+                <AvatarFallback className="bg-sidebar-primary/10 text-sidebar-primary text-xs">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              {!collapsed && (
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {profile ? `${profile.first_name} ${profile.last_name}` : "Dietist"}
+                  </p>
+                  <p className="text-xs text-sidebar-foreground/60 truncate">
+                    {profile?.title ?? "Leg. dietist"}
+                  </p>
+                </div>
+              )}
+              {!collapsed && <ChevronsUpDown className="h-4 w-4 text-sidebar-foreground/40" />}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" className="w-48">
+            <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logga ut
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
