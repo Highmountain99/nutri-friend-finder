@@ -1,153 +1,122 @@
 
 
-# Dietistens Dashboard -- Fullständig ombyggnad
+# Koppla ihop Patient-app och Dietist-dashboard
 
-## Nuläge
+## Analys: Befintligt vs Nytt
 
-Det finns redan en grundläggande dietist-dashboard med sidebar, patientlista, schema, meddelanden, recept och profil. Befintliga databastabeller inkluderar `dietitian_profiles`, `appointments`, `dietist_patient_assignments`, `intake_profiles`, `chat_messages`, m.fl. Dessa ska återanvändas -- inte dupliceras.
+Mycket av det du beskriver finns redan i databasen. Jag behöver **inte** skapa tabellerna `food_logs`, `health_profiles`, `weight_history`, `conversations`, `messages`, `recipes`, `patient_favorites` -- dessa existerar redan som `nutrition_entries`, `user_nutrition_settings`, `health_tracking_entries`, `chat_messages`, `recipes`, `user_favorite_recipes`.
 
-## Vad som behöver byggas
+**Nya tabeller som faktiskt behövs:**
+- `treatment_plans` -- behandlingsplaner
+- `treatment_goals` -- mål inom en plan
+- `treatment_milestones` -- delmål/milstolpar
 
-Arbetet delas upp i **6 implementeringssteg** som byggs sekventiellt:
+**Schemaändringar på befintliga tabeller:**
+- Lägg till `read_at` (timestamptz) på `chat_messages` för läst-kvittens
+- Lägg till `fiber` (numeric) på `nutrition_entries` (saknas idag)
 
----
-
-### Steg 1: Nya databastabeller + seed-data
-
-Tre nya tabeller behövs (de andra finns redan):
-
-- **`dietitian_journal_entries`** -- journalanteckningar (patient_id, dietitian_id, appointment_id nullable, anamnesis, assessment, action, next_steps, created_at, updated_at)
-- **`dietitian_notes`** -- snabbanteckningar per patient (patient_id, dietitian_id, content, created_at, updated_at)
-- **`patient_documents`** -- uppladdade filer (patient_id, uploaded_by, file_name, file_url, file_type, created_at)
-
-RLS-policyer: dietist kan CRUD egna journalanteckningar/anteckningar för tilldelade patienter. Patienter kan läsa sina egna journalanteckningar (read-only). Dokument kräver en storage bucket `patient-documents`.
-
-Seed-data via edge function eller insert-verktyget: 1 dietist "Sofia Ekström", 8 patienter med intake_profiles, bokningar, journalanteckningar.
-
----
-
-### Steg 2: Kollapserbar sidebar med avatar
-
-Ersätt nuvarande `DietitianSidebar` med Shadcn `Sidebar`-komponenten:
-- Ikoner: LayoutDashboard, Users, CalendarDays, MessageSquare, BarChart3, Settings
-- Kollapserbar (icon-mode)
-- Längst ner: dietistens avatar, namn, titel, utloggning
-- Hämta profildata via `useDietitianProfile`
-
-Uppdatera `DietitianLayout` att använda `SidebarProvider`.
+**Tabeller som INTE behövs** (redan finns):
+- `food_logs` → `nutrition_entries` har redan meal_type, meal_name, calories, protein, carbs, fat
+- `symptom_logs` → `symptom_entries` har redan user_id, meal_id (FK), description, entry_date
+- `messages`/`conversations` → `chat_messages` hanterar redan patient-dietist-chatt
+- `recipes` → finns redan med full struktur
+- `recipe_suggestions` → `user_recipe_interactions` med source='dietitian'
+- `patient_favorites` → `user_favorite_recipes`
+- `health_profiles` → `user_nutrition_settings` (height, weight, gender) + `intake_profiles` (concern data)
+- `weight_history` → `health_tracking_entries` med metric_type='weight'
 
 ---
 
-### Steg 3: Förbättrad översikt (dashboard)
+## Implementeringsplan (5 faser)
 
-Ny `DietitianDashboard`:
-- Hälsning med namn + datum
-- 4 statistikkort: Patienter idag, Aktiva totalt, Nästa besök, Beläggningsgrad
-- "Dagens schema" -- tidslinje med bokningskort (tid, patientnamn, besökstyp-badge, fokusområde, "Starta videosamtal"-knapp med tidsvillkor, "Visa profil")
-- "Kräver uppmärksamhet" -- patienter utan journal, missade besök, flaggade symptom
+### Fas 1: Databas + Behandlingsplaner
 
----
-
-### Steg 4: Patientlista + Patientprofil
-
-**Patientlista:** Tabell/kort-toggle, sökfält, filter (fokusområde, status). Kolumner: Namn, Fokusområde, Status, Nästa besök, Antal besök, Senaste kontakt.
-
-**Patientprofil (tvåkolumn-layout):**
-
-Vänster (65%):
-- Flik "Översikt": Kvalificeringsdata (från intake_profiles), pågående behandling, snabbanteckningar
-- Flik "Journal": Kronologisk lista med journalanteckningar, formulär för ny anteckning (SOAP-format)
-- Flik "Besök": Alla bokningar med status
-- Flik "Dokument": Drag-and-drop uppladdning, fillista
-
-Höger (35%):
-- Snabbinfo-kort (ålder, kön, registreringsdatum)
-- Kommande besök med countdown
-- Aktivitetslogg (senaste händelser)
-
----
-
-### Steg 5: Kalender
-
-Veckokalender-vy med dag-toggle. Visar tillgängliga tider och bokade besök. Färgkodning (nybesök grön, uppföljning blå, ledig ljusgrå). Sidebar "Dagens lista". Klick på bokning öppnar patient-snabbvy.
-
----
-
-### Steg 6: Statistik-sida
-
-Ny route `/dietitian/statistics`. KPI-kort (totala patienter, aktiva, behandlingstid, beläggningsgrad, förbättringsgrad). Grafer med Recharts: bokningar/vecka (stapel), patienttillväxt (linje), fokusområdesfördelning (cirkel).
-
----
-
-## Databasmigreringar
-
+**Migration:**
 ```sql
--- dietitian_journal_entries
-CREATE TABLE public.dietitian_journal_entries (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  patient_id uuid NOT NULL,
-  dietitian_id uuid NOT NULL,
-  appointment_id uuid REFERENCES public.appointments(id),
-  anamnesis text,
-  assessment text,
-  action text,
-  next_steps text,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-ALTER TABLE public.dietitian_journal_entries ENABLE ROW LEVEL SECURITY;
+-- Nya tabeller
+CREATE TABLE treatment_plans (id, patient_id, dietitian_id, title, description, status, created_at, archived_at);
+CREATE TABLE treatment_goals (id, plan_id FK, title, description, status, sort_order, planned_start, planned_end, notes, completed_at);
+CREATE TABLE treatment_milestones (id, goal_id FK, title, is_completed, completed_at, sort_order);
 
--- dietitian_notes (quick scratchpad)
-CREATE TABLE public.dietitian_notes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  patient_id uuid NOT NULL,
-  dietitian_id uuid NOT NULL,
-  content text NOT NULL DEFAULT '',
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-ALTER TABLE public.dietitian_notes ENABLE ROW LEVEL SECURITY;
+-- Schemaändringar
+ALTER TABLE chat_messages ADD COLUMN read_at timestamptz;
+ALTER TABLE nutrition_entries ADD COLUMN fiber numeric DEFAULT 0;
 
--- patient_documents
-CREATE TABLE public.patient_documents (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  patient_id uuid NOT NULL,
-  uploaded_by uuid NOT NULL,
-  file_name text NOT NULL,
-  file_url text NOT NULL,
-  file_type text,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE public.patient_documents ENABLE ROW LEVEL SECURITY;
-
--- Storage bucket
-INSERT INTO storage.buckets (id, name, public) VALUES ('patient-documents', 'patient-documents', false);
+-- RLS: dietist CRUD för tilldelade patienter, patient read-only
 ```
 
-Plus RLS policies for each table using `is_assigned_dietist()`.
+**UI:** Ny flik "Behandlingsplan" i patientprofilen med:
+- Skapa/redigera plan med mål och delmål
+- Expanderbara målkort med statusikoner och checkboxar
+- Progress bar i höger kolumn
+- Arkiverade planer kollapserbart
 
-## Nya filer
+### Fas 2: Kostdagbok-flik (Dietist ser patientdata)
 
-- `src/pages/dietitian/DietitianStatistics.tsx`
-- `src/components/dietitian/DietitianSidebar.tsx` (omskriven)
-- `src/components/dietitian/DietitianLayout.tsx` (uppdaterad)
-- `src/components/dietitian/PatientProfileSidebar.tsx`
-- `src/components/dietitian/JournalEntryForm.tsx`
-- `src/components/dietitian/DocumentUpload.tsx`
-- `src/components/dietitian/WeekCalendar.tsx`
-- `src/components/dietitian/VideoCallModal.tsx`
-- `src/hooks/dietitian/useJournalEntries.ts`
-- `src/hooks/dietitian/useDietitianNotes.ts`
-- `src/hooks/dietitian/usePatientDocuments.ts`
+Ny flik "Kostdagbok" i patientprofilen, läser från befintliga `nutrition_entries` + `symptom_entries`:
 
-Befintliga filer som skrivs om:
-- `DietitianDashboard.tsx`
-- `DietitianPatients.tsx`
-- `DietitianPatientDetail.tsx`
-- `DietitianSchedule.tsx`
-- `App.tsx` (ny route för statistics)
+- **Dagvy:** Datumväljare, måltidskort med ikon per typ, näringsvärden, symptom-badges
+- **Veckoöversikt:** Toggle dag/vecka, stapeldiagram (Recharts) med kalorier + symptomprickar, sammanfattningstabell
+- **Symptommönster-kort** i höger kolumn: topp 3 symptom, trendpilar, klickbar länk
+
+### Fas 3: Förbättrad Meddelanden-sida
+
+Skriv om `DietitianMessages.tsx` till tvåkolumn-layout:
+- Vänster: sökbar konversationslista med senaste meddelande, tidstämpel, oläst-badge
+- Höger: chatthistorik med daggrupperade tidstämplar, läst-kvittens
+- Sidebar: oläst-badge på Meddelanden-ikonen
+- Dashboard: obesvarade meddelanden >4h i "Kräver uppmärksamhet"
+
+Kräver: uppdatera `chat_messages` med `read_at` vid läsning, query för olästa räkningar.
+
+### Fas 4: Förbättrade Recept + Hälsoprofil
+
+**Recept:** Skriv om `DietitianRecipes.tsx`:
+- Rutnätsvy med kort (bild, titel, taggar, tid)
+- Toggle "Mina recept" / "Alla recept"
+- Förbättrad skapa-modal med bild-upload, dynamiska ingrediens-/instruktionsrader, kategorival
+- Föreslå till patient med meddelande + multi-select
+- Receptförslag-kort i patientprofilens höger kolumn
+
+**Hälsoprofil:** Utöka patientprofilens höger kolumn med data från `user_nutrition_settings` + `health_tracking_entries`:
+- Längd, vikt, BMI (beräknat)
+- Allergier, mediciner (från `intake_profiles.concern_tags` / `support_areas`)
+- Vikthistorik mini-graf
+- BMI-varning
+
+### Fas 5: Patient-sidan (Behandlingsplan + Receptförslag)
+
+- **Progress-sidan:** Visa aktiv behandlingsplan med mål, delmål, progress bar (read-only)
+- **Recept-sidan:** "Föreslagna av din dietist" sektion överst
+- **Bokning:** Verifiera att befintlig koppling via `appointments` fungerar korrekt
+
+---
+
+## Filer som skapas/ändras
+
+**Nya:**
+- `src/hooks/dietitian/useTreatmentPlan.ts`
+- `src/hooks/dietitian/usePatientFoodLog.ts`
+- `src/hooks/dietitian/useUnreadMessages.ts`
+- `src/components/dietitian/TreatmentPlanTab.tsx`
+- `src/components/dietitian/FoodLogTab.tsx`
+- `src/components/dietitian/SymptomPatternCard.tsx`
+
+**Ändrade:**
+- `DietitianPatientDetail.tsx` -- nya flikar + utökad höger kolumn
+- `DietitianMessages.tsx` -- tvåkolumn-layout, oläst-hantering
+- `DietitianRecipes.tsx` -- rutnät, alla recept, förbättrad modal
+- `DietitianSidebar.tsx` -- oläst-badge, Recept-länk (saknas)
+- `DietitianDashboard.tsx` -- obesvarade meddelanden i attention-sektion
+- `src/pages/Progress.tsx` -- behandlingsplan-vy
+
+## Seed-data
+
+Seed-data genereras via SQL INSERT (ej migration) efter tabellerna skapats: 8 patienter med kostdagbok, symptomloggningar, chatthistorik, recept, och behandlingsplaner.
+
+---
 
 ## Anmärkning
 
-Videosamtal implementeras som placeholder-modal. All text på svenska. Recharts används för statistikgrafer. Sidebar använder Shadcn Sidebar-komponenten med `collapsible="icon"`.
+Detta är ett stort arbete. Jag rekommenderar att vi bygger **fas 1 + 2 först** (behandlingsplaner + kostdagbok), sedan itererar med fas 3-5. Vill du köra alla faser i ett svep eller stegvis?
 
