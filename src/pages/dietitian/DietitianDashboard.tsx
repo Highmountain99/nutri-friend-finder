@@ -1,6 +1,7 @@
 import { useAssignedPatients } from "@/hooks/dietitian/useAssignedPatients";
 import { useDietitianSchedule } from "@/hooks/dietitian/useDietitianSchedule";
 import { useDietitianProfile } from "@/hooks/dietitian/useDietitianProfile";
+import { useUnreadMessages } from "@/hooks/dietitian/useUnreadMessages";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export default function DietitianDashboard() {
   const { data: patients } = useAssignedPatients();
   const { appointments } = useDietitianSchedule();
   const { data: profile } = useDietitianProfile();
+  const { data: unread } = useUnreadMessages();
   const [videoOpen, setVideoOpen] = useState(false);
 
   const now = new Date();

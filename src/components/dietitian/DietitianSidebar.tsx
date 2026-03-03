@@ -7,11 +7,13 @@ import {
   Settings,
   LogOut,
   ChevronsUpDown,
+  UtensilsCrossed,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDietitianProfile } from "@/hooks/dietitian/useDietitianProfile";
+import { useUnreadMessages } from "@/hooks/dietitian/useUnreadMessages";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sidebar,
@@ -36,7 +38,8 @@ const items = [
   { title: "Översikt", url: "/dietitian", icon: LayoutDashboard, end: true },
   { title: "Patienter", url: "/dietitian/patients", icon: Users },
   { title: "Kalender", url: "/dietitian/schedule", icon: CalendarDays },
-  { title: "Meddelanden", url: "/dietitian/messages", icon: MessageSquare },
+  { title: "Meddelanden", url: "/dietitian/messages", icon: MessageSquare, badgeKey: "messages" },
+  { title: "Recept", url: "/dietitian/recipes", icon: UtensilsCrossed },
   { title: "Statistik", url: "/dietitian/statistics", icon: BarChart3 },
   { title: "Inställningar", url: "/dietitian/profile", icon: Settings },
 ];
@@ -44,6 +47,7 @@ const items = [
 export function DietitianSidebar() {
   const { signOut } = useAuth();
   const { data: profile } = useDietitianProfile();
+  const { data: unread } = useUnreadMessages();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -77,7 +81,14 @@ export function DietitianSidebar() {
                       className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                       activeClassName="bg-sidebar-primary/10 text-sidebar-primary font-medium"
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
+                      <div className="relative shrink-0">
+                        <item.icon className="h-4 w-4" />
+                        {item.badgeKey === "messages" && (unread?.total ?? 0) > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                            {unread!.total > 99 ? "99+" : unread!.total}
+                          </span>
+                        )}
+                      </div>
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
