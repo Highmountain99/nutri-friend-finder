@@ -210,6 +210,80 @@ export type Database = {
           },
         ]
       }
+      dietitian_journal_entries: {
+        Row: {
+          action: string | null
+          anamnesis: string | null
+          appointment_id: string | null
+          assessment: string | null
+          created_at: string
+          dietitian_id: string
+          id: string
+          next_steps: string | null
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          action?: string | null
+          anamnesis?: string | null
+          appointment_id?: string | null
+          assessment?: string | null
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          next_steps?: string | null
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string | null
+          anamnesis?: string | null
+          appointment_id?: string | null
+          assessment?: string | null
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          next_steps?: string | null
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dietitian_journal_entries_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dietitian_notes: {
+        Row: {
+          content: string
+          created_at: string
+          dietitian_id: string
+          id: string
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dietitian_profiles: {
         Row: {
           avatar_url: string | null
@@ -450,6 +524,36 @@ export type Database = {
           meal_type?: string | null
           protein?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      patient_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          patient_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          patient_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          patient_id?: string
+          uploaded_by?: string
         }
         Relationships: []
       }

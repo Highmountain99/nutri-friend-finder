@@ -1,31 +1,106 @@
 import { useParams, Link } from "react-router-dom";
 import { usePatientJournal } from "@/hooks/dietitian/usePatientJournal";
 import { useDietitianChat } from "@/hooks/dietitian/useDietitianChat";
+import { useJournalEntries } from "@/hooks/dietitian/useJournalEntries";
+import { useDietitianNotes } from "@/hooks/dietitian/useDietitianNotes";
+import { usePatientDocuments } from "@/hooks/dietitian/usePatientDocuments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Send } from "lucide-react";
-import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, ArrowLeft, Send, Plus, Upload, FileText, Calendar, Clock, User } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
+
+const concernLabels: Record<string, string> = {
+  weight_loss: "Viktnedgång",
+  diabetes: "Diabetes",
+  gut_health: "Maghälsa / IBS",
+  general_health: "Allmän hälsa",
+  womens_health: "Kvinnohälsa",
+  emotional_eating: "Emotionellt ätande",
+  eating_disorder: "Ätstörning",
+  heart_health: "Hjärthälsa",
+};
+
+const motivationColors: Record<string, string> = {
+  excited: "bg-primary/10 text-primary",
+  curious: "bg-yellow-100 text-yellow-700",
+  hesitant: "bg-orange-100 text-orange-700",
+  not_ready: "bg-destructive/10 text-destructive",
+};
+
+const motivationLabels: Record<string, string> = {
+  excited: "Jag är taggad",
+  curious: "Nyfiken",
+  hesitant: "Tveksam",
+  not_ready: "Inte redo",
+};
+
+const activityLabels: Record<string, string> = {
+  sedentary: "Stillasittande",
+  lightly_active: "Lätt aktiv",
+  moderately_active: "Måttligt aktiv",
+  active: "Aktiv",
+  very_active: "Mycket aktiv",
+};
 
 export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
   const { meals, symptoms, healthTracking, goals, intakeProfile, isLoading } = usePatientJournal(id);
   const { messages, sendMessage } = useDietitianChat(id);
+  const { entries: journalEntries, addEntry } = useJournalEntries(id);
+  const { notes, upsertNote } = useDietitianNotes(id);
+  const { documents, uploadDocument } = usePatientDocuments(id);
+
   const [chatInput, setChatInput] = useState("");
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [showJournalForm, setShowJournalForm] = useState(false);
+  const [journalForm, setJournalForm] = useState({ anamnesis: "", assessment: "", action: "", next_steps: "" });
+  const [noteContent, setNoteContent] = useState("");
+  const [noteInitialized, setNoteInitialized] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.data]);
 
+  useEffect(() => {
+    if (notes.data && notes.data.length > 0 && !noteInitialized) {
+      setNoteContent(notes.data[0].content);
+      setNoteInitialized(true);
+    }
+  }, [notes.data, noteInitialized]);
+
   const handleSend = () => {
     if (!chatInput.trim()) return;
     sendMessage.mutate(chatInput.trim());
     setChatInput("");
+  };
+
+  const handleSaveJournal = () => {
+    addEntry.mutate(journalForm, {
+      onSuccess: () => {
+        setShowJournalForm(false);
+        setJournalForm({ anamnesis: "", assessment: "", action: "", next_steps: "" });
+      },
+    });
+  };
+
+  const handleSaveNote = useCallback(() => {
+    const existingNote = notes.data?.[0];
+    upsertNote.mutate({ id: existingNote?.id, content: noteContent });
+  }, [noteContent, notes.data, upsertNote]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadDocument.mutate(file);
   };
 
   if (isLoading) {
@@ -36,133 +111,345 @@ export default function DietitianPatientDetail() {
     );
   }
 
-  const concern = intakeProfile.data?.unified_concern_category || intakeProfile.data?.primary_concern_category;
+  const intake = intakeProfile.data;
+  const concern = intake?.unified_concern_category || intake?.primary_concern_category;
+  const appointments = meals; // reuse for count placeholder
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-7xl">
+      <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} />
+
+      {/* Header */}
       <div className="flex items-center gap-3">
         <Link to="/dietitian/patients">
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>
           <h1 className="text-xl font-bold">Patient {id?.slice(0, 8)}</h1>
-          {concern && <Badge variant="secondary" className="mt-1">{concern}</Badge>}
+          {concern && <Badge variant="secondary" className="mt-1">{concernLabels[concern] ?? concern}</Badge>}
         </div>
       </div>
 
-      {/* Nutrition goals */}
-      {goals.data && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Näringsmål</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-4 gap-4 text-center">
-              <div><p className="text-lg font-bold">{goals.data.calories_goal}</p><p className="text-xs text-muted-foreground">kcal</p></div>
-              <div><p className="text-lg font-bold">{goals.data.protein_goal}g</p><p className="text-xs text-muted-foreground">Protein</p></div>
-              <div><p className="text-lg font-bold">{goals.data.carbs_goal}g</p><p className="text-xs text-muted-foreground">Kolhydrater</p></div>
-              <div><p className="text-lg font-bold">{goals.data.fat_goal}g</p><p className="text-xs text-muted-foreground">Fett</p></div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+        {/* Left column */}
+        <div>
+          <Tabs defaultValue="overview">
+            <TabsList>
+              <TabsTrigger value="overview">Översikt</TabsTrigger>
+              <TabsTrigger value="journal">Journal</TabsTrigger>
+              <TabsTrigger value="visits">Besök</TabsTrigger>
+              <TabsTrigger value="documents">Dokument</TabsTrigger>
+              <TabsTrigger value="chat">Chatt</TabsTrigger>
+            </TabsList>
 
-      <Tabs defaultValue="meals">
-        <TabsList>
-          <TabsTrigger value="meals">Måltider</TabsTrigger>
-          <TabsTrigger value="symptoms">Symtom</TabsTrigger>
-          <TabsTrigger value="health">Hälsovärden</TabsTrigger>
-          <TabsTrigger value="chat">Chatt</TabsTrigger>
-        </TabsList>
+            {/* Overview tab */}
+            <TabsContent value="overview" className="space-y-4 mt-4">
+              {/* Intake profile card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Patientens profil från registrering</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {intake ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground text-xs">Söker vård för</p>
+                          <p className="font-medium">{intake.care_seeker_type === "self" ? "Sig själv" : "Annan person"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Primärt fokus</p>
+                          <Badge variant="secondary">{concernLabels[concern ?? ""] ?? concern}</Badge>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Aktivitetsnivå</p>
+                          <p className="font-medium">{activityLabels[intake.activity_level ?? ""] ?? intake.activity_level ?? "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Motivationsnivå</p>
+                          {intake.motivation_level && (
+                            <Badge className={`${motivationColors[intake.motivation_level]} border-0`}>
+                              {motivationLabels[intake.motivation_level]}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      {intake.support_areas && intake.support_areas.length > 0 && (
+                        <div>
+                          <p className="text-muted-foreground text-xs mb-1">Önskade stödområden</p>
+                          <div className="flex flex-wrap gap-1">
+                            {intake.support_areas.map((area) => (
+                              <Badge key={area} variant="outline" className="text-xs">{area}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Ingen kvalificeringsdata tillgänglig.</p>
+                  )}
+                </CardContent>
+              </Card>
 
-        <TabsContent value="meals" className="space-y-3 mt-4">
-          {!meals.data?.length ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">Inga måltider loggade ännu.</p>
-          ) : (
-            meals.data.map((m) => (
-              <Card key={m.id}>
-                <CardContent className="py-3">
-                  <div className="flex justify-between items-start">
+              {/* Nutrition goals */}
+              {goals.data && (
+                <Card>
+                  <CardHeader><CardTitle className="text-sm">Näringsmål</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-4 gap-4 text-center">
+                      <div><p className="text-lg font-bold">{goals.data.calories_goal}</p><p className="text-xs text-muted-foreground">kcal</p></div>
+                      <div><p className="text-lg font-bold">{goals.data.protein_goal}g</p><p className="text-xs text-muted-foreground">Protein</p></div>
+                      <div><p className="text-lg font-bold">{goals.data.carbs_goal}g</p><p className="text-xs text-muted-foreground">Kolhydrater</p></div>
+                      <div><p className="text-lg font-bold">{goals.data.fat_goal}g</p><p className="text-xs text-muted-foreground">Fett</p></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Quick notes */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Anteckningar</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Textarea
+                    placeholder="Skriv snabbanteckningar om patienten..."
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    rows={4}
+                  />
+                  <Button size="sm" onClick={handleSaveNote} disabled={upsertNote.isPending}>
+                    Spara
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Journal tab */}
+            <TabsContent value="journal" className="space-y-4 mt-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-semibold">Journalanteckningar</h3>
+                <Button size="sm" onClick={() => setShowJournalForm(!showJournalForm)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Ny anteckning
+                </Button>
+              </div>
+
+              {showJournalForm && (
+                <Card>
+                  <CardContent className="space-y-3 pt-4">
                     <div>
-                      <p className="text-sm font-medium">{m.meal_name || "Måltid"}</p>
-                      <p className="text-xs text-muted-foreground">{m.meal_type} · {format(new Date(m.entry_date), "d MMM", { locale: sv })}</p>
+                      <label className="text-xs font-medium text-muted-foreground">Anamnes</label>
+                      <Textarea value={journalForm.anamnesis} onChange={(e) => setJournalForm((p) => ({ ...p, anamnesis: e.target.value }))} rows={2} />
                     </div>
-                    <div className="text-right text-xs text-muted-foreground">
-                      <p>{m.calories} kcal</p>
-                      <p>P {m.protein}g · K {m.carbs}g · F {m.fat}g</p>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Bedömning</label>
+                      <Textarea value={journalForm.assessment} onChange={(e) => setJournalForm((p) => ({ ...p, assessment: e.target.value }))} rows={2} />
                     </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Åtgärd</label>
+                      <Textarea value={journalForm.action} onChange={(e) => setJournalForm((p) => ({ ...p, action: e.target.value }))} rows={2} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Nästa steg</label>
+                      <Textarea value={journalForm.next_steps} onChange={(e) => setJournalForm((p) => ({ ...p, next_steps: e.target.value }))} rows={2} />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleSaveJournal} disabled={addEntry.isPending}>Spara</Button>
+                      <Button size="sm" variant="outline" onClick={() => setShowJournalForm(false)}>Avbryt</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!journalEntries.data?.length ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">Inga journalanteckningar ännu.</p>
+              ) : (
+                journalEntries.data.map((entry) => (
+                  <Card key={entry.id}>
+                    <CardContent className="py-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(entry.created_at), "d MMMM yyyy, HH:mm", { locale: sv })}
+                        </p>
+                      </div>
+                      {entry.anamnesis && <div><p className="text-xs font-medium text-muted-foreground">Anamnes</p><p className="text-sm">{entry.anamnesis}</p></div>}
+                      {entry.assessment && <div><p className="text-xs font-medium text-muted-foreground">Bedömning</p><p className="text-sm">{entry.assessment}</p></div>}
+                      {entry.action && <div><p className="text-xs font-medium text-muted-foreground">Åtgärd</p><p className="text-sm">{entry.action}</p></div>}
+                      {entry.next_steps && <div><p className="text-xs font-medium text-muted-foreground">Nästa steg</p><p className="text-sm">{entry.next_steps}</p></div>}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
+            {/* Visits tab */}
+            <TabsContent value="visits" className="space-y-3 mt-4">
+              {!meals.data?.length ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">Inga måltider loggade ännu.</p>
+              ) : (
+                meals.data.map((m) => (
+                  <Card key={m.id}>
+                    <CardContent className="py-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-medium">{m.meal_name || "Måltid"}</p>
+                          <p className="text-xs text-muted-foreground">{m.meal_type} · {format(new Date(m.entry_date), "d MMM", { locale: sv })}</p>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground">
+                          <p>{m.calories} kcal</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
+            {/* Documents tab */}
+            <TabsContent value="documents" className="space-y-4 mt-4">
+              <div
+                className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file) uploadDocument.mutate(file);
+                }}
+              >
+                <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Dra och släpp filer här, eller klicka för att välja
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </div>
+
+              {documents.data?.map((doc) => (
+                <div key={doc.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                  <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.file_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(doc.created_at), "d MMM yyyy", { locale: sv })}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
+                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm">Öppna</Button>
+                  </a>
+                </div>
+              ))}
+            </TabsContent>
 
-        <TabsContent value="symptoms" className="space-y-3 mt-4">
-          {!symptoms.data?.length ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">Inga symtom rapporterade.</p>
-          ) : (
-            symptoms.data.map((s) => (
-              <Card key={s.id}>
-                <CardContent className="py-3">
-                  <p className="text-sm">{s.description}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(s.entry_date), "d MMM", { locale: sv })}
-                  </p>
+            {/* Chat tab */}
+            <TabsContent value="chat" className="mt-4">
+              <Card className="h-[400px] flex flex-col">
+                <CardContent className="flex-1 overflow-auto py-4 space-y-3">
+                  {messages.data?.map((m) => (
+                    <div key={m.id} className={`flex ${m.sender === "dietitian" ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
+                        m.sender === "dietitian"
+                          ? "bg-primary text-primary-foreground"
+                          : m.sender === "ai"
+                          ? "bg-muted text-muted-foreground italic"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}>
+                        {m.content}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={chatEndRef} />
                 </CardContent>
+                <div className="p-3 border-t flex gap-2">
+                  <Input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Skriv ett meddelande..."
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  />
+                  <Button size="icon" onClick={handleSend} disabled={sendMessage.isPending}>
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </Card>
-            ))
-          )}
-        </TabsContent>
+            </TabsContent>
+          </Tabs>
+        </div>
 
-        <TabsContent value="health" className="space-y-3 mt-4">
-          {!healthTracking.data?.length ? (
-            <p className="text-muted-foreground text-sm py-8 text-center">Inga hälsovärden loggade.</p>
-          ) : (
-            healthTracking.data.map((h) => (
-              <Card key={h.id}>
-                <CardContent className="py-3 flex justify-between">
+        {/* Right column */}
+        <div className="space-y-4">
+          {/* Quick info */}
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Snabbinfo</CardTitle></CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Patient-ID</span>
+                <span className="font-mono text-xs">{id?.slice(0, 12)}</span>
+              </div>
+              {intake?.completed_at && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Registrerad</span>
+                  <span>{format(new Date(intake.completed_at), "d MMM yyyy", { locale: sv })}</span>
+                </div>
+              )}
+              {concern && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Fokusområde</span>
+                  <Badge variant="secondary" className="text-xs">{concernLabels[concern] ?? concern}</Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Video call CTA */}
+          <Card>
+            <CardContent className="py-4">
+              <Button className="w-full" onClick={() => setVideoOpen(true)}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Starta videosamtal
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Activity log */}
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Aktivitetslogg</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {symptoms.data?.slice(0, 5).map((s) => (
+                <div key={s.id} className="flex items-start gap-2">
+                  <Clock className="h-3 w-3 text-muted-foreground mt-1 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium capitalize">{h.metric_type}</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(h.entry_date), "d MMM", { locale: sv })}</p>
-                  </div>
-                  <p className="text-sm font-semibold">{h.value} {h.unit}</p>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="chat" className="mt-4">
-          <Card className="h-[400px] flex flex-col">
-            <CardContent className="flex-1 overflow-auto py-4 space-y-3">
-              {messages.data?.map((m) => (
-                <div key={m.id} className={`flex ${m.sender === "dietitian" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
-                    m.sender === "dietitian"
-                      ? "bg-primary text-primary-foreground"
-                      : m.sender === "ai"
-                      ? "bg-muted text-muted-foreground italic"
-                      : "bg-secondary text-secondary-foreground"
-                  }`}>
-                    {m.content}
+                    <p className="text-xs">Symtom rapporterat: {s.description.slice(0, 40)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(s.created_at ?? s.entry_date), { addSuffix: true, locale: sv })}
+                    </p>
                   </div>
                 </div>
               ))}
-              <div ref={chatEndRef} />
+              {healthTracking.data?.slice(0, 3).map((h) => (
+                <div key={h.id} className="flex items-start gap-2">
+                  <Clock className="h-3 w-3 text-muted-foreground mt-1 shrink-0" />
+                  <div>
+                    <p className="text-xs">{h.metric_type}: {h.value} {h.unit}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(h.entry_date), { addSuffix: true, locale: sv })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {!symptoms.data?.length && !healthTracking.data?.length && (
+                <p className="text-xs text-muted-foreground text-center py-2">Ingen aktivitet ännu.</p>
+              )}
             </CardContent>
-            <div className="p-3 border-t flex gap-2">
-              <Input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Skriv ett meddelande..."
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              />
-              <Button size="icon" onClick={handleSend} disabled={sendMessage.isPending}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
