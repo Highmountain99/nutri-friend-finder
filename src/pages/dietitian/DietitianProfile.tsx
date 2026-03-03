@@ -1,19 +1,22 @@
 import { useDietitianProfile } from "@/hooks/dietitian/useDietitianProfile";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Save } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2, Save, Camera } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 export default function DietitianProfile() {
   const { data: profile, isLoading } = useDietitianProfile();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -35,6 +38,52 @@ export default function DietitianProfile() {
       });
     }
   }, [profile]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !profile) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Bara JPG, PNG eller WebP tillåts");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Bilden får inte vara större än 5 MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
+
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from("dietitian_profiles")
+        .update({ avatar_url: avatarUrl })
+        .eq("id", profile.id);
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["dietitian-profile"] });
+      toast.success("Profilbild uppdaterad!");
+    } catch (err: any) {
+      toast.error(err.message || "Kunde inte ladda upp bilden");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const updateProfile = useMutation({
     mutationFn: async () => {
@@ -75,6 +124,42 @@ export default function DietitianProfile() {
   return (
     <div className="space-y-6 max-w-2xl">
       <h1 className="text-2xl font-bold text-foreground">Min profil</h1>
+
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Profilbild</CardTitle></CardHeader>
+        <CardContent className="flex items-center gap-6">
+          <div className="relative group">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={profile.avatar_url ?? undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                {profile.first_name?.[0]}{profile.last_name?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              {uploading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-white" />
+              ) : (
+                <Camera className="h-5 w-5 text-white" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Ladda upp foto</p>
+            <p className="text-xs text-muted-foreground">JPG, PNG eller WebP. Max 5 MB.</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-sm">Personuppgifter</CardTitle></CardHeader>
