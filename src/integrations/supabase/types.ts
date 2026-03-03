@@ -102,6 +102,7 @@ export type Database = {
           escalated: boolean | null
           escalation_reason: string | null
           id: string
+          read_at: string | null
           sender: string
           user_id: string
         }
@@ -112,6 +113,7 @@ export type Database = {
           escalated?: boolean | null
           escalation_reason?: string | null
           id?: string
+          read_at?: string | null
           sender: string
           user_id: string
         }
@@ -122,6 +124,7 @@ export type Database = {
           escalated?: boolean | null
           escalation_reason?: string | null
           id?: string
+          read_at?: string | null
           sender?: string
           user_id?: string
         }
@@ -489,6 +492,7 @@ export type Database = {
           created_at: string | null
           entry_date: string
           fat: number | null
+          fiber: number | null
           id: string
           image_url: string | null
           is_ai_estimated: boolean | null
@@ -503,6 +507,7 @@ export type Database = {
           created_at?: string | null
           entry_date?: string
           fat?: number | null
+          fiber?: number | null
           id?: string
           image_url?: string | null
           is_ai_estimated?: boolean | null
@@ -517,6 +522,7 @@ export type Database = {
           created_at?: string | null
           entry_date?: string
           fat?: number | null
+          fiber?: number | null
           id?: string
           image_url?: string | null
           is_ai_estimated?: boolean | null
@@ -797,6 +803,127 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      treatment_goals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          notes: string | null
+          plan_id: string
+          planned_end: string | null
+          planned_start: string | null
+          sort_order: number
+          status: string
+          title: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          plan_id: string
+          planned_end?: string | null
+          planned_start?: string | null
+          sort_order?: number
+          status?: string
+          title: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          planned_end?: string | null
+          planned_start?: string | null
+          sort_order?: number
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_goals_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_milestones: {
+        Row: {
+          completed_at: string | null
+          goal_id: string
+          id: string
+          is_completed: boolean
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          completed_at?: string | null
+          goal_id: string
+          id?: string
+          is_completed?: boolean
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          completed_at?: string | null
+          goal_id?: string
+          id?: string
+          is_completed?: boolean
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_milestones_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_plans: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          description: string | null
+          dietitian_id: string
+          id: string
+          patient_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          description?: string | null
+          dietitian_id: string
+          id?: string
+          patient_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          description?: string | null
+          dietitian_id?: string
+          id?: string
+          patient_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_favorite_recipes: {
         Row: {
