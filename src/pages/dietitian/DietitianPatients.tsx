@@ -1,4 +1,4 @@
-import { useAssignedPatients } from "@/hooks/dietitian/useAssignedPatients";
+import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,9 @@ export default function DietitianPatients() {
     if (!search) return true;
     const q = search.toLowerCase();
     const concern = p.intake_profile?.primary_concern_category ?? "";
+    const name = getPatientDisplayName(p).toLowerCase();
     return (
+      name.includes(q) ||
       p.patient_id.toLowerCase().includes(q) ||
       (concernLabels[concern] ?? concern).toLowerCase().includes(q)
     );
@@ -106,7 +108,7 @@ export default function DietitianPatients() {
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                           <User className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="text-sm font-medium">Patient {p.patient_id.slice(0, 8)}</span>
+                        <span className="text-sm font-medium">{getPatientDisplayName(p)}</span>
                       </div>
                     </td>
                     <td className="p-3">
@@ -151,7 +153,7 @@ export default function DietitianPatients() {
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="h-5 w-5 text-primary" />
                       </div>
-                      <p className="text-sm font-medium">Patient {p.patient_id.slice(0, 8)}</p>
+                      <p className="text-sm font-medium">{getPatientDisplayName(p)}</p>
                     </div>
                     {concern && (
                       <Badge variant="secondary" className="text-xs">

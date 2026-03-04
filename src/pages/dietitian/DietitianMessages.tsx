@@ -1,4 +1,4 @@
-import { useAssignedPatients } from "@/hooks/dietitian/useAssignedPatients";
+import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
 import { useDietitianChat } from "@/hooks/dietitian/useDietitianChat";
 import { useUnreadMessages } from "@/hooks/dietitian/useUnreadMessages";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,9 +65,10 @@ export default function DietitianMessages() {
   const filteredPatients = useMemo(() => {
     if (!patients) return [];
     if (!searchQuery) return patients;
-    return patients.filter((p) =>
-      p.patient_id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return patients.filter((p) => {
+      const q = searchQuery.toLowerCase();
+      return p.patient_id.toLowerCase().includes(q) || getPatientDisplayName(p).toLowerCase().includes(q);
+    });
   }, [patients, searchQuery]);
 
   // Sort by unread count desc
@@ -140,7 +141,7 @@ export default function DietitianMessages() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Patient {p.patient_id.slice(0, 8)}</span>
+                        <span className="text-sm font-medium">{getPatientDisplayName(p)}</span>
                         {unreadCount > 0 && (
                           <span className="h-5 min-w-[20px] flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5">
                             {unreadCount}
@@ -171,7 +172,7 @@ export default function DietitianMessages() {
               {/* Chat header */}
               <div className="px-4 py-3 border-b flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">Patient {selectedPatient.slice(0, 8)}</span>
+                  <span className="font-medium text-sm">{selectedPatientData ? getPatientDisplayName(selectedPatientData) : `Patient ${selectedPatient.slice(0, 8)}`}</span>
                   {selectedConcern && (
                     <Badge variant="secondary" className="text-xs">{concernLabels[selectedConcern] ?? selectedConcern}</Badge>
                   )}
