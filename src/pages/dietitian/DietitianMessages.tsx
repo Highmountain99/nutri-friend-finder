@@ -4,8 +4,9 @@ import { useUnreadMessages } from "@/hooks/dietitian/useUnreadMessages";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, User, Search, Paperclip } from "lucide-react";
+import { Loader2, Send, User, Search, Paperclip, Check, Pencil, X, Bot } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -29,9 +30,11 @@ export default function DietitianMessages() {
   const { data: patients, isLoading } = useAssignedPatients();
   const { data: unread } = useUnreadMessages();
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-  const { messages, sendMessage } = useDietitianChat(selectedPatient ?? undefined);
+  const { messages, sendMessage, approveDraft, rejectAndReplace } = useDietitianChat(selectedPatient ?? undefined);
   const [input, setInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -187,29 +190,92 @@ export default function DietitianMessages() {
                       <span className="text-xs text-muted-foreground">{formatDateGroup(group.date)}</span>
                       <div className="h-px flex-1 bg-border" />
                     </div>
-                    {group.messages.map((m) => (
-                      <div key={m.id} className={`flex mb-2 ${m.sender === "dietitian" ? "justify-end" : "justify-start"}`}>
-                        <div className="max-w-[75%]">
-                          <div className={`px-3 py-2 rounded-xl text-sm ${
-                            m.sender === "dietitian" ? "bg-primary text-primary-foreground"
-                              : m.sender === "ai" ? "bg-muted text-muted-foreground italic"
-                              : "bg-secondary text-secondary-foreground"
-                          }`}>
-                            {m.content}
+                    {group.messages.filter((m) => (m as any).status !== 'rejected').map((m) => {
+                      const isDraft = (m as any).status === 'draft';
+                      const isEditing = editingDraftId === m.id;
+
+                      if (isDraft) {
+                        return (
+                          <div key={m.id} className="mb-3 mx-auto max-w-[85%]">
+                            <div className="border border-dashed border-primary/40 rounded-xl p-3 bg-primary/5 space-y-2">
+                              <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                                <Bot className="h-3.5 w-3.5" />
+                                AI-förslag till svar
+                              </div>
+                              {isEditing ? (
+                                <>
+                                  <Textarea
+                                    value={editedContent}
+                                    onChange={(e) => setEditedContent(e.target.value)}
+                                    rows={4}
+                                    className="text-sm"
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <Button variant="ghost" size="sm" onClick={() => setEditingDraftId(null)}>
+                                      <X className="h-3.5 w-3.5 mr-1" /> Avbryt
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => {
+                                        rejectAndReplace.mutate({ draftId: m.id, newContent: editedContent });
+                                        setEditingDraftId(null);
+                                      }}
+                                      disabled={!editedContent.trim() || rejectAndReplace.isPending}
+                                    >
+                                      <Send className="h-3.5 w-3.5 mr-1" /> Skicka
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-sm text-foreground whitespace-pre-wrap">{m.content}</p>
+                                  <div className="flex gap-2 justify-end">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => { setEditingDraftId(m.id); setEditedContent(m.content); }}
+                                    >
+                                      <Pencil className="h-3.5 w-3.5 mr-1" /> Redigera & skicka
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => approveDraft.mutate(m.id)}
+                                      disabled={approveDraft.isPending}
+                                    >
+                                      <Check className="h-3.5 w-3.5 mr-1" /> Godkänn & skicka
+                                    </Button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1 mt-0.5 px-1">
-                            <span className="text-[10px] text-muted-foreground">
-                              {format(new Date(m.created_at), "HH:mm")}
-                            </span>
-                            {m.sender === "dietitian" && (m as any).read_at && (
-                              <span className="text-[10px] text-primary">
-                                Läst {format(new Date((m as any).read_at), "HH:mm")}
+                        );
+                      }
+
+                      return (
+                        <div key={m.id} className={`flex mb-2 ${m.sender === "dietitian" ? "justify-end" : "justify-start"}`}>
+                          <div className="max-w-[75%]">
+                            <div className={`px-3 py-2 rounded-xl text-sm ${
+                              m.sender === "dietitian" ? "bg-primary text-primary-foreground"
+                                : m.sender === "ai" ? "bg-muted text-muted-foreground italic"
+                                : "bg-secondary text-secondary-foreground"
+                            }`}>
+                              {m.content}
+                            </div>
+                            <div className="flex items-center gap-1 mt-0.5 px-1">
+                              <span className="text-[10px] text-muted-foreground">
+                                {format(new Date(m.created_at), "HH:mm")}
                               </span>
-                            )}
+                              {m.sender === "dietitian" && (m as any).read_at && (
+                                <span className="text-[10px] text-primary">
+                                  Läst {format(new Date((m as any).read_at), "HH:mm")}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))}
                 <div ref={chatEndRef} />
