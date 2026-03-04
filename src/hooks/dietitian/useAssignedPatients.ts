@@ -70,12 +70,12 @@ export function useAssignedPatients() {
 
       // Fetch profiles
       const { data: profiles } = await supabase
-        .from("profiles" as any)
+        .from("profiles")
         .select("user_id, first_name, last_name")
         .in("user_id", patientIds);
 
       return assignments.map((a) => {
-        const profile = (profiles as any[])?.find((pr: any) => pr.user_id === a.patient_id);
+        const profile = profiles?.find((pr) => pr.user_id === a.patient_id);
         return {
           patient_id: a.patient_id,
           assigned_at: a.created_at,

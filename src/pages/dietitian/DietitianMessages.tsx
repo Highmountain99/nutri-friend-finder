@@ -122,7 +122,7 @@ export default function DietitianMessages() {
               />
             </div>
           </div>
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {sortedPatients.length === 0 ? (
               <p className="text-sm text-muted-foreground p-4 text-center">Inga patienter.</p>
             ) : (
@@ -183,7 +183,7 @@ export default function DietitianMessages() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-auto px-4 py-4 space-y-4">
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
                 {groupedMessages.map((group) => (
                   <div key={group.date}>
                     <div className="flex items-center gap-3 my-3">
