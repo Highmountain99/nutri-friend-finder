@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, Clock } from "lucide-react";
+import { Loader2, Plus, Trash2, Clock, X } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState, useEffect, useCallback } from "react";
@@ -73,6 +73,23 @@ export default function DietitianSchedule() {
     [existingSlots, dateStr, addAvailability]
   );
 
+  const removeSlot = useCallback(
+    (day: Date, slot: string) => {
+      const ds = format(day, "yyyy-MM-dd");
+      const avail = availability.data?.find((a) => a.available_date === ds);
+      if (!avail) return;
+      const currentSlots = avail.time_slots as string[];
+      const updated = currentSlots.filter((s) => s !== slot);
+      if (updated.length === 0) {
+        removeAvailability.mutate(avail.id);
+      } else {
+        addAvailability.mutate({ date: ds, slots: updated });
+      }
+      toast.success("Tid borttagen");
+    },
+    [availability.data, addAvailability, removeAvailability]
+  );
+
   const weekDrag = useDragSelect({ onSelectionComplete: handleWeekSelectionComplete });
   const dayDrag = useDragSelect({ onSelectionComplete: handleDaySelectionComplete });
 
@@ -132,6 +149,7 @@ export default function DietitianSchedule() {
                 getAppointmentsForDay={getAppointmentsForDay}
                 getAvailForDay={getAvailForDay}
                 drag={weekDrag}
+                onRemoveSlot={(dayIdx: number, slot: string) => removeSlot(weekDays[dayIdx], slot)}
               />
             ) : (
               <DayView
@@ -139,6 +157,7 @@ export default function DietitianSchedule() {
                 existingSlots={existingSlots}
                 getAppointmentsForDay={getAppointmentsForDay}
                 drag={dayDrag}
+                onRemoveSlot={(slot: string) => removeSlot(selectedDate, slot)}
               />
             )}
           </CardContent>
@@ -172,7 +191,15 @@ export default function DietitianSchedule() {
               {existingSlots.length > 0 ? (
                 <div className="flex flex-wrap gap-1">
                   {existingSlots.map((s) => (
-                    <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                    <Badge key={s} variant="secondary" className="text-xs flex items-center gap-1 pr-1">
+                      {s}
+                      <button
+                        onClick={() => removeSlot(selectedDate, s)}
+                        className="ml-0.5 rounded-full hover:bg-destructive/20 p-0.5 transition-colors"
+                      >
+                        <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                      </button>
+                    </Badge>
                   ))}
                 </div>
               ) : (
@@ -214,9 +241,10 @@ interface WeekViewProps {
   getAppointmentsForDay: (d: Date) => any[];
   getAvailForDay: (d: Date) => string[];
   drag: ReturnType<typeof useDragSelect>;
+  onRemoveSlot: (dayIdx: number, slot: string) => void;
 }
 
-function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag }: WeekViewProps) {
+function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot }: WeekViewProps) {
   return (
     <div className="overflow-x-auto select-none">
       <div className="min-w-[700px]">
@@ -293,8 +321,14 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
                             </p>
                           </div>
                         ) : hasSlot ? (
-                          <div className="flex items-center justify-center h-full">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                          <div className="flex items-center justify-center h-full group/slot">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover/slot:hidden" />
+                            <button
+                              className="hidden group-hover/slot:flex items-center justify-center"
+                              onClick={(e) => { e.stopPropagation(); onRemoveSlot(dayIdx, slotTime); }}
+                            >
+                              <X className="h-3 w-3 text-destructive/70 hover:text-destructive" />
+                            </button>
                           </div>
                         ) : null}
                       </div>
@@ -317,9 +351,10 @@ interface DayViewProps {
   existingSlots: string[];
   getAppointmentsForDay: (d: Date) => any[];
   drag: ReturnType<typeof useDragSelect>;
+  onRemoveSlot: (slot: string) => void;
 }
 
-function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag }: DayViewProps) {
+function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot }: DayViewProps) {
   const dayAppts = getAppointmentsForDay(selectedDate);
 
   return (
@@ -377,9 +412,17 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag }: D
                   </Badge>
                 </div>
               ) : hasSlot ? (
-                <div className="flex items-center gap-2 text-sm text-primary/70">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>Ledig tid</span>
+                <div className="flex items-center gap-2 text-sm text-primary/70 flex-1 justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>Ledig tid</span>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRemoveSlot(slotTime); }}
+                    className="rounded-full hover:bg-destructive/20 p-1 transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                  </button>
                 </div>
               ) : isDragSelected ? (
                 <span className="text-xs text-primary/60">Markeras...</span>
