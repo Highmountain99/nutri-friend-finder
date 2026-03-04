@@ -101,5 +101,24 @@ export function useDietitianChat(patientId: string | undefined) {
     },
   });
 
-  return { messages, sendMessage, approveDraft, rejectAndReplace };
+  // Dismiss AI draft – delete or mark as rejected so it disappears
+  const dismissDraft = useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error: deleteError } = await supabase
+        .from("chat_messages")
+        .delete()
+        .eq("id", messageId);
+      if (deleteError) {
+        await supabase
+          .from("chat_messages")
+          .update({ status: "rejected" } as any)
+          .eq("id", messageId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dietitian-chat", patientId] });
+    },
+  });
+
+  return { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft };
 }
