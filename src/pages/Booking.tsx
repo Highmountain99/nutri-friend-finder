@@ -79,11 +79,8 @@ export default function Booking() {
     const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
 
     if (result) {
-      setSelectedDietitian(dietitian);
-      setSelectedDate(date);
-      setSelectedSlot(slot);
       setSheetOpen(false);
-      setPhase('confirm');
+      navigate('/', { state: { bookingConfirmed: true } });
     }
   };
 
