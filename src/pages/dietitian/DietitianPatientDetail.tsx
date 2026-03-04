@@ -348,8 +348,8 @@ export default function DietitianPatientDetail() {
 
             {/* Chat tab */}
             <TabsContent value="chat" className="mt-4">
-              <Card className="h-[500px] flex flex-col">
-                <CardContent className="flex-1 overflow-auto py-4 space-y-3">
+              <Card className="h-[500px] flex flex-col overflow-hidden">
+                <CardContent className="flex-1 min-h-0 overflow-y-auto py-4 space-y-3">
                   {messages.data?.filter((m) => (m as any).status !== 'rejected').map((m) => {
                     const isDraft = (m as any).status === 'draft';
                     const isEditing = editingDraftId === m.id;
