@@ -57,7 +57,7 @@ const activityLabels: Record<string, string> = {
 export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
   const { meals, symptoms, healthTracking, goals, intakeProfile, isLoading } = usePatientJournal(id);
-  const { messages, sendMessage, approveDraft, rejectAndReplace } = useDietitianChat(id);
+  const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(id);
   const { entries: journalEntries, addEntry } = useJournalEntries(id);
   const { notes, upsertNote } = useDietitianNotes(id);
   const { documents, uploadDocument } = usePatientDocuments(id);
@@ -358,9 +358,20 @@ export default function DietitianPatientDetail() {
                       return (
                         <div key={m.id} className="mx-auto max-w-[90%]">
                           <div className="border border-dashed border-primary/40 rounded-xl p-3 bg-primary/5 space-y-2">
-                            <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-                              <Bot className="h-3.5 w-3.5" />
-                              AI-förslag till svar
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                                <Bot className="h-3.5 w-3.5" />
+                                AI-förslag till svar
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                onClick={() => dismissDraft.mutate(m.id)}
+                                disabled={dismissDraft.isPending}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
                             </div>
                             {isEditing ? (
                               <>

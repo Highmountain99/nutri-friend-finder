@@ -30,7 +30,7 @@ export default function DietitianMessages() {
   const { data: patients, isLoading } = useAssignedPatients();
   const { data: unread } = useUnreadMessages();
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-  const { messages, sendMessage, approveDraft, rejectAndReplace } = useDietitianChat(selectedPatient ?? undefined);
+  const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(selectedPatient ?? undefined);
   const [input, setInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
@@ -198,9 +198,20 @@ export default function DietitianMessages() {
                         return (
                           <div key={m.id} className="mb-3 mx-auto max-w-[85%]">
                             <div className="border border-dashed border-primary/40 rounded-xl p-3 bg-primary/5 space-y-2">
-                              <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-                                <Bot className="h-3.5 w-3.5" />
-                                AI-förslag till svar
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                                  <Bot className="h-3.5 w-3.5" />
+                                  AI-förslag till svar
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                  onClick={() => dismissDraft.mutate(m.id)}
+                                  disabled={dismissDraft.isPending}
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
                               </div>
                               {isEditing ? (
                                 <>
