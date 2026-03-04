@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, ArrowLeft, Send, Plus, Upload, FileText, Calendar, Clock, User, AlertTriangle } from "lucide-react";
+import { Loader2, ArrowLeft, Send, Plus, Upload, FileText, Calendar, Clock, User, AlertTriangle, Check, Pencil, X, Bot } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -57,7 +57,7 @@ const activityLabels: Record<string, string> = {
 export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
   const { meals, symptoms, healthTracking, goals, intakeProfile, isLoading } = usePatientJournal(id);
-  const { messages, sendMessage } = useDietitianChat(id);
+  const { messages, sendMessage, approveDraft, rejectAndReplace } = useDietitianChat(id);
   const { entries: journalEntries, addEntry } = useJournalEntries(id);
   const { notes, upsertNote } = useDietitianNotes(id);
   const { documents, uploadDocument } = usePatientDocuments(id);
@@ -66,6 +66,8 @@ export default function DietitianPatientDetail() {
 
   const [chatInput, setChatInput] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState("");
   const [showJournalForm, setShowJournalForm] = useState(false);
   const [journalForm, setJournalForm] = useState({ anamnesis: "", assessment: "", action: "", next_steps: "" });
   const [noteContent, setNoteContent] = useState("");
@@ -346,19 +348,82 @@ export default function DietitianPatientDetail() {
 
             {/* Chat tab */}
             <TabsContent value="chat" className="mt-4">
-              <Card className="h-[400px] flex flex-col">
+              <Card className="h-[500px] flex flex-col">
                 <CardContent className="flex-1 overflow-auto py-4 space-y-3">
-                  {messages.data?.map((m) => (
-                    <div key={m.id} className={`flex ${m.sender === "dietitian" ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
-                        m.sender === "dietitian" ? "bg-primary text-primary-foreground"
-                          : m.sender === "ai" ? "bg-muted text-muted-foreground italic"
-                          : "bg-secondary text-secondary-foreground"
-                      }`}>
-                        {m.content}
+                  {messages.data?.filter((m) => (m as any).status !== 'rejected').map((m) => {
+                    const isDraft = (m as any).status === 'draft';
+                    const isEditing = editingDraftId === m.id;
+
+                    if (isDraft) {
+                      return (
+                        <div key={m.id} className="mx-auto max-w-[90%]">
+                          <div className="border border-dashed border-primary/40 rounded-xl p-3 bg-primary/5 space-y-2">
+                            <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                              <Bot className="h-3.5 w-3.5" />
+                              AI-förslag till svar
+                            </div>
+                            {isEditing ? (
+                              <>
+                                <Textarea
+                                  value={editedContent}
+                                  onChange={(e) => setEditedContent(e.target.value)}
+                                  rows={4}
+                                  className="text-sm"
+                                />
+                                <div className="flex gap-2 justify-end">
+                                  <Button variant="ghost" size="sm" onClick={() => setEditingDraftId(null)}>
+                                    <X className="h-3.5 w-3.5 mr-1" /> Avbryt
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      rejectAndReplace.mutate({ draftId: m.id, newContent: editedContent });
+                                      setEditingDraftId(null);
+                                    }}
+                                    disabled={!editedContent.trim() || rejectAndReplace.isPending}
+                                  >
+                                    <Send className="h-3.5 w-3.5 mr-1" /> Skicka
+                                  </Button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm text-foreground whitespace-pre-wrap">{m.content}</p>
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => { setEditingDraftId(m.id); setEditedContent(m.content); }}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5 mr-1" /> Redigera & skicka
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => approveDraft.mutate(m.id)}
+                                    disabled={approveDraft.isPending}
+                                  >
+                                    <Check className="h-3.5 w-3.5 mr-1" /> Godkänn & skicka
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={m.id} className={`flex ${m.sender === "dietitian" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
+                          m.sender === "dietitian" ? "bg-primary text-primary-foreground"
+                            : m.sender === "ai" ? "bg-muted text-muted-foreground italic"
+                            : "bg-secondary text-secondary-foreground"
+                        }`}>
+                          {m.content}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div ref={chatEndRef} />
                 </CardContent>
                 <div className="p-3 border-t flex gap-2">
