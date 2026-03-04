@@ -19,6 +19,8 @@ export function OnboardingModal({
 }: OnboardingModalProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -35,6 +37,10 @@ export function OnboardingModal({
   };
   const handleGetStarted = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("Fyll i för- och efternamn");
+      return;
+    }
     if (!email || !password) {
       toast.error("Fyll i e-post och lösenord");
       return;
@@ -51,7 +57,7 @@ export function OnboardingModal({
     try {
       const {
         error
-      } = await signUp(email, password);
+      } = await signUp(email, password, firstName.trim(), lastName.trim());
       if (error) {
         toast.error(error.message || "Registreringen misslyckades");
         return;
@@ -84,6 +90,8 @@ export function OnboardingModal({
   };
   const handleClose = () => {
     setCurrentPage(0);
+    setFirstName("");
+    setLastName("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -112,7 +120,7 @@ export function OnboardingModal({
 
           {/* Page 3 - Registration */}
           <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto">
-            <OnboardingPage3 email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} onGetStarted={handleGetStarted} isLoading={isLoading} />
+            <OnboardingPage3 firstName={firstName} setFirstName={setFirstName} lastName={lastName} setLastName={setLastName} email={email} setEmail={setEmail} password={password} setPassword={setPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} onGetStarted={handleGetStarted} isLoading={isLoading} />
           </div>
         </div>
       </div>
@@ -225,6 +233,10 @@ function OnboardingPage2({
     </div>;
 }
 function OnboardingPage3({
+  firstName,
+  setFirstName,
+  lastName,
+  setLastName,
   email,
   setEmail,
   password,
@@ -234,6 +246,10 @@ function OnboardingPage3({
   onGetStarted,
   isLoading
 }: {
+  firstName: string;
+  setFirstName: (v: string) => void;
+  lastName: string;
+  setLastName: (v: string) => void;
   email: string;
   setEmail: (v: string) => void;
   password: string;
@@ -244,7 +260,6 @@ function OnboardingPage3({
   isLoading: boolean;
 }) {
   return <div className="flex-1 flex flex-col px-6 pt-16">
-      {/* Content */}
       <div className="flex-1">
         <h2 className="text-2xl font-semibold text-foreground mb-2">
           Skapa ditt konto
@@ -254,6 +269,17 @@ function OnboardingPage3({
         </p>
 
         <form onSubmit={onGetStarted} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="signup-firstname">Förnamn</Label>
+              <Input id="signup-firstname" type="text" placeholder="Anna" value={firstName} onChange={e => setFirstName(e.target.value)} disabled={isLoading} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="signup-lastname">Efternamn</Label>
+              <Input id="signup-lastname" type="text" placeholder="Andersson" value={lastName} onChange={e => setLastName(e.target.value)} disabled={isLoading} required />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="signup-email">E-post</Label>
             <Input id="signup-email" type="email" placeholder="din@epost.se" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} required />
@@ -269,7 +295,6 @@ function OnboardingPage3({
             <Input id="signup-confirm" type="password" placeholder="Upprepa lösenord" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} disabled={isLoading} required minLength={6} />
           </div>
 
-          {/* CTA */}
           <div className="pt-4">
             <Button type="submit" size="xl" className="w-full h-14 text-base font-medium" disabled={isLoading}>
               {isLoading ? "Skapar konto…" : "Kom igång"}

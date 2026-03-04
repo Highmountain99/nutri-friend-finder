@@ -10,7 +10,8 @@ export function AppLayout() {
   const { user } = useAuth();
   
   // Extract display name from user email or metadata
-  const userName = user?.user_metadata?.full_name || 
+  const userName = user?.user_metadata?.first_name || 
+                   user?.user_metadata?.full_name || 
                    user?.email?.split("@")[0] || 
                    "Användare";
 

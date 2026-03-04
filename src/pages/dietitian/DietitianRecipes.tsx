@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAssignedPatients } from "@/hooks/dietitian/useAssignedPatients";
+import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -275,7 +275,7 @@ export default function DietitianRecipes() {
                       setSuggestPatientIds((prev) => checked ? [...prev, p.patient_id] : prev.filter((id) => id !== p.patient_id));
                     }}
                   />
-                  <span className="text-sm">Patient {p.patient_id.slice(0, 8)}</span>
+                  <span className="text-sm">{getPatientDisplayName(p)}</span>
                 </label>
               ))}
             </div>

@@ -1,4 +1,4 @@
-import { useAssignedPatients } from "@/hooks/dietitian/useAssignedPatients";
+import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
 import { useDietitianSchedule } from "@/hooks/dietitian/useDietitianSchedule";
 import { useDietitianProfile } from "@/hooks/dietitian/useDietitianProfile";
 import { useUnreadMessages } from "@/hooks/dietitian/useUnreadMessages";
@@ -164,7 +164,7 @@ export default function DietitianDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">
-                          Patient {a.user_id?.slice(0, 8)}
+                          {patient ? getPatientDisplayName(patient) : `Patient ${a.user_id?.slice(0, 8)}`}
                         </p>
                         <Badge
                           variant="secondary"
@@ -222,7 +222,7 @@ export default function DietitianDashboard() {
             {attentionItems.map((p) => (
               <div key={p.patient_id} className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg">
                 <div>
-                  <p className="text-sm font-medium">Patient {p.patient_id.slice(0, 8)}</p>
+                  <p className="text-sm font-medium">{getPatientDisplayName(p)}</p>
                   <p className="text-xs text-muted-foreground">Ej slutfört kvalificering</p>
                 </div>
                 <Link to={`/dietitian/patients/${p.patient_id}`}>
@@ -233,7 +233,7 @@ export default function DietitianDashboard() {
             {missedAppointments.slice(0, 3).map((a) => (
               <div key={a.id} className="flex items-center justify-between p-3 bg-destructive/5 rounded-lg">
                 <div>
-                  <p className="text-sm font-medium">Patient {a.user_id?.slice(0, 8)}</p>
+                  <p className="text-sm font-medium">{patients?.find(p => p.patient_id === a.user_id) ? getPatientDisplayName(patients.find(p => p.patient_id === a.user_id)!) : `Patient ${a.user_id?.slice(0, 8)}`}</p>
                   <p className="text-xs text-muted-foreground">
                     Missat besök {format(new Date(a.appointment_date), "d MMM", { locale: sv })}
                   </p>
