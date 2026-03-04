@@ -30,8 +30,9 @@ export function useChatMessages() {
       setLoading(true);
       const { data, error } = await supabase
         .from("chat_messages")
-        .select("id, sender, content, created_at, escalated, escalation_reason")
+        .select("id, sender, content, created_at, escalated, escalation_reason, status")
         .eq("user_id", user.id)
+        .or("status.eq.sent,status.is.null")
         .order("created_at", { ascending: true });
 
       if (error) {
@@ -57,9 +58,9 @@ export function useChatMessages() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          const newMessage = payload.new as ChatMessage;
-          // Only add if it's a dietitian message (AI and user messages are handled locally)
-          if (newMessage.sender === "dietitian") {
+          const newMessage = payload.new as ChatMessage & { status?: string };
+          // Only add if status is 'sent' (not draft) and from dietitian or AI
+          if (newMessage.sender !== "user" && (!newMessage.status || newMessage.status === "sent")) {
             setMessages((prev) => [...prev, newMessage]);
           }
         }
@@ -116,78 +117,9 @@ export function useChatMessages() {
           throw new Error(errorData.error || "Ett fel uppstod");
         }
 
-        if (!response.body) {
-          throw new Error("Ingen respons från servern");
-        }
-
-        // Create placeholder for AI response
-        const aiMessageId = `ai-${Date.now()}`;
-        const aiMessage: ChatMessage = {
-          id: aiMessageId,
-          sender: "ai",
-          content: "",
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, aiMessage]);
-
-        // Stream the response
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let textBuffer = "";
-        let fullContent = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          textBuffer += decoder.decode(value, { stream: true });
-
-          // Process line-by-line
-          let newlineIndex: number;
-          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-            let line = textBuffer.slice(0, newlineIndex);
-            textBuffer = textBuffer.slice(newlineIndex + 1);
-
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            if (line.startsWith(":") || line.trim() === "") continue;
-            if (!line.startsWith("data: ")) continue;
-
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") break;
-
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-              if (content) {
-                fullContent += content;
-                // Update the AI message content
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === aiMessageId ? { ...msg, content: fullContent } : msg
-                  )
-                );
-              }
-            } catch {
-              // Incomplete JSON, put it back
-              textBuffer = line + "\n" + textBuffer;
-              break;
-            }
-          }
-        }
-
-        // Check for escalation in the final response
-        const escalationKeywords = ["dietist", "kopplat på", "skickat ditt meddelande"];
-        const isEscalated = escalationKeywords.some((keyword) =>
-          fullContent.toLowerCase().includes(keyword.toLowerCase())
-        );
-
-        if (isEscalated) {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === aiMessageId ? { ...msg, escalated: true } : msg
-            )
-          );
-        }
+        // AI response is saved as draft for dietitian approval – no streaming
+        // Just update the user message with the real ID from server
+        // Patient will see the response once dietitian approves it
       } catch (err) {
         console.error("Send message error:", err);
         setError(err instanceof Error ? err.message : "Ett fel uppstod");
