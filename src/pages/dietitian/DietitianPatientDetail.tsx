@@ -5,6 +5,7 @@ import { useJournalEntries } from "@/hooks/dietitian/useJournalEntries";
 import { useDietitianNotes } from "@/hooks/dietitian/useDietitianNotes";
 import { usePatientDocuments } from "@/hooks/dietitian/usePatientDocuments";
 import { useTreatmentPlan } from "@/hooks/dietitian/useTreatmentPlan";
+import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
 import { TreatmentPlanTab } from "@/components/dietitian/TreatmentPlanTab";
 import { FoodLogTab } from "@/components/dietitian/FoodLogTab";
 import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
+import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
@@ -62,7 +64,9 @@ export default function DietitianPatientDetail() {
   const { notes, upsertNote } = useDietitianNotes(id);
   const { documents, uploadDocument } = usePatientDocuments(id);
   const { activePlan } = useTreatmentPlan(id);
+  const { data: patients } = useAssignedPatients();
   const [activeTab, setActiveTab] = useState("overview");
+  const [editGoalsOpen, setEditGoalsOpen] = useState(false);
 
   const [chatInput, setChatInput] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
@@ -148,7 +152,12 @@ export default function DietitianPatientDetail() {
           <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>
-          <h1 className="text-xl font-bold">Patient {id?.slice(0, 8)}</h1>
+          <h1 className="text-xl font-bold">
+            {(() => {
+              const patient = patients?.find((p) => p.patient_id === id);
+              return patient ? getPatientDisplayName(patient) : `Patient ${id?.slice(0, 8)}`;
+            })()}
+          </h1>
           {concern && <Badge variant="secondary" className="mt-1">{concernLabels[concern] ?? concern}</Badge>}
         </div>
       </div>
@@ -228,19 +237,38 @@ export default function DietitianPatientDetail() {
               </Card>
 
               {/* Nutrition goals */}
-              {nutritionSettings && (
-                <Card>
-                  <CardHeader><CardTitle className="text-sm">Näringsmål</CardTitle></CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-4 gap-4 text-center">
-                      <div><p className="text-lg font-bold">{nutritionSettings.calories_goal}</p><p className="text-xs text-muted-foreground">kcal</p></div>
-                      <div><p className="text-lg font-bold">{nutritionSettings.protein_goal}g</p><p className="text-xs text-muted-foreground">Protein</p></div>
-                      <div><p className="text-lg font-bold">{nutritionSettings.carbs_goal}g</p><p className="text-xs text-muted-foreground">Kolhydrater</p></div>
-                      <div><p className="text-lg font-bold">{nutritionSettings.fat_goal}g</p><p className="text-xs text-muted-foreground">Fett</p></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm">Näringsmål</CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => setEditGoalsOpen(true)}>
+                    <Pencil className="h-3 w-3 mr-1" /> Justera
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {nutritionSettings ? (
+                    <>
+                      <div className="grid grid-cols-4 gap-4 text-center">
+                        <div><p className="text-lg font-bold">{nutritionSettings.calories_goal}</p><p className="text-xs text-muted-foreground">kcal</p></div>
+                        <div><p className="text-lg font-bold">{nutritionSettings.protein_goal}g</p><p className="text-xs text-muted-foreground">Protein</p></div>
+                        <div><p className="text-lg font-bold">{nutritionSettings.carbs_goal}g</p><p className="text-xs text-muted-foreground">Kolhydrater</p></div>
+                        <div><p className="text-lg font-bold">{nutritionSettings.fat_goal}g</p><p className="text-xs text-muted-foreground">Fett</p></div>
+                      </div>
+                      {nutritionSettings.set_by_dietist && (
+                        <p className="text-xs text-primary mt-2">✓ Satta av dietist</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Inga mål satta ännu. Klicka "Justera" för att sätta mål.</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <EditPatientGoalsSheet
+                open={editGoalsOpen}
+                onOpenChange={setEditGoalsOpen}
+                patientId={id!}
+                currentGoals={nutritionSettings}
+              />
 
               {/* Quick notes */}
               <Card>

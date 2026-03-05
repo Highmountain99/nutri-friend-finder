@@ -290,6 +290,36 @@ export type Database = {
         }
         Relationships: []
       }
+      dietitian_notifications: {
+        Row: {
+          created_at: string
+          dietitian_id: string
+          id: string
+          message: string
+          notification_type: string
+          patient_id: string
+          read_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          message: string
+          notification_type?: string
+          patient_id: string
+          read_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          message?: string
+          notification_type?: string
+          patient_id?: string
+          read_at?: string | null
+        }
+        Relationships: []
+      }
       dietitian_profiles: {
         Row: {
           avatar_url: string | null

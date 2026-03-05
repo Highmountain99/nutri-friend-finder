@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera, AlertCircle } from "lucide-react";
+import { Flame, Drumstick, Wheat, Droplet, ChevronLeft, ChevronRight, Plus, Camera, AlertCircle, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JournalCalendar } from "@/components/journal/JournalCalendar";
 import { NutritionProgressCard } from "@/components/journal/NutritionProgressCard";
@@ -11,6 +11,7 @@ import { AddMealSheet } from "@/components/journal/AddMealSheet";
 import { EditMealSheet } from "@/components/journal/EditMealSheet";
 import { AddSymptomSheet } from "@/components/journal/AddSymptomSheet";
 import { EditSymptomSheet } from "@/components/journal/EditSymptomSheet";
+import { EditNutritionGoalsSheet } from "@/components/journal/EditNutritionGoalsSheet";
 import { useJournalData, type Ingredient, type NutritionEntry, type SymptomEntry } from "@/hooks/useJournalData";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ export default function Journal() {
   const [isEditSymptomOpen, setIsEditSymptomOpen] = useState(false);
   const [editingSymptom, setEditingSymptom] = useState<SymptomEntry | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isEditGoalsOpen, setIsEditGoalsOpen] = useState(false);
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   
@@ -66,6 +68,7 @@ export default function Journal() {
     updateSymptom,
     deleteSymptom,
     updateSettings,
+    updateGoals,
     connectAppleHealth
   } = useJournalData(selectedDate);
 
@@ -225,15 +228,23 @@ export default function Journal() {
             {showOnboarding ? <AITrackingOnboarding onActivate={handleActivateAITracking} onSkip={handleSkipAITracking} /> : <>
                 {/* Nutrition Cards - Dynamic grid based on visible cards */}
                 {nutritionCards.length > 0 && (
-                  <div className={cn(
-                    "grid gap-2 sm:gap-3",
-                    nutritionCards.length === 1 && "grid-cols-1",
-                    nutritionCards.length === 2 && "grid-cols-2",
-                    nutritionCards.length === 3 && "grid-cols-3",
-                    nutritionCards.length >= 4 && "grid-cols-2"
-                  )}>
-                    {nutritionCards.map(card => <NutritionProgressCard key={card.label} {...card} />)}
-                  </div>
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground font-medium">Dagliga mål</span>
+                      <button onClick={() => setIsEditGoalsOpen(true)} className="text-xs text-primary flex items-center gap-1 hover:underline">
+                        <Settings2 className="w-3 h-3" /> Ändra mål
+                      </button>
+                    </div>
+                    <div className={cn(
+                      "grid gap-2 sm:gap-3",
+                      nutritionCards.length === 1 && "grid-cols-1",
+                      nutritionCards.length === 2 && "grid-cols-2",
+                      nutritionCards.length === 3 && "grid-cols-3",
+                      nutritionCards.length >= 4 && "grid-cols-2"
+                    )}>
+                      {nutritionCards.map(card => <NutritionProgressCard key={card.label} {...card} />)}
+                    </div>
+                  </>
                 )}
               </>}
           </div>
@@ -346,6 +357,14 @@ export default function Journal() {
         meals={entries}
         onUpdate={updateSymptom}
         onDelete={deleteSymptom}
+      />
+
+      {/* Edit Nutrition Goals Sheet */}
+      <EditNutritionGoalsSheet
+        open={isEditGoalsOpen}
+        onOpenChange={setIsEditGoalsOpen}
+        goals={goals}
+        onSave={updateGoals}
       />
     </div>;
 }

@@ -2,10 +2,11 @@ import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/us
 import { useDietitianSchedule } from "@/hooks/dietitian/useDietitianSchedule";
 import { useDietitianProfile } from "@/hooks/dietitian/useDietitianProfile";
 import { useUnreadMessages } from "@/hooks/dietitian/useUnreadMessages";
+import { useDietitianNotifications } from "@/hooks/dietitian/useDietitianNotifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, CalendarDays, Clock, TrendingUp, Video, User, AlertTriangle } from "lucide-react";
+import { Users, CalendarDays, Clock, TrendingUp, Video, User, AlertTriangle, Bell, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format, isToday, differenceInMinutes } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -28,6 +29,7 @@ export default function DietitianDashboard() {
   const { appointments } = useDietitianSchedule();
   const { data: profile } = useDietitianProfile();
   const { data: unread } = useUnreadMessages();
+  const { notifications, markAsRead } = useDietitianNotifications();
   const [videoOpen, setVideoOpen] = useState(false);
 
   const now = new Date();
@@ -136,6 +138,36 @@ export default function DietitianDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Notifications */}
+      {notifications.data && notifications.data.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Bell className="h-4 w-4 text-orange-500" />
+              Notiser ({notifications.data.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {notifications.data.map((n) => {
+              const patient = patients?.find((p) => p.patient_id === n.patient_id);
+              const name = patient ? getPatientDisplayName(patient) : `Patient ${n.patient_id.slice(0, 8)}`;
+              return (
+                <div key={n.id} className="flex items-start justify-between gap-3 p-3 bg-background rounded-lg border">
+                  <div>
+                    <p className="text-sm font-medium">{name}</p>
+                    <p className="text-xs text-muted-foreground">{n.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{format(new Date(n.created_at), "d MMM HH:mm", { locale: sv })}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="shrink-0 h-7 w-7" onClick={() => markAsRead.mutate(n.id)}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Today's schedule */}
       <Card>

@@ -497,18 +497,37 @@ export function useJournalData(selectedDate: Date) {
     async (newGoals: Partial<NutritionGoals>) => {
       if (!user) return;
 
-      const updated = { ...goals, ...newGoals };
+      const wasSetByDietist = goals.setByDietist;
+      const updated = { ...goals, ...newGoals, setByDietist: false };
       setGoals(updated);
 
       // Upsert goals
-      await supabase.from("user_nutrition_goals").upsert({
-        user_id: user.id,
+      await supabase.from("user_nutrition_goals").update({
         calories_goal: updated.caloriesGoal,
         protein_goal: updated.proteinGoal,
         carbs_goal: updated.carbsGoal,
         fat_goal: updated.fatGoal,
-        set_by_dietist: updated.setByDietist,
-      });
+        set_by_dietist: false,
+      }).eq("user_id", user.id);
+
+      // If the goals were set by a dietist, notify them
+      if (wasSetByDietist) {
+        const { data: assignment } = await supabase
+          .from("dietist_patient_assignments")
+          .select("dietist_id")
+          .eq("patient_id", user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (assignment) {
+          await supabase.from("dietitian_notifications").insert({
+            dietitian_id: assignment.dietist_id,
+            patient_id: user.id,
+            notification_type: "goal_override",
+            message: "Patienten har ändrat sina näringsmål som du tidigare satt.",
+          });
+        }
+      }
     },
     [user, goals]
   );
