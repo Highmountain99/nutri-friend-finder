@@ -55,6 +55,7 @@ export default function PersonalInfoSheet({ open, onOpenChange }: PersonalInfoSh
         .update({ first_name: firstName.trim(), last_name: lastName.trim() })
         .eq("user_id", user.id);
       if (error) throw error;
+      window.dispatchEvent(new Event("profile-updated"));
       toast.success("Namn uppdaterat!");
     } catch {
       toast.error("Kunde inte uppdatera namn");

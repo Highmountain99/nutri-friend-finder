@@ -24,20 +24,11 @@ export function AppLayout() {
     };
     fetchName();
 
-    // Listen for profile changes to keep name in sync
-    const channel = supabase
-      .channel('profile-name')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'profiles',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload: any) => {
-        if (payload.new?.first_name) setProfileName(payload.new.first_name);
-      })
-      .subscribe();
+    // Listen for profile-updated events from settings
+    const handler = () => fetchName();
+    window.addEventListener("profile-updated", handler);
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { window.removeEventListener("profile-updated", handler); };
   }, [user]);
 
   const userName = profileName ||
