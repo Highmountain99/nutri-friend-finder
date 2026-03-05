@@ -43,7 +43,7 @@ export default function DietitianMessages() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages.data]);
 
   // Mark messages as read when viewing
@@ -111,7 +111,7 @@ export default function DietitianMessages() {
   }
 
   return (
-    <div className="flex flex-col max-w-6xl h-[calc(100vh-theme(spacing.12)-theme(spacing.12))]">
+    <div className="flex flex-col max-w-6xl h-[calc(100vh-theme(spacing.12)-3rem)]">
       <h1 className="text-2xl font-bold text-foreground shrink-0 pb-4">Meddelanden</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-0 flex-1 min-h-0 border rounded-xl overflow-hidden">
@@ -168,7 +168,7 @@ export default function DietitianMessages() {
         </div>
 
         {/* Right: active conversation */}
-        <div className="flex flex-col bg-background">
+        <div className="flex flex-col bg-background min-h-0">
           {!selectedPatient ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
               Välj en patient för att öppna chatten.
