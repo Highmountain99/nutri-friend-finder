@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import ReactMarkdown from "react-markdown";
 import { Calendar } from "lucide-react";
+import { ChatAttachmentDisplay } from "./ChatAttachmentDisplay";
+import type { ChatAttachment } from "./ChatAttachmentPicker";
 
 interface ChatMessageProps {
   sender: "user" | "ai" | "dietitian";
@@ -17,6 +19,7 @@ interface ChatMessageProps {
   } | null;
   escalated?: boolean;
   onBookingRequest?: () => void;
+  attachments?: ChatAttachment[];
 }
 
 export function ChatMessage({
@@ -26,6 +29,7 @@ export function ChatMessage({
   dietitian,
   escalated,
   onBookingRequest,
+  attachments,
 }: ChatMessageProps) {
   const isUser = sender === "user";
 
@@ -69,6 +73,9 @@ export function ChatMessage({
             </div>
           ) : (
             <p className="text-sm whitespace-pre-wrap">{content}</p>
+          )}
+          {attachments && attachments.length > 0 && (
+            <ChatAttachmentDisplay attachments={attachments} />
           )}
         </div>
 

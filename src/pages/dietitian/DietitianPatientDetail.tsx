@@ -93,7 +93,7 @@ export default function DietitianPatientDetail() {
 
   const handleSend = () => {
     if (!chatInput.trim()) return;
-    sendMessage.mutate(chatInput.trim());
+    sendMessage.mutate({ content: chatInput.trim() });
     setChatInput("");
   };
 

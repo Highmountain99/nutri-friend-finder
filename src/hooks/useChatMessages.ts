@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 
 export interface ChatMessage {
   id: string;
@@ -9,6 +10,7 @@ export interface ChatMessage {
   created_at: string;
   escalated?: boolean;
   escalation_reason?: string;
+  attachments?: ChatAttachment[];
 }
 
 export function useChatMessages() {
@@ -30,7 +32,7 @@ export function useChatMessages() {
       setLoading(true);
       const { data, error } = await supabase
         .from("chat_messages")
-        .select("id, sender, content, created_at, escalated, escalation_reason, status")
+        .select("id, sender, content, created_at, escalated, escalation_reason, status, attachments")
         .eq("user_id", user.id)
         .or("status.eq.sent,status.is.null")
         .order("created_at", { ascending: true });
@@ -39,7 +41,11 @@ export function useChatMessages() {
         console.error("Error fetching messages:", error);
         setError("Kunde inte ladda meddelanden");
       } else {
-        setMessages((data || []) as ChatMessage[]);
+        setMessages((data || []).map((d) => ({
+          ...d,
+          sender: d.sender as ChatMessage["sender"],
+          attachments: (d.attachments || []) as unknown as ChatAttachment[],
+        })));
       }
       setLoading(false);
     };
@@ -74,8 +80,8 @@ export function useChatMessages() {
 
   // Send message and stream AI response
   const sendMessage = useCallback(
-    async (messageText: string) => {
-      if (!user || !messageText.trim()) return;
+    async (messageText: string, attachments?: ChatAttachment[]) => {
+      if (!user || (!messageText.trim() && (!attachments || attachments.length === 0))) return;
 
       setSending(true);
       setError(null);
@@ -86,6 +92,7 @@ export function useChatMessages() {
         sender: "user",
         content: messageText.trim(),
         created_at: new Date().toISOString(),
+        attachments: attachments || [],
       };
       setMessages((prev) => [...prev, userMessage]);
 
@@ -108,6 +115,7 @@ export function useChatMessages() {
             body: JSON.stringify({
               message: messageText.trim(),
               conversationHistory: messages.slice(-10),
+              attachments: attachments || [],
             }),
           }
         );

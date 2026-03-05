@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Send, User, Search, Paperclip, Check, Pencil, X, Bot } from "lucide-react";
+import { ChatAttachmentPicker, AttachmentPreview } from "@/components/messages/ChatAttachmentPicker";
+import { ChatAttachmentDisplay } from "@/components/messages/ChatAttachmentDisplay";
+import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -35,6 +38,8 @@ export default function DietitianMessages() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+  const [attachmentPickerOpen, setAttachmentPickerOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,9 +62,10 @@ export default function DietitianMessages() {
   }, [selectedPatient, messages.data]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
-    sendMessage.mutate(input.trim());
+    if (!input.trim() && pendingAttachments.length === 0) return;
+    sendMessage.mutate({ content: input.trim(), attachments: pendingAttachments.length > 0 ? pendingAttachments : undefined });
     setInput("");
+    setPendingAttachments([]);
   };
 
   const filteredPatients = useMemo(() => {
@@ -273,6 +279,9 @@ export default function DietitianMessages() {
                                 : "bg-secondary text-secondary-foreground"
                             }`}>
                               {m.content}
+                              {(m as any).attachments && (m as any).attachments.length > 0 && (
+                                <ChatAttachmentDisplay attachments={(m as any).attachments as ChatAttachment[]} />
+                              )}
                             </div>
                             <div className="flex items-center gap-1 mt-0.5 px-1">
                               <span className="text-[10px] text-muted-foreground">
@@ -294,21 +303,44 @@ export default function DietitianMessages() {
               </div>
 
               {/* Input */}
-              <div className="p-3 border-t flex gap-2">
-                <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground">
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Skriv ett meddelande..."
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  className="flex-1"
-                />
-                <Button size="icon" onClick={handleSend} disabled={sendMessage.isPending} className="bg-primary hover:bg-primary/90 shrink-0">
-                  <Send className="h-4 w-4" />
-                </Button>
+              <div className="p-3 border-t space-y-2">
+                {pendingAttachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {pendingAttachments.map((att, i) => (
+                      <AttachmentPreview
+                        key={i}
+                        attachment={att}
+                        onRemove={() => setPendingAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground" onClick={() => setAttachmentPickerOpen(true)}>
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Skriv ett meddelande..."
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    className="flex-1"
+                  />
+                  <Button size="icon" onClick={handleSend} disabled={sendMessage.isPending && !input.trim() && pendingAttachments.length === 0} className="bg-primary hover:bg-primary/90 shrink-0">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
+
+              {/* Attachment picker */}
+              {selectedPatient && (
+                <ChatAttachmentPicker
+                  patientId={selectedPatient}
+                  open={attachmentPickerOpen}
+                  onOpenChange={setAttachmentPickerOpen}
+                  onAttach={(att) => setPendingAttachments((prev) => [...prev, att])}
+                />
+              )}
             </>
           )}
         </div>
