@@ -5,12 +5,11 @@ import { RecipeSearchBar } from "@/components/recipes/RecipeSearchBar";
 import { RecipeSearchView } from "@/components/recipes/RecipeSearchView";
 import { RecipeFiltersBar } from "@/components/recipes/RecipeFiltersBar";
 import { RecipeSearchResultsList } from "@/components/recipes/RecipeSearchResultsList";
-import { DailyPicksSection } from "@/components/recipes/DailyPicksSection";
+import { SuggestedRecipesSection } from "@/components/recipes/SuggestedRecipesSection";
 import { MyRecipesSection } from "@/components/recipes/MyRecipesSection";
 import { RecipeDetailSheet } from "@/components/recipes/RecipeDetailSheet";
 import { ScannerSheet } from "@/components/scanner/ScannerSheet";
 import { ScannerHistoryProvider } from "@/contexts/ScannerHistoryContext";
-import { RecipeWithInteraction } from "@/hooks/useDailyPicks";
 import { emptyFilters, hasActiveFilters, type RecipeFilters } from "@/hooks/useRecipeSearch";
 import { Button } from "@/components/ui/button";
 
@@ -39,10 +38,6 @@ function RecipesContent() {
       : searchQuery.trim().length > 0 || hasActiveFilters(filters)
         ? "search-results"
         : "default";
-
-  const handleRecipeSelect = (recipe: RecipeWithInteraction) => {
-    setSelectedRecipeId(recipe.id);
-  };
 
   const handleRecipeIdSelect = (recipeId: string) => {
     setSelectedRecipeId(recipeId);
@@ -115,10 +110,10 @@ function RecipesContent() {
 
       {viewMode === "default" && (
         <div className="space-y-8">
-          {/* Daily Picks - only for logged in users */}
-          {user && <DailyPicksSection onRecipeSelect={handleRecipeSelect} />}
+          {/* Suggested by dietitian - primary view */}
+          {user && <SuggestedRecipesSection onRecipeSelect={handleRecipeIdSelect} />}
 
-          {/* My Recipes - only for logged in users */}
+          {/* My saved recipes */}
           {user && (
             <MyRecipesSection
               onRecipeSelect={handleRecipeIdSelect}
