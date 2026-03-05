@@ -6,7 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Utensils, Moon, Apple } from "lucide-react";
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
 import { sv } from "date-fns/locale";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts";
+
+const MACRO_COLORS = {
+  calories: "hsl(var(--primary))",
+  protein: "hsl(210, 70%, 50%)",
+  carbs: "hsl(40, 80%, 50%)",
+  fat: "hsl(0, 60%, 55%)",
+};
+
+const MACRO_LABELS: Record<string, string> = {
+  calories: "Kcal",
+  protein: "Protein (g)",
+  carbs: "Kolhydrater (g)",
+  fat: "Fett (g)",
+};
 
 const mealIcons: Record<string, any> = {
   breakfast: Sun,
@@ -57,11 +71,13 @@ export function FoodLogTab({ patientId }: Props) {
       const ds = format(day, "yyyy-MM-dd");
       const dayMeals = (meals.data ?? []).filter((m) => m.entry_date === ds);
       const daySymptoms = (symptoms.data ?? []).filter((s) => s.entry_date === ds);
-      const totalCal = dayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
       return {
         day: format(day, "EEE", { locale: sv }),
         date: ds,
-        calories: totalCal,
+        calories: dayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0),
+        protein: dayMeals.reduce((sum, m) => sum + Number(m.protein ?? 0), 0),
+        carbs: dayMeals.reduce((sum, m) => sum + Number(m.carbs ?? 0), 0),
+        fat: dayMeals.reduce((sum, m) => sum + Number(m.fat ?? 0), 0),
         meals: dayMeals.length,
         symptoms: daySymptoms.length,
       };
@@ -161,18 +177,23 @@ export function FoodLogTab({ patientId }: Props) {
         /* Week view */
         <div className="space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-sm">Kalorier per dag</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm">Näring per dag</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={weekData}>
                   <XAxis dataKey="day" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: number) => [`${v} kcal`, "Kalorier"]} />
-                  <Bar dataKey="calories" radius={[4, 4, 0, 0]}>
-                    {weekData.map((entry, i) => (
-                      <Cell key={i} className="fill-primary" />
-                    ))}
-                  </Bar>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [
+                      `${Math.round(value)}${name === "calories" ? " kcal" : " g"}`,
+                      MACRO_LABELS[name] ?? name,
+                    ]}
+                  />
+                  <Legend formatter={(value: string) => MACRO_LABELS[value] ?? value} />
+                  <Bar dataKey="calories" stackId="a" fill={MACRO_COLORS.calories} radius={[0, 0, 0, 0]} name="calories" />
+                  <Bar dataKey="protein" stackId="b" fill={MACRO_COLORS.protein} name="protein" />
+                  <Bar dataKey="carbs" stackId="b" fill={MACRO_COLORS.carbs} name="carbs" />
+                  <Bar dataKey="fat" stackId="b" fill={MACRO_COLORS.fat} radius={[4, 4, 0, 0]} name="fat" />
                 </BarChart>
               </ResponsiveContainer>
               {/* Symptom dots */}
