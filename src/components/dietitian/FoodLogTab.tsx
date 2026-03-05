@@ -109,9 +109,18 @@ export function FoodLogTab({ patientId }: Props) {
                 <Card key={meal.id}>
                   <CardContent className="py-3">
                     <div className="flex items-start gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Icon className="h-4 w-4 text-primary" />
-                      </div>
+                      {meal.image_url ? (
+                        <img
+                          src={meal.image_url}
+                          alt={meal.meal_name || "Måltidsbild"}
+                          className="h-16 w-16 rounded-lg object-cover shrink-0 mt-0.5 cursor-pointer"
+                          onClick={() => window.open(meal.image_url!, '_blank')}
+                        />
+                      ) : (
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">{mealLabels[meal.meal_type ?? ""] ?? meal.meal_type}</span>
