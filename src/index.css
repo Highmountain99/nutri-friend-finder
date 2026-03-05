@@ -183,3 +183,13 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/30;
 }
+
+@keyframes scanner-line {
+  0%, 100% { top: 0; }
+  50% { top: calc(100% - 2px); }
+}
+
+.animate-scanner-line {
+  animation: scanner-line 2s ease-in-out infinite;
+  position: absolute;
+}
