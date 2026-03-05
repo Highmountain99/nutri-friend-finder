@@ -37,7 +37,7 @@ export function ScannerSheet({ open, onOpenChange }: ScannerSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[95dvh] rounded-t-3xl p-0 overflow-hidden">
+      <SheetContent side="bottom" className="h-[95dvh] rounded-t-3xl p-0 overflow-hidden [&>button.absolute]:hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
