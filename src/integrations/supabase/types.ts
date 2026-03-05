@@ -727,6 +727,44 @@ export type Database = {
           },
         ]
       }
+      recipe_suggestions: {
+        Row: {
+          created_at: string
+          dietitian_id: string
+          id: string
+          message: string | null
+          patient_id: string
+          recipe_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          message?: string | null
+          patient_id: string
+          recipe_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          message?: string | null
+          patient_id?: string
+          recipe_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_suggestions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipes: {
         Row: {
           allergen_free: string[] | null
@@ -740,6 +778,7 @@ export type Database = {
           dietary_needs: string[] | null
           difficulty: string | null
           fat_per_serving: number | null
+          fiber_per_serving: number | null
           health_plans: string[] | null
           id: string
           image_url: string | null
@@ -747,8 +786,10 @@ export type Database = {
           instructions: Json | null
           is_climate_smart: boolean | null
           is_featured: boolean | null
+          is_published: boolean | null
           meal_types: string[] | null
           nutrition_details: Json | null
+          prep_time_minutes: number | null
           protein_per_serving: number | null
           rating: number | null
           rating_count: number | null
@@ -772,6 +813,7 @@ export type Database = {
           dietary_needs?: string[] | null
           difficulty?: string | null
           fat_per_serving?: number | null
+          fiber_per_serving?: number | null
           health_plans?: string[] | null
           id?: string
           image_url?: string | null
@@ -779,8 +821,10 @@ export type Database = {
           instructions?: Json | null
           is_climate_smart?: boolean | null
           is_featured?: boolean | null
+          is_published?: boolean | null
           meal_types?: string[] | null
           nutrition_details?: Json | null
+          prep_time_minutes?: number | null
           protein_per_serving?: number | null
           rating?: number | null
           rating_count?: number | null
@@ -804,6 +848,7 @@ export type Database = {
           dietary_needs?: string[] | null
           difficulty?: string | null
           fat_per_serving?: number | null
+          fiber_per_serving?: number | null
           health_plans?: string[] | null
           id?: string
           image_url?: string | null
@@ -811,8 +856,10 @@ export type Database = {
           instructions?: Json | null
           is_climate_smart?: boolean | null
           is_featured?: boolean | null
+          is_published?: boolean | null
           meal_types?: string[] | null
           nutrition_details?: Json | null
+          prep_time_minutes?: number | null
           protein_per_serving?: number | null
           rating?: number | null
           rating_count?: number | null
