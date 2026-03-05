@@ -27,6 +27,8 @@ export function BarcodeScanner({ onProductFound, onOpenHistory }: BarcodeScanner
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isProcessingRef = useRef(false);
+  const onProductFoundRef = useRef(onProductFound);
+  onProductFoundRef.current = onProductFound;
 
   const lookup = useCallback(async (barcode: string) => {
     if (isProcessingRef.current) return;
@@ -37,7 +39,7 @@ export function BarcodeScanner({ onProductFound, onOpenHistory }: BarcodeScanner
       if (navigator.vibrate) navigator.vibrate(200);
       const result = await fetchProduct(barcode.trim());
       if (result.found && result.product) {
-        onProductFound(result.product);
+        onProductFoundRef.current(result.product);
       } else {
         setError("Produkten hittades inte i databasen. Prova att skanna igen eller skriv in koden manuellt.");
       }
@@ -47,20 +49,32 @@ export function BarcodeScanner({ onProductFound, onOpenHistory }: BarcodeScanner
       setLoading(false);
       isProcessingRef.current = false;
     }
-  }, [onProductFound]);
+  }, []);
 
   useEffect(() => {
     let html5Qrcode: Html5Qrcode | null = null;
+    let stopped = false;
 
     async function startScanner() {
       try {
         html5Qrcode = new Html5Qrcode("scanner-region");
         scannerRef.current = html5Qrcode;
+
+        // Compute responsive qrbox based on container width
+        const container = document.getElementById("scanner-region");
+        const containerWidth = container?.clientWidth || 320;
+        const qrboxWidth = Math.min(280, containerWidth - 40);
+        const qrboxHeight = Math.round(qrboxWidth * 0.57);
+
         await html5Qrcode.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 280, height: 160 } },
+          {
+            fps: 10,
+            qrbox: { width: qrboxWidth, height: qrboxHeight },
+            aspectRatio: 1.6,
+          },
           (decodedText) => {
-            lookup(decodedText);
+            if (!stopped) lookup(decodedText);
           },
           () => {}
         );
@@ -72,6 +86,7 @@ export function BarcodeScanner({ onProductFound, onOpenHistory }: BarcodeScanner
     startScanner();
 
     return () => {
+      stopped = true;
       if (html5Qrcode?.isScanning) {
         html5Qrcode.stop().catch(() => {});
       }
