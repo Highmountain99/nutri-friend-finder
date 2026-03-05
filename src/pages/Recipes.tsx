@@ -9,6 +9,7 @@ import { SuggestedRecipesSection } from "@/components/recipes/SuggestedRecipesSe
 import { MyRecipesSection } from "@/components/recipes/MyRecipesSection";
 import { RecipeDetailSheet } from "@/components/recipes/RecipeDetailSheet";
 import { ScannerSheet } from "@/components/scanner/ScannerSheet";
+import { MyRecipesSheet } from "@/components/recipes/MyRecipesSheet";
 import { ScannerHistoryProvider } from "@/contexts/ScannerHistoryContext";
 import { emptyFilters, hasActiveFilters, type RecipeFilters } from "@/hooks/useRecipeSearch";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ function RecipesContent() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
   const [filters, setFilters] = useState<RecipeFilters>(emptyFilters);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [myRecipesOpen, setMyRecipesOpen] = useState(false);
 
   // Determine view mode
   const viewMode: ViewMode = 
@@ -117,9 +119,7 @@ function RecipesContent() {
           {user && (
             <MyRecipesSection
               onRecipeSelect={handleRecipeIdSelect}
-              onViewAll={() => {
-                // Could navigate to a full saved recipes page
-              }}
+              onViewAll={() => setMyRecipesOpen(true)}
             />
           )}
         </div>
@@ -136,6 +136,13 @@ function RecipesContent() {
 
       {/* Scanner Sheet */}
       <ScannerSheet open={scannerOpen} onOpenChange={setScannerOpen} />
+
+      {/* My Recipes Sheet */}
+      <MyRecipesSheet
+        open={myRecipesOpen}
+        onOpenChange={setMyRecipesOpen}
+        onRecipeSelect={handleRecipeIdSelect}
+      />
     </div>
   );
 }
