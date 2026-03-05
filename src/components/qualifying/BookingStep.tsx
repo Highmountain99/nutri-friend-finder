@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StepLayout } from './StepLayout';
 import { DietitianSelectionStep } from '@/components/booking/DietitianSelectionStep';
 import { DietitianCalendarStep } from '@/components/booking/DietitianCalendarStep';
@@ -8,6 +9,7 @@ import { DietitianDetailSheet } from '@/components/booking/DietitianDetailSheet'
 import { DietitianProfile, TimeSlot } from '@/types/dietitian';
 import { Button } from '@/components/ui/button';
 import { TriageResult } from '@/types/intake';
+import { useAppointments } from '@/hooks/useAppointments';
 
 type BookingPhase = 
   | 'selection'      
@@ -34,10 +36,25 @@ export function BookingStep({
   isLoading = false,
   triageResult = 'dietist',
 }: BookingStepProps) {
+  const navigate = useNavigate();
+  const { bookAppointment, cancelUpcomingBookedAppointments } = useAppointments();
   const [phase, setPhase] = useState<BookingPhase>('selection');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedDietitian, setSelectedDietitian] = useState<DietitianProfile | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  const handleBook = async (dietitian: DietitianProfile, date: Date, slot: TimeSlot) => {
+    const appointmentDate = new Date(date);
+    appointmentDate.setHours(slot.hour, slot.minute, 0, 0);
+
+    await cancelUpcomingBookedAppointments();
+    const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
+
+    if (result) {
+      setSheetOpen(false);
+      navigate('/', { state: { bookingConfirmed: true } });
+    }
+  };
 
   const handlePhaseBack = () => {
     switch (phase) {
@@ -118,12 +135,13 @@ export function BookingStep({
             onSelectDietitian={handleSelectDietitian}
             onShowAll={handleShowAll}
           />
-          <DietitianDetailSheet
-            dietitian={selectedDietitian}
-            open={sheetOpen}
-            onOpenChange={setSheetOpen}
-            initialDate={selectedDate}
-          />
+           <DietitianDetailSheet
+             dietitian={selectedDietitian}
+             open={sheetOpen}
+             onOpenChange={setSheetOpen}
+             onBook={handleBook}
+             initialDate={selectedDate}
+           />
         </>
       );
 
@@ -138,6 +156,7 @@ export function BookingStep({
             dietitian={selectedDietitian}
             open={sheetOpen}
             onOpenChange={setSheetOpen}
+            onBook={handleBook}
             initialDate={selectedDate}
           />
         </>
