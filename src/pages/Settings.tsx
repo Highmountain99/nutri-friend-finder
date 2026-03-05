@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import PersonalInfoSheet from "@/components/settings/PersonalInfoSheet";
 
 interface NutritionGoals {
   caloriesGoal: number;
@@ -65,6 +66,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [isGoalsDialogOpen, setIsGoalsDialogOpen] = useState(false);
+  const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   // Journal settings state
@@ -321,6 +323,9 @@ export default function Settings() {
                 <div
                   key={item.label}
                   className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => {
+                    if (item.label === "Personuppgifter") setIsPersonalInfoOpen(true);
+                  }}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="w-5 h-5 text-muted-foreground" />
@@ -359,6 +364,9 @@ export default function Settings() {
       <p className="text-center text-xs text-muted-foreground">
         EatSuite version 1.0.0
       </p>
+
+      {/* Personal Info Sheet */}
+      <PersonalInfoSheet open={isPersonalInfoOpen} onOpenChange={setIsPersonalInfoOpen} />
 
       {/* Goals Dialog */}
       <Dialog open={isGoalsDialogOpen} onOpenChange={setIsGoalsDialogOpen}>
