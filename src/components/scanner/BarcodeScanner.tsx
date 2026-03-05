@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Search, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,7 +57,19 @@ export function BarcodeScanner({ onProductFound, onOpenHistory }: BarcodeScanner
 
     async function startScanner() {
       try {
-        html5Qrcode = new Html5Qrcode("scanner-region");
+        const formatsToSupport = [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128,
+        ];
+
+        html5Qrcode = new Html5Qrcode("scanner-region", {
+          formatsToSupport,
+          useBarCodeDetectorIfSupported: false,
+          verbose: false,
+        });
         scannerRef.current = html5Qrcode;
 
         // Compute responsive qrbox based on container width
@@ -66,19 +78,23 @@ export function BarcodeScanner({ onProductFound, onOpenHistory }: BarcodeScanner
         const qrboxWidth = Math.min(280, containerWidth - 40);
         const qrboxHeight = Math.round(qrboxWidth * 0.57);
 
+        console.log("[BarcodeScanner] Starting scanner, container:", containerWidth, "qrbox:", qrboxWidth, "x", qrboxHeight);
+
         await html5Qrcode.start(
           { facingMode: "environment" },
           {
-            fps: 10,
+            fps: 15,
             qrbox: { width: qrboxWidth, height: qrboxHeight },
-            aspectRatio: 1.6,
           },
           (decodedText) => {
+            console.log("[BarcodeScanner] Decoded:", decodedText);
             if (!stopped) lookup(decodedText);
           },
           () => {}
         );
-      } catch {
+        console.log("[BarcodeScanner] Camera started successfully");
+      } catch (err) {
+        console.error("[BarcodeScanner] Failed to start:", err);
         setCameraAvailable(false);
       }
     }
