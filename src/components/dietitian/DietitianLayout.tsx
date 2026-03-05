@@ -11,7 +11,7 @@ export function DietitianLayout() {
           <header className="h-12 flex items-center border-b border-border px-4 shrink-0">
             <SidebarTrigger />
           </header>
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-6 min-h-0">
             <Outlet />
           </main>
         </div>
