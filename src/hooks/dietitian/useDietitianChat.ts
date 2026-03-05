@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 
 export function useDietitianChat(patientId: string | undefined) {
   const queryClient = useQueryClient();
@@ -42,13 +43,14 @@ export function useDietitianChat(patientId: string | undefined) {
   }, [patientId, queryClient]);
 
   const sendMessage = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, attachments }: { content: string; attachments?: ChatAttachment[] }) => {
       const { error } = await supabase.from("chat_messages").insert({
         user_id: patientId!,
         sender: "dietitian",
         content,
         conversation_type: "dietitian",
         status: "sent",
+        attachments: (attachments || []) as any,
       });
       if (error) throw error;
     },

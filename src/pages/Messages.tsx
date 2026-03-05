@@ -5,17 +5,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useChatMessages } from "@/hooks/useChatMessages";
+import { useAuth } from "@/contexts/AuthContext";
 import { ChatHeader } from "@/components/messages/ChatHeader";
 import { ChatMessage } from "@/components/messages/ChatMessage";
 import { ChatBookingSheet } from "@/components/messages/ChatBookingSheet";
+import { ChatAttachmentPicker, AttachmentPreview } from "@/components/messages/ChatAttachmentPicker";
+import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 
 export default function Messages() {
+  const { user } = useAuth();
   const { getUpcomingAppointment, loading: appointmentLoading } = useAppointments();
   const upcomingAppointment = getUpcomingAppointment();
   const { messages, loading: messagesLoading, sending, error, sendMessage } = useChatMessages();
 
   const [inputValue, setInputValue] = useState("");
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
+  const [attachmentPickerOpen, setAttachmentPickerOpen] = useState(false);
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,10 +54,12 @@ export default function Messages() {
   }, [inputValue]);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || sending) return;
+    if ((!inputValue.trim() && pendingAttachments.length === 0) || sending) return;
     const message = inputValue;
+    const atts = [...pendingAttachments];
     setInputValue("");
-    await sendMessage(message);
+    setPendingAttachments([]);
+    await sendMessage(message, atts.length > 0 ? atts : undefined);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -125,6 +133,7 @@ export default function Messages() {
                 dietitian={dietitianInfo}
                 escalated={msg.escalated}
                 onBookingRequest={handleBookingRequest}
+                attachments={msg.attachments}
               />
             ))
           )}
@@ -157,12 +166,24 @@ export default function Messages() {
 
         {/* Input */}
         <div className="px-4 py-3 border-t border-border bg-card">
+          {/* Pending attachments */}
+          {pendingAttachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {pendingAttachments.map((att, i) => (
+                <AttachmentPreview
+                  key={i}
+                  attachment={att}
+                  onRemove={() => setPendingAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                />
+              ))}
+            </div>
+          )}
           <div className="flex items-end gap-2">
             <Button
               variant="ghost"
               size="icon"
               className="text-muted-foreground flex-shrink-0"
-              disabled
+              onClick={() => setAttachmentPickerOpen(true)}
             >
               <Paperclip className="w-5 h-5" />
             </Button>
@@ -179,7 +200,7 @@ export default function Messages() {
             <Button
               onClick={handleSend}
               size="icon"
-              disabled={!inputValue.trim() || sending}
+              disabled={(!inputValue.trim() && pendingAttachments.length === 0) || sending}
               className="flex-shrink-0"
             >
               {sending ? (
@@ -191,6 +212,16 @@ export default function Messages() {
           </div>
         </div>
       </div>
+
+      {/* Attachment Picker */}
+      {user && (
+        <ChatAttachmentPicker
+          patientId={user.id}
+          open={attachmentPickerOpen}
+          onOpenChange={setAttachmentPickerOpen}
+          onAttach={(att) => setPendingAttachments((prev) => [...prev, att])}
+        />
+      )}
 
       {/* Booking Sheet */}
       <ChatBookingSheet
