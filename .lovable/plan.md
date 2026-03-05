@@ -1,79 +1,130 @@
 
 
-## Plan: Livsmedelsskanner på Receptsidan
+# Plan: Dietist-dashboard Receptverktyg
 
-### Översikt
-Bygga en komplett livsmedelsskanner som nås via en knapp på Receptsidan. Skannern använder kameran för att läsa streckkoder, hämtar produktdata från Open Food Facts API, och visar detaljerad näringsinformation. Inkluderar sökhistorik och jämförelsefunktion.
+## Nuläge
+- `DietitianRecipes.tsx` är en enkel sida (~290 rader) med grundläggande skapa/sök/föreslå-funktionalitet
+- `recipes`-tabellen har redan `cuisine_types`, `meal_types`, `health_plans`, `dietary_needs`, `allergen_free`, `source_url` som array-kolumner
+- Tabellen saknar `is_published`, `prep_time_minutes` och `fiber_per_serving`
+- Firecrawl-connector och edge functions för discover/scrape/parse finns redan
+- Ingen storage bucket `recipe-images` existerar ännu
 
-### Nya beroenden
-- `html5-qrcode` – streckkodsläsning via kamera
+## Databasändringar
 
-### Nya filer
+**Migration 1** – Lägg till kolumner i `recipes`:
+- `is_published boolean DEFAULT true` (befintliga recept blir publicerade)
+- `prep_time_minutes integer` (separat från `time_minutes` som blir cook_time)
+- `fiber_per_serving numeric`
 
-**Typer & API**
-- `src/types/scanner.ts` – TypeScript-interface för ProductResponse, nutriments, etc.
-- `src/lib/api/openFoodFacts.ts` – API-anrop mot Open Food Facts, caching i minnet
-- `src/lib/scanner/nutritionThresholds.ts` – EU-trafikljuströskelvärden och allergenöversättningar
+**Migration 2** – Skapa storage bucket `recipe-images` (public)
 
-**Context**
-- `src/contexts/ScannerHistoryContext.tsx` – React context för sessionsbaserad sökhistorik (inga databas/localStorage)
-
-**Komponenter** (`src/components/scanner/`)
-- `BarcodeScanner.tsx` – Kameravy med html5-qrcode, animerad skanningsram, manuellt inmatningsfält, demoknappar
-- `ProductView.tsx` – Fullständig produktsida: header, Nutri-Score, NOVA, näringstabell, makro-donut (Recharts), allergener, ingredienser, action-knappar
-- `NutriScoreDisplay.tsx` – A-B-C-D-E visuell skala med färgkodning
-- `NovaGroupDisplay.tsx` – NOVA 1-4 med färg och beskrivning
-- `NutritionTable.tsx` – Tabell med EU-trafikljusfärgkodning per rad
-- `MacroDonutChart.tsx` – Recharts donut med protein/kolhydrater/fett
-- `AllergenBadges.tsx` – Allergenbadges med svensk översättning
-- `IngredientsCollapsible.tsx` – Expanderbar ingredienslista
-- `ScannerHistory.tsx` – Lista med tidigare skannade produkter
-- `ProductCompare.tsx` – Jämförelsevy för 2-3 produkter sida vid sida
-- `ScannerSheet.tsx` – Sheet/fullskärmsvy som wraps hela flödet med intern navigation (scanner → produkt → historik → jämför)
-
-### Ändringar i befintliga filer
-
-**`src/pages/Recipes.tsx`**
-- Lägg till "Skanna livsmedel"-knapp (Scan-ikon från Lucide) i headern bredvid titeln
-- Wrappa med ScannerHistoryProvider
-- Knappen öppnar `ScannerSheet`
-
-**`src/App.tsx`**
-- Ingen ändring – skannern lever som en Sheet/overlay inom Recipes, inte som en separat route
-
-### Flöde
-
-```text
-Receptsidan
-  └─ Klick "Skanna" → öppnar ScannerSheet (fullskärm)
-       ├─ Scanner-vy (kamera + manuell input + demoknappar)
-       │    └─ Lyckad skanning → ProductView
-       │         └─ "Spara i historik" / "Skanna ny"
-       ├─ Historik-vy (lista, checkbox-markering)
-       │    └─ "Jämför" → ProductCompare
-       └─ Tillbaka-knapp stänger sheeten
+**Migration 3** – Skapa `recipe_suggestions`-tabell (separat från `user_recipe_interactions` för renare modell):
 ```
+id uuid PK
+recipe_id uuid FK → recipes
+dietitian_id uuid
+patient_id uuid
+message text nullable
+status text DEFAULT 'suggested' (suggested/saved/dismissed)
+created_at timestamp
+```
+Med RLS: dietister kan hantera för sina tilldelade patienter, patienter kan se och uppdatera sina egna.
 
-### Tekniska detaljer
+**Migration 4** – Seed 15 demo-recept + 4 recipe_suggestions
 
-- **Kamera**: `html5-qrcode` med stöd för EAN-13, EAN-8, UPC-A. Fallback med demoknappar om kamera ej tillgänglig.
-- **API**: Direkt klientanrop till `https://world.openfoodfacts.org/api/v2/product/{barcode}.json`. Caching i React state (Map). User-Agent header.
-- **Vibration**: `navigator.vibrate(200)` vid lyckad skanning.
-- **Färgkodning näring**: EU-trafikljuströskelvärden per 100g (fett ≤3g grön, 3-17.5g gul, >17.5g röd, etc.)
-- **Nutri-Score**: Visuell A-E skala med färgerna #1E8F4E, #60AC0E, #EEAE0E, #FF6F1E, #E63E11
-- **NOVA**: 1-4 med grön/gul/orange/röd
-- **Donut chart**: Recharts PieChart med innerRadius/outerRadius, kalorier i mitten
-- **Allergenöversättning**: Map från `en:gluten` → `Gluten`, `en:milk` → `Mjölk`, etc.
-- **Historik**: SessionContext med `useState<Product[]>`, ingen persistens
-- **Jämförelse**: Tabell med kolumner per produkt, bästa värde per rad markerat grönt
-- **Dark mode**: Använder befintliga CSS-variabler (redan implementerat i appen)
-- **Animationer**: Tailwind animate classes för slide-in, skanningslinje med CSS keyframe
+## Frontend-komponenter (ny filstruktur)
 
-### Steg i implementationsordning
-1. Installera `html5-qrcode`
-2. Skapa typer och API-hjälpfiler
-3. Skapa ScannerHistoryContext
-4. Bygga alla scanner-komponenter (bottom-up: små → stora)
-5. Skapa ScannerSheet som orkestrerar flödet
-6. Integrera knappen i Recipes.tsx
+Befintliga `DietitianRecipes.tsx` skrivs om helt och bryts ut i delkomponenter under `src/components/dietitian/recipes/`:
+
+### 1. `DietitianRecipesPage.tsx` (huvudsida)
+- Action-bar med rubrik + 3 knappar: "Skapa recept", "Importera recept", "Hämta från länk"
+- Kollapsbar filtersektion med 5 grupper av chip-taggar + sökfält + "Rensa filter" + "Visar X av Y"
+- Receptrutnät (3/2/1 kolumner), skeleton loading
+- Hanterar state för filter, sök, modaler
+
+### 2. `RecipeFilterPanel.tsx`
+- Kollapsbar panel med filter-ikon + badge för aktiva filter
+- 5 grupper med chip-knappar (toggle grön/grå)
+- Sökfält och "Rensa filter"
+- Tagmappning: DB-värden (english) ↔ visningsnamn (svenska)
+
+### 3. `DietitianRecipeCard.tsx`
+- Bild/platshållare, titel (max 2 rader), tid, portioner, max 3 taggar + "+N till"
+- Tre-pricks-meny: Föreslå, Redigera, Duplicera, Ta bort
+- Visar "Utkast"-badge om `is_published === false`
+
+### 4. `CreateRecipeSheet.tsx` (fullskärmsmodal/sheet)
+- Formulär: titel, beskrivning, bilduppladdning (drag-and-drop → `recipe-images` bucket)
+- Tider & portioner (3 fält i rad)
+- Ingredienslista med mängd/enhet-dropdown/ingrediens + "Klistra in lista"-parser
+- Numrerade instruktionssteg med drag-and-drop
+- Näringsvärden (expanderbar): kcal, protein, kolhydrater, fett, fiber
+- Tagg-sektion med alla 5 filtergrupper
+- Knappar: Spara utkast / Publicera / Avbryt
+
+### 5. `ImportRecipeModal.tsx`
+- Tabs med 3 alternativ: Klistra in text / Ladda upp fil / Flera filer
+- **Klistra in text**: textarea + "Tolka recept"-knapp med regex-parser
+- **Ladda upp fil**: drag-and-drop för .txt/.docx/.pdf/.csv – parsear via edge function eller client-side text
+- **Flera filer**: multi-fil-uppladdning
+- Förhandsgranskning av tolkade recept med checkboxar
+- Importerar som utkast, visar resultat
+
+### 6. `FetchRecipeFromUrlModal.tsx`
+- URL-fält + "Hämta recept"-knapp
+- Anropar ny edge function `scrape-recipe` som:
+  1. Fetchar URL server-side
+  2. Extraherar JSON-LD (`@type: Recipe`) från HTML
+  3. Fallback till meta-taggar + Firecrawl scraping
+  4. Returnerar strukturerad data
+- Förhandsvisning i redigerbart formulär
+- Auto-taggning baserat på innehåll (sparkle-ikon)
+- Spara som utkast eller publicera
+
+### 7. `SuggestRecipeModal.tsx` (uppgraderad)
+- Från receptkort: visar receptinfo + sökbar patientlista med checkboxar + allergibadges + meddelandefält
+- Från patientprofil: auto-applicerar patientens allergier/kostbehov som filter + filtrerad receptlista
+- Sparar till `recipe_suggestions` + skickar chattmeddelande
+
+### 8. `EditRecipeSheet.tsx`
+- Samma formulär som CreateRecipeSheet men förpopulerat med befintlig data
+- Uppdaterar via `.update()`
+
+## Edge Function: `scrape-recipe`
+
+Ny edge function under `supabase/functions/scrape-recipe/index.ts`:
+- Tar emot `{ url: string }`
+- Fetchar HTML server-side (eller via Firecrawl om direkt fetch misslyckas)
+- Parsear JSON-LD structured data (`schema.org/Recipe`)
+- Fallback: meta-taggar + Firecrawl scrape + AI-parsning
+- Returnerar `{ success, recipe: { title, ingredients, instructions, image, nutrition, ... } }`
+
+## Ingrediens-parser (client-side utility)
+
+`src/lib/recipeParser.ts`:
+- `parseIngredientList(text: string)` – splittar på newlines, regex: `(\d+\.?\d*)\s*(g|kg|ml|dl|l|msk|tsk|st|krm)?\s*(.+)`
+- `parseRecipeText(text: string)` – extraherar titel, ingredienser, instruktioner, portioner, tid från fritext
+- `autoSuggestTags(recipe)` – föreslår taggar baserat på ingredienser/titel
+
+## Tagmappning
+
+Konstant-fil `src/lib/recipeTags.ts` med mappning mellan DB-värden och svenska visningsnamn:
+```typescript
+export const TAG_GROUPS = {
+  cuisine: { label: 'Kök', options: [{ id: 'mediterranean', label: 'Medelhav' }, ...] },
+  mealType: { label: 'Måltidstyp', options: [...] },
+  // ...
+};
+```
+Används av både dietist-dashboard och patient-sidan (ersätter duplicerade listor i `RecipeFiltersBar.tsx`).
+
+## Sammanfattning av arbetsuppgifter
+
+1. Databasmigration: `is_published`, `prep_time_minutes`, `fiber_per_serving`, `recipe_suggestions`-tabell, `recipe-images` bucket
+2. Seed 15 demo-recept + 4 suggestions
+3. Utility-filer: `recipeTags.ts`, `recipeParser.ts`
+4. Edge function: `scrape-recipe`
+5. Komponenter: FilterPanel, RecipeCard, CreateRecipeSheet, ImportRecipeModal, FetchFromUrlModal, SuggestRecipeModal, EditRecipeSheet
+6. Huvudsida: `DietitianRecipes.tsx` omskriven med ny layout
+7. Uppdatera `RecipeFiltersBar.tsx` på patientsidan att använda delade tagg-konstanter
 
