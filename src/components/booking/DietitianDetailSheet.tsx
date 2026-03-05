@@ -58,14 +58,18 @@ export function DietitianDetailSheet({
 
   const handleBook = async () => {
     if (selectedDate && selectedSlot) {
-      const appointmentDate = new Date(selectedDate);
-      appointmentDate.setHours(selectedSlot.hour, selectedSlot.minute, 0, 0);
+      if (onBook) {
+        onBook(dietitian, selectedDate, selectedSlot);
+      } else {
+        const appointmentDate = new Date(selectedDate);
+        appointmentDate.setHours(selectedSlot.hour, selectedSlot.minute, 0, 0);
 
-      await cancelUpcomingBookedAppointments();
-      const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
+        await cancelUpcomingBookedAppointments();
+        const result = await bookAppointment(appointmentDate, 'video', dietitian.id);
 
-      if (result) {
-        onOpenChange(false);
+        if (result) {
+          onOpenChange(false);
+        }
       }
     }
   };
