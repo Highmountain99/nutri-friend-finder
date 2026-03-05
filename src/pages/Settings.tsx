@@ -244,10 +244,28 @@ export default function Settings() {
     navigate("/auth");
   };
 
-  // Get display name and email
-  const displayName = user?.user_metadata?.full_name || 
-                      user?.email?.split("@")[0] || 
-                      "Användare";
+  // Profile name state
+  const [profileFirstName, setProfileFirstName] = useState("");
+  const [profileLastName, setProfileLastName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setProfileFirstName(data.first_name || "");
+          setProfileLastName(data.last_name || "");
+        }
+      });
+  }, [user]);
+
+  const displayName = profileFirstName && profileLastName
+    ? `${profileFirstName} ${profileLastName}`
+    : user?.email?.split("@")[0] || "Användare";
   const displayEmail = user?.email || "";
   const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
