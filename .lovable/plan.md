@@ -1,55 +1,79 @@
 
 
-## Plan: Lägg till för- och efternamn i registreringsflödet och visa det för dietisten
+## Plan: Livsmedelsskanner på Receptsidan
 
 ### Översikt
-Skapa en `profiles`-tabell som lagrar patientens för- och efternamn. Samla in namnen vid registrering (OnboardingModal). Uppdatera alla dietist-vyer som idag visar `Patient {id.slice(0,8)}` till att istället visa det riktiga namnet.
+Bygga en komplett livsmedelsskanner som nås via en knapp på Receptsidan. Skannern använder kameran för att läsa streckkoder, hämtar produktdata från Open Food Facts API, och visar detaljerad näringsinformation. Inkluderar sökhistorik och jämförelsefunktion.
 
-### Steg
+### Nya beroenden
+- `html5-qrcode` – streckkodsläsning via kamera
 
-**1. Skapa `profiles`-tabell (databasmigration)**
-- Kolumner: `id` (uuid PK), `user_id` (uuid, FK till auth.users, ON DELETE CASCADE, UNIQUE), `first_name` text, `last_name` text, `created_at`, `updated_at`
-- RLS: användare kan läsa/uppdatera sin egen profil; dietister kan läsa tilldelade patienters profiler (via `is_assigned_dietist`)
-- Trigger: auto-skapa profil vid signup (tom, fylls i av appen)
+### Nya filer
 
-**2. Uppdatera signUp-flödet**
-- `AuthContext.signUp` tar emot `firstName` och `lastName` och sparar dem i `user_metadata` via Supabase auth, samt insertar en rad i `profiles`
-- `OnboardingModal` (Page 3): lägg till fält för "Förnamn" och "Efternamn" ovanför e-post
+**Typer & API**
+- `src/types/scanner.ts` – TypeScript-interface för ProductResponse, nutriments, etc.
+- `src/lib/api/openFoodFacts.ts` – API-anrop mot Open Food Facts, caching i minnet
+- `src/lib/scanner/nutritionThresholds.ts` – EU-trafikljuströskelvärden och allergenöversättningar
 
-**3. Uppdatera `useAssignedPatients` hook**
-- Hämta `profiles` för alla patient-ID:n och inkludera `first_name`/`last_name` i `PatientSummary`
+**Context**
+- `src/contexts/ScannerHistoryContext.tsx` – React context för sessionsbaserad sökhistorik (inga databas/localStorage)
 
-**4. Ersätt `Patient {id.slice(0,8)}` med riktigt namn**
-- Filer som behöver ändras:
-  - `DietitianPatients.tsx` (2 ställen)
-  - `DietitianMessages.tsx` (1 ställe)
-  - `DietitianDashboard.tsx` (1 ställe)
-  - `DietitianRecipes.tsx` (1 ställe)
-- Format: `{firstName} {lastName}`, fallback till `Patient {id.slice(0,8)}` om namn saknas
+**Komponenter** (`src/components/scanner/`)
+- `BarcodeScanner.tsx` – Kameravy med html5-qrcode, animerad skanningsram, manuellt inmatningsfält, demoknappar
+- `ProductView.tsx` – Fullständig produktsida: header, Nutri-Score, NOVA, näringstabell, makro-donut (Recharts), allergener, ingredienser, action-knappar
+- `NutriScoreDisplay.tsx` – A-B-C-D-E visuell skala med färgkodning
+- `NovaGroupDisplay.tsx` – NOVA 1-4 med färg och beskrivning
+- `NutritionTable.tsx` – Tabell med EU-trafikljusfärgkodning per rad
+- `MacroDonutChart.tsx` – Recharts donut med protein/kolhydrater/fett
+- `AllergenBadges.tsx` – Allergenbadges med svensk översättning
+- `IngredientsCollapsible.tsx` – Expanderbar ingredienslista
+- `ScannerHistory.tsx` – Lista med tidigare skannade produkter
+- `ProductCompare.tsx` – Jämförelsevy för 2-3 produkter sida vid sida
+- `ScannerSheet.tsx` – Sheet/fullskärmsvy som wraps hela flödet med intern navigation (scanner → produkt → historik → jämför)
+
+### Ändringar i befintliga filer
+
+**`src/pages/Recipes.tsx`**
+- Lägg till "Skanna livsmedel"-knapp (Scan-ikon från Lucide) i headern bredvid titeln
+- Wrappa med ScannerHistoryProvider
+- Knappen öppnar `ScannerSheet`
+
+**`src/App.tsx`**
+- Ingen ändring – skannern lever som en Sheet/overlay inom Recipes, inte som en separat route
+
+### Flöde
+
+```text
+Receptsidan
+  └─ Klick "Skanna" → öppnar ScannerSheet (fullskärm)
+       ├─ Scanner-vy (kamera + manuell input + demoknappar)
+       │    └─ Lyckad skanning → ProductView
+       │         └─ "Spara i historik" / "Skanna ny"
+       ├─ Historik-vy (lista, checkbox-markering)
+       │    └─ "Jämför" → ProductCompare
+       └─ Tillbaka-knapp stänger sheeten
+```
 
 ### Tekniska detaljer
 
-```sql
--- Migration: profiles table
-CREATE TABLE public.profiles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
-  first_name text NOT NULL DEFAULT '',
-  last_name text NOT NULL DEFAULT '',
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
+- **Kamera**: `html5-qrcode` med stöd för EAN-13, EAN-8, UPC-A. Fallback med demoknappar om kamera ej tillgänglig.
+- **API**: Direkt klientanrop till `https://world.openfoodfacts.org/api/v2/product/{barcode}.json`. Caching i React state (Map). User-Agent header.
+- **Vibration**: `navigator.vibrate(200)` vid lyckad skanning.
+- **Färgkodning näring**: EU-trafikljuströskelvärden per 100g (fett ≤3g grön, 3-17.5g gul, >17.5g röd, etc.)
+- **Nutri-Score**: Visuell A-E skala med färgerna #1E8F4E, #60AC0E, #EEAE0E, #FF6F1E, #E63E11
+- **NOVA**: 1-4 med grön/gul/orange/röd
+- **Donut chart**: Recharts PieChart med innerRadius/outerRadius, kalorier i mitten
+- **Allergenöversättning**: Map från `en:gluten` → `Gluten`, `en:milk` → `Mjölk`, etc.
+- **Historik**: SessionContext med `useState<Product[]>`, ingen persistens
+- **Jämförelse**: Tabell med kolumner per produkt, bästa värde per rad markerat grönt
+- **Dark mode**: Använder befintliga CSS-variabler (redan implementerat i appen)
+- **Animationer**: Tailwind animate classes för slide-in, skanningslinje med CSS keyframe
 
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
--- Users read/update own
-CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Dietitians read assigned patients
-CREATE POLICY "Dietitians can view assigned patient profiles" ON public.profiles FOR SELECT USING (is_assigned_dietist(user_id));
-```
-
-Berörda filer: `OnboardingModal.tsx`, `AuthContext.tsx`, `useAssignedPatients.ts`, `DietitianPatients.tsx`, `DietitianMessages.tsx`, `DietitianDashboard.tsx`, `DietitianRecipes.tsx`.
+### Steg i implementationsordning
+1. Installera `html5-qrcode`
+2. Skapa typer och API-hjälpfiler
+3. Skapa ScannerHistoryContext
+4. Bygga alla scanner-komponenter (bottom-up: små → stora)
+5. Skapa ScannerSheet som orkestrerar flödet
+6. Integrera knappen i Recipes.tsx
 
