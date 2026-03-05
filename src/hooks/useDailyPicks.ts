@@ -127,7 +127,7 @@ export function useDailyPicks() {
           suggested_date: today,
           source: "algo",
         },
-        { onConflict: "user_id,recipe_id,suggested_date" }
+        { onConflict: "user_id,recipe_id" }
       );
 
       if (error) throw error;
@@ -151,7 +151,7 @@ export function useDailyPicks() {
           suggested_date: today,
           source: "algo",
         },
-        { onConflict: "user_id,recipe_id,suggested_date" }
+        { onConflict: "user_id,recipe_id" }
       );
 
       if (error) throw error;
