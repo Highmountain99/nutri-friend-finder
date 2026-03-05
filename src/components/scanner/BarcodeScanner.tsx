@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchProduct } from "@/lib/api/openFoodFacts";
+import { ProductSearchInput } from "./ProductSearchInput";
 import type { Product } from "@/types/scanner";
 
 interface BarcodeScannerProps {
@@ -105,7 +106,10 @@ export function BarcodeScanner({ onProductFound, onOpenHistory }: BarcodeScanner
 
       <p className="text-center text-sm text-muted-foreground">Skanna streckkoden på produkten</p>
 
-      {/* Manual input */}
+      {/* Product name search */}
+      <ProductSearchInput onProductSelected={onProductFound} />
+
+      {/* Manual barcode input */}
       <div className="flex gap-2">
         <Input
           placeholder="Eller skriv in streckkod manuellt..."
