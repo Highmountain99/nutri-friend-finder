@@ -26,8 +26,8 @@ export function useSuggestedRecipes() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["suggested-recipes-stack", user?.id],
-    queryFn: async (): Promise<{ active: SuggestedRecipe[]; dismissed: SuggestedRecipe[] }> => {
-      if (!user) return { active: [], dismissed: [] };
+    queryFn: async (): Promise<{ active: SuggestedRecipe[]; dismissed: SuggestedRecipe[]; savedCount: number }> => {
+      if (!user) return { active: [], dismissed: [], savedCount: 0 };
 
       const { data: rows, error } = await supabase
         .from("recipe_suggestions")
@@ -36,7 +36,7 @@ export function useSuggestedRecipes() {
         .in("status", ["suggested", "saved", "dismissed"])
         .order("created_at", { ascending: false });
 
-      if (error || !rows || rows.length === 0) return { active: [], dismissed: [] };
+      if (error || !rows || rows.length === 0) return { active: [], dismissed: [], savedCount: 0 };
 
       const recipeIds = rows.map((s) => s.recipe_id);
       const { data: recipes } = await supabase
@@ -75,7 +75,9 @@ export function useSuggestedRecipes() {
         .map(mapRow)
         .filter(Boolean) as SuggestedRecipe[];
 
-      return { active, dismissed };
+      const savedCount = rows.filter((s) => s.status === "saved").length;
+
+      return { active, dismissed, savedCount };
     },
     enabled: !!user,
   });
@@ -89,6 +91,7 @@ export function useSuggestedRecipes() {
       if (error) throw error;
 
       // Also save to user_recipe_interactions so it shows in "My recipes"
+      // RLS requires source='algo' for user inserts, so we use that
       if (!user) return;
       const suggestion = data?.active.find((s) => s.suggestion_id === suggestionId);
       if (suggestion) {
@@ -98,7 +101,7 @@ export function useSuggestedRecipes() {
             recipe_id: suggestion.id,
             status: "saved",
             suggested_date: new Date().toISOString().split("T")[0],
-            source: "dietitian",
+            source: "algo",
           },
           { onConflict: "user_id,recipe_id" }
         );
@@ -143,6 +146,7 @@ export function useSuggestedRecipes() {
     dismissed: data?.dismissed || [],
     isLoading,
     hasDismissed: (data?.dismissed.length || 0) > 0,
+    hasSaved: (data?.savedCount || 0) > 0,
     saveRecipe: saveMutation.mutate,
     dismissRecipe: dismissMutation.mutate,
     restoreDismissed: restoreDismissedMutation.mutate,
