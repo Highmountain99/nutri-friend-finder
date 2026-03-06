@@ -60,7 +60,8 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
     );
   }
 
-  if (active.length === 0 && !hasDismissed) {
+  // True empty state: no suggestions at all (not saved, not dismissed, not active)
+  if (active.length === 0 && !hasDismissed && !hasSaved) {
     return (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
