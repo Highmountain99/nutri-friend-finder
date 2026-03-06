@@ -1,0 +1,1 @@
+UPDATE public.recipe_suggestions SET status = 'suggested' WHERE id = '759e960a-de21-413a-a97c-295aad02b78d'
