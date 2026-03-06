@@ -1,89 +1,65 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { Clock, Users, UtensilsCrossed, Sparkles } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { RefreshCw, Sparkles, UtensilsCrossed } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TAG_GROUPS } from "@/lib/recipeTags";
+import { SuggestedRecipeCard } from "./SuggestedRecipeCard";
+import { useSuggestedRecipes } from "@/hooks/useSuggestedRecipes";
+import { toast } from "sonner";
 
 interface SuggestedRecipesSectionProps {
   onRecipeSelect: (recipeId: string) => void;
 }
 
-function getTagLabel(id: string): string | null {
-  for (const group of Object.values(TAG_GROUPS)) {
-    const opt = group.options.find((o) => o.id === id);
-    if (opt) return opt.label;
-  }
-  return null;
-}
-
 export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSectionProps) {
-  const { user } = useAuth();
+  const {
+    active,
+    isLoading,
+    hasDismissed,
+    saveRecipe,
+    dismissRecipe,
+    restoreDismissed,
+    isSaving,
+    isDismissing,
+  } = useSuggestedRecipes();
 
-  const { data: suggestions, isLoading } = useQuery({
-    queryKey: ["patient-suggested-recipes", user?.id],
-    queryFn: async () => {
-      if (!user) return [];
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-      // Get all suggestions for this patient that are still 'suggested' or 'saved'
-      const { data: suggestionRows, error: sugError } = await supabase
-        .from("recipe_suggestions")
-        .select("id, recipe_id, message, status, created_at, dietitian_id")
-        .eq("patient_id", user.id)
-        .in("status", ["suggested", "saved"])
-        .order("created_at", { ascending: false });
+  const handleSave = () => {
+    const current = active[currentIndex];
+    if (current) {
+      saveRecipe(current.suggestion_id);
+      toast.success("Recept sparat!");
+      setCurrentIndex((prev) => Math.min(prev + 1, active.length));
+    }
+  };
 
-      if (sugError || !suggestionRows || suggestionRows.length === 0) return [];
+  const handleDismiss = () => {
+    const current = active[currentIndex];
+    if (current) {
+      dismissRecipe(current.suggestion_id);
+      setCurrentIndex((prev) => Math.min(prev + 1, active.length));
+    }
+  };
 
-      const recipeIds = suggestionRows.map((s) => s.recipe_id);
-
-      const { data: recipes } = await supabase
-        .from("recipes")
-        .select("id, title, description, image_url, time_minutes, servings, cuisine_types, meal_types, health_plans, dietary_needs, allergen_free, calories_per_serving")
-        .in("id", recipeIds);
-
-      // Get dietitian names
-      const dietitianIds = [...new Set(suggestionRows.map((s) => s.dietitian_id))];
-      const { data: dietitianProfiles } = await supabase
-        .from("dietitian_profiles")
-        .select("user_id, first_name, last_name")
-        .in("user_id", dietitianIds);
-
-      const dietitianMap = new Map(
-        (dietitianProfiles || []).map((d) => [d.user_id, `${d.first_name} ${d.last_name}`])
-      );
-
-      return suggestionRows.map((s) => {
-        const recipe = recipes?.find((r) => r.id === s.recipe_id);
-        return {
-          ...s,
-          recipe,
-          dietitianName: dietitianMap.get(s.dietitian_id) || "Din dietist",
-        };
-      }).filter((s) => s.recipe);
-    },
-    enabled: !!user,
-  });
+  const handleRestoreDismissed = () => {
+    restoreDismissed();
+    setCurrentIndex(0);
+    toast.success("Borttagna förslag återställda");
+  };
 
   if (isLoading) {
     return (
-      <section className="space-y-4">
+      <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold text-foreground">Föreslagna av din dietist</h2>
         </div>
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
-          ))}
-        </div>
+        <Skeleton className="h-[400px] rounded-lg" />
       </section>
     );
   }
 
-  if (!suggestions || suggestions.length === 0) {
+  if (active.length === 0 && !hasDismissed) {
     return (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
@@ -94,111 +70,88 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
           <UtensilsCrossed className="h-10 w-10 mb-3 opacity-30" />
           <p className="font-medium text-sm">Inga receptförslag ännu</p>
           <p className="text-xs mt-1 text-center max-w-[250px]">
-            Din dietist kan föreslå recept som passar just dig. Använd sökfunktionen för att hitta egna recept.
+            Din dietist kan föreslå recept som passar just dig.
           </p>
         </div>
       </section>
     );
   }
 
+  const currentRecipe = active[currentIndex];
+  const isFinished = currentIndex >= active.length || !currentRecipe;
+
   return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-semibold text-foreground">Föreslagna av din dietist</h2>
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold text-foreground">Föreslagna av din dietist</h2>
+        </div>
+        {!isFinished && active.length > 0 && (
+          <span className="text-sm text-muted-foreground">
+            {currentIndex + 1} / {active.length}
+          </span>
+        )}
       </div>
 
-      <div className="space-y-3">
-        {suggestions.map((suggestion) => {
-          const recipe = suggestion.recipe!;
-          const allTags = [
-            ...(recipe.cuisine_types || []),
-            ...(recipe.meal_types || []),
-            ...(recipe.health_plans || []),
-            ...(recipe.dietary_needs || []),
-            ...(recipe.allergen_free || []),
-          ];
-          const tagLabels = allTags.map(getTagLabel).filter(Boolean).slice(0, 3);
-          const extraCount = allTags.length - 3;
-
-          return (
-            <Card
-              key={suggestion.id}
-              className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
-              onClick={() => onRecipeSelect(recipe.id)}
-            >
-              <CardContent className="p-0">
-                <div className="flex">
-                  {/* Image */}
-                  <div className="w-28 h-28 flex-shrink-0 bg-muted">
+      {isFinished ? (
+        <div className="bg-muted/50 rounded-lg p-8 text-center space-y-4">
+          <p className="text-muted-foreground">
+            Du har gått igenom alla förslag från din dietist!
+          </p>
+          {hasDismissed ? (
+            <Button variant="outline" onClick={handleRestoreDismissed} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Se borttagna förslag igen
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Dina sparade recept hittar du under "Mina recept".
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="relative pb-6">
+          {/* Stack effect */}
+          {active
+            .slice(currentIndex + 1, currentIndex + 3)
+            .reverse()
+            .map((recipe, reverseIndex) => {
+              const stackSize = Math.min(active.length - currentIndex - 1, 2);
+              const i = stackSize - 1 - reverseIndex;
+              return (
+                <div
+                  key={recipe.id}
+                  className="absolute inset-x-0 top-0 bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden pointer-events-none"
+                  style={{
+                    transform: `translateY(${(i + 1) * 16}px) scale(${1 - (i + 1) * 0.05})`,
+                    zIndex: -i - 1,
+                  }}
+                >
+                  <div className="h-48 bg-muted relative">
                     {recipe.image_url ? (
-                      <img
-                        src={recipe.image_url}
-                        alt={recipe.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
+                      <img src={recipe.image_url} alt="" className="w-full h-full object-cover opacity-70" draggable={false} />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <UtensilsCrossed className="w-8 h-8 text-muted-foreground/30" />
-                      </div>
+                      <div className="w-full h-full bg-muted" />
                     )}
                   </div>
-
-                  {/* Content */}
-                  <div className="flex-1 p-3 min-w-0">
-                    <h3 className="font-medium text-sm text-foreground line-clamp-2 leading-tight">
-                      {recipe.title}
-                    </h3>
-
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Föreslagen av {suggestion.dietitianName}
-                    </p>
-
-                    {suggestion.message && (
-                      <p className="text-xs text-muted-foreground mt-1 italic line-clamp-1">
-                        "{suggestion.message}"
-                      </p>
-                    )}
-
-                    {/* Meta */}
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      {recipe.time_minutes && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {recipe.time_minutes} min
-                        </span>
-                      )}
-                      {recipe.servings && (
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          {recipe.servings} port
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Tags */}
-                    {tagLabels.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {tagLabels.map((label) => (
-                          <Badge key={label} variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {label}
-                          </Badge>
-                        ))}
-                        {extraCount > 0 && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            +{extraCount}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
+                  <div className="p-4 bg-card">
+                    <div className="h-5 bg-muted/30 rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-muted/20 rounded w-1/2" />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              );
+            })}
+
+          <SuggestedRecipeCard
+            recipe={currentRecipe}
+            onSave={handleSave}
+            onDismiss={handleDismiss}
+            onTap={() => onRecipeSelect(currentRecipe.id)}
+            disabled={isSaving || isDismissing}
+          />
+        </div>
+      )}
     </section>
   );
 }
