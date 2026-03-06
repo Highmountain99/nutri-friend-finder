@@ -164,15 +164,10 @@ export function RecipeDetailSheet({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      if (!user) {
-                        toast.error("Logga in för att spara favoriter");
-                        return;
-                      }
-                      toggleFavorite.mutate({ recipeId: recipe.id, isFavorite: false });
-                    }}
+                    disabled={savingRecipe}
+                    onClick={handleToggleSave}
                   >
-                    <Heart className="w-5 h-5" />
+                    <Heart className={`w-5 h-5 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                   </Button>
                 </div>
 
@@ -251,16 +246,21 @@ export function RecipeDetailSheet({
                     Ingredienser ({recipe.ingredients.length})
                   </h3>
                   <ul className="space-y-2">
-                    {recipe.ingredients.map((ingredient, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <span className="text-primary">•</span>
-                        <span className="text-foreground">
-                          {ingredient.quantity && `${ingredient.quantity} `}
-                          {ingredient.unit && `${ingredient.unit} `}
-                          {ingredient.text}
-                        </span>
-                      </li>
-                    ))}
+                    {recipe.ingredients.map((ingredient, i) => {
+                      const name = ingredient.ingredient || ingredient.text;
+                      const qty = ingredient.amount ?? ingredient.quantity;
+                      const unit = ingredient.unit || "";
+                      return (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <span className="text-primary">•</span>
+                          <span className="text-foreground">
+                            {qty ? `${qty} ` : ""}
+                            {unit ? `${unit} ` : ""}
+                            {name}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
 
