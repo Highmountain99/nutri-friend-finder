@@ -36,7 +36,7 @@ export function useSuggestedRecipes() {
         .in("status", ["suggested", "saved", "dismissed"])
         .order("created_at", { ascending: false });
 
-      if (error || !rows || rows.length === 0) return { active: [], dismissed: [] };
+      if (error || !rows || rows.length === 0) return { active: [], dismissed: [], savedCount: 0 };
 
       const recipeIds = rows.map((s) => s.recipe_id);
       const { data: recipes } = await supabase
