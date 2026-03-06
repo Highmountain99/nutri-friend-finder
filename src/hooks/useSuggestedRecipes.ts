@@ -26,8 +26,8 @@ export function useSuggestedRecipes() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["suggested-recipes-stack", user?.id],
-    queryFn: async (): Promise<{ active: SuggestedRecipe[]; dismissed: SuggestedRecipe[] }> => {
-      if (!user) return { active: [], dismissed: [] };
+    queryFn: async (): Promise<{ active: SuggestedRecipe[]; dismissed: SuggestedRecipe[]; savedCount: number }> => {
+      if (!user) return { active: [], dismissed: [], savedCount: 0 };
 
       const { data: rows, error } = await supabase
         .from("recipe_suggestions")
