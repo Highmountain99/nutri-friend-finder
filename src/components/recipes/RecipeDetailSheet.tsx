@@ -20,8 +20,10 @@ import {
   Star,
 } from "lucide-react";
 import { useRecipeDetail, useRateRecipe } from "@/hooks/useRecipeDetail";
-import { useToggleFavorite } from "@/hooks/useRecipes";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMyRecipes } from "@/hooks/useMyRecipes";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CookingModeSheet } from "./CookingModeSheet";
 import { NutritionDetailModal } from "./NutritionDetailModal";
@@ -40,11 +42,51 @@ export function RecipeDetailSheet({
   const { user } = useAuth();
   const { recipe, isLoading, userRating, similarRecipes } = useRecipeDetail(recipeId);
   const rateRecipe = useRateRecipe();
-  const toggleFavorite = useToggleFavorite();
+  const queryClient = useQueryClient();
+  const { data: myRecipes } = useMyRecipes();
+
+  const isSaved = myRecipes?.some((r) => r.id === recipeId) ?? false;
 
   const [showCookingMode, setShowCookingMode] = useState(false);
   const [showNutritionDetail, setShowNutritionDetail] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [savingRecipe, setSavingRecipe] = useState(false);
+
+  const handleToggleSave = async () => {
+    if (!user) {
+      toast.error("Logga in för att spara recept");
+      return;
+    }
+    if (!recipeId) return;
+    setSavingRecipe(true);
+    try {
+      if (isSaved) {
+        await supabase
+          .from("user_recipe_interactions")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("recipe_id", recipeId);
+        toast.success("Recept borttaget");
+      } else {
+        await supabase.from("user_recipe_interactions").upsert(
+          {
+            user_id: user.id,
+            recipe_id: recipeId,
+            status: "saved",
+            suggested_date: new Date().toISOString().split("T")[0],
+            source: "algo",
+          },
+          { onConflict: "user_id,recipe_id" }
+        );
+        toast.success("Recept sparat!");
+      }
+      queryClient.invalidateQueries({ queryKey: ["myRecipes"] });
+    } catch {
+      toast.error("Något gick fel");
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
 
   const handleRate = (rating: number) => {
     if (!user) {
@@ -122,15 +164,10 @@ export function RecipeDetailSheet({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      if (!user) {
-                        toast.error("Logga in för att spara favoriter");
-                        return;
-                      }
-                      toggleFavorite.mutate({ recipeId: recipe.id, isFavorite: false });
-                    }}
+                    disabled={savingRecipe}
+                    onClick={handleToggleSave}
                   >
-                    <Heart className="w-5 h-5" />
+                    <Heart className={`w-5 h-5 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                   </Button>
                 </div>
 
@@ -209,16 +246,21 @@ export function RecipeDetailSheet({
                     Ingredienser ({recipe.ingredients.length})
                   </h3>
                   <ul className="space-y-2">
-                    {recipe.ingredients.map((ingredient, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <span className="text-primary">•</span>
-                        <span className="text-foreground">
-                          {ingredient.quantity && `${ingredient.quantity} `}
-                          {ingredient.unit && `${ingredient.unit} `}
-                          {ingredient.text}
-                        </span>
-                      </li>
-                    ))}
+                    {recipe.ingredients.map((ingredient, i) => {
+                      const name = ingredient.ingredient || ingredient.text;
+                      const qty = ingredient.amount ?? ingredient.quantity;
+                      const unit = ingredient.unit || "";
+                      return (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <span className="text-primary">•</span>
+                          <span className="text-foreground">
+                            {qty ? `${qty} ` : ""}
+                            {unit ? `${unit} ` : ""}
+                            {name}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
 
