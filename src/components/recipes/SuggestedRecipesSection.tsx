@@ -15,6 +15,7 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
     active,
     isLoading,
     hasDismissed,
+    hasSaved,
     saveRecipe,
     dismissRecipe,
     restoreDismissed,
