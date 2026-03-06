@@ -35,6 +35,8 @@ export interface Ingredient {
   text: string;
   quantity?: string;
   unit?: string;
+  ingredient?: string;
+  amount?: string | number;
 }
 
 export interface Instruction {

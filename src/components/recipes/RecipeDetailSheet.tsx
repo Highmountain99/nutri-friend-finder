@@ -20,8 +20,10 @@ import {
   Star,
 } from "lucide-react";
 import { useRecipeDetail, useRateRecipe } from "@/hooks/useRecipeDetail";
-import { useToggleFavorite } from "@/hooks/useRecipes";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMyRecipes } from "@/hooks/useMyRecipes";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CookingModeSheet } from "./CookingModeSheet";
 import { NutritionDetailModal } from "./NutritionDetailModal";
