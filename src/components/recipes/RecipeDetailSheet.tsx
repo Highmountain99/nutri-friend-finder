@@ -42,11 +42,51 @@ export function RecipeDetailSheet({
   const { user } = useAuth();
   const { recipe, isLoading, userRating, similarRecipes } = useRecipeDetail(recipeId);
   const rateRecipe = useRateRecipe();
-  const toggleFavorite = useToggleFavorite();
+  const queryClient = useQueryClient();
+  const { data: myRecipes } = useMyRecipes();
+
+  const isSaved = myRecipes?.some((r) => r.id === recipeId) ?? false;
 
   const [showCookingMode, setShowCookingMode] = useState(false);
   const [showNutritionDetail, setShowNutritionDetail] = useState(false);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [savingRecipe, setSavingRecipe] = useState(false);
+
+  const handleToggleSave = async () => {
+    if (!user) {
+      toast.error("Logga in för att spara recept");
+      return;
+    }
+    if (!recipeId) return;
+    setSavingRecipe(true);
+    try {
+      if (isSaved) {
+        await supabase
+          .from("user_recipe_interactions")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("recipe_id", recipeId);
+        toast.success("Recept borttaget");
+      } else {
+        await supabase.from("user_recipe_interactions").upsert(
+          {
+            user_id: user.id,
+            recipe_id: recipeId,
+            status: "saved",
+            suggested_date: new Date().toISOString().split("T")[0],
+            source: "algo",
+          },
+          { onConflict: "user_id,recipe_id" }
+        );
+        toast.success("Recept sparat!");
+      }
+      queryClient.invalidateQueries({ queryKey: ["myRecipes"] });
+    } catch {
+      toast.error("Något gick fel");
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
 
   const handleRate = (rating: number) => {
     if (!user) {
