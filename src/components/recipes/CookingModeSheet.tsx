@@ -133,11 +133,11 @@ export function CookingModeSheet({
                       {i + 1}
                     </span>
                     <span className="text-lg text-foreground">
-                      {ingredient.quantity && (
-                        <span className="font-semibold">{ingredient.quantity} </span>
+                      {(ingredient.amount ?? ingredient.quantity) && (
+                        <span className="font-semibold">{ingredient.amount ?? ingredient.quantity} </span>
                       )}
                       {ingredient.unit && <span>{ingredient.unit} </span>}
-                      {ingredient.text}
+                      {ingredient.ingredient || ingredient.text}
                     </span>
                   </li>
                 ))}
