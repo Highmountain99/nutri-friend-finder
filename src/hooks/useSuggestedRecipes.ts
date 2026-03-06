@@ -75,7 +75,9 @@ export function useSuggestedRecipes() {
         .map(mapRow)
         .filter(Boolean) as SuggestedRecipe[];
 
-      return { active, dismissed };
+      const savedCount = rows.filter((s) => s.status === "saved").length;
+
+      return { active, dismissed, savedCount };
     },
     enabled: !!user,
   });
