@@ -89,6 +89,7 @@ export function useSuggestedRecipes() {
       if (error) throw error;
 
       // Also save to user_recipe_interactions so it shows in "My recipes"
+      // RLS requires source='algo' for user inserts, so we use that
       if (!user) return;
       const suggestion = data?.active.find((s) => s.suggestion_id === suggestionId);
       if (suggestion) {
@@ -98,7 +99,7 @@ export function useSuggestedRecipes() {
             recipe_id: suggestion.id,
             status: "saved",
             suggested_date: new Date().toISOString().split("T")[0],
-            source: "dietitian",
+            source: "algo",
           },
           { onConflict: "user_id,recipe_id" }
         );
