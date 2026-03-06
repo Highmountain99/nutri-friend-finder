@@ -146,6 +146,7 @@ export function useSuggestedRecipes() {
     dismissed: data?.dismissed || [],
     isLoading,
     hasDismissed: (data?.dismissed.length || 0) > 0,
+    hasSaved: (data?.savedCount || 0) > 0,
     saveRecipe: saveMutation.mutate,
     dismissRecipe: dismissMutation.mutate,
     restoreDismissed: restoreDismissedMutation.mutate,
