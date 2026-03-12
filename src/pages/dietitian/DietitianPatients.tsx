@@ -144,7 +144,7 @@ export default function DietitianPatients() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p) => {
-            const concern = p.intake_profile?.primary_concern_category;
+            const concern = p.intake_profile?.unified_concern_category || p.intake_profile?.primary_concern_category;
             return (
               <Link key={p.patient_id} to={`/dietitian/patients/${p.patient_id}`}>
                 <Card className="hover:shadow-elevated transition-shadow cursor-pointer h-full">
