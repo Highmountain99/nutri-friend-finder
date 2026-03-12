@@ -8,6 +8,7 @@ import { TrendChart } from "./shared/TrendChart";
 import { LogMetricSheet } from "./shared/LogMetricSheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 
 interface HeartHealthProgressProps {
   data: ProgressData;
