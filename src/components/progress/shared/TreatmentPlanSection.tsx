@@ -23,17 +23,17 @@ function GoalCard({ goal }: { goal: PatientGoal }) {
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <Card className="shadow-soft overflow-hidden">
+      <Card className="border-border/50 shadow-sm overflow-hidden">
         <CollapsibleTrigger asChild>
-          <CardContent className="p-4 cursor-pointer hover:bg-muted/30 transition-colors">
+          <CardContent className="p-4 cursor-pointer hover:bg-muted/20 transition-colors">
             <div className="flex items-start gap-3">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
                   goal.status === "completed"
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : goal.status === "in_progress"
-                    ? "bg-primary/20 text-primary"
-                    : "bg-muted text-muted-foreground"
+                    ? "bg-primary/15 text-primary"
+                    : "bg-muted/60 text-muted-foreground"
                 }`}
               >
                 {goal.status === "completed" ? (
@@ -44,17 +44,17 @@ function GoalCard({ goal }: { goal: PatientGoal }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-medium text-foreground text-sm truncate">{goal.title}</h3>
+                  <h3 className="font-semibold text-foreground text-sm truncate">{goal.title}</h3>
                   <ChevronDown
-                    className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${
+                    className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${
                       open ? "rotate-180" : ""
                     }`}
                   />
                 </div>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1.5">
                   <Badge
                     variant={goal.status === "completed" ? "default" : "secondary"}
-                    className="text-xs"
+                    className="text-[10px] px-2 py-0.5"
                   >
                     {config.label}
                   </Badge>
@@ -65,16 +65,16 @@ function GoalCard({ goal }: { goal: PatientGoal }) {
                   )}
                 </div>
                 {totalMilestones > 0 && (
-                  <Progress value={milestoneProgress} className="h-1.5 mt-2" />
+                  <Progress value={milestoneProgress} className="h-1.5 mt-2.5 rounded-full" />
                 )}
               </div>
             </div>
           </CardContent>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+          <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
             {goal.description && (
-              <p className="text-sm text-muted-foreground">{goal.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{goal.description}</p>
             )}
             {(goal.planned_start || goal.planned_end) && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -89,14 +89,14 @@ function GoalCard({ goal }: { goal: PatientGoal }) {
               </div>
             )}
             {goal.milestones.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {goal.milestones.map((m) => (
                   <div key={m.id} className="flex items-center gap-2.5">
                     <div
                       className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
                         m.is_completed
                           ? "bg-primary text-primary-foreground"
-                          : "border-2 border-muted-foreground/30"
+                          : "border-2 border-muted-foreground/25"
                       }`}
                     >
                       {m.is_completed && <Check className="w-3 h-3" />}
@@ -133,24 +133,24 @@ export function TreatmentPlanSection() {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
           🎯 Behandlingsplan
         </h2>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground font-medium">
           {completedGoals}/{totalGoals} mål klara
         </span>
       </div>
 
       {/* Overall progress */}
-      <Card className="shadow-soft">
+      <Card className="border-border/50 shadow-sm">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-foreground">{plan.title}</span>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-sm font-semibold text-foreground">{plan.title}</span>
             <span className="text-sm font-bold text-primary">{Math.round(overallProgress)}%</span>
           </div>
-          <Progress value={overallProgress} className="h-2" />
+          <Progress value={overallProgress} className="h-2.5 rounded-full" />
           {plan.description && (
-            <p className="text-xs text-muted-foreground mt-2">{plan.description}</p>
+            <p className="text-xs text-muted-foreground mt-2.5 leading-relaxed">{plan.description}</p>
           )}
         </CardContent>
       </Card>
