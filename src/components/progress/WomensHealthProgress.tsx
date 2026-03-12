@@ -64,12 +64,8 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
       )}
 
       {/* Weight Trend */}
-      {weightChartData.length > 0 && (
-        <TrendChart
-          title="Viktutveckling"
-          data={weightChartData}
-          unit="kg"
-        />
+      {show('trend_chart') && weightChartData.length > 0 && (
+        <TrendChart title="Viktutveckling" data={weightChartData} unit="kg" />
       )}
 
       {/* Focus Areas */}
