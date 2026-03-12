@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProgressData, HealthEntry, WeeklyStats, METRIC_CONFIGS, MetricType, ProgressConcernCategory } from '@/types/progress';
 import { startOfWeek, endOfWeek, subDays, format } from 'date-fns';
 
-export function useProgressData(): ProgressData {
+export function useProgressData(): ProgressData & { visibleSections: string[] } {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useIntakeProfile();
   const [healthEntries, setHealthEntries] = useState<HealthEntry[]>([]);
@@ -14,10 +14,35 @@ export function useProgressData(): ProgressData {
     totalDays: 7,
   });
   const [loading, setLoading] = useState(true);
+  const [progressConfig, setProgressConfig] = useState<{
+    concern_category_override: string | null;
+    visible_sections: string[] | null;
+  } | null>(null);
 
-  // Use unifiedConcernCategory first, fallback to primaryConcernCategory for legacy profiles
+  // Fetch dietitian config for this patient
+  useEffect(() => {
+    if (!user) return;
+    const fetchConfig = async () => {
+      const { data } = await supabase
+        .from('patient_progress_config')
+        .select('concern_category_override, visible_sections')
+        .eq('patient_id', user.id)
+        .maybeSingle();
+      if (data) setProgressConfig(data as any);
+    };
+    fetchConfig();
+  }, [user]);
+
+  // Use dietitian override first, then unifiedConcernCategory, then primaryConcernCategory
   const concernCategory: ProgressConcernCategory | null = 
-    profile?.unifiedConcernCategory || profile?.primaryConcernCategory || null;
+    (progressConfig?.concern_category_override as ProgressConcernCategory) ||
+    profile?.unifiedConcernCategory || 
+    profile?.primaryConcernCategory || 
+    null;
+
+  const visibleSections = progressConfig?.visible_sections && progressConfig.visible_sections.length > 0
+    ? progressConfig.visible_sections
+    : ['metric_cards', 'trend_chart', 'weekly_overview', 'treatment_plan', 'milestones', 'log_button', 'macro_progress'];
 
   useEffect(() => {
     if (!user || profileLoading) return;
@@ -168,5 +193,6 @@ export function useProgressData(): ProgressData {
     weeklyStats,
     treatmentPhase: calculateTreatmentPhase(),
     loading: loading || profileLoading,
+    visibleSections,
   };
 }
