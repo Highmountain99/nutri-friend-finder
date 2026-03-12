@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTreatmentPlan, type TreatmentGoal } from "@/hooks/dietitian/useTreatmentPlan";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,9 +9,10 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, ChevronDown, ChevronRight, Circle, CircleDot, CheckCircle2, Archive, Loader2, Trash2, Sparkles } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, Circle, CircleDot, CheckCircle2, Archive, Loader2, Trash2, Sparkles, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ConfigureProgressSheet } from "./ConfigureProgressSheet";
 
 const statusIcon = (status: string) => {
   if (status === "completed") return <CheckCircle2 className="h-4 w-4 text-primary" />;
@@ -47,6 +48,7 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
   const [showCreate, setShowCreate] = useState(false);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
   const [showArchived, setShowArchived] = useState(false);
+  const [showConfigureProgress, setShowConfigureProgress] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -79,9 +81,18 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
         setShowCreate(false);
         setForm({ title: "", description: "", goals: [{ title: "", description: "", planned_start: "", planned_end: "", milestones: [""] }] });
         toast.success("Behandlingsplan skapad!");
+        // Open the progress configuration sheet
+        setShowConfigureProgress(true);
       },
       onError: () => toast.error("Kunde inte skapa plan"),
     });
+  };
+
+  const handleCreateAndArchive = () => {
+    if (activePlan) {
+      archivePlan.mutate(activePlan.id);
+    }
+    handleCreate();
   };
 
   const completedGoals = activePlan?.goals?.filter((g) => g.status === "completed").length ?? 0;
@@ -98,7 +109,6 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
     <div className="space-y-4">
       {activePlan ? (
         <>
-          {/* Plan header */}
           <Card>
             <CardContent className="py-4">
               <div className="flex items-center justify-between mb-3">
@@ -106,9 +116,14 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
                   <h3 className="font-semibold">{activePlan.title}</h3>
                   {activePlan.description && <p className="text-sm text-muted-foreground mt-1">{activePlan.description}</p>}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => archivePlan.mutate(activePlan.id)}>
-                  <Archive className="h-3 w-3 mr-1" /> Arkivera
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowConfigureProgress(true)}>
+                    <Palette className="h-3 w-3 mr-1" /> Designa vy
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => archivePlan.mutate(activePlan.id)}>
+                    <Archive className="h-3 w-3 mr-1" /> Arkivera
+                  </Button>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <Progress value={progressPercent} className="h-2 flex-1" />
@@ -117,7 +132,6 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
             </CardContent>
           </Card>
 
-          {/* Goals */}
           {activePlan.goals?.map((goal) => {
             const expanded = expandedGoals.has(goal.id);
             const milestoneDone = goal.milestones?.filter((m) => m.is_completed).length ?? 0;
@@ -196,7 +210,7 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
             <DialogHeader><DialogTitle>Ny behandlingsplan</DialogTitle></DialogHeader>
-            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={() => { archivePlan.mutate(activePlan.id); handleCreate(); }} isPending={createPlan.isPending} patientContext={patientContext} />
+            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreateAndArchive} isPending={createPlan.isPending} patientContext={patientContext} />
           </DialogContent>
         </Dialog>
       )}
@@ -222,6 +236,12 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
           </CollapsibleContent>
         </Collapsible>
       )}
+
+      <ConfigureProgressSheet
+        open={showConfigureProgress}
+        onOpenChange={setShowConfigureProgress}
+        patientId={patientId}
+      />
     </div>
   );
 }
@@ -309,8 +329,8 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
         <Button variant="outline" size="sm" onClick={addGoal}><Plus className="h-4 w-4 mr-1" /> Lägg till mål</Button>
       </div>
 
-      <Button className="w-full" onClick={onSubmit} disabled={!form.title.trim() || isPending}>
-        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Spara och aktivera"}
+      <Button className="w-full gap-2" onClick={onSubmit} disabled={!form.title.trim() || isPending}>
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Palette className="h-4 w-4" /> Spara & designa utvecklingsvy</>}
       </Button>
     </div>
   );
