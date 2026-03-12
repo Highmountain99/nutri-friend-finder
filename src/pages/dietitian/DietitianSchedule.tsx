@@ -495,11 +495,12 @@ interface DayViewProps {
   drag: ReturnType<typeof useDragSelect>;
   onRemoveSlot: (slot: string) => void;
   patients: any[] | undefined;
+  allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
   onStartVideo: () => void;
 }
 
-function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, onOpenPatient, onStartVideo }: DayViewProps) {
+function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: DayViewProps) {
   const dayAppts = getAppointmentsForDay(selectedDate);
 
   return (
