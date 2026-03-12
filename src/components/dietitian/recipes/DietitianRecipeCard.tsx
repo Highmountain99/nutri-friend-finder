@@ -17,6 +17,8 @@ interface DietitianRecipeCardProps {
   recipe: Recipe;
   isOwn?: boolean;
   isSaved?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
   onSuggest: (id: string) => void;
   onEdit?: (recipe: Recipe) => void;
   onDuplicate: (recipe: Recipe) => void;
@@ -29,6 +31,8 @@ export function DietitianRecipeCard({
   recipe,
   isOwn,
   isSaved,
+  isSelected,
+  onToggleSelect,
   onSuggest,
   onEdit,
   onDuplicate,
