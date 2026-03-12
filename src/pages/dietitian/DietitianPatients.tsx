@@ -55,6 +55,10 @@ export default function DietitianPatients() {
           <p className="text-muted-foreground">{patients?.length ?? 0} tilldelade patienter</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Bjud in patient
+          </Button>
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
             size="icon"
