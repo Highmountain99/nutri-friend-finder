@@ -291,6 +291,7 @@ export default function DietitianSchedule() {
                 drag={dayDrag}
                 onRemoveSlot={(slot: string) => removeSlot(selectedDate, slot)}
                 patients={patients}
+                allAppointments={appointments.data ?? []}
                 onOpenPatient={handleOpenPatient}
                 onStartVideo={() => setVideoOpen(true)}
               />
