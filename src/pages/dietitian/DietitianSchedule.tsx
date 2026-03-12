@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Trash2, Clock, X } from "lucide-react";
+import { CalendarSyncSheet } from "@/components/dietitian/CalendarSyncSheet";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState, useEffect, useCallback } from "react";
@@ -132,6 +133,7 @@ export default function DietitianSchedule() {
           <p className="text-muted-foreground">Dra över tidsluckor för att göra dig tillgänglig.</p>
         </div>
         <div className="flex gap-2">
+          <CalendarSyncSheet />
           <Button variant={view === "week" ? "default" : "outline"} size="sm" onClick={() => setView("week")}>Vecka</Button>
           <Button variant={view === "day" ? "default" : "outline"} size="sm" onClick={() => setView("day")}>Dag</Button>
         </div>
