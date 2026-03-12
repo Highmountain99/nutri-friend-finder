@@ -349,7 +349,17 @@ export default function DietitianPatientDetail() {
 
             {/* Treatment Plan tab */}
             <TabsContent value="treatment" className="mt-4">
-              {id && <TreatmentPlanTab patientId={id} />}
+              {id && <TreatmentPlanTab patientId={id} patientContext={intakeProfile ? {
+                concernCategory: intakeProfile.primary_concern_category ?? intakeProfile.unified_concern_category ?? undefined,
+                concernSubcategory: intakeProfile.primary_concern_subcategory ?? undefined,
+                supportAreas: intakeProfile.support_areas ?? undefined,
+                concernTags: intakeProfile.concern_tags ?? undefined,
+                activityLevel: intakeProfile.activity_level ?? undefined,
+                motivationLevel: intakeProfile.motivation_level ?? undefined,
+                aiFreeText: intakeProfile.ai_free_text ?? undefined,
+                triageResult: intakeProfile.triage_result ?? undefined,
+                preferenceTags: intakeProfile.preference_tags ?? undefined,
+              } : undefined} />}
             </TabsContent>
 
             {/* Visits tab */}
