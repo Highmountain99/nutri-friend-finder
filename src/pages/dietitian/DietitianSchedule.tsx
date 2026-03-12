@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Trash2, Clock, X } from "lucide-react";
+import { CalendarSyncSheet } from "@/components/dietitian/CalendarSyncSheet";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState, useEffect, useCallback } from "react";
