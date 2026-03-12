@@ -64,26 +64,12 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
       )}
 
       {/* Log Buttons */}
-      <div className="flex gap-2 justify-center flex-wrap">
-        <LogMetricSheet 
-          metricType="cholesterol_total"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Kolesterol
-            </Button>
-          }
-        />
-        <LogMetricSheet 
-          metricType="blood_pressure_systolic"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Blodtryck
-            </Button>
-          }
-        />
-      </div>
+      {show('log_button') && (
+        <div className="flex gap-2 justify-center flex-wrap">
+          <LogMetricSheet metricType="cholesterol_total" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Kolesterol</Button>} />
+          <LogMetricSheet metricType="blood_pressure_systolic" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Blodtryck</Button>} />
+        </div>
+      )}
 
       {/* Mediterranean Score */}
       <section>
