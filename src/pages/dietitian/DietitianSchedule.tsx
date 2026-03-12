@@ -30,12 +30,14 @@ const HALF_HOURS = HOURS.flatMap((h) => [
 function AppointmentPopover({
   appointment,
   patients,
+  allAppointments,
   children,
   onOpenPatient,
   onStartVideo,
 }: {
   appointment: any;
   patients: any[] | undefined;
+  allAppointments: any[];
   children: React.ReactNode;
   onOpenPatient: (patientId: string) => void;
   onStartVideo: () => void;
@@ -47,7 +49,14 @@ function AppointmentPopover({
   const initials = patient?.first_name && patient?.last_name
     ? `${patient.first_name[0]}${patient.last_name[0]}`
     : patientName.slice(0, 2).toUpperCase();
-  const typeLabel = appointment.appointment_type === "initial" ? "Nybesök" : "Uppföljning";
+
+  // Check if this is the first meeting with this patient
+  const isFirstMeeting = !allAppointments.some(
+    (a) => a.user_id === appointment.user_id &&
+      a.id !== appointment.id &&
+      new Date(a.appointment_date) < new Date(appointment.appointment_date)
+  );
+  const typeLabel = isFirstMeeting ? "Introduktion" : "Uppföljning";
   const apptDate = new Date(appointment.appointment_date);
   const concern = patient?.intake_profile?.unified_concern_category || patient?.intake_profile?.primary_concern_category;
 
@@ -270,6 +279,7 @@ export default function DietitianSchedule() {
                 drag={weekDrag}
                 onRemoveSlot={(dayIdx: number, slot: string) => removeSlot(weekDays[dayIdx], slot)}
                 patients={patients}
+                allAppointments={appointments.data ?? []}
                 onOpenPatient={handleOpenPatient}
                 onStartVideo={() => setVideoOpen(true)}
               />
@@ -281,6 +291,7 @@ export default function DietitianSchedule() {
                 drag={dayDrag}
                 onRemoveSlot={(slot: string) => removeSlot(selectedDate, slot)}
                 patients={patients}
+                allAppointments={appointments.data ?? []}
                 onOpenPatient={handleOpenPatient}
                 onStartVideo={() => setVideoOpen(true)}
               />
@@ -367,11 +378,12 @@ interface WeekViewProps {
   drag: ReturnType<typeof useDragSelect>;
   onRemoveSlot: (dayIdx: number, slot: string) => void;
   patients: any[] | undefined;
+  allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
   onStartVideo: () => void;
 }
 
-function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, onOpenPatient, onStartVideo }: WeekViewProps) {
+function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: WeekViewProps) {
   return (
     <div className="overflow-x-auto select-none">
       <div className="min-w-[700px]">
@@ -439,15 +451,12 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
                           <AppointmentPopover
                             appointment={apptAtSlot}
                             patients={patients}
+                            allAppointments={allAppointments}
                             onOpenPatient={onOpenPatient}
                             onStartVideo={onStartVideo}
                           >
                             <div
-                              className={`text-xs p-1 rounded m-0.5 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${
-                                apptAtSlot.appointment_type === "initial"
-                                  ? "bg-primary/15 text-primary"
-                                  : "bg-accent/50 text-accent-foreground"
-                              }`}
+                              className="text-xs p-1 rounded m-0.5 cursor-pointer hover:ring-1 hover:ring-blue-400/30 transition-all bg-blue-100 text-blue-700"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <p className="font-medium truncate text-[10px]">
@@ -488,11 +497,12 @@ interface DayViewProps {
   drag: ReturnType<typeof useDragSelect>;
   onRemoveSlot: (slot: string) => void;
   patients: any[] | undefined;
+  allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
   onStartVideo: () => void;
 }
 
-function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, onOpenPatient, onStartVideo }: DayViewProps) {
+function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: DayViewProps) {
   const dayAppts = getAppointmentsForDay(selectedDate);
 
   return (
@@ -540,15 +550,12 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onR
                 <AppointmentPopover
                   appointment={appt}
                   patients={patients}
+                  allAppointments={allAppointments}
                   onOpenPatient={onOpenPatient}
                   onStartVideo={onStartVideo}
                 >
                   <div
-                    className={`p-2 rounded text-sm cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${
-                      appt.appointment_type === "initial"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-accent/50 text-accent-foreground"
-                    }`}
+                    className="p-2 rounded text-sm cursor-pointer hover:ring-1 hover:ring-blue-400/30 transition-all bg-blue-50 text-blue-700"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="font-medium">
