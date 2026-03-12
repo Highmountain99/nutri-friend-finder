@@ -232,58 +232,82 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                 </Label>
               </div>
 
-              {/* Phone frame */}
-              <div className="mx-auto max-w-[320px] border-2 border-border rounded-[2rem] bg-background shadow-lg overflow-hidden">
-                {/* Status bar */}
-                <div className="h-6 bg-muted/50 flex items-center justify-center">
-                  <div className="w-16 h-1 bg-muted-foreground/20 rounded-full" />
-                </div>
+              {/* iPhone frame – top visible, fades out at bottom */}
+              <div className="relative mx-auto max-w-[320px]">
+                {/* Phone bezel */}
+                <div className="border-[3px] border-foreground/80 rounded-t-[2.5rem] bg-background shadow-2xl overflow-hidden">
+                  {/* Dynamic Island */}
+                  <div className="h-8 bg-background flex items-end justify-center pb-1">
+                    <div className="w-[90px] h-[22px] bg-foreground/90 rounded-full" />
+                  </div>
 
-                {/* Content area */}
-                <div className="p-4 space-y-4 min-h-[340px]">
-                  {enabledSections.length === 0 ? (
-                    <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
-                      Inga element valda
-                    </div>
-                  ) : (
-                    enabledSections.map((section, idx) => (
-                      <div
-                        key={section.value}
-                        data-section-idx={orderedSections.findIndex(s => s.value === section.value)}
-                        draggable
-                        onDragStart={(e) => handleDragStart(orderedSections.findIndex(s => s.value === section.value), e)}
-                        onDragEnter={() => handleDragEnter(orderedSections.findIndex(s => s.value === section.value))}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDragEnd={handleDragEnd}
-                        className={`
-                          group relative rounded-xl border bg-card p-3 transition-all cursor-grab active:cursor-grabbing select-none
-                          ${overIdx === orderedSections.findIndex(s => s.value === section.value) && dragIdx !== null
-                            ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
-                            : "border-border hover:border-primary/40"
-                          }
-                        `}
-                      >
-                        {/* Drag handle + visibility toggle overlay */}
-                        <div className="absolute -left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <GripVertical className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleSection(section.value); }}
-                          className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all z-10"
-                        >
-                          <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
-                        </button>
-
-                        <ModulePreview sectionValue={section.value} label={section.label} />
+                  {/* Status bar */}
+                  <div className="flex items-center justify-between px-6 py-1 text-[10px] font-semibold text-foreground/70">
+                    <span>9:41</span>
+                    <div className="flex items-center gap-1">
+                      <div className="flex gap-[2px] items-end">
+                        <div className="w-[3px] h-[4px] bg-foreground/60 rounded-sm" />
+                        <div className="w-[3px] h-[6px] bg-foreground/60 rounded-sm" />
+                        <div className="w-[3px] h-[8px] bg-foreground/60 rounded-sm" />
+                        <div className="w-[3px] h-[10px] bg-foreground/30 rounded-sm" />
                       </div>
-                    ))
-                  )}
+                      <span>5G</span>
+                      <div className="w-[18px] h-[9px] border border-foreground/50 rounded-[2px] relative">
+                        <div className="absolute inset-[1px] right-[3px] bg-foreground/50 rounded-[1px]" />
+                        <div className="absolute right-[-3px] top-[2px] w-[1.5px] h-[4px] bg-foreground/40 rounded-r-full" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* App header */}
+                  <div className="px-4 pt-2 pb-3">
+                    <h3 className="text-sm font-bold text-foreground">Utveckling</h3>
+                  </div>
+
+                  {/* Content area */}
+                  <div className="px-3 pb-6 space-y-3 max-h-[360px] overflow-y-auto scrollbar-hide">
+                    {enabledSections.length === 0 ? (
+                      <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
+                        Inga element valda
+                      </div>
+                    ) : (
+                      enabledSections.map((section, idx) => (
+                        <div
+                          key={section.value}
+                          data-section-idx={orderedSections.findIndex(s => s.value === section.value)}
+                          draggable
+                          onDragStart={(e) => handleDragStart(orderedSections.findIndex(s => s.value === section.value), e)}
+                          onDragEnter={() => handleDragEnter(orderedSections.findIndex(s => s.value === section.value))}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDragEnd={handleDragEnd}
+                          className={`
+                            group relative rounded-xl border bg-card p-3 transition-all cursor-grab active:cursor-grabbing select-none
+                            ${overIdx === orderedSections.findIndex(s => s.value === section.value) && dragIdx !== null
+                              ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
+                              : "border-border hover:border-primary/40"
+                            }
+                          `}
+                        >
+                          {/* Drag handle + visibility toggle overlay */}
+                          <div className="absolute -left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <GripVertical className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleSection(section.value); }}
+                            className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all z-10"
+                          >
+                            <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+
+                          <ModulePreview sectionValue={section.value} label={section.label} />
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
 
-                {/* Home indicator */}
-                <div className="h-5 flex items-center justify-center">
-                  <div className="w-24 h-1 bg-muted-foreground/20 rounded-full" />
-                </div>
+                {/* Fade-out gradient at the bottom edge */}
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none z-10" />
               </div>
             </div>
 
