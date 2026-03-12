@@ -20,8 +20,8 @@ export default function Invite() {
 
   useEffect(() => {
     if (!code) return;
-    // Extract the actual invite code (last 6 hex chars after optional name prefix)
-    const match = code.match(/([a-f0-9]{6})$/);
+    // Extract the actual invite code (last hex segment after optional name prefix)
+    const match = code.match(/([a-f0-9]{6,})$/);
     const inviteCode = match ? match[1] : code;
 
     (async () => {
