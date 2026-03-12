@@ -548,15 +548,12 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onR
                 <AppointmentPopover
                   appointment={appt}
                   patients={patients}
+                  allAppointments={allAppointments}
                   onOpenPatient={onOpenPatient}
                   onStartVideo={onStartVideo}
                 >
                   <div
-                    className={`p-2 rounded text-sm cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${
-                      appt.appointment_type === "initial"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-accent/50 text-accent-foreground"
-                    }`}
+                    className="p-2 rounded text-sm cursor-pointer hover:ring-1 hover:ring-blue-400/30 transition-all bg-blue-50 text-blue-700"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="font-medium">
