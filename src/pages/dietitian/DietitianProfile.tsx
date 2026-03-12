@@ -206,13 +206,137 @@ export default function DietitianProfile() {
             <label className="text-xs font-medium text-muted-foreground">Bio</label>
             <Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={4} />
           </div>
+          {/* Specializations multi-select */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Specialiseringar (kommaseparerade)</label>
-            <Input value={form.specializations} onChange={(e) => setForm({ ...form, specializations: e.target.value })} placeholder="Diabetes, viktnedgång, IBS" />
+            <label className="text-xs font-medium text-muted-foreground">Specialiseringar</label>
+            <Popover open={specOpen} onOpenChange={setSpecOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-between font-normal h-auto min-h-10 py-2">
+                  <span className="text-sm text-muted-foreground">Välj specialiseringar...</span>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-64 overflow-y-auto" align="start">
+                {SPECIALIZATION_OPTIONS.map((spec) => {
+                  const selected = form.specializations.includes(spec);
+                  return (
+                    <button
+                      key={spec}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-accent/10 transition-colors ${selected ? "bg-primary/10 text-primary font-medium" : ""}`}
+                      onClick={() => {
+                        setForm(f => ({
+                          ...f,
+                          specializations: selected
+                            ? f.specializations.filter(s => s !== spec)
+                            : [...f.specializations, spec],
+                        }));
+                      }}
+                    >
+                      {spec}
+                    </button>
+                  );
+                })}
+                <div className="border-t p-2 flex gap-2">
+                  <Input
+                    value={customSpec}
+                    onChange={(e) => setCustomSpec(e.target.value)}
+                    placeholder="Lägg till egen..."
+                    className="h-8 text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customSpec.trim()) {
+                        e.preventDefault();
+                        if (!form.specializations.includes(customSpec.trim())) {
+                          setForm(f => ({ ...f, specializations: [...f.specializations, customSpec.trim()] }));
+                        }
+                        setCustomSpec("");
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-2"
+                    disabled={!customSpec.trim()}
+                    onClick={() => {
+                      if (customSpec.trim() && !form.specializations.includes(customSpec.trim())) {
+                        setForm(f => ({ ...f, specializations: [...f.specializations, customSpec.trim()] }));
+                      }
+                      setCustomSpec("");
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            {form.specializations.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {form.specializations.map((spec) => (
+                  <Badge key={spec} variant="secondary" className="gap-1 pr-1">
+                    {spec}
+                    <button onClick={() => setForm(f => ({ ...f, specializations: f.specializations.filter(s => s !== spec) }))} className="hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Languages multi-select */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Språk (kommaseparerade)</label>
-            <Input value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })} placeholder="Svenska, engelska" />
+            <label className="text-xs font-medium text-muted-foreground">Språk</label>
+            <Popover open={langOpen} onOpenChange={(o) => { setLangOpen(o); if (!o) setLangSearch(""); }}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-between font-normal h-auto min-h-10 py-2">
+                  <span className="text-sm text-muted-foreground">Välj språk...</span>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <div className="p-2 border-b">
+                  <Input
+                    value={langSearch}
+                    onChange={(e) => setLangSearch(e.target.value)}
+                    placeholder="Sök språk..."
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="max-h-52 overflow-y-auto">
+                  {LANGUAGE_OPTIONS.filter(l => l.toLowerCase().includes(langSearch.toLowerCase())).map((lang) => {
+                    const selected = form.languages.includes(lang);
+                    return (
+                      <button
+                        key={lang}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-accent/10 transition-colors ${selected ? "bg-primary/10 text-primary font-medium" : ""}`}
+                        onClick={() => {
+                          setForm(f => ({
+                            ...f,
+                            languages: selected
+                              ? f.languages.filter(l => l !== lang)
+                              : [...f.languages, lang],
+                          }));
+                        }}
+                      >
+                        {lang}
+                      </button>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+            {form.languages.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {form.languages.map((lang) => (
+                  <Badge key={lang} variant="secondary" className="gap-1 pr-1">
+                    {lang}
+                    <button onClick={() => setForm(f => ({ ...f, languages: f.languages.filter(l => l !== lang) }))} className="hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
           <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending} className="w-full">
             {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
