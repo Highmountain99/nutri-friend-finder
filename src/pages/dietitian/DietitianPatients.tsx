@@ -28,7 +28,7 @@ export default function DietitianPatients() {
   const filtered = (patients ?? []).filter((p) => {
     if (!search) return true;
     const q = search.toLowerCase();
-    const concern = p.intake_profile?.primary_concern_category ?? "";
+    const concern = p.intake_profile?.unified_concern_category ?? p.intake_profile?.primary_concern_category ?? "";
     const name = getPatientDisplayName(p).toLowerCase();
     return (
       name.includes(q) ||
@@ -100,7 +100,7 @@ export default function DietitianPatients() {
             </thead>
             <tbody>
               {filtered.map((p) => {
-                const concern = p.intake_profile?.primary_concern_category;
+                const concern = p.intake_profile?.unified_concern_category || p.intake_profile?.primary_concern_category;
                 return (
                   <tr key={p.patient_id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="p-3">
@@ -144,7 +144,7 @@ export default function DietitianPatients() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p) => {
-            const concern = p.intake_profile?.primary_concern_category;
+            const concern = p.intake_profile?.unified_concern_category || p.intake_profile?.primary_concern_category;
             return (
               <Link key={p.patient_id} to={`/dietitian/patients/${p.patient_id}`}>
                 <Card className="hover:shadow-elevated transition-shadow cursor-pointer h-full">
