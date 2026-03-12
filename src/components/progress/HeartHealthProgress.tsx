@@ -12,6 +12,7 @@ import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 
 interface HeartHealthProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
 // Mediterranean diet scoring (simplified)
@@ -22,7 +23,7 @@ const HEART_HEALTHY_CHOICES = [
   { name: 'Fullkorn', target: 7, current: 5, unit: 'portioner' },
 ];
 
-export function HeartHealthProgress({ data }: HeartHealthProgressProps) {
+export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
   const cholesterolEntries = data.healthEntries.filter(e => e.metric_type === 'cholesterol_total');
   const systolicEntries = data.healthEntries.filter(e => e.metric_type === 'blood_pressure_systolic');
   const diastolicEntries = data.healthEntries.filter(e => e.metric_type === 'blood_pressure_diastolic');
