@@ -449,15 +449,12 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
                           <AppointmentPopover
                             appointment={apptAtSlot}
                             patients={patients}
+                            allAppointments={allAppointments}
                             onOpenPatient={onOpenPatient}
                             onStartVideo={onStartVideo}
                           >
                             <div
-                              className={`text-xs p-1 rounded m-0.5 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${
-                                apptAtSlot.appointment_type === "initial"
-                                  ? "bg-primary/15 text-primary"
-                                  : "bg-accent/50 text-accent-foreground"
-                              }`}
+                              className="text-xs p-1 rounded m-0.5 cursor-pointer hover:ring-1 hover:ring-blue-400/30 transition-all bg-blue-100 text-blue-700"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <p className="font-medium truncate text-[10px]">
