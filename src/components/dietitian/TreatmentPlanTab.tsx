@@ -9,8 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, ChevronDown, ChevronRight, Circle, CircleDot, CheckCircle2, Archive, Loader2, Trash2 } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, Circle, CircleDot, CheckCircle2, Archive, Loader2, Trash2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusIcon = (status: string) => {
   if (status === "completed") return <CheckCircle2 className="h-4 w-4 text-primary" />;
@@ -24,11 +25,24 @@ const statusLabel: Record<string, string> = {
   completed: "Avklarad",
 };
 
-interface Props {
-  patientId: string;
+interface PatientContext {
+  concernCategory?: string;
+  concernSubcategory?: string;
+  supportAreas?: string[];
+  concernTags?: string[];
+  activityLevel?: string;
+  motivationLevel?: string;
+  aiFreeText?: string;
+  triageResult?: string;
+  preferenceTags?: string[];
 }
 
-export function TreatmentPlanTab({ patientId }: Props) {
+interface Props {
+  patientId: string;
+  patientContext?: PatientContext;
+}
+
+export function TreatmentPlanTab({ patientId, patientContext }: Props) {
   const { activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan } = useTreatmentPlan(patientId);
   const [showCreate, setShowCreate] = useState(false);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
@@ -168,7 +182,7 @@ export function TreatmentPlanTab({ patientId }: Props) {
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
                 <DialogHeader><DialogTitle>Ny behandlingsplan</DialogTitle></DialogHeader>
-                <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreate} isPending={createPlan.isPending} />
+                <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreate} isPending={createPlan.isPending} patientContext={patientContext} />
               </DialogContent>
             </Dialog>
           </CardContent>
@@ -182,7 +196,7 @@ export function TreatmentPlanTab({ patientId }: Props) {
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
             <DialogHeader><DialogTitle>Ny behandlingsplan</DialogTitle></DialogHeader>
-            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={() => { archivePlan.mutate(activePlan.id); handleCreate(); }} isPending={createPlan.isPending} />
+            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={() => { archivePlan.mutate(activePlan.id); handleCreate(); }} isPending={createPlan.isPending} patientContext={patientContext} />
           </DialogContent>
         </Dialog>
       )}
@@ -212,9 +226,57 @@ export function TreatmentPlanTab({ patientId }: Props) {
   );
 }
 
-function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending }: any) {
+function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending, patientContext }: any) {
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleAiSuggest = async () => {
+    if (!patientContext) {
+      toast.error("Ingen patientdata tillgänglig för AI-förslag");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-treatment-plan", {
+        body: { patientContext },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const plan = data.plan;
+      setForm({
+        title: plan.title || "",
+        description: plan.description || "",
+        goals: (plan.goals || []).map((g: any) => ({
+          title: g.title || "",
+          description: g.description || "",
+          planned_start: g.planned_start || "",
+          planned_end: g.planned_end || "",
+          milestones: g.milestones?.length ? g.milestones : [""],
+        })),
+      });
+      toast.success("AI-förslag tillämpat! Granska och justera innan du sparar.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Kunde inte generera AI-förslag");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={handleAiSuggest}
+          disabled={aiLoading || !patientContext}
+        >
+          {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {aiLoading ? "Genererar förslag…" : "AI-förslag baserat på patient"}
+        </Button>
+      </div>
+
       <Input placeholder="Plantitel" value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} />
       <Textarea placeholder="Beskrivning (valfritt)" value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} rows={2} />
 

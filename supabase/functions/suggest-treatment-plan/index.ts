@@ -1,0 +1,121 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const { patientContext } = await req.json();
+
+    const systemPrompt = `Du är en klinisk dietist-assistent som hjälper dietister att skapa behandlingsplaner.
+Baserat på patientens information, föreslå en komplett behandlingsplan.
+
+Svara ENBART med tool call, aldrig med fritext.`;
+
+    const userPrompt = `Skapa en behandlingsplan baserat på denna patientinformation:
+
+Primär kategori: ${patientContext.concernCategory || "Ej angiven"}
+Underkategori: ${patientContext.concernSubcategory || "Ej angiven"}
+Stödområden: ${patientContext.supportAreas?.join(", ") || "Ej angivna"}
+Concern-taggar: ${patientContext.concernTags?.join(", ") || "Inga"}
+Aktivitetsnivå: ${patientContext.activityLevel || "Ej angiven"}
+Motivationsnivå: ${patientContext.motivationLevel || "Ej angiven"}
+AI-fritext (patientens egna ord): ${patientContext.aiFreeText || "Ej angiven"}
+Triageresultat: ${patientContext.triageResult || "Ej angivet"}
+Preferenstaggar: ${patientContext.preferenceTags?.join(", ") || "Inga"}
+
+Ge en plan med 2-4 realistiska mål. Varje mål ska ha 2-4 konkreta delmål.
+Alla texter ska vara på svenska, professionella men stöttande.
+Planera datumspann på 8-12 veckor framåt från idag (${new Date().toISOString().split("T")[0]}).`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "suggest_treatment_plan",
+              description: "Return a structured treatment plan suggestion.",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "Kort titel för behandlingsplanen" },
+                  description: { type: "string", description: "Beskrivning av planens syfte och mål" },
+                  goals: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        description: { type: "string" },
+                        planned_start: { type: "string", description: "ISO date YYYY-MM-DD" },
+                        planned_end: { type: "string", description: "ISO date YYYY-MM-DD" },
+                        milestones: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                      },
+                      required: ["title", "description", "milestones"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["title", "description", "goals"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "suggest_treatment_plan" } },
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "För många förfrågningar, försök igen om en stund." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI-krediter slut. Fyll på i Lovable-inställningar." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      throw new Error("AI gateway error");
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall) throw new Error("No tool call in response");
+
+    const plan = JSON.parse(toolCall.function.arguments);
+
+    return new Response(JSON.stringify({ success: true, plan }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("suggest-treatment-plan error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
