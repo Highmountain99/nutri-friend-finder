@@ -10,7 +10,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, GripVertical, Eye, EyeOff, Smartphone } from "lucide-react";
 import { ModulePreview } from "./progress-builder/ModulePreview";
-import { TEMPLATE_SECTION_DEFAULTS } from "./progress-builder/templateDefaults";
+import { TEMPLATE_SECTION_DEFAULTS, CATEGORY_SECTIONS, GENERIC_SECTIONS, type SectionDef } from "./progress-builder/templateDefaults";
 
 const TEMPLATE_OPTIONS: { value: string; label: string; description: string }[] = [
   { value: "auto", label: "Automatisk (från kvalificering)", description: "Baseras på patientens egna val" },
@@ -23,15 +23,9 @@ const TEMPLATE_OPTIONS: { value: string; label: string; description: string }[] 
   { value: "general_health", label: "Allmän hälsa", description: "Makros, kalorier, vikt" },
 ];
 
-const SECTION_OPTIONS: { value: string; label: string; description: string }[] = [
-  { value: "metric_cards", label: "Mätvärden", description: "Kort med nyckeltal (vikt, blodsocker etc.)" },
-  { value: "trend_chart", label: "Trendgraf", description: "Visuell graf över utvecklingen" },
-  { value: "weekly_overview", label: "Veckoöversikt", description: "Aktiva dagar och loggade måltider" },
-  { value: "treatment_plan", label: "Behandlingsplan", description: "Mål och delmål från planen" },
-  { value: "milestones", label: "Milstolpar", description: "Automatiska milstolpar baserat på data" },
-  { value: "log_button", label: "Loggningsknapp", description: "Snabbknapp för att logga mätvärden" },
-  { value: "macro_progress", label: "Makroöversikt", description: "Protein, kolhydrater, fett" },
-];
+const getSectionsForTemplate = (tmpl: string): SectionDef[] => {
+  return CATEGORY_SECTIONS[tmpl] || GENERIC_SECTIONS;
+};
 
 interface ConfigureProgressSheetProps {
   open: boolean;
@@ -70,24 +64,24 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
   });
 
   const buildSectionsFromTemplate = useCallback((tmpl: string, savedSections?: string[] | null) => {
+    const templateSections = getSectionsForTemplate(tmpl);
     const defaults = TEMPLATE_SECTION_DEFAULTS[tmpl] || TEMPLATE_SECTION_DEFAULTS["auto"];
-    const enabledSet = new Set(savedSections && savedSections.length > 0 ? savedSections : defaults);
     
     const ordered: SectionItem[] = [];
     // Enabled first in order
     if (savedSections && savedSections.length > 0) {
       for (const val of savedSections) {
-        const opt = SECTION_OPTIONS.find(s => s.value === val);
+        const opt = templateSections.find(s => s.value === val);
         if (opt) ordered.push({ ...opt, enabled: true });
       }
     } else {
       for (const val of defaults) {
-        const opt = SECTION_OPTIONS.find(s => s.value === val);
+        const opt = templateSections.find(s => s.value === val);
         if (opt) ordered.push({ ...opt, enabled: true });
       }
     }
     // Then disabled
-    for (const opt of SECTION_OPTIONS) {
+    for (const opt of templateSections) {
       if (!ordered.find(o => o.value === opt.value)) {
         ordered.push({ ...opt, enabled: false });
       }
