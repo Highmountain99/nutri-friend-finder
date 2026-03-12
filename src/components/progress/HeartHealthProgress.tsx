@@ -91,14 +91,8 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
       </section>
 
       {/* Cholesterol Trend */}
-      {cholesterolChartData.length > 0 && (
-        <TrendChart
-          title="Kolesteroltrend (6 mån)"
-          data={cholesterolChartData}
-          unit="mmol/L"
-          targetValue={cholesterolTarget}
-          targetLabel={`Mål: <${cholesterolTarget}`}
-        />
+      {show('trend_chart') && cholesterolChartData.length > 0 && (
+        <TrendChart title="Kolesteroltrend (6 mån)" data={cholesterolChartData} unit="mmol/L" targetValue={cholesterolTarget} targetLabel={`Mål: <${cholesterolTarget}`} />
       )}
 
       {/* Heart-Healthy Choices */}
