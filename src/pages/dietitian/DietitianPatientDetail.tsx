@@ -68,6 +68,7 @@ export default function DietitianPatientDetail() {
   const { data: patients } = useAssignedPatients();
   const [activeTab, setActiveTab] = useState("overview");
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
+  const [configProgressOpen, setConfigProgressOpen] = useState(false);
 
   const [chatInput, setChatInput] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
