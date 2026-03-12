@@ -37,13 +37,17 @@ export default function DietitianProfile() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [customSpec, setCustomSpec] = useState("");
+  const [specOpen, setSpecOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [langSearch, setLangSearch] = useState("");
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
     title: "",
     bio: "",
-    specializations: "",
-    languages: "",
+    specializations: [] as string[],
+    languages: [] as string[],
   });
 
   useEffect(() => {
