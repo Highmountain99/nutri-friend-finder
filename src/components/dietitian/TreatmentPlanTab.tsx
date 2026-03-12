@@ -42,7 +42,7 @@ interface Props {
   patientContext?: PatientContext;
 }
 
-export function TreatmentPlanTab({ patientId }: Props) {
+export function TreatmentPlanTab({ patientId, patientContext }: Props) {
   const { activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan } = useTreatmentPlan(patientId);
   const [showCreate, setShowCreate] = useState(false);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
