@@ -100,7 +100,7 @@ export default function DietitianPatients() {
             </thead>
             <tbody>
               {filtered.map((p) => {
-                const concern = p.intake_profile?.primary_concern_category;
+                const concern = p.intake_profile?.unified_concern_category || p.intake_profile?.primary_concern_category;
                 return (
                   <tr key={p.patient_id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="p-3">
