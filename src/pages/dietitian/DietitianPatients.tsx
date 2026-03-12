@@ -25,6 +25,7 @@ export default function DietitianPatients() {
   const { data: patients, isLoading } = useAssignedPatients();
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const filtered = (patients ?? []).filter((p) => {
     if (!search) return true;
