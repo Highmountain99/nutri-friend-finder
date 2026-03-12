@@ -1,14 +1,21 @@
 import { useDietitianSchedule } from "@/hooks/dietitian/useDietitianSchedule";
-import { useAssignedPatients } from "@/hooks/dietitian/useAssignedPatients";
+import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, Clock, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Clock, X, Video, User, FileText, ExternalLink } from "lucide-react";
 import { CalendarSyncSheet } from "@/components/dietitian/CalendarSyncSheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
 import { useDragSelect } from "@/hooks/useDragSelect";
 import { toast } from "sonner";
@@ -19,12 +26,124 @@ const HALF_HOURS = HOURS.flatMap((h) => [
   `${h.toString().padStart(2, "0")}:30`,
 ]);
 
+// Appointment popup component
+function AppointmentPopover({
+  appointment,
+  patients,
+  children,
+  onOpenPatient,
+  onStartVideo,
+}: {
+  appointment: any;
+  patients: any[] | undefined;
+  children: React.ReactNode;
+  onOpenPatient: (patientId: string) => void;
+  onStartVideo: () => void;
+}) {
+  const patient = patients?.find((p) => p.patient_id === appointment.user_id);
+  const patientName = patient
+    ? getPatientDisplayName(patient)
+    : `Patient ${appointment.user_id?.slice(0, 8)}`;
+  const initials = patient?.first_name && patient?.last_name
+    ? `${patient.first_name[0]}${patient.last_name[0]}`
+    : patientName.slice(0, 2).toUpperCase();
+  const typeLabel = appointment.appointment_type === "initial" ? "Nybesök" : "Uppföljning";
+  const apptDate = new Date(appointment.appointment_date);
+  const concern = patient?.intake_profile?.unified_concern_category || patient?.intake_profile?.primary_concern_category;
+
+  const concernLabels: Record<string, string> = {
+    weight_loss: "Viktnedgång",
+    diabetes: "Diabetes",
+    gut_health: "Maghälsa",
+    general_health: "Allmän hälsa",
+    womens_health: "Kvinnohälsa",
+    emotional_eating: "Emotionellt ätande",
+    eating_disorder: "Ätstörning",
+    heart_health: "Hjärthälsa",
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent className="w-72 p-0" side="right" align="start" sideOffset={8}>
+        <div className="p-4 space-y-3">
+          {/* Patient header */}
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="font-medium text-sm truncate">{patientName}</p>
+              {concern && (
+                <p className="text-xs text-muted-foreground">
+                  {concernLabels[concern] || concern}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Appointment details */}
+          <div className="bg-muted/50 rounded-lg p-3 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Tid</span>
+              <span className="text-sm font-medium">
+                {format(apptDate, "HH:mm")} – {format(new Date(apptDate.getTime() + 30 * 60 * 1000), "HH:mm")}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Datum</span>
+              <span className="text-sm">
+                {format(apptDate, "d MMM yyyy", { locale: sv })}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Typ</span>
+              <Badge variant="secondary" className="text-xs">{typeLabel}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Format</span>
+              <div className="flex items-center gap-1 text-xs">
+                <Video className="h-3 w-3" />
+                <span>Video</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 gap-1.5 text-xs"
+              onClick={() => onOpenPatient(appointment.user_id)}
+            >
+              <User className="h-3.5 w-3.5" />
+              Patientöversikt
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 gap-1.5 text-xs"
+              onClick={onStartVideo}
+            >
+              <Video className="h-3.5 w-3.5" />
+              Starta möte
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function DietitianSchedule() {
   const { appointments, availability, addAvailability, removeAvailability } = useDietitianSchedule();
   const { data: patients } = useAssignedPatients();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [videoOpen, setVideoOpen] = useState(false);
   const [view, setView] = useState<"week" | "day">("week");
+  const navigate = useNavigate();
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const existingAvail = availability.data?.find((a) => a.available_date === dateStr);
@@ -33,9 +152,6 @@ export default function DietitianSchedule() {
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  // Build selectable IDs for drag-select
-  // Week view: "day_col:slot" e.g. "0:09:00"
-  // Day view: "slot" e.g. "09:00"
   const weekSlotIds = weekDays.flatMap((_, dayIdx) =>
     HALF_HOURS.map((slot) => `${dayIdx}:${slot}`)
   );
@@ -43,7 +159,6 @@ export default function DietitianSchedule() {
 
   const handleWeekSelectionComplete = useCallback(
     (selectedIds: string[]) => {
-      // Group by day
       const byDay: Record<number, string[]> = {};
       selectedIds.forEach((id) => {
         const [dayIdx, slot] = [parseInt(id.split(":")[0]), id.slice(id.indexOf(":") + 1)];
@@ -102,7 +217,6 @@ export default function DietitianSchedule() {
     dayDrag.setSelectableIds(daySlotIds);
   }, [daySlotIds.join(",")]);
 
-  // Global pointer up listener for drag
   useEffect(() => {
     const handleUp = () => {
       weekDrag.handlePointerUp();
@@ -123,6 +237,10 @@ export default function DietitianSchedule() {
     return avail ? (avail.time_slots as string[]) : [];
   };
 
+  const handleOpenPatient = (patientId: string) => {
+    navigate(`/dietitian/patients/${patientId}`);
+  };
+
   return (
     <div className="space-y-6 max-w-7xl">
       <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} />
@@ -140,7 +258,6 @@ export default function DietitianSchedule() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-        {/* Main calendar area */}
         <Card>
           <CardContent className="p-0">
             {view === "week" ? (
@@ -152,6 +269,9 @@ export default function DietitianSchedule() {
                 getAvailForDay={getAvailForDay}
                 drag={weekDrag}
                 onRemoveSlot={(dayIdx: number, slot: string) => removeSlot(weekDays[dayIdx], slot)}
+                patients={patients}
+                onOpenPatient={handleOpenPatient}
+                onStartVideo={() => setVideoOpen(true)}
               />
             ) : (
               <DayView
@@ -160,6 +280,9 @@ export default function DietitianSchedule() {
                 getAppointmentsForDay={getAppointmentsForDay}
                 drag={dayDrag}
                 onRemoveSlot={(slot: string) => removeSlot(selectedDate, slot)}
+                patients={patients}
+                onOpenPatient={handleOpenPatient}
+                onStartVideo={() => setVideoOpen(true)}
               />
             )}
           </CardContent>
@@ -210,7 +333,6 @@ export default function DietitianSchedule() {
             </CardContent>
           </Card>
 
-          {/* Today's list */}
           <Card>
             <CardHeader><CardTitle className="text-sm">Dagens bokningar</CardTitle></CardHeader>
             <CardContent className="space-y-2">
@@ -244,9 +366,12 @@ interface WeekViewProps {
   getAvailForDay: (d: Date) => string[];
   drag: ReturnType<typeof useDragSelect>;
   onRemoveSlot: (dayIdx: number, slot: string) => void;
+  patients: any[] | undefined;
+  onOpenPatient: (patientId: string) => void;
+  onStartVideo: () => void;
 }
 
-function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot }: WeekViewProps) {
+function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, onOpenPatient, onStartVideo }: WeekViewProps) {
   return (
     <div className="overflow-x-auto select-none">
       <div className="min-w-[700px]">
@@ -267,7 +392,7 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
           ))}
         </div>
 
-        {/* Time grid with half-hour rows */}
+        {/* Time grid */}
         {HOURS.map((hour) => (
           <div key={hour}>
             {[0, 30].map((minutes) => {
@@ -311,17 +436,25 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
                         }}
                       >
                         {apptAtSlot ? (
-                          <div
-                            className={`text-xs p-1 rounded m-0.5 ${
-                              apptAtSlot.appointment_type === "initial"
-                                ? "bg-primary/15 text-primary"
-                                : "bg-blue-100 text-blue-700"
-                            }`}
+                          <AppointmentPopover
+                            appointment={apptAtSlot}
+                            patients={patients}
+                            onOpenPatient={onOpenPatient}
+                            onStartVideo={onStartVideo}
                           >
-                            <p className="font-medium truncate text-[10px]">
-                              {format(new Date(apptAtSlot.appointment_date), "HH:mm")}
-                            </p>
-                          </div>
+                            <div
+                              className={`text-xs p-1 rounded m-0.5 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${
+                                apptAtSlot.appointment_type === "initial"
+                                  ? "bg-primary/15 text-primary"
+                                  : "bg-accent/50 text-accent-foreground"
+                              }`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <p className="font-medium truncate text-[10px]">
+                                {format(new Date(apptAtSlot.appointment_date), "HH:mm")}
+                              </p>
+                            </div>
+                          </AppointmentPopover>
                         ) : hasSlot ? (
                           <div className="flex items-center justify-center h-full group/slot">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover/slot:hidden" />
@@ -354,9 +487,12 @@ interface DayViewProps {
   getAppointmentsForDay: (d: Date) => any[];
   drag: ReturnType<typeof useDragSelect>;
   onRemoveSlot: (slot: string) => void;
+  patients: any[] | undefined;
+  onOpenPatient: (patientId: string) => void;
+  onStartVideo: () => void;
 }
 
-function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot }: DayViewProps) {
+function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, onOpenPatient, onStartVideo }: DayViewProps) {
   const dayAppts = getAppointmentsForDay(selectedDate);
 
   return (
@@ -401,18 +537,31 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onR
             <span className="text-sm text-muted-foreground w-12 font-mono">{slotTime}</span>
             <div className="flex-1">
               {appt ? (
-                <div className={`p-2 rounded text-sm ${
-                  appt.appointment_type === "initial"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-blue-50 text-blue-700"
-                }`}>
-                  <span className="font-medium">
-                    Patient {appt.user_id?.slice(0, 8)}
-                  </span>
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {appt.appointment_type === "initial" ? "Nybesök" : "Uppföljning"}
-                  </Badge>
-                </div>
+                <AppointmentPopover
+                  appointment={appt}
+                  patients={patients}
+                  onOpenPatient={onOpenPatient}
+                  onStartVideo={onStartVideo}
+                >
+                  <div
+                    className={`p-2 rounded text-sm cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${
+                      appt.appointment_type === "initial"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-accent/50 text-accent-foreground"
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="font-medium">
+                      {(() => {
+                        const patient = patients?.find((p) => p.patient_id === appt.user_id);
+                        return patient ? getPatientDisplayName(patient) : `Patient ${appt.user_id?.slice(0, 8)}`;
+                      })()}
+                    </span>
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {appt.appointment_type === "initial" ? "Nybesök" : "Uppföljning"}
+                    </Badge>
+                  </div>
+                </AppointmentPopover>
               ) : hasSlot ? (
                 <div className="flex items-center gap-2 text-sm text-primary/70 flex-1 justify-between">
                   <div className="flex items-center gap-2">
