@@ -5,6 +5,7 @@ import { ProgressData } from "@/types/progress";
 import { ProgressHeader } from "./shared/ProgressHeader";
 import { MetricCard } from "./shared/MetricCard";
 import { MilestoneList } from "./shared/MilestoneList";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 import { WeeklyOverview } from "./shared/WeeklyOverview";
 import { LogMetricSheet } from "./shared/LogMetricSheet";
 import { Button } from "@/components/ui/button";
