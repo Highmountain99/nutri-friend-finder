@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Upload, Link, UtensilsCrossed } from "lucide-react";
+import { Plus, Upload, Link, UtensilsCrossed, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables, Json } from "@/integrations/supabase/types";
 import { RecipeFilterPanel, type RecipeFilterState, emptyFilterState } from "@/components/dietitian/recipes/RecipeFilterPanel";
@@ -28,6 +29,21 @@ export default function DietitianRecipes() {
   const [showFetch, setShowFetch] = useState(false);
   const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
   const [suggestRecipe, setSuggestRecipe] = useState<{ id: string; title: string; image?: string | null } | null>(null);
+
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBatchSuggest, setShowBatchSuggest] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
 
   // Fetch all recipes
   const { data: recipes, isLoading } = useQuery({
@@ -172,6 +188,12 @@ export default function DietitianRecipes() {
     };
   };
 
+  // Build batch recipes for suggest modal
+  const batchRecipes = Array.from(selectedIds).map((id) => {
+    const r = allRecipes.find((rec) => rec.id === id);
+    return r ? { id: r.id, title: r.title, image: r.image_url } : null;
+  }).filter(Boolean) as { id: string; title: string; image?: string | null }[];
+
   return (
     <div className="space-y-6 max-w-7xl">
       {/* Action bar */}
@@ -191,12 +213,38 @@ export default function DietitianRecipes() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "mine")}>
+      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as "all" | "mine"); clearSelection(); }}>
         <TabsList>
           <TabsTrigger value="all">Alla recept</TabsTrigger>
           <TabsTrigger value="mine">Mina recept</TabsTrigger>
         </TabsList>
       </Tabs>
+
+      {/* Selection bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+          <span className="text-sm font-medium text-primary">
+            {selectedIds.size} recept markerade
+          </span>
+          <Button
+            size="sm"
+            onClick={() => setShowBatchSuggest(true)}
+            className="gap-1.5"
+          >
+            <Send className="h-3.5 w-3.5" />
+            Föreslå till patient
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={clearSelection}
+            className="gap-1 text-muted-foreground ml-auto"
+          >
+            <X className="h-3.5 w-3.5" />
+            Avmarkera
+          </Button>
+        </div>
+      )}
 
       {/* Filter panel */}
       <RecipeFilterPanel
@@ -234,12 +282,15 @@ export default function DietitianRecipes() {
           {filteredRecipes.map((recipe) => {
             const isOwn = recipe.created_by === user?.id;
             const isSaved = savedIds.has(recipe.id);
+            const isSelected = selectedIds.has(recipe.id);
             return (
               <DietitianRecipeCard
                 key={recipe.id}
                 recipe={recipe}
                 isOwn={isOwn}
                 isSaved={isSaved}
+                isSelected={isSelected}
+                onToggleSelect={() => toggleSelect(recipe.id)}
                 onSuggest={(id) =>
                   setSuggestRecipe({ id, title: recipe.title, image: recipe.image_url })
                 }
@@ -273,6 +324,7 @@ export default function DietitianRecipes() {
       <ImportRecipeModal open={showImport} onOpenChange={setShowImport} />
       <FetchRecipeFromUrlModal open={showFetch} onOpenChange={setShowFetch} />
 
+      {/* Single recipe suggest */}
       {suggestRecipe && (
         <SuggestRecipeModal
           open={!!suggestRecipe}
@@ -280,6 +332,18 @@ export default function DietitianRecipes() {
           recipeId={suggestRecipe.id}
           recipeTitle={suggestRecipe.title}
           recipeImage={suggestRecipe.image}
+        />
+      )}
+
+      {/* Batch suggest */}
+      {showBatchSuggest && batchRecipes.length > 0 && (
+        <SuggestRecipeModal
+          open={showBatchSuggest}
+          onOpenChange={(o) => {
+            setShowBatchSuggest(o);
+            if (!o) clearSelection();
+          }}
+          recipes={batchRecipes}
         />
       )}
     </div>
