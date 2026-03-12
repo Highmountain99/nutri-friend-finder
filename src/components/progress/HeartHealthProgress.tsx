@@ -56,24 +56,12 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
       />
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <MetricCard
-          icon={Activity}
-          label="Kolesterol"
-          value={latestCholesterol?.toFixed(1) || '–'}
-          unit="mmol/L"
-          subtitle={`Mål: <${cholesterolTarget}`}
-          status={latestCholesterol ? (isCholesterolOk ? 'success' : 'warning') : 'neutral'}
-        />
-        <MetricCard
-          icon={Heart}
-          label="Blodtryck"
-          value={latestSystolic && latestDiastolic ? `${latestSystolic}/${latestDiastolic}` : '–'}
-          unit="mmHg"
-          subtitle={`Mål: <${systolicTarget}`}
-          status={latestSystolic ? (isBPOk ? 'success' : 'warning') : 'neutral'}
-        />
-      </div>
+      {show('metric_cards') && (
+        <div className="grid grid-cols-2 gap-3">
+          <MetricCard icon={Activity} label="Kolesterol" value={latestCholesterol?.toFixed(1) || '–'} unit="mmol/L" subtitle={`Mål: <${cholesterolTarget}`} status={latestCholesterol ? (isCholesterolOk ? 'success' : 'warning') : 'neutral'} />
+          <MetricCard icon={Heart} label="Blodtryck" value={latestSystolic && latestDiastolic ? `${latestSystolic}/${latestDiastolic}` : '–'} unit="mmHg" subtitle={`Mål: <${systolicTarget}`} status={latestSystolic ? (isBPOk ? 'success' : 'warning') : 'neutral'} />
+        </div>
+      )}
 
       {/* Log Buttons */}
       <div className="flex gap-2 justify-center flex-wrap">
