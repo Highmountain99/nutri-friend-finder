@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Clock, MoreVertical, Send, Pencil, Copy, Trash2, Users, UtensilsCrossed, Bookmark, BookmarkX } from "lucide-react";
+import { Check, Clock, MoreVertical, Send, Pencil, Copy, Trash2, Users, UtensilsCrossed, Bookmark, BookmarkX } from "lucide-react";
 import { getTagLabel } from "@/lib/recipeTags";
 import type { Tables } from "@/integrations/supabase/types";
 
