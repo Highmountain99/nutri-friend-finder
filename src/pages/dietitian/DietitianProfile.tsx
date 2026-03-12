@@ -118,8 +118,8 @@ export default function DietitianProfile() {
           last_name: form.last_name,
           title: form.title,
           bio: form.bio || null,
-          specializations: form.specializations.split(",").map((s) => s.trim()).filter(Boolean),
-          languages: form.languages.split(",").map((s) => s.trim()).filter(Boolean),
+          specializations: form.specializations.filter(Boolean),
+          languages: form.languages.filter(Boolean),
         })
         .eq("id", profile!.id);
       if (error) throw error;
