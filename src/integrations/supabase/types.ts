@@ -599,6 +599,39 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          dietitian_id: string
+          id: string
+          invite_code: string
+          patient_email: string | null
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          invite_code?: string
+          patient_email?: string | null
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          invite_code?: string
+          patient_email?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       patient_progress_config: {
         Row: {
           concern_category_override: string | null

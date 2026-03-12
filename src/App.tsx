@@ -37,6 +37,7 @@ import DietitianMessages from "./pages/dietitian/DietitianMessages";
 import DietitianProfile from "./pages/dietitian/DietitianProfile";
 import DietitianLogin from "./pages/dietitian/DietitianLogin";
 import DietitianStatistics from "./pages/dietitian/DietitianStatistics";
+import Invite from "./pages/Invite";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
             {/* Auth routes - no layout */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/dietitian/login" element={<DietitianLogin />} />
+            <Route path="/invite/:code" element={<Invite />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
