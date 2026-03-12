@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProgressData } from "@/types/progress";
 import { ProgressHeader } from "./shared/ProgressHeader";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 import { useNavigate } from "react-router-dom";
 
 interface EatingDisorderProgressProps {
