@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressData } from "@/types/progress";
 import { ProgressHeader } from "./shared/ProgressHeader";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 
 interface GutHealthProgressProps {
   data: ProgressData;
@@ -138,6 +139,9 @@ export function GutHealthProgress({ data }: GutHealthProgressProps) {
           </CardContent>
         </Card>
       </section>
+
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
 
       {/* Next Steps */}
       <section>

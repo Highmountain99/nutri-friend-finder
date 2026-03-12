@@ -6,6 +6,7 @@ import { ProgressHeader } from "./shared/ProgressHeader";
 import { MetricCard } from "./shared/MetricCard";
 import { TrendChart } from "./shared/TrendChart";
 import { MilestoneList } from "./shared/MilestoneList";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 import { LogMetricSheet } from "./shared/LogMetricSheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -145,6 +146,9 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
           </CardContent>
         </Card>
       </section>
+
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
 
       {/* Milestones */}
       <MilestoneList milestones={data.milestones} />

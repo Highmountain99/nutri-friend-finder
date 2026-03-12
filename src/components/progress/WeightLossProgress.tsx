@@ -4,6 +4,7 @@ import { ProgressHeader } from "./shared/ProgressHeader";
 import { MetricCard } from "./shared/MetricCard";
 import { TrendChart } from "./shared/TrendChart";
 import { MilestoneList } from "./shared/MilestoneList";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 import { WeeklyOverview } from "./shared/WeeklyOverview";
 import { LogMetricSheet } from "./shared/LogMetricSheet";
 import { Button } from "@/components/ui/button";
@@ -100,6 +101,9 @@ export function WeightLossProgress({ data }: WeightLossProgressProps) {
 
       {/* Weekly Overview */}
       <WeeklyOverview stats={data.weeklyStats} showCalories={true} />
+
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
 
       {/* Milestones */}
       <MilestoneList milestones={data.milestones} />

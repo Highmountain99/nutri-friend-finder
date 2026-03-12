@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProgressData } from "@/types/progress";
 import { ProgressHeader } from "./shared/ProgressHeader";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 import { useNavigate } from "react-router-dom";
 
 interface EatingDisorderProgressProps {
@@ -127,30 +128,8 @@ export function EatingDisorderProgress({ data }: EatingDisorderProgressProps) {
         </Card>
       </section>
 
-      {/* Weekly Goals from Dietitian */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-          🎯 Veckomål från dietist
-        </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4 space-y-3">
-            {WEEKLY_GOALS.map((goal) => (
-              <div key={goal.id} className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  goal.completed 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted text-muted-foreground'
-                }`}>
-                  {goal.completed ? <Check className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-                </div>
-                <span className={`text-sm ${goal.completed ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {goal.title}
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
 
       {/* Next Appointment */}
       <section>

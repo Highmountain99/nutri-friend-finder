@@ -8,6 +8,7 @@ import { TrendChart } from "./shared/TrendChart";
 import { LogMetricSheet } from "./shared/LogMetricSheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 
 interface HeartHealthProgressProps {
   data: ProgressData;
@@ -155,6 +156,9 @@ export function HeartHealthProgress({ data }: HeartHealthProgressProps) {
           </CardContent>
         </Card>
       </section>
+
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
 
       {/* Tips */}
       <Card className="shadow-soft bg-gradient-to-r from-red-50/50 to-background dark:from-red-950/20">
