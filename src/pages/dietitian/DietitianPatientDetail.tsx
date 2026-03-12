@@ -22,6 +22,7 @@ import { TreatmentPlanTab } from "@/components/dietitian/TreatmentPlanTab";
 import { FoodLogTab } from "@/components/dietitian/FoodLogTab";
 import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
 import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
+import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
