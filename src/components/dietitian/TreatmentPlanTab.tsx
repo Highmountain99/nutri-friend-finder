@@ -196,7 +196,7 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
             <DialogHeader><DialogTitle>Ny behandlingsplan</DialogTitle></DialogHeader>
-            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={() => { archivePlan.mutate(activePlan.id); handleCreate(); }} isPending={createPlan.isPending} />
+            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={() => { archivePlan.mutate(activePlan.id); handleCreate(); }} isPending={createPlan.isPending} patientContext={patientContext} />
           </DialogContent>
         </Dialog>
       )}
