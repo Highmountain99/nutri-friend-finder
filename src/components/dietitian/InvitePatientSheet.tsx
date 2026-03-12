@@ -23,6 +23,20 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
 
+  // Fetch dietitian profile for name slug
+  const { data: dietitianProfile } = useQuery({
+    queryKey: ["dietitian-profile-slug", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("dietitian_profiles")
+        .select("first_name, last_name")
+        .eq("user_id", user!.id)
+        .single();
+      return data;
+    },
+    enabled: !!user && open,
+  });
+
   // Get or create a general invite link for this dietitian
   const { data: generalInvite, isLoading: loadingGeneral } = useQuery({
     queryKey: ["dietitian-general-invite", user?.id],
@@ -88,8 +102,12 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
     onError: () => toast.error("Kunde inte skapa inbjudan"),
   });
 
+  const nameSlug = dietitianProfile
+    ? `${dietitianProfile.first_name}-${dietitianProfile.last_name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-zåäö0-9-]/g, "")
+    : "";
+
   const inviteUrl = generalInvite
-    ? `${window.location.origin}/invite/${(generalInvite as any).invite_code}`
+    ? `${window.location.origin}/invite/${nameSlug ? nameSlug + "-" : ""}${(generalInvite as any).invite_code}`
     : "";
 
   const copyLink = async () => {
