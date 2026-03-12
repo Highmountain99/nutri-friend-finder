@@ -7,9 +7,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Save, Camera } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Loader2, Save, Camera, X, ChevronDown, Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+
+const SPECIALIZATION_OPTIONS = [
+  "IBS", "Viktnedgång", "Diabetes typ 1", "Diabetes typ 2", "Ätstörningar",
+  "Hjärt- och kärlsjukdom", "Celiaki", "Allergi & intolerans", "PCOS",
+  "Graviditet & amning", "Idrottsnutrition", "Barnnutrition", "Geriatrik",
+  "Vegansk/vegetarisk kost", "Njursjukdom", "Leversjukdom", "Onkologi",
+  "Obesitas", "Magtarmsjukdomar", "Emotionellt ätande", "Klimakteriet",
+];
+
+const LANGUAGE_OPTIONS = [
+  "Svenska", "Engelska", "Arabiska", "Persiska", "Somaliska", "Finska",
+  "Norska", "Danska", "Tyska", "Franska", "Spanska", "Portugisiska",
+  "Italienska", "Ryska", "Polska", "Turkiska", "Kinesiska (mandarin)",
+  "Hindi", "Urdu", "Bengaliska", "Japanska", "Koreanska", "Thailändska",
+  "Vietnamesiska", "Grekiska", "Nederländska", "Rumänska", "Ungerska",
+  "Tjeckiska", "Kroatiska", "Serbiska", "Bosniska", "Albanska", "Kurdiska",
+  "Tigrinja", "Amhariska", "Swahili",
+];
 
 export default function DietitianProfile() {
   const { data: profile, isLoading } = useDietitianProfile();
