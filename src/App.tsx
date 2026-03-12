@@ -37,6 +37,7 @@ import DietitianMessages from "./pages/dietitian/DietitianMessages";
 import DietitianProfile from "./pages/dietitian/DietitianProfile";
 import DietitianLogin from "./pages/dietitian/DietitianLogin";
 import DietitianStatistics from "./pages/dietitian/DietitianStatistics";
+import Invite from "./pages/Invite";
 
 const queryClient = new QueryClient();
 
