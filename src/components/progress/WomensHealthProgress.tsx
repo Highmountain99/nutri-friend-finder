@@ -13,6 +13,7 @@ import { Plus } from "lucide-react";
 
 interface WomensHealthProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
 // Focus areas for women's health (PCOS focus)
@@ -22,7 +23,7 @@ const FOCUS_AREAS = [
   { name: 'Vikthantering', description: 'Hållbar viktminskning vid behov' },
 ];
 
-export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
+export function WomensHealthProgress({ data, show }: WomensHealthProgressProps) {
   const weightEntries = data.healthEntries.filter(e => e.metric_type === 'weight');
   const waistEntries = data.healthEntries.filter(e => e.metric_type === 'waist_circumference');
 
