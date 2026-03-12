@@ -2,14 +2,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, GripVertical, Eye, EyeOff } from "lucide-react";
+import { Loader2, GripVertical, Eye, EyeOff, Smartphone } from "lucide-react";
+import { ModulePreview } from "./progress-builder/ModulePreview";
+import { TEMPLATE_SECTION_DEFAULTS } from "./progress-builder/templateDefaults";
 
 const TEMPLATE_OPTIONS: { value: string; label: string; description: string }[] = [
   { value: "auto", label: "Automatisk (från kvalificering)", description: "Baseras på patientens egna val" },
@@ -31,8 +32,6 @@ const SECTION_OPTIONS: { value: string; label: string; description: string }[] =
   { value: "log_button", label: "Loggningsknapp", description: "Snabbknapp för att logga mätvärden" },
   { value: "macro_progress", label: "Makroöversikt", description: "Protein, kolhydrater, fett" },
 ];
-
-const ALL_SECTIONS = SECTION_OPTIONS.map(s => s.value);
 
 interface ConfigureProgressSheetProps {
   open: boolean;
@@ -70,32 +69,49 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     enabled: open,
   });
 
+  const buildSectionsFromTemplate = useCallback((tmpl: string, savedSections?: string[] | null) => {
+    const defaults = TEMPLATE_SECTION_DEFAULTS[tmpl] || TEMPLATE_SECTION_DEFAULTS["auto"];
+    const enabledSet = new Set(savedSections && savedSections.length > 0 ? savedSections : defaults);
+    
+    const ordered: SectionItem[] = [];
+    // Enabled first in order
+    if (savedSections && savedSections.length > 0) {
+      for (const val of savedSections) {
+        const opt = SECTION_OPTIONS.find(s => s.value === val);
+        if (opt) ordered.push({ ...opt, enabled: true });
+      }
+    } else {
+      for (const val of defaults) {
+        const opt = SECTION_OPTIONS.find(s => s.value === val);
+        if (opt) ordered.push({ ...opt, enabled: true });
+      }
+    }
+    // Then disabled
+    for (const opt of SECTION_OPTIONS) {
+      if (!ordered.find(o => o.value === opt.value)) {
+        ordered.push({ ...opt, enabled: false });
+      }
+    }
+    return ordered;
+  }, []);
+
   useEffect(() => {
     if (config) {
-      setTemplate(config.concern_category_override || "auto");
+      const tmpl = config.concern_category_override || "auto";
+      setTemplate(tmpl);
       const savedSections = (config as any).visible_sections as string[] | null;
-      const enabledSet = new Set(savedSections && savedSections.length > 0 ? savedSections : ALL_SECTIONS);
-
-      // Build ordered list: enabled sections first (in saved order), then disabled ones
-      const ordered: SectionItem[] = [];
-      if (savedSections && savedSections.length > 0) {
-        for (const val of savedSections) {
-          const opt = SECTION_OPTIONS.find(s => s.value === val);
-          if (opt) ordered.push({ ...opt, enabled: true });
-        }
-      }
-      // Add any that aren't in the saved list
-      for (const opt of SECTION_OPTIONS) {
-        if (!ordered.find(o => o.value === opt.value)) {
-          ordered.push({ ...opt, enabled: enabledSet.has(opt.value) });
-        }
-      }
-      setOrderedSections(ordered);
+      setOrderedSections(buildSectionsFromTemplate(tmpl, savedSections));
     } else {
       setTemplate("auto");
-      setOrderedSections(SECTION_OPTIONS.map(s => ({ ...s, enabled: true })));
+      setOrderedSections(buildSectionsFromTemplate("auto"));
     }
-  }, [config]);
+  }, [config, buildSectionsFromTemplate]);
+
+  const handleTemplateChange = (newTemplate: string) => {
+    setTemplate(newTemplate);
+    // Reset sections to template defaults
+    setOrderedSections(buildSectionsFromTemplate(newTemplate));
+  };
 
   const toggleSection = (value: string) => {
     setOrderedSections(prev =>
@@ -107,7 +123,6 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     setDragIdx(idx);
     dragNode.current = e.currentTarget;
     e.dataTransfer.effectAllowed = "move";
-    // Make drag image semi-transparent
     requestAnimationFrame(() => {
       if (dragNode.current) dragNode.current.style.opacity = "0.4";
     });
@@ -131,43 +146,6 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     setOverIdx(null);
     dragNode.current = null;
   }, [dragIdx, overIdx]);
-
-  // Touch drag support
-  const touchStartY = useRef(0);
-  const touchIdx = useRef<number | null>(null);
-
-  const handleTouchStart = useCallback((idx: number, e: React.TouchEvent) => {
-    touchIdx.current = idx;
-    touchStartY.current = e.touches[0].clientY;
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (touchIdx.current === null) return;
-    const touch = e.touches[0];
-    const elements = document.querySelectorAll("[data-section-idx]");
-    for (let i = 0; i < elements.length; i++) {
-      const rect = elements[i].getBoundingClientRect();
-      if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-        setOverIdx(parseInt(elements[i].getAttribute("data-section-idx") || "0"));
-        break;
-      }
-    }
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    const from = touchIdx.current;
-    const to = overIdx;
-    if (from !== null && to !== null && from !== to) {
-      setOrderedSections(prev => {
-        const updated = [...prev];
-        const [removed] = updated.splice(from, 1);
-        updated.splice(to, 0, removed);
-        return updated;
-      });
-    }
-    touchIdx.current = null;
-    setOverIdx(null);
-  }, [overIdx]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -206,27 +184,34 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     }
   };
 
+  const enabledSections = orderedSections.filter(s => s.enabled);
+  const disabledSections = orderedSections.filter(s => !s.enabled);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Designa utvecklingsvy</SheetTitle>
-          <SheetDescription>
-            Välj template och dra för att ordna elementen som patienten ser.
-          </SheetDescription>
-        </SheetHeader>
+      <SheetContent className="overflow-y-auto sm:max-w-lg w-full p-0">
+        <div className="p-6 pb-3">
+          <SheetHeader className="text-left">
+            <SheetTitle className="text-lg">Designa utvecklingsvy</SheetTitle>
+            <SheetDescription className="text-sm">
+              Välj template och bygg patientens vy genom att dra moduler.
+            </SheetDescription>
+          </SheetHeader>
+        </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-8">
+          <div className="flex justify-center py-12">
             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-6 mt-6">
+          <div className="space-y-5 pb-6">
             {/* Template selector */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Template</Label>
-              <Select value={template} onValueChange={setTemplate}>
-                <SelectTrigger>
+            <div className="px-6 space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Template
+              </Label>
+              <Select value={template} onValueChange={handleTemplateChange}>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -244,56 +229,100 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
 
             <Separator />
 
-            {/* Draggable section list */}
-            <div className="space-y-1">
-              <Label className="text-sm font-medium">Element & ordning</Label>
-              <p className="text-xs text-muted-foreground mb-3">
-                Dra för att ändra ordning. Klicka på ögat för att visa/dölja.
-              </p>
-              <div className="space-y-1.5">
-                {orderedSections.map((section, idx) => (
-                  <div
-                    key={section.value}
-                    data-section-idx={idx}
-                    draggable
-                    onDragStart={(e) => handleDragStart(idx, e)}
-                    onDragEnter={() => handleDragEnter(idx)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDragEnd={handleDragEnd}
-                    onTouchStart={(e) => handleTouchStart(idx, e)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                    className={`
-                      flex items-center gap-3 p-3 rounded-xl border bg-card transition-all select-none
-                      ${dragIdx === idx ? "opacity-40" : ""}
-                      ${overIdx === idx && dragIdx !== null && dragIdx !== idx ? "border-primary ring-1 ring-primary/30" : "border-border"}
-                      ${!section.enabled ? "opacity-50" : ""}
-                    `}
-                  >
-                    <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 cursor-grab active:cursor-grabbing" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{section.label}</p>
-                      <p className="text-xs text-muted-foreground truncate">{section.description}</p>
+            {/* Phone preview with active modules */}
+            <div className="px-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Smartphone className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Patientens vy
+                </Label>
+              </div>
+
+              {/* Phone frame */}
+              <div className="mx-auto max-w-[320px] border-2 border-border rounded-[2rem] bg-background shadow-lg overflow-hidden">
+                {/* Status bar */}
+                <div className="h-6 bg-muted/50 flex items-center justify-center">
+                  <div className="w-16 h-1 bg-muted-foreground/20 rounded-full" />
+                </div>
+
+                {/* Content area */}
+                <div className="p-4 space-y-4 min-h-[340px]">
+                  {enabledSections.length === 0 ? (
+                    <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
+                      Inga element valda
                     </div>
-                    <button
-                      onClick={() => toggleSection(section.value)}
-                      className="shrink-0 p-1.5 rounded-lg hover:bg-muted transition-colors"
-                    >
-                      {section.enabled ? (
-                        <Eye className="h-4 w-4 text-primary" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                ))}
+                  ) : (
+                    enabledSections.map((section, idx) => (
+                      <div
+                        key={section.value}
+                        data-section-idx={orderedSections.findIndex(s => s.value === section.value)}
+                        draggable
+                        onDragStart={(e) => handleDragStart(orderedSections.findIndex(s => s.value === section.value), e)}
+                        onDragEnter={() => handleDragEnter(orderedSections.findIndex(s => s.value === section.value))}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDragEnd={handleDragEnd}
+                        className={`
+                          group relative rounded-xl border bg-card p-3 transition-all cursor-grab active:cursor-grabbing select-none
+                          ${overIdx === orderedSections.findIndex(s => s.value === section.value) && dragIdx !== null
+                            ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
+                            : "border-border hover:border-primary/40"
+                          }
+                        `}
+                      >
+                        {/* Drag handle + visibility toggle overlay */}
+                        <div className="absolute -left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleSection(section.value); }}
+                          className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all z-10"
+                        >
+                          <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                        </button>
+
+                        <ModulePreview sectionValue={section.value} label={section.label} />
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Home indicator */}
+                <div className="h-5 flex items-center justify-center">
+                  <div className="w-24 h-1 bg-muted-foreground/20 rounded-full" />
+                </div>
               </div>
             </div>
 
-            <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Spara design
-            </Button>
+            {/* Disabled modules pool */}
+            {disabledSections.length > 0 && (
+              <div className="px-6 space-y-3">
+                <Separator />
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tillgängliga element
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Klicka för att lägga till i vyn.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {disabledSections.map(section => (
+                    <button
+                      key={section.value}
+                      onClick={() => toggleSection(section.value)}
+                      className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                    >
+                      <ModulePreview sectionValue={section.value} label={section.label} compact />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="px-6 pt-2">
+              <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl">
+                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Spara design
+              </Button>
+            </div>
           </div>
         )}
       </SheetContent>
