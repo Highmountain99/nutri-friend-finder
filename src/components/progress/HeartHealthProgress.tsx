@@ -15,12 +15,11 @@ interface HeartHealthProgressProps {
   show: (section: string) => boolean;
 }
 
-// Mediterranean diet scoring (simplified)
 const HEART_HEALTHY_CHOICES = [
-  { name: 'Fet fisk', target: 2, current: 4, unit: 'portioner' },
-  { name: 'Grönsaker', target: 14, current: 12, unit: 'portioner' },
-  { name: 'Baljväxter', target: 3, current: 3, unit: 'portioner' },
-  { name: 'Fullkorn', target: 7, current: 5, unit: 'portioner' },
+  { name: 'Fet fisk', icon: Fish, target: 2, current: 4, unit: 'portioner' },
+  { name: 'Grönsaker', icon: Leaf, target: 14, current: 12, unit: 'portioner' },
+  { name: 'Baljväxter', icon: Target, target: 3, current: 3, unit: 'portioner' },
+  { name: 'Fullkorn', icon: Target, target: 7, current: 5, unit: 'portioner' },
 ];
 
 export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
@@ -32,14 +31,12 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
   const latestSystolic = systolicEntries[0]?.value;
   const latestDiastolic = diastolicEntries[0]?.value;
 
-  // Targets
   const cholesterolTarget = 5.0;
   const systolicTarget = 130;
 
   const isCholesterolOk = latestCholesterol && latestCholesterol < cholesterolTarget;
   const isBPOk = latestSystolic && latestSystolic < systolicTarget;
 
-  // Mediterranean score (simplified calculation)
   const totalScore = HEART_HEALTHY_CHOICES.reduce((sum, item) => {
     return sum + Math.min((item.current / item.target) * 25, 25);
   }, 0);
@@ -49,13 +46,12 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
     .reverse();
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in">
+    <div className="px-4 py-6 space-y-5 animate-fade-in pb-24">
       <ProgressHeader 
         title="Hjärthälsa"
         subtitle="Följ dina värden och kostval"
       />
 
-      {/* Key Metrics */}
       {show('metric_cards') && (
         <div className="grid grid-cols-2 gap-3">
           <MetricCard icon={Activity} label="Kolesterol" value={latestCholesterol?.toFixed(1) || '–'} unit="mmol/L" subtitle={`Mål: <${cholesterolTarget}`} status={latestCholesterol ? (isCholesterolOk ? 'success' : 'warning') : 'neutral'} />
@@ -63,62 +59,55 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
         </div>
       )}
 
-      {/* Log Buttons */}
       {show('log_button') && (
         <div className="flex gap-2 justify-center flex-wrap">
-          <LogMetricSheet metricType="cholesterol_total" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Kolesterol</Button>} />
-          <LogMetricSheet metricType="blood_pressure_systolic" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Blodtryck</Button>} />
+          <LogMetricSheet metricType="cholesterol_total" trigger={<Button variant="outline" size="sm" className="gap-2 rounded-full px-4 border-border/60 font-medium shadow-sm"><Plus className="w-3.5 h-3.5" />Kolesterol</Button>} />
+          <LogMetricSheet metricType="blood_pressure_systolic" trigger={<Button variant="outline" size="sm" className="gap-2 rounded-full px-4 border-border/60 font-medium shadow-sm"><Plus className="w-3.5 h-3.5" />Blodtryck</Button>} />
         </div>
       )}
 
-      {/* Mediterranean Score */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           🥗 Medelhavspoäng
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-2.5">
               <span className="text-sm text-muted-foreground">Denna vecka</span>
-              <span className="font-bold text-foreground">{Math.round(totalScore)}/100</span>
+              <span className="font-bold text-foreground text-lg">{Math.round(totalScore)}/100</span>
             </div>
-            <Progress value={totalScore} className="h-2 mb-3" />
-            <p className="text-xs text-muted-foreground">
-              ↑ +5 jämfört med förra veckan
-            </p>
+            <Progress value={totalScore} className="h-2.5 rounded-full mb-2.5" />
+            <p className="text-xs text-muted-foreground">↑ +5 jämfört med förra veckan</p>
           </CardContent>
         </Card>
       </section>
 
-      {/* Cholesterol Trend */}
       {show('trend_chart') && cholesterolChartData.length > 0 && (
         <TrendChart title="Kolesteroltrend (6 mån)" data={cholesterolChartData} unit="mmol/L" targetValue={cholesterolTarget} targetLabel={`Mål: <${cholesterolTarget}`} />
       )}
 
-      {/* Heart-Healthy Choices */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           ✅ Hjärtvänliga val denna vecka
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4 space-y-4">
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5 space-y-4">
             {HEART_HEALTHY_CHOICES.map((item) => {
               const percentage = Math.min((item.current / item.target) * 100, 100);
               const isComplete = item.current >= item.target;
+              const Icon = item.icon;
               return (
                 <div key={item.name}>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      {item.name === 'Fet fisk' && <Fish className="w-4 h-4 text-primary" />}
-                      {item.name === 'Grönsaker' && <Leaf className="w-4 h-4 text-primary" />}
-                      {item.name !== 'Fet fisk' && item.name !== 'Grönsaker' && <Target className="w-4 h-4 text-primary" />}
+                      <Icon className="w-4 h-4 text-primary" />
                       <span className="text-sm font-medium text-foreground">{item.name}</span>
                     </div>
-                    <span className={`text-sm ${isComplete ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                    <span className={`text-sm font-medium ${isComplete ? 'text-primary' : 'text-muted-foreground'}`}>
                       {item.current}/{item.target} {item.unit}
                     </span>
                   </div>
-                  <Progress value={percentage} className="h-1.5" />
+                  <Progress value={percentage} className="h-2 rounded-full" />
                 </div>
               );
             })}
@@ -126,17 +115,17 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
         </Card>
       </section>
 
-      {/* Treatment Plan from Dietitian */}
       {show('treatment_plan') && <TreatmentPlanSection />}
 
-      {/* Tips */}
-      <Card className="shadow-soft bg-gradient-to-r from-red-50/50 to-background dark:from-red-950/20">
-        <CardContent className="p-4">
+      <Card className="border-border/50 shadow-sm bg-gradient-to-br from-destructive/5 to-background">
+        <CardContent className="p-5">
           <div className="flex items-start gap-3">
-            <Heart className="w-5 h-5 text-red-500 mt-0.5" />
+            <div className="w-10 h-10 rounded-2xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+              <Heart className="w-5 h-5 text-destructive/70" />
+            </div>
             <div>
-              <p className="text-sm font-medium text-foreground mb-1">Tips för bättre hjärthälsa</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-semibold text-foreground mb-1">Tips för bättre hjärthälsa</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Ersätt rött kött med fisk 2 gånger i veckan. Olivolja istället för smör. 
                 30 min promenad dagligen.
               </p>
