@@ -226,9 +226,57 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
   );
 }
 
-function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending }: any) {
+function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending, patientContext }: any) {
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleAiSuggest = async () => {
+    if (!patientContext) {
+      toast.error("Ingen patientdata tillgänglig för AI-förslag");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-treatment-plan", {
+        body: { patientContext },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const plan = data.plan;
+      setForm({
+        title: plan.title || "",
+        description: plan.description || "",
+        goals: (plan.goals || []).map((g: any) => ({
+          title: g.title || "",
+          description: g.description || "",
+          planned_start: g.planned_start || "",
+          planned_end: g.planned_end || "",
+          milestones: g.milestones?.length ? g.milestones : [""],
+        })),
+      });
+      toast.success("AI-förslag tillämpat! Granska och justera innan du sparar.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Kunde inte generera AI-förslag");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={handleAiSuggest}
+          disabled={aiLoading || !patientContext}
+        >
+          {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {aiLoading ? "Genererar förslag…" : "AI-förslag baserat på patient"}
+        </Button>
+      </div>
+
       <Input placeholder="Plantitel" value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} />
       <Textarea placeholder="Beskrivning (valfritt)" value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} rows={2} />
 
