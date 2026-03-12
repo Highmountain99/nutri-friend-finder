@@ -4,9 +4,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Clock, MoreVertical, Send, Pencil, Copy, Trash2, Users, UtensilsCrossed } from "lucide-react";
+import { Clock, MoreVertical, Send, Pencil, Copy, Trash2, Users, UtensilsCrossed, Bookmark, BookmarkX } from "lucide-react";
 import { getTagLabel } from "@/lib/recipeTags";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -14,20 +15,27 @@ type Recipe = Tables<"recipes"> & { is_published?: boolean };
 
 interface DietitianRecipeCardProps {
   recipe: Recipe;
+  isOwn?: boolean;
+  isSaved?: boolean;
   onSuggest: (id: string) => void;
-  onEdit: (recipe: Recipe) => void;
+  onEdit?: (recipe: Recipe) => void;
   onDuplicate: (recipe: Recipe) => void;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onSaveToMine?: (id: string) => void;
+  onRemoveFromMine?: (id: string) => void;
 }
 
 export function DietitianRecipeCard({
   recipe,
+  isOwn,
+  isSaved,
   onSuggest,
   onEdit,
   onDuplicate,
   onDelete,
+  onSaveToMine,
+  onRemoveFromMine,
 }: DietitianRecipeCardProps) {
-  // Gather all tags
   const allTags = [
     ...(recipe.cuisine_types || []),
     ...(recipe.meal_types || []),
@@ -53,10 +61,15 @@ export function DietitianRecipeCard({
         </div>
       )}
 
-      {/* Draft badge */}
-      {!isPublished && (
-        <Badge variant="secondary" className="absolute top-2 left-2 text-[10px]">Utkast</Badge>
-      )}
+      {/* Badges */}
+      <div className="absolute top-2 left-2 flex gap-1">
+        {!isPublished && (
+          <Badge variant="secondary" className="text-[10px]">Utkast</Badge>
+        )}
+        {isSaved && !isOwn && (
+          <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-0">Sparad</Badge>
+        )}
+      </div>
 
       {/* 3-dot menu */}
       <div className="absolute top-2 right-2">
@@ -74,15 +87,37 @@ export function DietitianRecipeCard({
             <DropdownMenuItem onClick={() => onSuggest(recipe.id)}>
               <Send className="h-3.5 w-3.5 mr-2" /> Föreslå till patient
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(recipe)}>
-              <Pencil className="h-3.5 w-3.5 mr-2" /> Redigera
-            </DropdownMenuItem>
+
+            {onSaveToMine && (
+              <DropdownMenuItem onClick={() => onSaveToMine(recipe.id)}>
+                <Bookmark className="h-3.5 w-3.5 mr-2" /> Lägg till i mina recept
+              </DropdownMenuItem>
+            )}
+
+            {onRemoveFromMine && (
+              <DropdownMenuItem onClick={() => onRemoveFromMine(recipe.id)}>
+                <BookmarkX className="h-3.5 w-3.5 mr-2" /> Ta bort från mina recept
+              </DropdownMenuItem>
+            )}
+
+            {onEdit && (
+              <DropdownMenuItem onClick={() => onEdit(recipe)}>
+                <Pencil className="h-3.5 w-3.5 mr-2" /> Redigera
+              </DropdownMenuItem>
+            )}
+
             <DropdownMenuItem onClick={() => onDuplicate(recipe)}>
               <Copy className="h-3.5 w-3.5 mr-2" /> Duplicera
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive" onClick={() => onDelete(recipe.id)}>
-              <Trash2 className="h-3.5 w-3.5 mr-2" /> Ta bort
-            </DropdownMenuItem>
+
+            {onDelete && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive" onClick={() => onDelete(recipe.id)}>
+                  <Trash2 className="h-3.5 w-3.5 mr-2" /> Ta bort
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

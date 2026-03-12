@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Upload, Link, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables, Json } from "@/integrations/supabase/types";
@@ -20,6 +21,7 @@ export default function DietitianRecipes() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState<"all" | "mine">("all");
   const [filters, setFilters] = useState<RecipeFilterState>(emptyFilterState);
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -27,7 +29,7 @@ export default function DietitianRecipes() {
   const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
   const [suggestRecipe, setSuggestRecipe] = useState<{ id: string; title: string; image?: string | null } | null>(null);
 
-  // Fetch all recipes (dietitian sees all)
+  // Fetch all recipes
   const { data: recipes, isLoading } = useQuery({
     queryKey: ["dietitian-recipes"],
     queryFn: async () => {
@@ -41,10 +43,30 @@ export default function DietitianRecipes() {
     },
   });
 
+  // Fetch saved/favorite recipe IDs
+  const { data: favoriteIds } = useQuery({
+    queryKey: ["dietitian-favorite-recipes", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_favorite_recipes")
+        .select("recipe_id")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return new Set(data.map((f) => f.recipe_id));
+    },
+    enabled: !!user,
+  });
+
+  const savedIds = favoriteIds || new Set<string>();
   const allRecipes = recipes || [];
 
+  // Tab filtering
+  const tabFiltered = activeTab === "mine"
+    ? allRecipes.filter((r) => r.created_by === user?.id || savedIds.has(r.id))
+    : allRecipes;
+
   // Client-side filtering
-  const filteredRecipes = allRecipes.filter((r) => {
+  const filteredRecipes = tabFiltered.filter((r) => {
     if (filters.search) {
       const q = filters.search.toLowerCase();
       const ingredientText = JSON.stringify(r.ingredients || []).toLowerCase();
@@ -86,6 +108,37 @@ export default function DietitianRecipes() {
       toast.success("Recept duplicerat som utkast");
     },
     onError: () => toast.error("Kunde inte duplicera recept"),
+  });
+
+  const saveToMyRecipes = useMutation({
+    mutationFn: async (recipeId: string) => {
+      const { error } = await supabase.from("user_favorite_recipes").insert({
+        user_id: user!.id,
+        recipe_id: recipeId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dietitian-favorite-recipes"] });
+      toast.success("Recept tillagt i mina recept");
+    },
+    onError: () => toast.error("Kunde inte spara recept"),
+  });
+
+  const removeFromMyRecipes = useMutation({
+    mutationFn: async (recipeId: string) => {
+      const { error } = await supabase
+        .from("user_favorite_recipes")
+        .delete()
+        .eq("user_id", user!.id)
+        .eq("recipe_id", recipeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dietitian-favorite-recipes"] });
+      toast.success("Recept borttaget från mina recept");
+    },
+    onError: () => toast.error("Kunde inte ta bort recept"),
   });
 
   const recipeToFormData = (r: Recipe): Partial<RecipeFormData> => {
@@ -137,11 +190,19 @@ export default function DietitianRecipes() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "mine")}>
+        <TabsList>
+          <TabsTrigger value="all">Alla recept</TabsTrigger>
+          <TabsTrigger value="mine">Mina recept</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Filter panel */}
       <RecipeFilterPanel
         filters={filters}
         onChange={setFilters}
-        totalCount={allRecipes.length}
+        totalCount={tabFiltered.length}
         filteredCount={filteredRecipes.length}
       />
 
@@ -162,26 +223,38 @@ export default function DietitianRecipes() {
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <UtensilsCrossed className="h-12 w-12 mb-3 opacity-30" />
           <p className="font-medium">Inga recept hittades</p>
-          <p className="text-sm mt-1">Prova att ändra filter eller skapa ett nytt recept.</p>
+          <p className="text-sm mt-1">
+            {activeTab === "mine"
+              ? "Du har inga egna recept ännu. Skapa ett nytt eller lägg till från alla recept."
+              : "Prova att ändra filter eller skapa ett nytt recept."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredRecipes.map((recipe) => (
-            <DietitianRecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              onSuggest={(id) =>
-                setSuggestRecipe({ id, title: recipe.title, image: recipe.image_url })
-              }
-              onEdit={(r) => setEditRecipe(r)}
-              onDuplicate={(r) => duplicateRecipe.mutate(r)}
-              onDelete={(id) => {
-                if (confirm("Vill du verkligen ta bort detta recept?")) {
-                  deleteRecipe.mutate(id);
+          {filteredRecipes.map((recipe) => {
+            const isOwn = recipe.created_by === user?.id;
+            const isSaved = savedIds.has(recipe.id);
+            return (
+              <DietitianRecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                isOwn={isOwn}
+                isSaved={isSaved}
+                onSuggest={(id) =>
+                  setSuggestRecipe({ id, title: recipe.title, image: recipe.image_url })
                 }
-              }}
-            />
-          ))}
+                onEdit={isOwn ? (r) => setEditRecipe(r) : undefined}
+                onDuplicate={(r) => duplicateRecipe.mutate(r)}
+                onDelete={isOwn ? (id) => {
+                  if (confirm("Vill du verkligen ta bort detta recept?")) {
+                    deleteRecipe.mutate(id);
+                  }
+                } : undefined}
+                onSaveToMine={!isOwn && !isSaved ? (id) => saveToMyRecipes.mutate(id) : undefined}
+                onRemoveFromMine={isSaved && !isOwn ? (id) => removeFromMyRecipes.mutate(id) : undefined}
+              />
+            );
+          })}
         </div>
       )}
 
