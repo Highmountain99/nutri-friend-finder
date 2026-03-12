@@ -12,9 +12,10 @@ import { Plus } from "lucide-react";
 
 interface WeightLossProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
-export function WeightLossProgress({ data }: WeightLossProgressProps) {
+export function WeightLossProgress({ data, show }: WeightLossProgressProps) {
   const weightEntries = data.healthEntries.filter(e => e.metric_type === 'weight');
   const latestWeight = weightEntries[0]?.value;
   const firstWeight = weightEntries[weightEntries.length - 1]?.value;
