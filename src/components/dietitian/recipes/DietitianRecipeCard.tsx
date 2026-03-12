@@ -79,7 +79,7 @@ export function DietitianRecipeCard({
       )}
 
       {/* Badges */}
-      <div className="absolute top-2 left-2 flex gap-1">
+      <div className={`absolute top-2 flex gap-1 ${onToggleSelect ? "left-9" : "left-2"}`}>
         {!isPublished && (
           <Badge variant="secondary" className="text-[10px]">Utkast</Badge>
         )}
