@@ -56,26 +56,12 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
       )}
 
       {/* Log Buttons */}
-      <div className="flex gap-2 justify-center">
-        <LogMetricSheet 
-          metricType="weight"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Logga vikt
-            </Button>
-          }
-        />
-        <LogMetricSheet 
-          metricType="waist_circumference"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Logga midjemått
-            </Button>
-          }
-        />
-      </div>
+      {show('log_button') && (
+        <div className="flex gap-2 justify-center">
+          <LogMetricSheet metricType="weight" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Logga vikt</Button>} />
+          <LogMetricSheet metricType="waist_circumference" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Logga midjemått</Button>} />
+        </div>
+      )}
 
       {/* Weight Trend */}
       {weightChartData.length > 0 && (
