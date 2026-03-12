@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Clock, MoreVertical, Send, Pencil, Copy, Trash2, Users, UtensilsCrossed, Bookmark, BookmarkX } from "lucide-react";
+import { Check, Clock, MoreVertical, Send, Pencil, Copy, Trash2, Users, UtensilsCrossed, Bookmark, BookmarkX } from "lucide-react";
 import { getTagLabel } from "@/lib/recipeTags";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -17,6 +17,8 @@ interface DietitianRecipeCardProps {
   recipe: Recipe;
   isOwn?: boolean;
   isSaved?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
   onSuggest: (id: string) => void;
   onEdit?: (recipe: Recipe) => void;
   onDuplicate: (recipe: Recipe) => void;
@@ -29,6 +31,8 @@ export function DietitianRecipeCard({
   recipe,
   isOwn,
   isSaved,
+  isSelected,
+  onToggleSelect,
   onSuggest,
   onEdit,
   onDuplicate,
@@ -49,7 +53,20 @@ export function DietitianRecipeCard({
   const isPublished = (recipe as any).is_published !== false;
 
   return (
-    <div className="group relative rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md">
+    <div className={`group relative rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md ${isSelected ? "ring-2 ring-primary border-primary" : ""}`}>
+      {/* Select checkbox */}
+      {onToggleSelect && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+          className={`absolute top-2 left-2 z-10 h-5 w-5 rounded border-2 flex items-center justify-center transition-all ${
+            isSelected
+              ? "bg-primary border-primary text-primary-foreground"
+              : "border-white/80 bg-white/60 backdrop-blur-sm opacity-0 group-hover:opacity-100"
+          }`}
+        >
+          {isSelected && <Check className="h-3 w-3" />}
+        </button>
+      )}
       {/* Image */}
       {recipe.image_url ? (
         <div className="h-40 bg-muted">
@@ -62,7 +79,7 @@ export function DietitianRecipeCard({
       )}
 
       {/* Badges */}
-      <div className="absolute top-2 left-2 flex gap-1">
+      <div className={`absolute top-2 flex gap-1 ${onToggleSelect ? "left-9" : "left-2"}`}>
         {!isPublished && (
           <Badge variant="secondary" className="text-[10px]">Utkast</Badge>
         )}
