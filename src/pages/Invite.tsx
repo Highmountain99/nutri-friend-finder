@@ -20,11 +20,15 @@ export default function Invite() {
 
   useEffect(() => {
     if (!code) return;
+    // Extract the actual invite code (last 6 hex chars after optional name prefix)
+    const match = code.match(/([a-f0-9]{6})$/);
+    const inviteCode = match ? match[1] : code;
+
     (async () => {
       const { data, error } = await supabase
         .from("patient_invitations" as any)
         .select("*")
-        .eq("invite_code", code)
+        .eq("invite_code", inviteCode)
         .eq("status", "pending")
         .limit(1);
 
