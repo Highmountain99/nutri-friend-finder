@@ -10,7 +10,6 @@ interface GutHealthProgressProps {
   show: (section: string) => boolean;
 }
 
-// FODMAP phases with foods to test
 const FODMAP_PHASES = [
   { name: 'Eliminering', duration: '2-6 veckor' },
   { name: 'Återintroduktion', duration: '6-8 veckor' },
@@ -29,7 +28,7 @@ export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
   const symptomFreeDays = data.weeklyStats.symptomFreeDays || 0;
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in">
+    <div className="px-4 py-6 space-y-5 animate-fade-in pb-24">
       <ProgressHeader 
         title="FODMAP-resan"
         subtitle={`Fas ${currentPhase}: ${FODMAP_PHASES[currentPhase - 1]?.name}`}
@@ -40,13 +39,12 @@ export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
         }}
       />
 
-      {/* Phase Overview */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {FODMAP_PHASES.map((phase, index) => (
           <Badge
             key={phase.name}
             variant={index + 1 === currentPhase ? 'default' : index + 1 < currentPhase ? 'secondary' : 'outline'}
-            className="whitespace-nowrap flex items-center gap-1"
+            className="whitespace-nowrap flex items-center gap-1.5 rounded-full px-3.5 py-1.5"
           >
             {index + 1 < currentPhase && <Check className="w-3 h-3" />}
             {index + 1 === currentPhase && <Circle className="w-3 h-3 fill-current" />}
@@ -55,22 +53,21 @@ export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
         ))}
       </div>
 
-      {/* Current Challenge */}
       {currentPhase === 2 && (
         <section>
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
             Aktuell utmaning
           </h2>
-          <Card className="shadow-soft border-l-4 border-l-primary">
-            <CardContent className="p-4">
+          <Card className="border-border/50 shadow-sm border-l-4 border-l-primary">
+            <CardContent className="p-5">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Leaf className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium text-foreground">Testar: Laktos (mjölk)</h3>
-                  <p className="text-sm text-muted-foreground">Dag 2 av 3</p>
-                  <button className="text-sm text-primary font-medium mt-2 hover:underline">
+                  <h3 className="font-semibold text-foreground">Testar: Laktos (mjölk)</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">Dag 2 av 3</p>
+                  <button className="text-sm text-primary font-semibold mt-2 hover:underline">
                     Logga reaktion →
                   </button>
                 </div>
@@ -80,34 +77,33 @@ export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
         </section>
       )}
 
-      {/* Identified Triggers */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           Identifierade triggers
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4 space-y-3">
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5 space-y-3.5">
             {FODMAP_GROUPS.map((group) => (
               <div key={group.name} className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
                   group.status === 'trigger' 
-                    ? 'bg-amber-100 text-amber-600' 
+                    ? 'bg-amber-500/10 text-amber-600' 
                     : group.status === 'safe'
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-primary-soft text-primary'
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-primary/10 text-primary'
                 }`}>
                   {group.status === 'trigger' && <AlertCircle className="w-4 h-4" />}
                   {group.status === 'safe' && <Check className="w-4 h-4" />}
                   {group.status === 'testing' && <Circle className="w-4 h-4" />}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{group.name}</p>
+                  <p className="text-sm font-semibold text-foreground">{group.name}</p>
                   <p className="text-xs text-muted-foreground">{group.foods}</p>
                 </div>
                 <Badge variant={
                   group.status === 'trigger' ? 'destructive' : 
                   group.status === 'safe' ? 'secondary' : 'default'
-                } className="text-xs">
+                } className="text-[10px] rounded-full px-2.5">
                   {group.status === 'trigger' ? 'Trigger' : group.status === 'safe' ? 'OK' : 'Testar'}
                 </Badge>
               </div>
@@ -116,20 +112,19 @@ export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
         </Card>
       </section>
 
-      {/* Symptom-Free Days */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           Symptomfria dagar
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary-soft flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <span className="text-2xl font-bold text-primary">{symptomFreeDays}</span>
               </div>
               <div>
-                <p className="font-medium text-foreground">av 7 dagar denna vecka</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">av 7 dagar denna vecka</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
                   {symptomFreeDays >= 5 
                     ? '↑ Bättre än förra veckan!' 
                     : 'Fortsätt följa protokollet'
@@ -141,22 +136,24 @@ export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
         </Card>
       </section>
 
-      {/* Treatment Plan from Dietitian */}
       {show('treatment_plan') && <TreatmentPlanSection />}
 
-      {/* Next Steps */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           Nästa steg
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span>Slutför laktostest (1 dag kvar)</span>
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-primary" />
+              </div>
+              <span className="font-medium">Slutför laktostest (1 dag kvar)</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Leaf className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-8 h-8 rounded-xl bg-muted/60 flex items-center justify-center">
+                <Leaf className="w-4 h-4 text-muted-foreground" />
+              </div>
               <span className="text-muted-foreground">Börja testa fruktan (bröd)</span>
             </div>
           </CardContent>

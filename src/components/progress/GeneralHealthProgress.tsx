@@ -20,7 +20,6 @@ export function GeneralHealthProgress({ data, show }: GeneralHealthProgressProps
   const weightEntries = data.healthEntries.filter(e => e.metric_type === 'weight');
   const latestWeight = weightEntries[0]?.value;
 
-  // Mock macro targets (would come from nutrition goals in real implementation)
   const macroProgress = {
     protein: { current: 45, target: 60, unit: 'g' },
     carbs: { current: 180, target: 250, unit: 'g' },
@@ -28,13 +27,12 @@ export function GeneralHealthProgress({ data, show }: GeneralHealthProgressProps
   };
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in">
+    <div className="px-4 py-6 space-y-5 animate-fade-in pb-24">
       <ProgressHeader 
         title="Din utveckling"
         subtitle="Följ dina hälsoframsteg"
       />
 
-      {/* Overview Stats */}
       {show('metric_cards') && (
         <div className="grid grid-cols-2 gap-3">
           <MetricCard icon={Flame} label="Kalorier idag" value={data.weeklyStats.caloriesAvg || '–'} unit="kcal" subtitle={data.weeklyStats.caloriesGoal ? `Mål: ${data.weeklyStats.caloriesGoal}` : undefined} status="neutral" />
@@ -42,52 +40,41 @@ export function GeneralHealthProgress({ data, show }: GeneralHealthProgressProps
         </div>
       )}
 
-      {/* Log Weight (if relevant) */}
       {show('log_button') && latestWeight && (
         <div className="flex justify-center">
-          <LogMetricSheet metricType="weight" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Logga vikt ({latestWeight.toFixed(1)} kg)</Button>} />
+          <LogMetricSheet metricType="weight" trigger={
+            <Button variant="outline" size="sm" className="gap-2 rounded-full px-5 border-border/60 font-medium shadow-sm">
+              <Plus className="w-4 h-4" />Logga vikt ({latestWeight.toFixed(1)} kg)
+            </Button>
+          } />
         </div>
       )}
 
-      {/* Macro Progress */}
       {show('macro_progress') && (
         <section>
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Makros idag</h2>
-          <Card className="shadow-soft">
-            <CardContent className="p-4 space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2"><Dumbbell className="w-4 h-4 text-primary" /><span className="text-sm font-medium">Protein</span></div>
-                  <span className="text-sm text-muted-foreground">{macroProgress.protein.current}/{macroProgress.protein.target}{macroProgress.protein.unit}</span>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Makros idag</h2>
+          <Card className="border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-4">
+              {[
+                { label: 'Protein', icon: Dumbbell, color: 'text-primary', data: macroProgress.protein },
+                { label: 'Kolhydrater', icon: TrendingUp, color: 'text-amber-500', data: macroProgress.carbs },
+                { label: 'Fett', icon: Flame, color: 'text-destructive/70', data: macroProgress.fat },
+              ].map(({ label, icon: Icon, color, data: d }) => (
+                <div key={label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2"><Icon className={`w-4 h-4 ${color}`} /><span className="text-sm font-medium">{label}</span></div>
+                    <span className="text-sm text-muted-foreground font-medium">{d.current}/{d.target}{d.unit}</span>
+                  </div>
+                  <Progress value={(d.current / d.target) * 100} className="h-2 rounded-full" />
                 </div>
-                <Progress value={(macroProgress.protein.current / macroProgress.protein.target) * 100} className="h-2" />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-amber-500" /><span className="text-sm font-medium">Kolhydrater</span></div>
-                  <span className="text-sm text-muted-foreground">{macroProgress.carbs.current}/{macroProgress.carbs.target}{macroProgress.carbs.unit}</span>
-                </div>
-                <Progress value={(macroProgress.carbs.current / macroProgress.carbs.target) * 100} className="h-2" />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2"><Flame className="w-4 h-4 text-red-500" /><span className="text-sm font-medium">Fett</span></div>
-                  <span className="text-sm text-muted-foreground">{macroProgress.fat.current}/{macroProgress.fat.target}{macroProgress.fat.unit}</span>
-                </div>
-                <Progress value={(macroProgress.fat.current / macroProgress.fat.target) * 100} className="h-2" />
-              </div>
+              ))}
             </CardContent>
           </Card>
         </section>
       )}
 
-      {/* Weekly Overview */}
       {show('weekly_overview') && <WeeklyOverview stats={data.weeklyStats} showCalories={true} />}
-
-      {/* Treatment Plan from Dietitian */}
       {show('treatment_plan') && <TreatmentPlanSection />}
-
-      {/* Milestones */}
       {show('milestones') && <MilestoneList milestones={data.milestones} />}
     </div>
   );
