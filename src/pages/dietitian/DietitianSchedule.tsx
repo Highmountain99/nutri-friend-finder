@@ -133,6 +133,7 @@ export default function DietitianSchedule() {
           <p className="text-muted-foreground">Dra över tidsluckor för att göra dig tillgänglig.</p>
         </div>
         <div className="flex gap-2">
+          <CalendarSyncSheet />
           <Button variant={view === "week" ? "default" : "outline"} size="sm" onClick={() => setView("week")}>Vecka</Button>
           <Button variant={view === "day" ? "default" : "outline"} size="sm" onClick={() => setView("day")}>Dag</Button>
         </div>
