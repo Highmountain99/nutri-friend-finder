@@ -57,8 +57,8 @@ export default function DietitianProfile() {
         last_name: profile.last_name,
         title: profile.title,
         bio: profile.bio ?? "",
-        specializations: (profile.specializations ?? []).join(", "),
-        languages: (profile.languages ?? []).join(", "),
+        specializations: profile.specializations ?? [],
+        languages: profile.languages ?? [],
       });
     }
   }, [profile]);
