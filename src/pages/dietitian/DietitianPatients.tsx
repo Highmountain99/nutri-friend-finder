@@ -28,7 +28,7 @@ export default function DietitianPatients() {
   const filtered = (patients ?? []).filter((p) => {
     if (!search) return true;
     const q = search.toLowerCase();
-    const concern = p.intake_profile?.primary_concern_category ?? "";
+    const concern = p.intake_profile?.unified_concern_category ?? p.intake_profile?.primary_concern_category ?? "";
     const name = getPatientDisplayName(p).toLowerCase();
     return (
       name.includes(q) ||
