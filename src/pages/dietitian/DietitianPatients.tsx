@@ -178,6 +178,8 @@ export default function DietitianPatients() {
           })}
         </div>
       )}
+
+      <InvitePatientSheet open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   );
 }
