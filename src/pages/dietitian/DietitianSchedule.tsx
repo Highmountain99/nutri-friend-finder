@@ -376,11 +376,12 @@ interface WeekViewProps {
   drag: ReturnType<typeof useDragSelect>;
   onRemoveSlot: (dayIdx: number, slot: string) => void;
   patients: any[] | undefined;
+  allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
   onStartVideo: () => void;
 }
 
-function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, onOpenPatient, onStartVideo }: WeekViewProps) {
+function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: WeekViewProps) {
   return (
     <div className="overflow-x-auto select-none">
       <div className="min-w-[700px]">
