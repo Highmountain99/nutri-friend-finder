@@ -13,6 +13,7 @@ import { Plus } from "lucide-react";
 
 interface WomensHealthProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
 // Focus areas for women's health (PCOS focus)
@@ -22,7 +23,7 @@ const FOCUS_AREAS = [
   { name: 'Vikthantering', description: 'Hållbar viktminskning vid behov' },
 ];
 
-export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
+export function WomensHealthProgress({ data, show }: WomensHealthProgressProps) {
   const weightEntries = data.healthEntries.filter(e => e.metric_type === 'weight');
   const waistEntries = data.healthEntries.filter(e => e.metric_type === 'waist_circumference');
 
@@ -48,55 +49,24 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
       />
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <MetricCard
-          icon={Scale}
-          label="Vikt"
-          value={latestWeight?.toFixed(1) || '–'}
-          unit="kg"
-          trend={weightChange > 0 ? 'down' : weightChange < 0 ? 'up' : undefined}
-          trendValue={weightChange !== 0 ? `${Math.abs(weightChange).toFixed(1)} kg` : undefined}
-          status="neutral"
-        />
-        <MetricCard
-          icon={Target}
-          label="Midjemått"
-          value={latestWaist?.toFixed(0) || '–'}
-          unit="cm"
-          subtitle="Mål: <80 cm"
-          status={latestWaist ? (latestWaist < 80 ? 'success' : 'warning') : 'neutral'}
-        />
-      </div>
+      {show('metric_cards') && (
+        <div className="grid grid-cols-2 gap-3">
+          <MetricCard icon={Scale} label="Vikt" value={latestWeight?.toFixed(1) || '–'} unit="kg" trend={weightChange > 0 ? 'down' : weightChange < 0 ? 'up' : undefined} trendValue={weightChange !== 0 ? `${Math.abs(weightChange).toFixed(1)} kg` : undefined} status="neutral" />
+          <MetricCard icon={Target} label="Midjemått" value={latestWaist?.toFixed(0) || '–'} unit="cm" subtitle="Mål: <80 cm" status={latestWaist ? (latestWaist < 80 ? 'success' : 'warning') : 'neutral'} />
+        </div>
+      )}
 
       {/* Log Buttons */}
-      <div className="flex gap-2 justify-center">
-        <LogMetricSheet 
-          metricType="weight"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Logga vikt
-            </Button>
-          }
-        />
-        <LogMetricSheet 
-          metricType="waist_circumference"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Logga midjemått
-            </Button>
-          }
-        />
-      </div>
+      {show('log_button') && (
+        <div className="flex gap-2 justify-center">
+          <LogMetricSheet metricType="weight" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Logga vikt</Button>} />
+          <LogMetricSheet metricType="waist_circumference" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Logga midjemått</Button>} />
+        </div>
+      )}
 
       {/* Weight Trend */}
-      {weightChartData.length > 0 && (
-        <TrendChart
-          title="Viktutveckling"
-          data={weightChartData}
-          unit="kg"
-        />
+      {show('trend_chart') && weightChartData.length > 0 && (
+        <TrendChart title="Viktutveckling" data={weightChartData} unit="kg" />
       )}
 
       {/* Focus Areas */}
@@ -148,10 +118,10 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Milestones */}
-      <MilestoneList milestones={data.milestones} />
+      {show('milestones') && <MilestoneList milestones={data.milestones} />}
 
       {/* PCOS Tips */}
       <Card className="shadow-soft bg-gradient-to-r from-pink-50/50 to-background dark:from-pink-950/20">

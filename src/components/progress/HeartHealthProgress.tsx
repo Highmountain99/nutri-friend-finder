@@ -12,6 +12,7 @@ import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 
 interface HeartHealthProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
 // Mediterranean diet scoring (simplified)
@@ -22,7 +23,7 @@ const HEART_HEALTHY_CHOICES = [
   { name: 'Fullkorn', target: 7, current: 5, unit: 'portioner' },
 ];
 
-export function HeartHealthProgress({ data }: HeartHealthProgressProps) {
+export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
   const cholesterolEntries = data.healthEntries.filter(e => e.metric_type === 'cholesterol_total');
   const systolicEntries = data.healthEntries.filter(e => e.metric_type === 'blood_pressure_systolic');
   const diastolicEntries = data.healthEntries.filter(e => e.metric_type === 'blood_pressure_diastolic');
@@ -55,46 +56,20 @@ export function HeartHealthProgress({ data }: HeartHealthProgressProps) {
       />
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <MetricCard
-          icon={Activity}
-          label="Kolesterol"
-          value={latestCholesterol?.toFixed(1) || '–'}
-          unit="mmol/L"
-          subtitle={`Mål: <${cholesterolTarget}`}
-          status={latestCholesterol ? (isCholesterolOk ? 'success' : 'warning') : 'neutral'}
-        />
-        <MetricCard
-          icon={Heart}
-          label="Blodtryck"
-          value={latestSystolic && latestDiastolic ? `${latestSystolic}/${latestDiastolic}` : '–'}
-          unit="mmHg"
-          subtitle={`Mål: <${systolicTarget}`}
-          status={latestSystolic ? (isBPOk ? 'success' : 'warning') : 'neutral'}
-        />
-      </div>
+      {show('metric_cards') && (
+        <div className="grid grid-cols-2 gap-3">
+          <MetricCard icon={Activity} label="Kolesterol" value={latestCholesterol?.toFixed(1) || '–'} unit="mmol/L" subtitle={`Mål: <${cholesterolTarget}`} status={latestCholesterol ? (isCholesterolOk ? 'success' : 'warning') : 'neutral'} />
+          <MetricCard icon={Heart} label="Blodtryck" value={latestSystolic && latestDiastolic ? `${latestSystolic}/${latestDiastolic}` : '–'} unit="mmHg" subtitle={`Mål: <${systolicTarget}`} status={latestSystolic ? (isBPOk ? 'success' : 'warning') : 'neutral'} />
+        </div>
+      )}
 
       {/* Log Buttons */}
-      <div className="flex gap-2 justify-center flex-wrap">
-        <LogMetricSheet 
-          metricType="cholesterol_total"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Kolesterol
-            </Button>
-          }
-        />
-        <LogMetricSheet 
-          metricType="blood_pressure_systolic"
-          trigger={
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Blodtryck
-            </Button>
-          }
-        />
-      </div>
+      {show('log_button') && (
+        <div className="flex gap-2 justify-center flex-wrap">
+          <LogMetricSheet metricType="cholesterol_total" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Kolesterol</Button>} />
+          <LogMetricSheet metricType="blood_pressure_systolic" trigger={<Button variant="outline" size="sm" className="gap-2"><Plus className="w-4 h-4" />Blodtryck</Button>} />
+        </div>
+      )}
 
       {/* Mediterranean Score */}
       <section>
@@ -116,14 +91,8 @@ export function HeartHealthProgress({ data }: HeartHealthProgressProps) {
       </section>
 
       {/* Cholesterol Trend */}
-      {cholesterolChartData.length > 0 && (
-        <TrendChart
-          title="Kolesteroltrend (6 mån)"
-          data={cholesterolChartData}
-          unit="mmol/L"
-          targetValue={cholesterolTarget}
-          targetLabel={`Mål: <${cholesterolTarget}`}
-        />
+      {show('trend_chart') && cholesterolChartData.length > 0 && (
+        <TrendChart title="Kolesteroltrend (6 mån)" data={cholesterolChartData} unit="mmol/L" targetValue={cholesterolTarget} targetLabel={`Mål: <${cholesterolTarget}`} />
       )}
 
       {/* Heart-Healthy Choices */}
@@ -158,7 +127,7 @@ export function HeartHealthProgress({ data }: HeartHealthProgressProps) {
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Tips */}
       <Card className="shadow-soft bg-gradient-to-r from-red-50/50 to-background dark:from-red-950/20">

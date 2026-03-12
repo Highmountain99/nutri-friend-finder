@@ -12,9 +12,10 @@ import { Plus } from "lucide-react";
 
 interface WeightLossProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
-export function WeightLossProgress({ data }: WeightLossProgressProps) {
+export function WeightLossProgress({ data, show }: WeightLossProgressProps) {
   const weightEntries = data.healthEntries.filter(e => e.metric_type === 'weight');
   const latestWeight = weightEntries[0]?.value;
   const firstWeight = weightEntries[weightEntries.length - 1]?.value;
@@ -41,72 +42,35 @@ export function WeightLossProgress({ data }: WeightLossProgressProps) {
       />
 
       {/* Weight Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <MetricCard
-          icon={Scale}
-          label="Nu"
-          value={latestWeight?.toFixed(1) || '–'}
-          unit="kg"
-          status="neutral"
-        />
-        <MetricCard
-          icon={TrendingDown}
-          label="Tappat"
-          value={weightLost > 0 ? weightLost.toFixed(1) : '0'}
-          unit="kg"
-          status={weightLost > 0 ? 'success' : 'neutral'}
-          trend={weightLost > 0 ? 'down' : undefined}
-        />
-        {firstWeight && (
-          <MetricCard
-            icon={Target}
-            label="Startvikt"
-            value={firstWeight.toFixed(1)}
-            unit="kg"
-            status="neutral"
-          />
-        )}
-        {remainingWeight !== undefined && remainingWeight > 0 && (
-          <MetricCard
-            icon={Target}
-            label="Kvar till mål"
-            value={remainingWeight.toFixed(1)}
-            unit="kg"
-            status="neutral"
-          />
-        )}
-      </div>
+      {show('metric_cards') && (
+        <div className="grid grid-cols-2 gap-3">
+          <MetricCard icon={Scale} label="Nu" value={latestWeight?.toFixed(1) || '–'} unit="kg" status="neutral" />
+          <MetricCard icon={TrendingDown} label="Tappat" value={weightLost > 0 ? weightLost.toFixed(1) : '0'} unit="kg" status={weightLost > 0 ? 'success' : 'neutral'} trend={weightLost > 0 ? 'down' : undefined} />
+          {firstWeight && <MetricCard icon={Target} label="Startvikt" value={firstWeight.toFixed(1)} unit="kg" status="neutral" />}
+          {remainingWeight !== undefined && remainingWeight > 0 && <MetricCard icon={Target} label="Kvar till mål" value={remainingWeight.toFixed(1)} unit="kg" status="neutral" />}
+        </div>
+      )}
 
       {/* Log Weight Button */}
-      <div className="flex justify-center">
-        <LogMetricSheet 
-          metricType="weight"
-          trigger={
-            <Button variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Logga vikt
-            </Button>
-          }
-        />
-      </div>
+      {show('log_button') && (
+        <div className="flex justify-center">
+          <LogMetricSheet metricType="weight" trigger={<Button variant="outline" className="gap-2"><Plus className="w-4 h-4" />Logga vikt</Button>} />
+        </div>
+      )}
 
       {/* Weight Trend Chart */}
-      <TrendChart
-        title="Viktutveckling"
-        data={chartData}
-        unit="kg"
-        targetValue={targetWeight}
-        targetLabel={targetWeight ? `Mål: ${targetWeight.toFixed(0)} kg` : undefined}
-      />
+      {show('trend_chart') && (
+        <TrendChart title="Viktutveckling" data={chartData} unit="kg" targetValue={targetWeight} targetLabel={targetWeight ? `Mål: ${targetWeight.toFixed(0)} kg` : undefined} />
+      )}
 
       {/* Weekly Overview */}
-      <WeeklyOverview stats={data.weeklyStats} showCalories={true} />
+      {show('weekly_overview') && <WeeklyOverview stats={data.weeklyStats} showCalories={true} />}
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Milestones */}
-      <MilestoneList milestones={data.milestones} />
+      {show('milestones') && <MilestoneList milestones={data.milestones} />}
     </div>
   );
 }

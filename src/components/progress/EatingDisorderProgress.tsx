@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 interface EatingDisorderProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
 // Affirmations for daily focus
@@ -26,7 +27,7 @@ const WEEKLY_GOALS = [
   { id: '3', title: 'Äta tillsammans med någon', completed: false },
 ];
 
-export function EatingDisorderProgress({ data }: EatingDisorderProgressProps) {
+export function EatingDisorderProgress({ data, show }: EatingDisorderProgressProps) {
   const navigate = useNavigate();
   
   // Get a consistent affirmation for today based on date
@@ -129,7 +130,7 @@ export function EatingDisorderProgress({ data }: EatingDisorderProgressProps) {
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Next Appointment */}
       <section>

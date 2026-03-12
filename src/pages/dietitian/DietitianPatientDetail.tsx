@@ -22,6 +22,7 @@ import { TreatmentPlanTab } from "@/components/dietitian/TreatmentPlanTab";
 import { FoodLogTab } from "@/components/dietitian/FoodLogTab";
 import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
 import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
+import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
@@ -67,6 +68,7 @@ export default function DietitianPatientDetail() {
   const { data: patients } = useAssignedPatients();
   const [activeTab, setActiveTab] = useState("overview");
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
+  const [configProgressOpen, setConfigProgressOpen] = useState(false);
 
   const [chatInput, setChatInput] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
@@ -263,11 +265,32 @@ export default function DietitianPatientDetail() {
                 </CardContent>
               </Card>
 
+              {/* Progress configuration */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm">Patientens utvecklingsvy</CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => setConfigProgressOpen(true)}>
+                    <Pencil className="h-3 w-3 mr-1" /> Anpassa
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Välj template och synliga element för patientens utvecklingssida.
+                  </p>
+                </CardContent>
+              </Card>
+
               <EditPatientGoalsSheet
                 open={editGoalsOpen}
                 onOpenChange={setEditGoalsOpen}
                 patientId={id!}
                 currentGoals={nutritionSettings}
+              />
+
+              <ConfigureProgressSheet
+                open={configProgressOpen}
+                onOpenChange={setConfigProgressOpen}
+                patientId={id!}
               />
 
               {/* Quick notes */}

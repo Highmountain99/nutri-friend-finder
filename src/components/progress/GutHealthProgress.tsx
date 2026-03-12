@@ -7,6 +7,7 @@ import { TreatmentPlanSection } from "./shared/TreatmentPlanSection";
 
 interface GutHealthProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
 // FODMAP phases with foods to test
@@ -23,7 +24,7 @@ const FODMAP_GROUPS = [
   { name: 'Polyoler', foods: 'Svamp, blomkål, sötningsmedel', status: 'safe' as const },
 ];
 
-export function GutHealthProgress({ data }: GutHealthProgressProps) {
+export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
   const currentPhase = data.treatmentPhase?.currentPhase || 1;
   const symptomFreeDays = data.weeklyStats.symptomFreeDays || 0;
 
@@ -141,7 +142,7 @@ export function GutHealthProgress({ data }: GutHealthProgressProps) {
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Next Steps */}
       <section>
