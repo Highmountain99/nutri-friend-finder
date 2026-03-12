@@ -30,12 +30,14 @@ const HALF_HOURS = HOURS.flatMap((h) => [
 function AppointmentPopover({
   appointment,
   patients,
+  allAppointments,
   children,
   onOpenPatient,
   onStartVideo,
 }: {
   appointment: any;
   patients: any[] | undefined;
+  allAppointments: any[];
   children: React.ReactNode;
   onOpenPatient: (patientId: string) => void;
   onStartVideo: () => void;
@@ -47,7 +49,14 @@ function AppointmentPopover({
   const initials = patient?.first_name && patient?.last_name
     ? `${patient.first_name[0]}${patient.last_name[0]}`
     : patientName.slice(0, 2).toUpperCase();
-  const typeLabel = appointment.appointment_type === "initial" ? "Nybesök" : "Uppföljning";
+
+  // Check if this is the first meeting with this patient
+  const isFirstMeeting = !allAppointments.some(
+    (a) => a.user_id === appointment.user_id &&
+      a.id !== appointment.id &&
+      new Date(a.appointment_date) < new Date(appointment.appointment_date)
+  );
+  const typeLabel = isFirstMeeting ? "Introduktion" : "Uppföljning";
   const apptDate = new Date(appointment.appointment_date);
   const concern = patient?.intake_profile?.unified_concern_category || patient?.intake_profile?.primary_concern_category;
 
