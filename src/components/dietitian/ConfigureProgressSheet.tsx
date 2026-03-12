@@ -64,24 +64,24 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
   });
 
   const buildSectionsFromTemplate = useCallback((tmpl: string, savedSections?: string[] | null) => {
+    const templateSections = getSectionsForTemplate(tmpl);
     const defaults = TEMPLATE_SECTION_DEFAULTS[tmpl] || TEMPLATE_SECTION_DEFAULTS["auto"];
-    const enabledSet = new Set(savedSections && savedSections.length > 0 ? savedSections : defaults);
     
     const ordered: SectionItem[] = [];
     // Enabled first in order
     if (savedSections && savedSections.length > 0) {
       for (const val of savedSections) {
-        const opt = SECTION_OPTIONS.find(s => s.value === val);
+        const opt = templateSections.find(s => s.value === val);
         if (opt) ordered.push({ ...opt, enabled: true });
       }
     } else {
       for (const val of defaults) {
-        const opt = SECTION_OPTIONS.find(s => s.value === val);
+        const opt = templateSections.find(s => s.value === val);
         if (opt) ordered.push({ ...opt, enabled: true });
       }
     }
     // Then disabled
-    for (const opt of SECTION_OPTIONS) {
+    for (const opt of templateSections) {
       if (!ordered.find(o => o.value === opt.value)) {
         ordered.push({ ...opt, enabled: false });
       }
