@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_invitations ALTER COLUMN invite_code SET DEFAULT encode(gen_random_bytes(3), 'hex');
