@@ -176,6 +176,9 @@ export function DiabetesProgress({ data }: DiabetesProgressProps) {
         </Card>
       </section>
 
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
+
       {/* Milestones */}
       <MilestoneList milestones={data.milestones} />
     </div>

@@ -126,6 +126,9 @@ export function GeneralHealthProgress({ data }: GeneralHealthProgressProps) {
       {/* Weekly Overview */}
       <WeeklyOverview stats={data.weeklyStats} showCalories={true} />
 
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
+
       {/* Milestones */}
       <MilestoneList milestones={data.milestones} />
     </div>

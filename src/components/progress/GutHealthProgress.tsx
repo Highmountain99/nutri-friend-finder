@@ -140,6 +140,9 @@ export function GutHealthProgress({ data }: GutHealthProgressProps) {
         </Card>
       </section>
 
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
+
       {/* Next Steps */}
       <section>
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">

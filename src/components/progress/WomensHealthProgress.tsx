@@ -147,6 +147,9 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
         </Card>
       </section>
 
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
+
       {/* Milestones */}
       <MilestoneList milestones={data.milestones} />
 

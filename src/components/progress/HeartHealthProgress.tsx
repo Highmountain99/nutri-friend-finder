@@ -157,6 +157,9 @@ export function HeartHealthProgress({ data }: HeartHealthProgressProps) {
         </Card>
       </section>
 
+      {/* Treatment Plan from Dietitian */}
+      <TreatmentPlanSection />
+
       {/* Tips */}
       <Card className="shadow-soft bg-gradient-to-r from-red-50/50 to-background dark:from-red-950/20">
         <CardContent className="p-4">
