@@ -48,25 +48,12 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
       />
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <MetricCard
-          icon={Scale}
-          label="Vikt"
-          value={latestWeight?.toFixed(1) || '–'}
-          unit="kg"
-          trend={weightChange > 0 ? 'down' : weightChange < 0 ? 'up' : undefined}
-          trendValue={weightChange !== 0 ? `${Math.abs(weightChange).toFixed(1)} kg` : undefined}
-          status="neutral"
-        />
-        <MetricCard
-          icon={Target}
-          label="Midjemått"
-          value={latestWaist?.toFixed(0) || '–'}
-          unit="cm"
-          subtitle="Mål: <80 cm"
-          status={latestWaist ? (latestWaist < 80 ? 'success' : 'warning') : 'neutral'}
-        />
-      </div>
+      {show('metric_cards') && (
+        <div className="grid grid-cols-2 gap-3">
+          <MetricCard icon={Scale} label="Vikt" value={latestWeight?.toFixed(1) || '–'} unit="kg" trend={weightChange > 0 ? 'down' : weightChange < 0 ? 'up' : undefined} trendValue={weightChange !== 0 ? `${Math.abs(weightChange).toFixed(1)} kg` : undefined} status="neutral" />
+          <MetricCard icon={Target} label="Midjemått" value={latestWaist?.toFixed(0) || '–'} unit="cm" subtitle="Mål: <80 cm" status={latestWaist ? (latestWaist < 80 ? 'success' : 'warning') : 'neutral'} />
+        </div>
+      )}
 
       {/* Log Buttons */}
       <div className="flex gap-2 justify-center">
