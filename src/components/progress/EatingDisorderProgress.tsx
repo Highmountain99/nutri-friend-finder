@@ -130,7 +130,7 @@ export function EatingDisorderProgress({ data, show }: EatingDisorderProgressPro
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Next Appointment */}
       <section>

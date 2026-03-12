@@ -142,7 +142,7 @@ export function GutHealthProgress({ data, show }: GutHealthProgressProps) {
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Next Steps */}
       <section>

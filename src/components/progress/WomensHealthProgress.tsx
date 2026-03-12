@@ -117,10 +117,10 @@ export function WomensHealthProgress({ data }: WomensHealthProgressProps) {
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Milestones */}
-      <MilestoneList milestones={data.milestones} />
+      {show('milestones') && <MilestoneList milestones={data.milestones} />}
 
       {/* PCOS Tips */}
       <Card className="shadow-soft bg-gradient-to-r from-pink-50/50 to-background dark:from-pink-950/20">

@@ -127,7 +127,7 @@ export function HeartHealthProgress({ data, show }: HeartHealthProgressProps) {
       </section>
 
       {/* Treatment Plan from Dietitian */}
-      <TreatmentPlanSection />
+      {show('treatment_plan') && <TreatmentPlanSection />}
 
       {/* Tips */}
       <Card className="shadow-soft bg-gradient-to-r from-red-50/50 to-background dark:from-red-950/20">
