@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_progress_config ADD COLUMN visible_sections text[] DEFAULT '{}'::text[];

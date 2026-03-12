@@ -608,6 +608,7 @@ export type Database = {
           patient_id: string
           updated_at: string | null
           visible_metrics: string[] | null
+          visible_sections: string[] | null
         }
         Insert: {
           concern_category_override?: string | null
@@ -617,6 +618,7 @@ export type Database = {
           patient_id: string
           updated_at?: string | null
           visible_metrics?: string[] | null
+          visible_sections?: string[] | null
         }
         Update: {
           concern_category_override?: string | null
@@ -626,6 +628,7 @@ export type Database = {
           patient_id?: string
           updated_at?: string | null
           visible_metrics?: string[] | null
+          visible_sections?: string[] | null
         }
         Relationships: []
       }
