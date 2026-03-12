@@ -102,8 +102,12 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
     onError: () => toast.error("Kunde inte skapa inbjudan"),
   });
 
+  const nameSlug = dietitianProfile
+    ? `${dietitianProfile.first_name}-${dietitianProfile.last_name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-zåäö0-9-]/g, "")
+    : "";
+
   const inviteUrl = generalInvite
-    ? `${window.location.origin}/invite/${(generalInvite as any).invite_code}`
+    ? `${window.location.origin}/invite/${nameSlug ? nameSlug + "-" : ""}${(generalInvite as any).invite_code}`
     : "";
 
   const copyLink = async () => {
