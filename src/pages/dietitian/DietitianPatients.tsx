@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, User, ArrowRight, Search, LayoutGrid, List } from "lucide-react";
+import { Loader2, User, ArrowRight, Search, LayoutGrid, List, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState } from "react";
+import { InvitePatientSheet } from "@/components/dietitian/InvitePatientSheet";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
