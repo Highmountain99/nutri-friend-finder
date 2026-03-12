@@ -11,19 +11,19 @@ interface MilestoneListProps {
 export function MilestoneList({ milestones, title = "Milstolpar" }: MilestoneListProps) {
   return (
     <section>
-      <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+      <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
         {title}
       </h2>
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {milestones.map((milestone) => (
-          <Card key={milestone.id} className="shadow-soft">
+          <Card key={milestone.id} className="border-border/50 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors ${
                     milestone.completed
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/60 text-muted-foreground"
                   }`}
                 >
                   {milestone.completed ? (
@@ -33,10 +33,12 @@ export function MilestoneList({ milestones, title = "Milstolpar" }: MilestoneLis
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium text-foreground">{milestone.title}</h3>
-                  <p className="text-sm text-muted-foreground">{milestone.description}</p>
+                  <h3 className={`font-semibold text-sm ${milestone.completed ? 'text-foreground' : 'text-foreground'}`}>
+                    {milestone.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{milestone.description}</p>
                   {!milestone.completed && milestone.progress !== undefined && (
-                    <Progress value={milestone.progress} className="h-1.5 mt-2" />
+                    <Progress value={milestone.progress} className="h-1.5 mt-2.5 rounded-full" />
                   )}
                 </div>
               </div>

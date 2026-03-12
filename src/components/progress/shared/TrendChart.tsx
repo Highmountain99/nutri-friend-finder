@@ -43,11 +43,11 @@ export function TrendChart({
 
   if (data.length === 0) {
     return (
-      <Card className="shadow-soft">
-        <CardContent className="p-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">{title}</h3>
-          <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
-            Ingen data ännu
+      <Card className="border-border/50 shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="text-base font-semibold text-foreground mb-4">{title}</h3>
+          <div className="h-36 flex items-center justify-center text-muted-foreground text-sm rounded-xl bg-muted/30">
+            Ingen data ännu – börja logga för att se trender
           </div>
         </CardContent>
       </Card>
@@ -55,31 +55,34 @@ export function TrendChart({
   }
 
   return (
-    <Card className="shadow-soft">
-      <CardContent className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-3">{title}</h3>
-        <div className="h-40">
+    <Card className="border-border/50 shadow-sm">
+      <CardContent className="p-5">
+        <h3 className="text-base font-semibold text-foreground mb-4">{title}</h3>
+        <div className="h-44">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={formattedData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+            <LineChart data={formattedData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
               <XAxis 
                 dataKey="dateLabel" 
-                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={false}
                 tickLine={false}
+                dy={8}
               />
               <YAxis 
                 domain={[yMin, yMax]}
-                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={false}
                 tickLine={false}
                 width={40}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
+                  backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  padding: '8px 12px',
+                  boxShadow: '0 4px 12px hsl(var(--foreground) / 0.08)',
                 }}
                 formatter={(value: number) => [`${value} ${unit}`, '']}
                 labelFormatter={(label) => label}
@@ -88,7 +91,8 @@ export function TrendChart({
                 <ReferenceLine 
                   y={targetValue} 
                   stroke="hsl(var(--muted-foreground))" 
-                  strokeDasharray="3 3"
+                  strokeDasharray="6 4"
+                  strokeOpacity={0.5}
                   label={{ 
                     value: targetLabel || `Mål: ${targetValue}`, 
                     position: 'right',
@@ -101,9 +105,9 @@ export function TrendChart({
                 type="monotone"
                 dataKey="value"
                 stroke={color}
-                strokeWidth={2}
-                dot={{ fill: color, strokeWidth: 0, r: 3 }}
-                activeDot={{ r: 5, fill: color }}
+                strokeWidth={2.5}
+                dot={{ fill: color, strokeWidth: 0, r: 4 }}
+                activeDot={{ r: 6, fill: color, stroke: 'hsl(var(--card))', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>

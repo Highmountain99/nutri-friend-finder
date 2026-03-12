@@ -11,7 +11,6 @@ interface EatingDisorderProgressProps {
   show: (section: string) => boolean;
 }
 
-// Affirmations for daily focus
 const AFFIRMATIONS = [
   "Lyssna på din kropp och var snäll mot dig själv",
   "Varje måltid är ett steg framåt",
@@ -20,7 +19,6 @@ const AFFIRMATIONS = [
   "Din kropp förtjänar näring och omsorg",
 ];
 
-// Weekly goals (would come from dietitian in real implementation)
 const WEEKLY_GOALS = [
   { id: '1', title: 'Äta frukost varje dag', completed: true },
   { id: '2', title: 'Prova en ny maträtt', completed: false },
@@ -30,15 +28,12 @@ const WEEKLY_GOALS = [
 export function EatingDisorderProgress({ data, show }: EatingDisorderProgressProps) {
   const navigate = useNavigate();
   
-  // Get a consistent affirmation for today based on date
   const todayIndex = new Date().getDate() % AFFIRMATIONS.length;
   const todayAffirmation = AFFIRMATIONS[todayIndex];
 
-  // Calculate meal regularity from nutrition entries (without showing calories!)
   const mealsLogged = data.weeklyStats.mealsLogged || 0;
   const daysWithThreeMeals = Math.min(Math.floor(mealsLogged / 3), 7);
 
-  // Mock meal rhythm for today (would come from nutrition_entries)
   const todayMeals = [
     { name: 'Frukost', logged: true },
     { name: 'Lunch', logged: true },
@@ -47,43 +42,41 @@ export function EatingDisorderProgress({ data, show }: EatingDisorderProgressPro
   ];
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in">
+    <div className="px-4 py-6 space-y-5 animate-fade-in pb-24">
       <ProgressHeader 
         title="Din återhämtning"
         subtitle="En dag i taget"
       />
 
-      {/* Daily Focus - Affirmation */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           💚 Dagens fokus
         </h2>
-        <Card className="shadow-soft bg-gradient-to-br from-primary-soft to-background border-primary/20">
-          <CardContent className="p-5 text-center">
-            <p className="text-lg font-medium text-foreground italic">
+        <Card className="border-primary/20 shadow-sm bg-gradient-to-br from-primary/5 to-background">
+          <CardContent className="p-6 text-center">
+            <p className="text-lg font-semibold text-foreground italic leading-relaxed">
               "{todayAffirmation}"
             </p>
           </CardContent>
         </Card>
       </section>
 
-      {/* Meal Rhythm - NO calories shown */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           🍽️ Måltidsrytm idag
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4 space-y-3">
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5 space-y-3">
             {todayMeals.map((meal) => (
               <div key={meal.name} className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                   meal.logged 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted text-muted-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'bg-muted/60 text-muted-foreground'
                 }`}>
                   {meal.logged ? <Check className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
                 </div>
-                <span className={`text-sm ${meal.logged ? 'text-foreground' : 'text-muted-foreground'}`}>
+                <span className={`text-sm font-medium ${meal.logged ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {meal.name}
                 </span>
               </div>
@@ -92,36 +85,33 @@ export function EatingDisorderProgress({ data, show }: EatingDisorderProgressPro
         </Card>
       </section>
 
-      {/* 30-Day Regularity (Heatmap-style, no numbers) */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           📈 Regelbundenhet (30 dagar)
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-7 gap-1 mb-3">
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5">
+            <div className="grid grid-cols-7 gap-1.5 mb-4">
               {Array.from({ length: 30 }).map((_, i) => {
-                // Random for demo - would be real data
                 const hasThreeMeals = Math.random() > 0.2;
                 return (
                   <div
                     key={i}
-                    className={`w-full aspect-square rounded-sm ${
+                    className={`w-full aspect-square rounded-md ${
                       hasThreeMeals 
-                        ? 'bg-primary' 
-                        : 'bg-muted'
+                        ? 'bg-primary/80' 
+                        : 'bg-muted/50'
                     }`}
-                    title={hasThreeMeals ? '3+ måltider' : 'Färre måltider'}
                   />
                 );
               })}
             </div>
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-primary" />
-                <span className="text-muted-foreground">3+ måltider</span>
+                <div className="w-3 h-3 rounded-sm bg-primary/80" />
+                <span className="text-muted-foreground text-xs">3+ måltider</span>
               </div>
-              <span className="font-medium text-foreground">
+              <span className="font-semibold text-foreground">
                 {daysWithThreeMeals}/30 dagar
               </span>
             </div>
@@ -129,22 +119,20 @@ export function EatingDisorderProgress({ data, show }: EatingDisorderProgressPro
         </Card>
       </section>
 
-      {/* Treatment Plan from Dietitian */}
       {show('treatment_plan') && <TreatmentPlanSection />}
 
-      {/* Next Appointment */}
       <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
           📅 Nästa samtal
         </h2>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-5">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-foreground">Onsdag 5 feb kl 14:00</p>
+                <p className="font-semibold text-foreground">Onsdag 5 feb kl 14:00</p>
                 <p className="text-sm text-muted-foreground">Videosamtal med din dietist</p>
               </div>
             </div>
@@ -152,7 +140,7 @@ export function EatingDisorderProgress({ data, show }: EatingDisorderProgressPro
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex-1"
+                className="flex-1 rounded-full border-border/60 font-medium"
                 onClick={() => navigate('/booking')}
               >
                 Boka om
@@ -160,7 +148,7 @@ export function EatingDisorderProgress({ data, show }: EatingDisorderProgressPro
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 rounded-full border-border/60 font-medium"
                 onClick={() => navigate('/messages')}
               >
                 <MessageSquare className="w-4 h-4" />
@@ -171,11 +159,12 @@ export function EatingDisorderProgress({ data, show }: EatingDisorderProgressPro
         </Card>
       </section>
 
-      {/* Support Message */}
-      <Card className="shadow-soft bg-gradient-to-r from-primary-soft/50 to-accent/10">
-        <CardContent className="p-4 text-center">
-          <Heart className="w-8 h-8 text-primary mx-auto mb-2" />
-          <p className="text-sm text-foreground">
+      <Card className="border-border/50 shadow-sm bg-gradient-to-br from-primary/5 to-accent/5">
+        <CardContent className="p-6 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+            <Heart className="w-6 h-6 text-primary" />
+          </div>
+          <p className="text-sm font-medium text-foreground leading-relaxed">
             Du gör framsteg varje dag. <br />
             Vi finns här för dig. 💚
           </p>
