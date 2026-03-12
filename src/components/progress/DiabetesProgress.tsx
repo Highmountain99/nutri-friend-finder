@@ -13,9 +13,10 @@ import { Plus } from "lucide-react";
 
 interface DiabetesProgressProps {
   data: ProgressData;
+  show: (section: string) => boolean;
 }
 
-export function DiabetesProgress({ data }: DiabetesProgressProps) {
+export function DiabetesProgress({ data, show }: DiabetesProgressProps) {
   const fastingEntries = data.healthEntries.filter(e => e.metric_type === 'blood_sugar_fasting');
   const postMealEntries = data.healthEntries.filter(e => e.metric_type === 'blood_sugar_post_meal');
   const hba1cEntries = data.healthEntries.filter(e => e.metric_type === 'hba1c');
