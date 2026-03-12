@@ -265,11 +265,32 @@ export default function DietitianPatientDetail() {
                 </CardContent>
               </Card>
 
+              {/* Progress configuration */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm">Patientens utvecklingsvy</CardTitle>
+                  <Button variant="outline" size="sm" onClick={() => setConfigProgressOpen(true)}>
+                    <Pencil className="h-3 w-3 mr-1" /> Anpassa
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Välj template och synliga element för patientens utvecklingssida.
+                  </p>
+                </CardContent>
+              </Card>
+
               <EditPatientGoalsSheet
                 open={editGoalsOpen}
                 onOpenChange={setEditGoalsOpen}
                 patientId={id!}
                 currentGoals={nutritionSettings}
+              />
+
+              <ConfigureProgressSheet
+                open={configProgressOpen}
+                onOpenChange={setConfigProgressOpen}
+                patientId={id!}
               />
 
               {/* Quick notes */}
