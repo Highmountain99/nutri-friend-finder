@@ -135,6 +135,7 @@ function AppointmentPopover({
               size="sm"
               className="flex-1 gap-1.5 text-xs"
               onClick={onStartVideo}
+              disabled={apptDate.getTime() - Date.now() > 15 * 60 * 1000}
             >
               <Video className="h-3.5 w-3.5" />
               Starta möte
