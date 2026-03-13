@@ -11,14 +11,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     // Verify the caller's identity via JWT
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Missing authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -26,14 +25,18 @@ Deno.serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    if (authError || !caller) {
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !data?.claims) {
       return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const callerId = data.claims.sub as string;
     const { userId, firstName, lastName } = await req.json();
 
     if (!userId || !firstName || !lastName) {
@@ -43,13 +46,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Only allow users to set up their own dietitian profile
-    if (userId !== caller.id) {
+    // Only allow users to set up their own dietitian profile — no privilege escalation
+    if (userId !== callerId) {
       return new Response(JSON.stringify({ error: "You can only set up your own dietitian profile" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Prevent re-assignment if user already has the dietist role
     const { data: existingRole } = await supabaseAdmin
