@@ -31,8 +31,8 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">1.1</h3>
             <p>
               Detta Avtal reglerar användningen av onlinegränssnitt och egendom (till exempel webbplats och appar) 
-              som ägs och kontrolleras av EatSuite AB (nedan kallat "EatSuite", "vi", "oss" och "vår"), inklusive 
-              EatSuites appar (nedan kallat "Appen") och webbplatserna eatsuitecare.com och eatsuite.se 
+              som ägs och kontrolleras av Gut Feeling AB (nedan kallat "Gut Feeling", "vi", "oss" och "vår"), inklusive 
+              Gut Feelings appar (nedan kallat "Appen") och webbplatserna gutfeelingcare.com och gutfeeling.se 
               (tillsammans "Webbplatsen"), samt Tjänsterna som är tillgängliga för Användare och Dietister 
               och/eller Kostrådgivare (enligt definitionen nedan) via Appen och/eller Webbplatsen.
             </p>
