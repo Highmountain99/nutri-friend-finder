@@ -258,12 +258,12 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">5.2</h3>
             <p>
-              EatSuites mål är att se till att Appen och/eller Webbplatsen upprätthåller en hög nivå av 
+              Gut Feelings mål är att se till att Appen och/eller Webbplatsen upprätthåller en hög nivå av 
               tillgänglighet och att Användaren har tillgång till sitt Användarkonto när som helst på dygnet. 
               Videosamtalen bokas av Användaren via de bokningsfunktioner som tillhandahålls via Appens och/eller 
               Webbplatsens bokningssystem eller av Dietist/Kostrådgivaren. Appen och videosamtalen tillhandahålls 
               i enlighet med ovanstående, med undantag för planerade avbrott för underhåll som annonserats i 
-              Appen i förväg eller avbrott utanför EatSuites kontroll.
+              Appen i förväg eller avbrott utanför Gut Feelings kontroll.
             </p>
 
             <h3 className="text-base font-medium text-foreground">5.3</h3>
