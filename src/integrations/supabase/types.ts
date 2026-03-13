@@ -327,6 +327,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          calendar_token: string | null
           created_at: string
           first_name: string
           id: string
@@ -341,6 +342,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          calendar_token?: string | null
           created_at?: string
           first_name: string
           id?: string
@@ -355,6 +357,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          calendar_token?: string | null
           created_at?: string
           first_name?: string
           id?: string
@@ -1263,6 +1266,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_calendar_token: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

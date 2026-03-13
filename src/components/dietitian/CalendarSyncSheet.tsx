@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Copy, Check, Calendar, ExternalLink, RefreshCw } from "lucide-react";
 import {
   Sheet,
@@ -13,14 +13,51 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function CalendarSyncSheet() {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
+  const queryClient = useQueryClient();
 
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  const feedUrl = user
-    ? `https://${projectId}.supabase.co/functions/v1/calendar-feed?token=${user.id}`
+
+  // Fetch or generate calendar token
+  const { data: calendarToken } = useQuery({
+    queryKey: ["calendar-token", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dietitian_profiles")
+        .select("calendar_token")
+        .eq("user_id", user!.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data.calendar_token) return data.calendar_token;
+
+      // Generate a new token
+      const { data: tokenData, error: tokenError } = await supabase
+        .rpc("generate_calendar_token");
+
+      if (tokenError) throw tokenError;
+
+      const newToken = tokenData as string;
+
+      // Save to profile
+      await supabase
+        .from("dietitian_profiles")
+        .update({ calendar_token: newToken })
+        .eq("user_id", user!.id);
+
+      return newToken;
+    },
+    enabled: !!user,
+  });
+
+  const feedUrl = calendarToken
+    ? `https://${projectId}.supabase.co/functions/v1/calendar-feed?token=${calendarToken}`
     : "";
 
   const handleCopy = async () => {
@@ -66,7 +103,7 @@ export function CalendarSyncSheet() {
                   className="text-xs font-mono"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
-                <Button size="icon" variant="outline" onClick={handleCopy}>
+                <Button size="icon" variant="outline" onClick={handleCopy} disabled={!calendarToken}>
                   {copied ? (
                     <Check className="h-4 w-4 text-green-600" />
                   ) : (
@@ -90,6 +127,7 @@ export function CalendarSyncSheet() {
               <Button
                 variant="outline"
                 className="w-full gap-2"
+                disabled={!calendarToken}
                 onClick={() => window.open(googleCalUrl, "_blank")}
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">

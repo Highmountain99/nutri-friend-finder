@@ -31,15 +31,51 @@ Extrahera följande fält:
 
 Om information saknas, använd null för enskilda fält eller tomma arrayer för array-fält.`;
 
+async function verifyAdmin(req: Request): Promise<{ userId: string } | Response> {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data, error } = await supabase.auth.getClaims(token);
+  if (error || !data?.claims) {
+    return new Response(JSON.stringify({ success: false, error: 'Invalid token' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const userId = data.claims.sub as string;
+  const supabaseAdmin = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const { data: hasRole } = await supabaseAdmin.rpc('has_role', { _user_id: userId, _role: 'admin' });
+  if (!hasRole) {
+    return new Response(JSON.stringify({ success: false, error: 'Forbidden: admin role required' }), {
+      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  return { userId };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const authResult = await verifyAdmin(req);
+    if (authResult instanceof Response) return authResult;
+
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {
-      console.error('LOVABLE_API_KEY not configured');
       return new Response(
         JSON.stringify({ success: false, error: 'Lovable AI not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -52,7 +88,6 @@ Deno.serve(async (req) => {
 
     const { batchSize = 5 } = await req.json().catch(() => ({}));
 
-    // Get recipes with scraped data that need parsing
     const { data: scrapedRecipes, error: fetchError } = await supabase
       .from('recipe_import_queue')
       .select('*')
@@ -62,7 +97,6 @@ Deno.serve(async (req) => {
       .limit(batchSize);
 
     if (fetchError) {
-      console.error('Error fetching scraped recipes:', fetchError);
       return new Response(
         JSON.stringify({ success: false, error: fetchError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -78,43 +112,25 @@ Deno.serve(async (req) => {
 
     console.log(`Parsing ${scrapedRecipes.length} recipes with AI...`);
 
-    const results = {
-      success: 0,
-      failed: 0,
-      imported: 0,
-      errors: [] as string[]
-    };
+    const results = { success: 0, failed: 0, imported: 0, errors: [] as string[] };
 
     for (const recipe of scrapedRecipes) {
       try {
-        // Mark as processing
-        await supabase
-          .from('recipe_import_queue')
-          .update({ status: 'processing' })
-          .eq('id', recipe.id);
-
-        console.log(`Parsing: ${recipe.source_url}`);
+        await supabase.from('recipe_import_queue').update({ status: 'processing' }).eq('id', recipe.id);
 
         const markdown = recipe.scraped_data?.markdown || '';
-        
-        if (!markdown) {
-          throw new Error('No markdown content to parse');
-        }
+        if (!markdown) throw new Error('No markdown content to parse');
 
-        // Call Lovable AI to parse the recipe
         const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${lovableApiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: 'google/gemini-2.5-flash',
             messages: [
               { role: 'system', content: PARSE_SYSTEM_PROMPT },
               { role: 'user', content: `Extrahera receptdata från följande markdown:\n\n${markdown.substring(0, 8000)}` }
             ],
-            temperature: 0.1, // Low temperature for consistent extraction
+            temperature: 0.1,
           }),
         });
 
@@ -125,12 +141,8 @@ Deno.serve(async (req) => {
 
         const aiData = await aiResponse.json();
         const content = aiData.choices?.[0]?.message?.content;
+        if (!content) throw new Error('No content from AI response');
 
-        if (!content) {
-          throw new Error('No content from AI response');
-        }
-
-        // Parse the JSON response (handle markdown code blocks)
         let parsedRecipe;
         try {
           const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
@@ -140,40 +152,31 @@ Deno.serve(async (req) => {
           throw new Error(`Failed to parse AI response as JSON: ${content.substring(0, 200)}`);
         }
 
-        // Update queue with parsed data
-        await supabase
-          .from('recipe_import_queue')
-          .update({ 
-            parsed_data: parsedRecipe,
-            status: 'completed',
-            processed_at: new Date().toISOString()
-          })
-          .eq('id', recipe.id);
+        await supabase.from('recipe_import_queue').update({ 
+          parsed_data: parsedRecipe, status: 'completed', processed_at: new Date().toISOString()
+        }).eq('id', recipe.id);
 
-        // Insert into recipes table
-        const { error: insertError } = await supabase
-          .from('recipes')
-          .insert({
-            title: parsedRecipe.title || 'Okänt recept',
-            description: parsedRecipe.description,
-            time_minutes: parsedRecipe.time_minutes,
-            servings: parsedRecipe.servings || 4,
-            difficulty: parsedRecipe.difficulty || 'medel',
-            ingredients: parsedRecipe.ingredients || [],
-            instructions: parsedRecipe.instructions || [],
-            image_url: parsedRecipe.image_url,
-            tags: parsedRecipe.tags || [],
-            meal_types: parsedRecipe.meal_types || ['middag'],
-            cuisine_types: parsedRecipe.cuisine_types || [],
-            dietary_needs: parsedRecipe.dietary_needs || [],
-            allergen_free: parsedRecipe.allergen_free || [],
-            calories_per_serving: parsedRecipe.calories_per_serving,
-            protein_per_serving: parsedRecipe.protein_per_serving,
-            carbs_per_serving: parsedRecipe.carbs_per_serving,
-            fat_per_serving: parsedRecipe.fat_per_serving,
-            source_url: recipe.source_url,
-            rating: 4.0, // Default rating
-          });
+        const { error: insertError } = await supabase.from('recipes').insert({
+          title: parsedRecipe.title || 'Okänt recept',
+          description: parsedRecipe.description,
+          time_minutes: parsedRecipe.time_minutes,
+          servings: parsedRecipe.servings || 4,
+          difficulty: parsedRecipe.difficulty || 'medel',
+          ingredients: parsedRecipe.ingredients || [],
+          instructions: parsedRecipe.instructions || [],
+          image_url: parsedRecipe.image_url,
+          tags: parsedRecipe.tags || [],
+          meal_types: parsedRecipe.meal_types || ['middag'],
+          cuisine_types: parsedRecipe.cuisine_types || [],
+          dietary_needs: parsedRecipe.dietary_needs || [],
+          allergen_free: parsedRecipe.allergen_free || [],
+          calories_per_serving: parsedRecipe.calories_per_serving,
+          protein_per_serving: parsedRecipe.protein_per_serving,
+          carbs_per_serving: parsedRecipe.carbs_per_serving,
+          fat_per_serving: parsedRecipe.fat_per_serving,
+          source_url: recipe.source_url,
+          rating: 4.0,
+        });
 
         if (insertError) {
           console.error('Error inserting recipe:', insertError);
@@ -183,42 +186,28 @@ Deno.serve(async (req) => {
         }
 
         results.success++;
-
-        // Small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Error parsing ${recipe.source_url}:`, errorMsg);
-        
-        await supabase
-          .from('recipe_import_queue')
-          .update({ 
-            status: 'failed',
-            error_message: errorMsg,
-            processed_at: new Date().toISOString()
-          })
-          .eq('id', recipe.id);
-
+        await supabase.from('recipe_import_queue').update({ 
+          status: 'failed', error_message: errorMsg, processed_at: new Date().toISOString()
+        }).eq('id', recipe.id);
         results.failed++;
         results.errors.push(`${recipe.source_url}: ${errorMsg}`);
       }
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        message: `Parsed ${results.success} recipes, imported ${results.imported}, ${results.failed} failed`,
-        results
-      }),
+      JSON.stringify({ success: true, message: `Parsed ${results.success} recipes, imported ${results.imported}, ${results.failed} failed`, results }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in recipe-parse:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

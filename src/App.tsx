@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { QualifyingRoute } from "@/components/auth/QualifyingRoute";
+import { AdminRoute } from "@/components/auth/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
@@ -81,7 +82,15 @@ const App = () => (
                 <Route path="/koder" element={<Koder />} />
                 <Route path="/seb-forsakring" element={<SEBForsakring />} />
                 <Route path="/meeting-history" element={<MeetingHistory />} />
-                <Route path="/admin" element={<Admin />} />
+              </Route>
+            </Route>
+            
+            {/* Admin route - requires admin role */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AdminRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/admin" element={<Admin />} />
+                </Route>
               </Route>
             </Route>
             {/* Dietitian dashboard routes */}

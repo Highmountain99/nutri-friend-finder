@@ -30,15 +30,20 @@ Deno.serve(async (req) => {
       return new Response("Missing token", { status: 401 });
     }
 
+    // Validate token format — must be a 64-char hex string (not a UUID)
+    if (!/^[a-f0-9]{64}$/i.test(token)) {
+      return new Response("Invalid token", { status: 403 });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify the token (it's the user's ID for simplicity — in production use a signed token)
+    // Look up dietitian by their secure calendar token
     const { data: profile, error: profileError } = await supabase
       .from("dietitian_profiles")
       .select("id, first_name, last_name, user_id")
-      .eq("user_id", token)
+      .eq("calendar_token", token)
       .single();
 
     if (profileError || !profile) {
@@ -76,11 +81,9 @@ Deno.serve(async (req) => {
     // Add appointments as events
     for (const appt of appointments ?? []) {
       const start = new Date(appt.appointment_date);
-      const end = new Date(start.getTime() + 30 * 60 * 1000); // 30 min default
+      const end = new Date(start.getTime() + 30 * 60 * 1000);
 
-      // Try to get patient name from join, fallback to ID
       let patientName = "Patient";
-      // The join might not work due to FK naming, so handle gracefully
       const profileData = (appt as any).profiles;
       if (profileData && profileData.first_name) {
         patientName = `${profileData.first_name} ${profileData.last_name}`;
@@ -105,7 +108,6 @@ Deno.serve(async (req) => {
       const slots = (a.time_slots as string[]) ?? [];
       if (slots.length === 0) continue;
 
-      // Group consecutive slots into blocks
       const sorted = [...slots].sort();
       let blockStart = sorted[0];
       let prevSlot = sorted[0];
@@ -121,9 +123,6 @@ Deno.serve(async (req) => {
         })();
 
         if (!isConsecutive) {
-          // Emit block
-          const [sh, sm] = blockStart.split(":").map(Number);
-          const [eh, em] = prevSlot.split(":").map(Number);
           const startDate = new Date(`${a.available_date}T${blockStart}:00`);
           const endDate = new Date(`${a.available_date}T${prevSlot}:00`);
           endDate.setMinutes(endDate.getMinutes() + 30);
