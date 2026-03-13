@@ -223,9 +223,9 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">4.4 Betalningsvillkor för företag</h3>
             <p>
-              EatSuite har särskilda erbjudanden för företag som vill erbjuda Tjänsterna till sina anställda. 
+              Gut Feeling har särskilda erbjudanden för företag som vill erbjuda Tjänsterna till sina anställda. 
               Pris- och betalningsvillkor för dessa Tjänster beskrivs i detalj i de särskilda villkor som 
-              EatSuite skickar till företaget för godkännande. Genom att acceptera dessa särskilda villkor 
+              Gut Feeling skickar till företaget för godkännande. Genom att acceptera dessa särskilda villkor 
               förbinder sig företaget att kommunicera detta Avtal till de anställda som använder Tjänsterna.
             </p>
 
