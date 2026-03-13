@@ -82,7 +82,6 @@ const App = () => (
                 <Route path="/koder" element={<Koder />} />
                 <Route path="/seb-forsakring" element={<SEBForsakring />} />
                 <Route path="/meeting-history" element={<MeetingHistory />} />
-                <Route path="/meeting-history" element={<MeetingHistory />} />
               </Route>
             </Route>
             
@@ -92,8 +91,6 @@ const App = () => (
                 <Route element={<AppLayout />}>
                   <Route path="/admin" element={<Admin />} />
                 </Route>
-              </Route>
-            </Route>
               </Route>
             </Route>
             {/* Dietitian dashboard routes */}
