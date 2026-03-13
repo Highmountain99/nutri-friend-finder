@@ -136,11 +136,11 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">3.5</h3>
             <p>
               Användaren ansvarar för att tillämpa rimlig omsorg vid tillhandahållandet av uppgifter, inklusive 
-              kontaktuppgifter och hälsouppgifter i förekommande fall, när Avtalet ingås. EatSuite ansvarar inte 
+              kontaktuppgifter och hälsouppgifter i förekommande fall, när Avtalet ingås. Gut Feeling ansvarar inte 
               för rådgivning eller åtgärder som påverkas av att Användaren anger felaktiga uppgifter. Användaren 
               förbinder sig att hålla sin personliga profil i Appen uppdaterad och aktuell under hela 
-              avtalsperioden. EatSuite ska snarast meddelas om eventuella ändringar genom en uppdatering direkt 
-              i Appen eller via e-post till info@eatsuite.se.
+              avtalsperioden. Gut Feeling ska snarast meddelas om eventuella ändringar genom en uppdatering direkt 
+              i Appen eller via e-post till info@gutfeeling.se.
             </p>
 
             <h3 className="text-base font-medium text-foreground">3.6</h3>
