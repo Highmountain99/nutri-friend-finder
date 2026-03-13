@@ -94,7 +94,7 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">2.5</h3>
             <p>
-              Detta Avtal och annan information om EatSuites Tjänster finns i Appen och på Webbplatsen.
+              Detta Avtal och annan information om Gut Feelings Tjänster finns i Appen och på Webbplatsen.
             </p>
 
             <h3 className="text-base font-medium text-foreground">2.6</h3>
