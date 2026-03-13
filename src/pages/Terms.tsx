@@ -250,8 +250,8 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">5.1</h3>
             <p>
-              Inom de gränser som anges i detta kapitel 5 ansvarar EatSuite för att Appen och/eller Webbplatsen 
-              är tillgänglig i enlighet med punkterna 5.2, 5.3 och 5.5 nedan. EatSuite ansvarar dessutom för 
+              Inom de gränser som anges i detta kapitel 5 ansvarar Gut Feeling för att Appen och/eller Webbplatsen 
+              är tillgänglig i enlighet med punkterna 5.2, 5.3 och 5.5 nedan. Gut Feeling ansvarar dessutom för 
               lagring av den information som tillhandahålls och laddas upp i Appen och/eller på Webbplatsen 
               av Användaren och Dietist/Kostrådgivaren.
             </p>
