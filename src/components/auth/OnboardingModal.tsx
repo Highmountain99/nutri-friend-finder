@@ -152,7 +152,7 @@ function OnboardingPage1({
 
         {/* Stats */}
         <div className="space-y-6">
-          <StatRow number="100 000+" text="Har genomgått en behandling hos EatSuite" />
+          <StatRow number="100 000+" text="Har genomgått en behandling hos Gut Feeling" />
           <StatRow number="80 %" text="ser hälsoförbättringar inom 30 dagar" />
           <StatRow number="4,9 av 5" text="är genomsnittsbetyget på våra dietister" />
         </div>

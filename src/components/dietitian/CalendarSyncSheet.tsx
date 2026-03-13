@@ -122,7 +122,7 @@ export function CalendarSyncSheet() {
                 <Badge variant="secondary" className="text-xs">Snabbstart</Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                Klicka nedan för att direkt lägga till ditt EatSuite-schema i Google Kalender. Bokningar och tillgänglighet uppdateras automatiskt.
+                Klicka nedan för att direkt lägga till ditt Gut Feeling-schema i Google Kalender. Bokningar och tillgänglighet uppdateras automatiskt.
               </p>
               <Button
                 variant="outline"
