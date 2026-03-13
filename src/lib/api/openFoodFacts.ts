@@ -12,7 +12,7 @@ const FIELDS = [
 export async function searchProducts(query: string): Promise<Product[]> {
   const res = await fetch(
     `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10&fields=${FIELDS},code`,
-    { headers: { "User-Agent": "EatSuite/1.0 (kontakt@eatsuite.se)" } }
+    { headers: { "User-Agent": "GutFeeling/1.0 (kontakt@gutfeeling.se)" } }
   );
   if (!res.ok) return [];
   const data = await res.json();
