@@ -203,7 +203,7 @@ export default function Invite() {
                 <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
                   <Heart className="h-7 w-7 text-primary" />
                 </div>
-                <h1 className="text-xl font-bold">Välkommen till EatSuite</h1>
+                <h1 className="text-xl font-bold">Välkommen till Gut Feeling</h1>
                 {dietitianName && (
                   <p className="text-muted-foreground">
                     Du har blivit inbjuden av <span className="font-medium text-foreground">{dietitianName}</span>
