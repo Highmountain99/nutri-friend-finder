@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       headers: {
         ...corsHeaders,
         "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": `attachment; filename="eatsuite-kalender.ics"`,
+        "Content-Disposition": `attachment; filename="gutfeeling-kalender.ics"`,
       },
     });
   } catch (error) {
