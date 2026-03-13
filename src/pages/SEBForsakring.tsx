@@ -82,7 +82,7 @@ export default function SEBForsakring() {
             </CardTitle>
             <CardDescription>
               SEB:s kunder med rätt försäkring får tillgång till dietistrådgivning 
-              och kostvägledning genom EatSuite. Ange ditt skadenummer nedan för 
+              och kostvägledning genom Gut Feeling. Ange ditt skadenummer nedan för 
               att aktivera din förmån.
             </CardDescription>
           </CardHeader>
