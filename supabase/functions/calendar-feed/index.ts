@@ -71,10 +71,10 @@ Deno.serve(async (req) => {
     const lines: string[] = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//EatSuite//Dietist Kalender//SV",
+      "PRODID:-//GutFeeling//Dietist Kalender//SV",
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
-      `X-WR-CALNAME:EatSuite – ${profile.first_name} ${profile.last_name}`,
+      `X-WR-CALNAME:Gut Feeling – ${profile.first_name} ${profile.last_name}`,
       "X-WR-TIMEZONE:Europe/Stockholm",
     ];
 
