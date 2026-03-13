@@ -169,6 +169,11 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
                                 onCheckedChange={(checked) => toggleMilestone.mutate({ milestoneId: m.id, completed: !!checked })}
                               />
                               <span className={`text-sm ${m.is_completed ? "line-through text-muted-foreground" : ""}`}>{m.title}</span>
+                              {m.is_completed && m.completed_at && (
+                                <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
+                                  Klar {new Date(m.completed_at).toLocaleDateString("sv-SE", { day: "numeric", month: "short" })}
+                                </span>
+                              )}
                             </label>
                           ))}
                         </div>

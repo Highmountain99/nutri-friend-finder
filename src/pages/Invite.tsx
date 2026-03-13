@@ -5,8 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Heart, ArrowRight } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Heart, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
+
+const CONCERN_OPTIONS = [
+  { value: "weight_loss", label: "Viktnedgång" },
+  { value: "gut_health", label: "Maghälsa" },
+  { value: "diabetes", label: "Diabetes" },
+  { value: "heart_health", label: "Hjärthälsa" },
+  { value: "womens_health", label: "Kvinnohälsa" },
+  { value: "eating_disorder", label: "Ätstörning" },
+  { value: "emotional_eating", label: "Emotionellt ätande" },
+  { value: "general_health", label: "Allmän hälsa" },
+];
 
 export default function Invite() {
   const { code } = useParams<{ code: string }>();
@@ -14,13 +26,15 @@ export default function Invite() {
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState<any>(null);
   const [dietitianName, setDietitianName] = useState("");
-  const [mode, setMode] = useState<"info" | "signup">("info");
+  const [mode, setMode] = useState<"info" | "signup" | "concern">("info");
   const [form, setForm] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [selectedConcern, setSelectedConcern] = useState<string | null>(null);
+  const [freeText, setFreeText] = useState("");
+  const [signedUpUser, setSignedUpUser] = useState<any>(null);
 
   useEffect(() => {
     if (!code) return;
-    // Extract the actual invite code (last hex segment after optional name prefix)
     const match = code.match(/([a-f0-9]{6,})$/);
     const inviteCode = match ? match[1] : code;
 
@@ -40,12 +54,10 @@ export default function Invite() {
       const inv = data[0] as any;
       setInvitation(inv);
 
-      // Pre-fill email if it was an email invite
       if (inv.patient_email) {
         setForm((f) => ({ ...f, email: inv.patient_email }));
       }
 
-      // Get dietitian name
       const { data: profile } = await supabase
         .from("dietitian_profiles")
         .select("first_name, last_name, title")
@@ -83,39 +95,73 @@ export default function Invite() {
       if (signUpError) throw signUpError;
 
       if (signUpData.user) {
-        // Create profile
         await supabase.from("profiles" as any).insert({
           user_id: signUpData.user.id,
           first_name: form.firstName,
           last_name: form.lastName,
         });
 
-        // Create assignment between dietitian and patient
         await supabase.from("dietist_patient_assignments" as any).insert({
           dietist_id: invitation.dietitian_id,
           patient_id: signUpData.user.id,
         });
 
-        // Mark invitation as accepted
         await supabase
           .from("patient_invitations" as any)
           .update({ status: "accepted", accepted_by: signUpData.user.id, accepted_at: new Date().toISOString() })
           .eq("id", invitation.id);
 
-        // Create a simplified intake profile so they skip the full qualifying
-        await supabase.from("intake_profiles" as any).insert({
-          user_id: signUpData.user.id,
-          completed_at: new Date().toISOString(),
-          current_step: 9,
-          care_seeker_type: "self",
-          wants_dietist: true,
-          triage_result: "approved",
-          unified_concern_category: "general_health",
-        });
-
-        toast.success("Konto skapat! Välkommen till EatSuite.");
-        navigate("/");
+        // Save user reference and move to concern step
+        setSignedUpUser(signUpData.user);
+        setMode("concern");
       }
+    } catch (err: any) {
+      toast.error(err.message || "Något gick fel");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const finishWithConcern = async () => {
+    if (!signedUpUser) return;
+    setSubmitting(true);
+    try {
+      await supabase.from("intake_profiles" as any).insert({
+        user_id: signedUpUser.id,
+        completed_at: new Date().toISOString(),
+        current_step: 9,
+        care_seeker_type: "self",
+        wants_dietist: true,
+        triage_result: "approved",
+        unified_concern_category: selectedConcern || "general_health",
+        ai_free_text: freeText || null,
+      });
+
+      toast.success("Konto skapat! Välkommen till EatSuite.");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message || "Något gick fel");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const skipConcern = async () => {
+    if (!signedUpUser) return;
+    setSubmitting(true);
+    try {
+      await supabase.from("intake_profiles" as any).insert({
+        user_id: signedUpUser.id,
+        completed_at: new Date().toISOString(),
+        current_step: 9,
+        care_seeker_type: "self",
+        wants_dietist: true,
+        triage_result: "approved",
+        unified_concern_category: "general_health",
+      });
+
+      toast.success("Konto skapat! Välkommen till EatSuite.");
+      navigate("/");
     } catch (err: any) {
       toast.error(err.message || "Något gick fel");
     } finally {
@@ -186,7 +232,7 @@ export default function Invite() {
                 </button>
               </p>
             </>
-          ) : (
+          ) : mode === "signup" ? (
             <>
               <div className="text-center space-y-2">
                 <h1 className="text-xl font-bold">Skapa ditt konto</h1>
@@ -246,7 +292,7 @@ export default function Invite() {
                 {submitting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
-                Skapa konto
+                Fortsätt
               </Button>
 
               <button
@@ -255,6 +301,65 @@ export default function Invite() {
               >
                 Tillbaka
               </button>
+            </>
+          ) : (
+            /* Concern selection step */
+            <>
+              <div className="text-center space-y-2">
+                <h1 className="text-xl font-bold">Vad vill du ha hjälp med?</h1>
+                <p className="text-sm text-muted-foreground">
+                  Välj det som bäst beskriver dig, eller skriv fritt nedan
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {CONCERN_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSelectedConcern(selectedConcern === opt.value ? null : opt.value)}
+                    className={`rounded-xl border px-3 py-2.5 text-sm font-medium text-left transition-colors ${
+                      selectedConcern === opt.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-card text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {selectedConcern === opt.value && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
+                      <span>{opt.label}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Eller beskriv med egna ord</Label>
+                <Textarea
+                  value={freeText}
+                  onChange={(e) => setFreeText(e.target.value)}
+                  placeholder="T.ex. jag vill äta bättre för att orka mer i vardagen..."
+                  rows={2}
+                  className="text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={finishWithConcern}
+                  disabled={submitting || (!selectedConcern && !freeText.trim())}
+                >
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Fortsätt
+                </Button>
+                <button
+                  className="w-full text-xs text-muted-foreground underline"
+                  onClick={skipConcern}
+                  disabled={submitting}
+                >
+                  Hoppa över
+                </button>
+              </div>
             </>
           )}
         </CardContent>

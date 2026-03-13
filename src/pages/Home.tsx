@@ -1,17 +1,21 @@
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, User, Settings } from "lucide-react";
+import { MessageCircle, User, Settings, CalendarPlus } from "lucide-react";
 import { AppointmentCard } from "@/components/home/AppointmentCard";
 import { QuickActionCard } from "@/components/home/QuickActionCard";
 import { useAppointments } from "@/hooks/useAppointments";
+import { useMyDietitian } from "@/hooks/useMyDietitian";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Home() {
   const navigate = useNavigate();
   const { getUpcomingAppointment, cancelAppointment, loading } = useAppointments();
+  const { data: dietitian, isLoading: dietitianLoading } = useMyDietitian();
 
   const upcomingAppointment = getUpcomingAppointment();
 
-  // Format appointment for card
   const formattedAppointment = upcomingAppointment
     ? {
         date: upcomingAppointment.appointmentDate,
@@ -31,6 +35,39 @@ export default function Home() {
 
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
+      {/* Dietitian Card */}
+      {dietitianLoading ? (
+        <Skeleton className="h-24 w-full rounded-xl" />
+      ) : dietitian ? (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12 border-2 border-primary/20">
+                <AvatarImage src={dietitian.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  {dietitian.first_name?.[0]}{dietitian.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  {dietitian.first_name} {dietitian.last_name}
+                </p>
+                <p className="text-xs text-muted-foreground">{dietitian.title}</p>
+                <p className="text-xs text-primary font-medium mt-0.5">Din dietist</p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => navigate("/booking", { state: { mode: "new" } })}
+                className="gap-1.5 shrink-0"
+              >
+                <CalendarPlus className="h-3.5 w-3.5" />
+                Boka samtal
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {/* Appointment Section */}
       <section>
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
