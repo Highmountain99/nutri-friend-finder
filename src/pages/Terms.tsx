@@ -21,9 +21,9 @@ export default function Terms() {
         <main className="px-6 py-8 max-w-lg mx-auto pb-safe">
           <div className="prose prose-sm text-foreground/80 space-y-6">
             <p>
-              Genom att använda EatSuites Tjänster godkänner du dessa Allmänna villkor (nedan kallat "Avtalet"). 
-              Läs Avtalet noggrant innan du använder EatSuites Tjänster (enligt definitionen i punkt 2.1). 
-              Om du inte accepterar Avtalet ska du inte använda EatSuites Tjänster.
+              Genom att använda Gut Feelings Tjänster godkänner du dessa Allmänna villkor (nedan kallat "Avtalet"). 
+              Läs Avtalet noggrant innan du använder Gut Feelings Tjänster (enligt definitionen i punkt 2.1). 
+              Om du inte accepterar Avtalet ska du inte använda Gut Feelings Tjänster.
             </p>
 
             <h2 className="text-lg font-semibold text-foreground">1. Avtalets omfattning och tillämplighet</h2>
