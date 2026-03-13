@@ -129,10 +129,10 @@ Deno.serve(async (req) => {
 
           lines.push(
             "BEGIN:VEVENT",
-            `UID:avail-${a.id}-${blockStart}@eatsuite.se`,
+            `UID:avail-${a.id}-${blockStart}@gutfeeling.se`,
             `DTSTART:${formatIcalDate(startDate)}`,
             `DTEND:${formatIcalDate(endDate)}`,
-            `SUMMARY:${escapeIcal("Ledig tid – EatSuite")}`,
+            `SUMMARY:${escapeIcal("Ledig tid – Gut Feeling")}`,
             "STATUS:TENTATIVE",
             "TRANSP:TRANSPARENT",
             "END:VEVENT"
