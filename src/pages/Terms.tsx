@@ -161,10 +161,10 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">3.8</h3>
             <p>
               Genom att registrera ett Användarkonto i Appen och/eller på Webbplatsen bekräftar och godkänner 
-              Användaren att EatSuite kan använda de kontaktuppgifter som Användaren har angett för att kontakta 
+              Användaren att Gut Feeling kan använda de kontaktuppgifter som Användaren har angett för att kontakta 
               Användaren genom utskick (post eller e-post), telefonsamtal, meddelanden och notiser med information 
               och erbjudanden. Användaren kan när som helst avregistrera sig från marknadsföringskommunikation 
-              (enligt definitionen i punkt 13). Läs mer om hur EatSuite lagrar information och behandlar 
+              (enligt definitionen i punkt 13). Läs mer om hur Gut Feeling lagrar information och behandlar 
               personuppgifter i Integritetspolicyn.
             </p>
 
