@@ -137,7 +137,7 @@ export default function Invite() {
         ai_free_text: freeText || null,
       });
 
-      toast.success("Konto skapat! Välkommen till EatSuite.");
+      toast.success("Konto skapat! Välkommen till Gut Feeling.");
       navigate("/");
     } catch (err: any) {
       toast.error(err.message || "Något gick fel");
