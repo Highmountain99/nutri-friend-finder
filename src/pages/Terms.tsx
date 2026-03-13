@@ -100,10 +100,10 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">2.6</h3>
             <p>
               Vid allvarliga sjukdomssymtom eller tillstånd som kräver akut eller omfattande medicinsk bedömning 
-              är EatSuite inte rätt vårdnivå, utan Användaren ska då söka adekvat vård via till exempel vårdcentral 
+              är Gut Feeling inte rätt vårdnivå, utan Användaren ska då söka adekvat vård via till exempel vårdcentral 
               eller akutmottagning. I en akut situation (t.ex. allvarliga bröstsmärtor, andningssvårigheter, 
               misstänkt allvarlig allergisk reaktion, kraftig uttorkning, eller annan akutsituation) ska 
-              Användaren inte heller vända sig till EatSuite, utan till en adekvat akut instans alternativt 
+              Användaren inte heller vända sig till Gut Feeling, utan till en adekvat akut instans alternativt 
               ringa 112 för vägledning och råd. Vid misstanke om allvarlig ätstörning, snabb försämring eller 
               annan situation som kräver specialistvård ska Användaren kontakta vården skyndsamt.
             </p>
