@@ -212,7 +212,7 @@ export default function Invite() {
               </div>
 
               <div className="space-y-3 text-sm text-muted-foreground">
-                <p>Med EatSuite får du:</p>
+                <p>Med Gut Feeling får du:</p>
                 <ul className="space-y-2 list-disc list-inside">
                   <li>Direktkontakt med din dietist via chatt och videosamtal</li>
                   <li>Personlig kostplan och receptförslag</li>

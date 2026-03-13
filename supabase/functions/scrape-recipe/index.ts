@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
     let html = '';
     try {
       const resp = await fetch(formattedUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EatSuite/1.0)' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GutFeeling/1.0)' },
       });
       html = await resp.text();
     } catch (fetchErr) {

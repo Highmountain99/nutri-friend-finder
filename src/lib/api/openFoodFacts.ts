@@ -46,7 +46,7 @@ export async function fetchProduct(barcode: string): Promise<{ found: boolean; p
 
   const res = await fetch(
     `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=${FIELDS}`,
-    { headers: { "User-Agent": "EatSuite/1.0 (kontakt@eatsuite.se)" } }
+    { headers: { "User-Agent": "GutFeeling/1.0 (kontakt@gutfeeling.se)" } }
   );
 
   if (!res.ok) throw new Error("Kunde inte hämta produktdata. Kontrollera din internetanslutning.");
