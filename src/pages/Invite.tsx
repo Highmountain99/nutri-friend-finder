@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,8 @@ const CONCERN_OPTIONS = [
 export default function Invite() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const { user, session } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState<any>(null);
   const [dietitianName, setDietitianName] = useState("");
@@ -31,12 +34,18 @@ export default function Invite() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedConcern, setSelectedConcern] = useState<string | null>(null);
   const [freeText, setFreeText] = useState("");
-  const [signedUpUser, setSignedUpUser] = useState<any>(null);
+
+  const inviteCode = useMemo(() => {
+    if (!code) return null;
+    const match = code.match(/([a-f0-9]{6,})$/i);
+    return match ? match[1] : code;
+  }, [code]);
+
+  const invitePath = code ? `/invite/${code}` : "/invite";
+  const loginRedirectUrl = `/auth?openLogin=1&redirect=${encodeURIComponent(invitePath)}`;
 
   useEffect(() => {
-    if (!code) return;
-    const match = code.match(/([a-f0-9]{6,})$/);
-    const inviteCode = match ? match[1] : code;
+    if (!inviteCode) return;
 
     (async () => {
       const { data, error } = await supabase
@@ -69,7 +78,7 @@ export default function Invite() {
       }
       setLoading(false);
     })();
-  }, [code]);
+  }, [inviteCode]);
 
   const handleSignup = async () => {
     if (!form.email || !form.password || !form.firstName) {
@@ -87,34 +96,75 @@ export default function Invite() {
         email: form.email,
         password: form.password,
         options: {
-          emailRedirectTo: window.location.origin,
-          data: { first_name: form.firstName, last_name: form.lastName, invite_code: code },
+          emailRedirectTo: `${window.location.origin}${invitePath}`,
+          data: {
+            first_name: form.firstName,
+            last_name: form.lastName,
+            invite_code: inviteCode,
+          },
         },
       });
 
       if (signUpError) throw signUpError;
+      if (!signUpData.user) throw new Error("Kunde inte skapa konto");
 
-      if (signUpData.user) {
-        await supabase.from("profiles" as any).insert({
-          user_id: signUpData.user.id,
-          first_name: form.firstName,
-          last_name: form.lastName,
-        });
-
-        await supabase.from("dietist_patient_assignments" as any).insert({
-          dietist_id: invitation.dietitian_id,
-          patient_id: signUpData.user.id,
-        });
-
-        await supabase
-          .from("patient_invitations" as any)
-          .update({ status: "accepted", accepted_by: signUpData.user.id, accepted_at: new Date().toISOString() })
-          .eq("id", invitation.id);
-
-        // Save user reference and move to concern step
-        setSignedUpUser(signUpData.user);
-        setMode("concern");
+      if (!signUpData.session) {
+        toast.success("Konto skapat! Bekräfta din e-post och logga in för att fortsätta.");
+        navigate(loginRedirectUrl);
+        return;
       }
+
+      const { error: profileError } = await supabase
+        .from("profiles" as any)
+        .upsert(
+          {
+            user_id: signUpData.user.id,
+            first_name: form.firstName,
+            last_name: form.lastName,
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (profileError) {
+        console.error("Error upserting profile during invite signup:", profileError);
+      }
+
+      setMode("concern");
+    } catch (err: any) {
+      toast.error(err.message || "Något gick fel");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const completeInvite = async (concern: string, text?: string) => {
+    if (!inviteCode) {
+      toast.error("Ogiltig inbjudningskod");
+      return;
+    }
+
+    if (!session) {
+      toast.error("Logga in för att slutföra inbjudan");
+      navigate(loginRedirectUrl);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc("accept_invitation_and_assign" as any, {
+        _invite_code: inviteCode,
+        _primary_concern: concern,
+        _free_text: text?.trim() ? text.trim() : null,
+      } as any);
+
+      if (error) throw error;
+      if (!data) {
+        toast.error("Inbjudan kunde inte accepteras. Kontrollera att du använder rätt konto.");
+        return;
+      }
+
+      toast.success("Inbjudan accepterad! Fortsätt med onboarding.");
+      navigate("/qualifying");
     } catch (err: any) {
       toast.error(err.message || "Något gick fel");
     } finally {
@@ -123,50 +173,11 @@ export default function Invite() {
   };
 
   const finishWithConcern = async () => {
-    if (!signedUpUser) return;
-    setSubmitting(true);
-    try {
-      await supabase.from("intake_profiles" as any).insert({
-        user_id: signedUpUser.id,
-        completed_at: new Date().toISOString(),
-        current_step: 9,
-        care_seeker_type: "self",
-        wants_dietist: true,
-        triage_result: "approved",
-        unified_concern_category: selectedConcern || "general_health",
-        ai_free_text: freeText || null,
-      });
-
-      toast.success("Konto skapat! Välkommen till Gut Feeling.");
-      navigate("/");
-    } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
-    } finally {
-      setSubmitting(false);
-    }
+    await completeInvite(selectedConcern || "general_health", freeText);
   };
 
   const skipConcern = async () => {
-    if (!signedUpUser) return;
-    setSubmitting(true);
-    try {
-      await supabase.from("intake_profiles" as any).insert({
-        user_id: signedUpUser.id,
-        completed_at: new Date().toISOString(),
-        current_step: 9,
-        care_seeker_type: "self",
-        wants_dietist: true,
-        triage_result: "approved",
-        unified_concern_category: "general_health",
-      });
-
-      toast.success("Konto skapat! Välkommen till Gut Feeling.");
-      navigate("/");
-    } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
-    } finally {
-      setSubmitting(false);
-    }
+    await completeInvite("general_health");
   };
 
   if (loading) {
@@ -220,17 +231,23 @@ export default function Invite() {
                 </ul>
               </div>
 
-              <Button className="w-full" size="lg" onClick={() => setMode("signup")}>
-                Skapa konto
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={() => setMode(user ? "concern" : "signup")}
+              >
+                {user ? "Fortsätt" : "Skapa konto"}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
-                Har du redan ett konto?{" "}
-                <button className="text-primary underline" onClick={() => navigate("/auth")}>
-                  Logga in
-                </button>
-              </p>
+              {!user ? (
+                <p className="text-xs text-center text-muted-foreground">
+                  Har du redan ett konto?{" "}
+                  <button className="text-primary underline" onClick={() => navigate(loginRedirectUrl)}>
+                    Logga in
+                  </button>
+                </p>
+              ) : null}
             </>
           ) : mode === "signup" ? (
             <>
@@ -283,15 +300,8 @@ export default function Invite() {
                 </div>
               </div>
 
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleSignup}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
+              <Button className="w-full" size="lg" onClick={handleSignup} disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Fortsätt
               </Button>
 
@@ -303,7 +313,6 @@ export default function Invite() {
               </button>
             </>
           ) : (
-            /* Concern selection step */
             <>
               <div className="text-center space-y-2">
                 <h1 className="text-xl font-bold">Vad vill du ha hjälp med?</h1>
@@ -342,12 +351,18 @@ export default function Invite() {
                 />
               </div>
 
+              {!session ? (
+                <p className="text-xs text-center text-muted-foreground">
+                  Du behöver vara inloggad för att fortsätta.
+                </p>
+              ) : null}
+
               <div className="space-y-2">
                 <Button
                   className="w-full"
                   size="lg"
                   onClick={finishWithConcern}
-                  disabled={submitting || (!selectedConcern && !freeText.trim())}
+                  disabled={submitting || !session || (!selectedConcern && !freeText.trim())}
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Fortsätt
@@ -355,7 +370,7 @@ export default function Invite() {
                 <button
                   className="w-full text-xs text-muted-foreground underline"
                   onClick={skipConcern}
-                  disabled={submitting}
+                  disabled={submitting || !session}
                 >
                   Hoppa över
                 </button>

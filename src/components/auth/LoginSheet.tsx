@@ -18,9 +18,10 @@ import { toast } from "sonner";
 interface LoginSheetProps {
   open: boolean;
   onClose: () => void;
+  redirectTo?: string;
 }
 
-export function LoginSheet({ open, onClose }: LoginSheetProps) {
+export function LoginSheet({ open, onClose, redirectTo = "/" }: LoginSheetProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,11 +29,13 @@ export function LoginSheet({ open, onClose }: LoginSheetProps) {
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
+  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/";
+
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
       const { error, redirected } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}${safeRedirect}`,
       });
       
       if (redirected) {
@@ -46,7 +49,7 @@ export function LoginSheet({ open, onClose }: LoginSheetProps) {
       }
       
       onClose();
-      navigate("/");
+      navigate(safeRedirect);
     } catch (error) {
       console.error("Google login failed:", error);
       toast.error("Ett fel uppstod vid Google-inloggning");
@@ -71,7 +74,7 @@ export function LoginSheet({ open, onClose }: LoginSheetProps) {
         return;
       }
       onClose();
-      navigate("/");
+      navigate(safeRedirect);
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Ett fel uppstod vid inloggning");
