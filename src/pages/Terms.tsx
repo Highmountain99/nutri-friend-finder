@@ -231,7 +231,7 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">4.5 Betalningsvillkor för privat rådgivning</h3>
             <p>
-              EatSuite har ett erbjudande för privat rådgivning som privatpersoner kan köpa på webbplatsen. 
+              Gut Feeling har ett erbjudande för privat rådgivning som privatpersoner kan köpa på webbplatsen. 
               Användaren kan köpa samtalspaket som ger tillgång till Tjänsterna i Appen. Betalning sker på 
               Webbplatsen och Användaren får en kod via e-post inom en (1) arbetsdag. Koden ska användas 
               som betalning i Appen.
