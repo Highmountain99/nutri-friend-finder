@@ -126,7 +126,7 @@ export default function DietitianLogin() {
       <div className="flex-1 flex items-center justify-center px-6">
         <div className="w-full max-w-sm space-y-8">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-foreground">EatSuite Pro</h1>
+            <h1 className="text-2xl font-bold text-foreground">Gut Feeling Pro</h1>
             <p className="text-sm text-muted-foreground">
               {mode === "login" ? "Logga in som dietist" : "Skapa dietistkonto"}
             </p>

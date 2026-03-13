@@ -21,9 +21,9 @@ export default function Terms() {
         <main className="px-6 py-8 max-w-lg mx-auto pb-safe">
           <div className="prose prose-sm text-foreground/80 space-y-6">
             <p>
-              Genom att använda EatSuites Tjänster godkänner du dessa Allmänna villkor (nedan kallat "Avtalet"). 
-              Läs Avtalet noggrant innan du använder EatSuites Tjänster (enligt definitionen i punkt 2.1). 
-              Om du inte accepterar Avtalet ska du inte använda EatSuites Tjänster.
+              Genom att använda Gut Feelings Tjänster godkänner du dessa Allmänna villkor (nedan kallat "Avtalet"). 
+              Läs Avtalet noggrant innan du använder Gut Feelings Tjänster (enligt definitionen i punkt 2.1). 
+              Om du inte accepterar Avtalet ska du inte använda Gut Feelings Tjänster.
             </p>
 
             <h2 className="text-lg font-semibold text-foreground">1. Avtalets omfattning och tillämplighet</h2>
@@ -31,15 +31,15 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">1.1</h3>
             <p>
               Detta Avtal reglerar användningen av onlinegränssnitt och egendom (till exempel webbplats och appar) 
-              som ägs och kontrolleras av EatSuite AB (nedan kallat "EatSuite", "vi", "oss" och "vår"), inklusive 
-              EatSuites appar (nedan kallat "Appen") och webbplatserna eatsuitecare.com och eatsuite.se 
+              som ägs och kontrolleras av Gut Feeling AB (nedan kallat "Gut Feeling", "vi", "oss" och "vår"), inklusive 
+              Gut Feelings appar (nedan kallat "Appen") och webbplatserna gutfeelingcare.com och gutfeeling.se 
               (tillsammans "Webbplatsen"), samt Tjänsterna som är tillgängliga för Användare och Dietister 
               och/eller Kostrådgivare (enligt definitionen nedan) via Appen och/eller Webbplatsen.
             </p>
 
             <h3 className="text-base font-medium text-foreground">1.2</h3>
             <p>
-              EatSuite är registrerad vårdgivare (nedan kallat "Vårdgivare") under tillsyn av Inspektionen för 
+              Gut Feeling är registrerad vårdgivare (nedan kallat "Vårdgivare") under tillsyn av Inspektionen för 
               vård och omsorg (IVO) och arbetar uteslutande med etablerade, legitimerade dietister och/eller 
               kvalificerade kostrådgivare i enlighet med gällande krav.
             </p>
@@ -68,21 +68,21 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">2.2</h3>
             <p>
-              EatSuite har avtal med Paean Hälsa AB om digitala vårdtjänster mellan Dietister/Kostrådgivare och 
+              Gut Feeling har avtal med Paean Hälsa AB om digitala vårdtjänster mellan Dietister/Kostrådgivare och 
               deras patienter. Den vård som du som patient får via Appen tillhandahålls av en vårdcentral till 
-              vilken EatSuite är en underleverantör. Dina vårdkontakter registreras hos följande vårdcentral: 
+              vilken Gut Feeling är en underleverantör. Dina vårdkontakter registreras hos följande vårdcentral: 
               Frösjö Vårdcentral, Sörmland. I samband med kontakt med en Dietist/Kostrådgivare registreras 
               därför vårdbesöket i din journal som ett besök på den aktuella vårdcentralen.
             </p>
 
             <h3 className="text-base font-medium text-foreground">2.3</h3>
             <p>
-              EatSuite erbjuder Användare kost- och nutritionsrådgivning på primärvårdsnivå. Detta motsvarar den 
-              vårdnivå som normalt kan erbjudas via en vårdcentral. EatSuite kan därför inte erbjuda vård som 
+              Gut Feeling erbjuder Användare kost- och nutritionsrådgivning på primärvårdsnivå. Detta motsvarar den 
+              vårdnivå som normalt kan erbjudas via en vårdcentral. Gut Feeling kan därför inte erbjuda vård som 
               kräver specialistkompetens, avancerad medicinsk utredning, akuta insatser eller specialistbehandling 
               (t.ex. vid allvarliga medicinska tillstånd eller svåra ätstörningar). Det betyder att 
               Dietist/Kostrådgivaren kan komma att avbryta rådgivningen om Dietist/Kostrådgivaren bedömer att 
-              EatSuite inte är rätt vårdnivå för Användaren.
+              Gut Feeling inte är rätt vårdnivå för Användaren.
             </p>
 
             <h3 className="text-base font-medium text-foreground">2.4</h3>
@@ -94,16 +94,16 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">2.5</h3>
             <p>
-              Detta Avtal och annan information om EatSuites Tjänster finns i Appen och på Webbplatsen.
+              Detta Avtal och annan information om Gut Feelings Tjänster finns i Appen och på Webbplatsen.
             </p>
 
             <h3 className="text-base font-medium text-foreground">2.6</h3>
             <p>
               Vid allvarliga sjukdomssymtom eller tillstånd som kräver akut eller omfattande medicinsk bedömning 
-              är EatSuite inte rätt vårdnivå, utan Användaren ska då söka adekvat vård via till exempel vårdcentral 
+              är Gut Feeling inte rätt vårdnivå, utan Användaren ska då söka adekvat vård via till exempel vårdcentral 
               eller akutmottagning. I en akut situation (t.ex. allvarliga bröstsmärtor, andningssvårigheter, 
               misstänkt allvarlig allergisk reaktion, kraftig uttorkning, eller annan akutsituation) ska 
-              Användaren inte heller vända sig till EatSuite, utan till en adekvat akut instans alternativt 
+              Användaren inte heller vända sig till Gut Feeling, utan till en adekvat akut instans alternativt 
               ringa 112 för vägledning och råd. Vid misstanke om allvarlig ätstörning, snabb försämring eller 
               annan situation som kräver specialistvård ska Användaren kontakta vården skyndsamt.
             </p>
@@ -123,7 +123,7 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">3.3</h3>
             <p>
-              EatSuite ansvarar inte för otillåten användning av ett Användarkonto av en extern person och inte 
+              Gut Feeling ansvarar inte för otillåten användning av ett Användarkonto av en extern person och inte 
               heller för eventuella konsekvenser och/eller skada som uppstår av sådan användning.
             </p>
 
@@ -136,17 +136,17 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">3.5</h3>
             <p>
               Användaren ansvarar för att tillämpa rimlig omsorg vid tillhandahållandet av uppgifter, inklusive 
-              kontaktuppgifter och hälsouppgifter i förekommande fall, när Avtalet ingås. EatSuite ansvarar inte 
+              kontaktuppgifter och hälsouppgifter i förekommande fall, när Avtalet ingås. Gut Feeling ansvarar inte 
               för rådgivning eller åtgärder som påverkas av att Användaren anger felaktiga uppgifter. Användaren 
               förbinder sig att hålla sin personliga profil i Appen uppdaterad och aktuell under hela 
-              avtalsperioden. EatSuite ska snarast meddelas om eventuella ändringar genom en uppdatering direkt 
-              i Appen eller via e-post till info@eatsuite.se.
+              avtalsperioden. Gut Feeling ska snarast meddelas om eventuella ändringar genom en uppdatering direkt 
+              i Appen eller via e-post till info@gutfeeling.se.
             </p>
 
             <h3 className="text-base font-medium text-foreground">3.6</h3>
             <p>
               Användaren är personligen ansvarig för den information som hen tillhandahåller i eller genom Appen 
-              och/eller på Webbplatsen. Mer information om hur EatSuite hanterar personuppgifter finns i EatSuites 
+              och/eller på Webbplatsen. Mer information om hur Gut Feeling hanterar personuppgifter finns i Gut Feelings 
               integritetspolicy som finns tillgänglig i Appen eller på Webbplatsen.
             </p>
 
@@ -154,17 +154,17 @@ export default function Terms() {
             <p>
               Genom att registrera ett Användarkonto i Appen och/eller på Webbplatsen bekräftar och accepterar 
               Användaren de tekniska specifikationer, villkor och restriktioner för Appen och/eller Webbplatsen 
-              som anges i EatSuites aktuella beskrivningar av Tjänsten, vilka finns tillgängliga i Appen 
+              som anges i Gut Feelings aktuella beskrivningar av Tjänsten, vilka finns tillgängliga i Appen 
               och/eller på Webbplatsen.
             </p>
 
             <h3 className="text-base font-medium text-foreground">3.8</h3>
             <p>
               Genom att registrera ett Användarkonto i Appen och/eller på Webbplatsen bekräftar och godkänner 
-              Användaren att EatSuite kan använda de kontaktuppgifter som Användaren har angett för att kontakta 
+              Användaren att Gut Feeling kan använda de kontaktuppgifter som Användaren har angett för att kontakta 
               Användaren genom utskick (post eller e-post), telefonsamtal, meddelanden och notiser med information 
               och erbjudanden. Användaren kan när som helst avregistrera sig från marknadsföringskommunikation 
-              (enligt definitionen i punkt 13). Läs mer om hur EatSuite lagrar information och behandlar 
+              (enligt definitionen i punkt 13). Läs mer om hur Gut Feeling lagrar information och behandlar 
               personuppgifter i Integritetspolicyn.
             </p>
 
@@ -182,7 +182,7 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">3.10</h3>
             <p>
-              Innehåll som EatSuite publicerar eller tillhandahåller i Appen och/eller på Webbplatsen kan användas 
+              Innehåll som Gut Feeling publicerar eller tillhandahåller i Appen och/eller på Webbplatsen kan användas 
               som en del av Tjänsten eller som förebyggande egenvård. IKL-program som används som en del av 
               Tjänsten är ett komplement till Tjänsten som Dietist/Kostrådgivaren erbjuder Användaren och är 
               inte avsedda att användas i stället för en Dietist/Kostrådgivares professionella bedömning. 
@@ -208,30 +208,30 @@ export default function Terms() {
             <p>
               Användare kan inte påbörja ett videosamtal innan betalningsmetoden för samtalet har bekräftats. 
               Genom att använda Tjänsten godkänner du att bli fakturerad enligt det svenska hälso- och 
-              sjukvårdsregleringssystemet. EatSuite förbehåller sig rätten att ta ut påminnelseavgift. 
+              sjukvårdsregleringssystemet. Gut Feeling förbehåller sig rätten att ta ut påminnelseavgift. 
               Vid utebliven betalning lämnas ärendet vidare till inkasso.
             </p>
 
             <h3 className="text-base font-medium text-foreground">4.3</h3>
             <p>
-              Frikort gäller på EatSuite och EatSuite är ansluten till e-frikortstjänsten för de regioner där 
+              Frikort gäller på Gut Feeling och Gut Feeling är ansluten till e-frikortstjänsten för de regioner där 
               det är tillämpligt. Om en Användare har ett elektroniskt frikort kommer uppgifterna att samlas 
               in genom e-frikortstjänsten. Frikort i pappersformat gäller också och Användaren kan uppge 
-              frikortsnumret vid bokning/betalning. EatSuite registrerar endast patientavgifter om Användaren 
+              frikortsnumret vid bokning/betalning. Gut Feeling registrerar endast patientavgifter om Användaren 
               är folkbokförd i en region som är ansluten till e-frikortstjänsten.
             </p>
 
             <h3 className="text-base font-medium text-foreground">4.4 Betalningsvillkor för företag</h3>
             <p>
-              EatSuite har särskilda erbjudanden för företag som vill erbjuda Tjänsterna till sina anställda. 
+              Gut Feeling har särskilda erbjudanden för företag som vill erbjuda Tjänsterna till sina anställda. 
               Pris- och betalningsvillkor för dessa Tjänster beskrivs i detalj i de särskilda villkor som 
-              EatSuite skickar till företaget för godkännande. Genom att acceptera dessa särskilda villkor 
+              Gut Feeling skickar till företaget för godkännande. Genom att acceptera dessa särskilda villkor 
               förbinder sig företaget att kommunicera detta Avtal till de anställda som använder Tjänsterna.
             </p>
 
             <h3 className="text-base font-medium text-foreground">4.5 Betalningsvillkor för privat rådgivning</h3>
             <p>
-              EatSuite har ett erbjudande för privat rådgivning som privatpersoner kan köpa på webbplatsen. 
+              Gut Feeling har ett erbjudande för privat rådgivning som privatpersoner kan köpa på webbplatsen. 
               Användaren kan köpa samtalspaket som ger tillgång till Tjänsterna i Appen. Betalning sker på 
               Webbplatsen och Användaren får en kod via e-post inom en (1) arbetsdag. Koden ska användas 
               som betalning i Appen.
@@ -242,7 +242,7 @@ export default function Terms() {
               få återbetalning i de fall Dietist/Kostrådgivaren avråder från ytterligare samtal efter det första 
               samtalet. I ovannämnda fall kommer Användaren att få tillbaka hela beloppet exklusive priset för 
               ett videosamtal, vilket är 800 kr. Om mer än ett videosamtal har genomförts eller om Användaren 
-              har påbörjat ett IKL-program, görs ingen återbetalning. Kontakta EatSuites Customer Service för 
+              har påbörjat ett IKL-program, görs ingen återbetalning. Kontakta Gut Feelings Customer Service för 
               att begära återbetalning.
             </p>
 
@@ -250,30 +250,30 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">5.1</h3>
             <p>
-              Inom de gränser som anges i detta kapitel 5 ansvarar EatSuite för att Appen och/eller Webbplatsen 
-              är tillgänglig i enlighet med punkterna 5.2, 5.3 och 5.5 nedan. EatSuite ansvarar dessutom för 
+              Inom de gränser som anges i detta kapitel 5 ansvarar Gut Feeling för att Appen och/eller Webbplatsen 
+              är tillgänglig i enlighet med punkterna 5.2, 5.3 och 5.5 nedan. Gut Feeling ansvarar dessutom för 
               lagring av den information som tillhandahålls och laddas upp i Appen och/eller på Webbplatsen 
               av Användaren och Dietist/Kostrådgivaren.
             </p>
 
             <h3 className="text-base font-medium text-foreground">5.2</h3>
             <p>
-              EatSuites mål är att se till att Appen och/eller Webbplatsen upprätthåller en hög nivå av 
+              Gut Feelings mål är att se till att Appen och/eller Webbplatsen upprätthåller en hög nivå av 
               tillgänglighet och att Användaren har tillgång till sitt Användarkonto när som helst på dygnet. 
               Videosamtalen bokas av Användaren via de bokningsfunktioner som tillhandahålls via Appens och/eller 
               Webbplatsens bokningssystem eller av Dietist/Kostrådgivaren. Appen och videosamtalen tillhandahålls 
               i enlighet med ovanstående, med undantag för planerade avbrott för underhåll som annonserats i 
-              Appen i förväg eller avbrott utanför EatSuites kontroll.
+              Appen i förväg eller avbrott utanför Gut Feelings kontroll.
             </p>
 
             <h3 className="text-base font-medium text-foreground">5.3</h3>
             <p>
-              EatSuite ska inte ansvara för eventuella avbrott i Tjänsten eller tillgängligheten som uppstått 
+              Gut Feeling ska inte ansvara för eventuella avbrott i Tjänsten eller tillgängligheten som uppstått 
               på grund av: i) fel i Användarens hårdvara/utrustning, anslutande nätverk, Användarens programvara 
-              eller fel i programvara som utgör tredjepartsprodukt och som EatSuite inte kan avhjälpa, trots 
+              eller fel i programvara som utgör tredjepartsprodukt och som Gut Feeling inte kan avhjälpa, trots 
               att vi på ett fackmannamässigt sätt försökt åtgärda eller kringgå dem, ii) andra omständigheter 
               som Användaren är ansvarig för enligt Avtalet, iii) virus eller andra angrepp på säkerheten trots 
-              att EatSuite har vidtagit professionella åtgärder, eller iv) omständigheter som utgör force majeure 
+              att Gut Feeling har vidtagit professionella åtgärder, eller iv) omständigheter som utgör force majeure 
               enligt kapitel 12 nedan.
             </p>
 

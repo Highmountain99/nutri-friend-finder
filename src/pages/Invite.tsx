@@ -137,7 +137,7 @@ export default function Invite() {
         ai_free_text: freeText || null,
       });
 
-      toast.success("Konto skapat! Välkommen till EatSuite.");
+      toast.success("Konto skapat! Välkommen till Gut Feeling.");
       navigate("/");
     } catch (err: any) {
       toast.error(err.message || "Något gick fel");
@@ -160,7 +160,7 @@ export default function Invite() {
         unified_concern_category: "general_health",
       });
 
-      toast.success("Konto skapat! Välkommen till EatSuite.");
+      toast.success("Konto skapat! Välkommen till Gut Feeling.");
       navigate("/");
     } catch (err: any) {
       toast.error(err.message || "Något gick fel");
@@ -203,7 +203,7 @@ export default function Invite() {
                 <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
                   <Heart className="h-7 w-7 text-primary" />
                 </div>
-                <h1 className="text-xl font-bold">Välkommen till EatSuite</h1>
+                <h1 className="text-xl font-bold">Välkommen till Gut Feeling</h1>
                 {dietitianName && (
                   <p className="text-muted-foreground">
                     Du har blivit inbjuden av <span className="font-medium text-foreground">{dietitianName}</span>
@@ -212,7 +212,7 @@ export default function Invite() {
               </div>
 
               <div className="space-y-3 text-sm text-muted-foreground">
-                <p>Med EatSuite får du:</p>
+                <p>Med Gut Feeling får du:</p>
                 <ul className="space-y-2 list-disc list-inside">
                   <li>Direktkontakt med din dietist via chatt och videosamtal</li>
                   <li>Personlig kostplan och receptförslag</li>

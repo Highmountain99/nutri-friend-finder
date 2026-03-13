@@ -41,10 +41,10 @@ export default function SEBForsakring() {
             <Shield className="w-12 h-12 text-primary" />
           </div>
           <h2 className="text-xl font-semibold text-foreground text-center">
-            SEB + EatSuite
+            SEB + Gut Feeling
           </h2>
           <p className="text-muted-foreground text-center mt-2 max-w-sm">
-            Genom SEB:s försäkring har du tillgång till kostrådgivning via EatSuite
+            Genom SEB:s försäkring har du tillgång till kostrådgivning via Gut Feeling
           </p>
         </div>
 
@@ -65,7 +65,7 @@ export default function SEBForsakring() {
                     <DialogDescription className="space-y-3 pt-2">
                       <p>
                         Om du har en försäkring genom SEB som inkluderar kostrådgivning 
-                        kan du använda EatSuite utan extra kostnad.
+                        kan du använda Gut Feeling utan extra kostnad.
                       </p>
                       <p>
                         <strong>Skadenummer</strong> hittar du i ditt försäkringsbrev eller 
@@ -82,7 +82,7 @@ export default function SEBForsakring() {
             </CardTitle>
             <CardDescription>
               SEB:s kunder med rätt försäkring får tillgång till dietistrådgivning 
-              och kostvägledning genom EatSuite. Ange ditt skadenummer nedan för 
+              och kostvägledning genom Gut Feeling. Ange ditt skadenummer nedan för 
               att aktivera din förmån.
             </CardDescription>
           </CardHeader>

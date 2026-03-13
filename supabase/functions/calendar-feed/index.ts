@@ -71,10 +71,10 @@ Deno.serve(async (req) => {
     const lines: string[] = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//EatSuite//Dietist Kalender//SV",
+      "PRODID:-//GutFeeling//Dietist Kalender//SV",
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
-      `X-WR-CALNAME:EatSuite – ${profile.first_name} ${profile.last_name}`,
+      `X-WR-CALNAME:Gut Feeling – ${profile.first_name} ${profile.last_name}`,
       "X-WR-TIMEZONE:Europe/Stockholm",
     ];
 
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
 
       lines.push(
         "BEGIN:VEVENT",
-        `UID:appt-${appt.id}@eatsuite.se`,
+        `UID:appt-${appt.id}@gutfeeling.se`,
         `DTSTART:${formatIcalDate(start)}`,
         `DTEND:${formatIcalDate(end)}`,
         `SUMMARY:${escapeIcal(`${typeLabel} – ${patientName}`)}`,
@@ -129,10 +129,10 @@ Deno.serve(async (req) => {
 
           lines.push(
             "BEGIN:VEVENT",
-            `UID:avail-${a.id}-${blockStart}@eatsuite.se`,
+            `UID:avail-${a.id}-${blockStart}@gutfeeling.se`,
             `DTSTART:${formatIcalDate(startDate)}`,
             `DTEND:${formatIcalDate(endDate)}`,
-            `SUMMARY:${escapeIcal("Ledig tid – EatSuite")}`,
+            `SUMMARY:${escapeIcal("Ledig tid – Gut Feeling")}`,
             "STATUS:TENTATIVE",
             "TRANSP:TRANSPARENT",
             "END:VEVENT"
@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       headers: {
         ...corsHeaders,
         "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": `attachment; filename="eatsuite-kalender.ics"`,
+        "Content-Disposition": `attachment; filename="gutfeeling-kalender.ics"`,
       },
     });
   } catch (error) {
