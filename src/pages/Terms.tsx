@@ -208,7 +208,7 @@ export default function Terms() {
             <p>
               Användare kan inte påbörja ett videosamtal innan betalningsmetoden för samtalet har bekräftats. 
               Genom att använda Tjänsten godkänner du att bli fakturerad enligt det svenska hälso- och 
-              sjukvårdsregleringssystemet. EatSuite förbehåller sig rätten att ta ut påminnelseavgift. 
+              sjukvårdsregleringssystemet. Gut Feeling förbehåller sig rätten att ta ut påminnelseavgift. 
               Vid utebliven betalning lämnas ärendet vidare till inkasso.
             </p>
 
