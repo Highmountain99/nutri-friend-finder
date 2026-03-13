@@ -242,7 +242,7 @@ export default function Terms() {
               få återbetalning i de fall Dietist/Kostrådgivaren avråder från ytterligare samtal efter det första 
               samtalet. I ovannämnda fall kommer Användaren att få tillbaka hela beloppet exklusive priset för 
               ett videosamtal, vilket är 800 kr. Om mer än ett videosamtal har genomförts eller om Användaren 
-              har påbörjat ett IKL-program, görs ingen återbetalning. Kontakta EatSuites Customer Service för 
+              har påbörjat ett IKL-program, görs ingen återbetalning. Kontakta Gut Feelings Customer Service för 
               att begära återbetalning.
             </p>
 
