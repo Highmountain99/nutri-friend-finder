@@ -82,7 +82,18 @@ const App = () => (
                 <Route path="/koder" element={<Koder />} />
                 <Route path="/seb-forsakring" element={<SEBForsakring />} />
                 <Route path="/meeting-history" element={<MeetingHistory />} />
-                <Route path="/admin" element={<Admin />} />
+                <Route path="/meeting-history" element={<MeetingHistory />} />
+              </Route>
+            </Route>
+            
+            {/* Admin route - requires admin role */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AdminRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/admin" element={<Admin />} />
+                </Route>
+              </Route>
+            </Route>
               </Route>
             </Route>
             {/* Dietitian dashboard routes */}
