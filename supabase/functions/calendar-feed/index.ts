@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
 
       lines.push(
         "BEGIN:VEVENT",
-        `UID:appt-${appt.id}@eatsuite.se`,
+        `UID:appt-${appt.id}@gutfeeling.se`,
         `DTSTART:${formatIcalDate(start)}`,
         `DTEND:${formatIcalDate(end)}`,
         `SUMMARY:${escapeIcal(`${typeLabel} – ${patientName}`)}`,
