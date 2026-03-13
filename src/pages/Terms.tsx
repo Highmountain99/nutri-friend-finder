@@ -77,12 +77,12 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">2.3</h3>
             <p>
-              EatSuite erbjuder Användare kost- och nutritionsrådgivning på primärvårdsnivå. Detta motsvarar den 
-              vårdnivå som normalt kan erbjudas via en vårdcentral. EatSuite kan därför inte erbjuda vård som 
+              Gut Feeling erbjuder Användare kost- och nutritionsrådgivning på primärvårdsnivå. Detta motsvarar den 
+              vårdnivå som normalt kan erbjudas via en vårdcentral. Gut Feeling kan därför inte erbjuda vård som 
               kräver specialistkompetens, avancerad medicinsk utredning, akuta insatser eller specialistbehandling 
               (t.ex. vid allvarliga medicinska tillstånd eller svåra ätstörningar). Det betyder att 
               Dietist/Kostrådgivaren kan komma att avbryta rådgivningen om Dietist/Kostrådgivaren bedömer att 
-              EatSuite inte är rätt vårdnivå för Användaren.
+              Gut Feeling inte är rätt vårdnivå för Användaren.
             </p>
 
             <h3 className="text-base font-medium text-foreground">2.4</h3>
