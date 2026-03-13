@@ -1266,6 +1266,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation_and_assign: {
+        Args: {
+          _free_text?: string
+          _invite_code: string
+          _primary_concern?: string
+        }
+        Returns: boolean
+      }
       generate_calendar_token: { Args: never; Returns: string }
       has_role: {
         Args: {
