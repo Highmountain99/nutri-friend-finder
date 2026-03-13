@@ -146,7 +146,7 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">3.6</h3>
             <p>
               Användaren är personligen ansvarig för den information som hen tillhandahåller i eller genom Appen 
-              och/eller på Webbplatsen. Mer information om hur EatSuite hanterar personuppgifter finns i EatSuites 
+              och/eller på Webbplatsen. Mer information om hur Gut Feeling hanterar personuppgifter finns i Gut Feelings 
               integritetspolicy som finns tillgänglig i Appen eller på Webbplatsen.
             </p>
 
