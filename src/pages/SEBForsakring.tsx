@@ -65,7 +65,7 @@ export default function SEBForsakring() {
                     <DialogDescription className="space-y-3 pt-2">
                       <p>
                         Om du har en försäkring genom SEB som inkluderar kostrådgivning 
-                        kan du använda EatSuite utan extra kostnad.
+                        kan du använda Gut Feeling utan extra kostnad.
                       </p>
                       <p>
                         <strong>Skadenummer</strong> hittar du i ditt försäkringsbrev eller 
