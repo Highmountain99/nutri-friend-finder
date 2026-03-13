@@ -60,9 +60,14 @@ export function DietitianSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         {!collapsed ? (
-          <span className="text-sm font-bold tracking-wide text-sidebar-foreground uppercase">
-            Gut Feeling Pro
-          </span>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold tracking-wide text-sidebar-foreground uppercase">
+              Gut Feeling
+            </span>
+            <span className="text-[10px] font-medium tracking-wider text-sidebar-foreground/50 uppercase">
+              EatSuite
+            </span>
+          </div>
         ) : (
           <span className="text-xs font-bold text-sidebar-foreground">GF</span>
         )}
