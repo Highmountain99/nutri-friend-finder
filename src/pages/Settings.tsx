@@ -380,7 +380,7 @@ export default function Settings() {
 
       {/* App Version */}
       <p className="text-center text-xs text-muted-foreground">
-        EatSuite version 1.0.0
+        Gut Feeling version 1.0.0
       </p>
 
       {/* Personal Info Sheet */}
