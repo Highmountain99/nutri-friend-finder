@@ -1,12 +1,16 @@
-import { Check, Circle, ChevronDown, Target, Calendar } from "lucide-react";
+import { Check, Target, ChevronDown, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { usePatientTreatmentPlan, PatientGoal } from "@/hooks/usePatientTreatmentPlan";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   not_started: { label: "Ej påbörjat", color: "text-muted-foreground", bg: "bg-muted" },
@@ -20,6 +24,26 @@ function GoalCard({ goal }: { goal: PatientGoal }) {
   const completedMilestones = goal.milestones.filter((m) => m.is_completed).length;
   const totalMilestones = goal.milestones.length;
   const milestoneProgress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
+  const queryClient = useQueryClient();
+
+  const toggleMilestone = useMutation({
+    mutationFn: async ({ milestoneId, completed }: { milestoneId: string; completed: boolean }) => {
+      const { error } = await supabase
+        .from("treatment_milestones")
+        .update({
+          is_completed: completed,
+          completed_at: completed ? new Date().toISOString() : null,
+        })
+        .eq("id", milestoneId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-treatment-plan"] });
+    },
+    onError: () => {
+      toast.error("Kunde inte uppdatera delmålet");
+    },
+  });
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -91,16 +115,14 @@ function GoalCard({ goal }: { goal: PatientGoal }) {
             {goal.milestones.length > 0 && (
               <div className="space-y-2.5">
                 {goal.milestones.map((m) => (
-                  <div key={m.id} className="flex items-center gap-2.5">
-                    <div
-                      className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        m.is_completed
-                          ? "bg-primary text-primary-foreground"
-                          : "border-2 border-muted-foreground/25"
-                      }`}
-                    >
-                      {m.is_completed && <Check className="w-3 h-3" />}
-                    </div>
+                  <label key={m.id} className="flex items-center gap-2.5 cursor-pointer">
+                    <Checkbox
+                      checked={m.is_completed}
+                      onCheckedChange={(checked) =>
+                        toggleMilestone.mutate({ milestoneId: m.id, completed: !!checked })
+                      }
+                      className="rounded-full"
+                    />
                     <span
                       className={`text-sm ${
                         m.is_completed
@@ -110,7 +132,7 @@ function GoalCard({ goal }: { goal: PatientGoal }) {
                     >
                       {m.title}
                     </span>
-                  </div>
+                  </label>
                 ))}
               </div>
             )}
@@ -141,7 +163,6 @@ export function TreatmentPlanSection() {
         </span>
       </div>
 
-      {/* Overall progress */}
       <Card className="border-border/50 shadow-sm">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2.5">
@@ -155,7 +176,6 @@ export function TreatmentPlanSection() {
         </CardContent>
       </Card>
 
-      {/* Goal cards */}
       <div className="space-y-2">
         {plan.goals.map((goal) => (
           <GoalCard key={goal.id} goal={goal} />
