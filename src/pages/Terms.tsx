@@ -268,12 +268,12 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">5.3</h3>
             <p>
-              EatSuite ska inte ansvara för eventuella avbrott i Tjänsten eller tillgängligheten som uppstått 
+              Gut Feeling ska inte ansvara för eventuella avbrott i Tjänsten eller tillgängligheten som uppstått 
               på grund av: i) fel i Användarens hårdvara/utrustning, anslutande nätverk, Användarens programvara 
-              eller fel i programvara som utgör tredjepartsprodukt och som EatSuite inte kan avhjälpa, trots 
+              eller fel i programvara som utgör tredjepartsprodukt och som Gut Feeling inte kan avhjälpa, trots 
               att vi på ett fackmannamässigt sätt försökt åtgärda eller kringgå dem, ii) andra omständigheter 
               som Användaren är ansvarig för enligt Avtalet, iii) virus eller andra angrepp på säkerheten trots 
-              att EatSuite har vidtagit professionella åtgärder, eller iv) omständigheter som utgör force majeure 
+              att Gut Feeling har vidtagit professionella åtgärder, eller iv) omständigheter som utgör force majeure 
               enligt kapitel 12 nedan.
             </p>
 
