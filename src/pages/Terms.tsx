@@ -182,7 +182,7 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">3.10</h3>
             <p>
-              Innehåll som EatSuite publicerar eller tillhandahåller i Appen och/eller på Webbplatsen kan användas 
+              Innehåll som Gut Feeling publicerar eller tillhandahåller i Appen och/eller på Webbplatsen kan användas 
               som en del av Tjänsten eller som förebyggande egenvård. IKL-program som används som en del av 
               Tjänsten är ett komplement till Tjänsten som Dietist/Kostrådgivaren erbjuder Användaren och är 
               inte avsedda att användas i stället för en Dietist/Kostrådgivares professionella bedömning. 
