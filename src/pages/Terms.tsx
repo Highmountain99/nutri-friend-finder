@@ -154,7 +154,7 @@ export default function Terms() {
             <p>
               Genom att registrera ett Användarkonto i Appen och/eller på Webbplatsen bekräftar och accepterar 
               Användaren de tekniska specifikationer, villkor och restriktioner för Appen och/eller Webbplatsen 
-              som anges i EatSuites aktuella beskrivningar av Tjänsten, vilka finns tillgängliga i Appen 
+              som anges i Gut Feelings aktuella beskrivningar av Tjänsten, vilka finns tillgängliga i Appen 
               och/eller på Webbplatsen.
             </p>
 
