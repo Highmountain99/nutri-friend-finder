@@ -214,10 +214,10 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">4.3</h3>
             <p>
-              Frikort gäller på EatSuite och EatSuite är ansluten till e-frikortstjänsten för de regioner där 
+              Frikort gäller på Gut Feeling och Gut Feeling är ansluten till e-frikortstjänsten för de regioner där 
               det är tillämpligt. Om en Användare har ett elektroniskt frikort kommer uppgifterna att samlas 
               in genom e-frikortstjänsten. Frikort i pappersformat gäller också och Användaren kan uppge 
-              frikortsnumret vid bokning/betalning. EatSuite registrerar endast patientavgifter om Användaren 
+              frikortsnumret vid bokning/betalning. Gut Feeling registrerar endast patientavgifter om Användaren 
               är folkbokförd i en region som är ansluten till e-frikortstjänsten.
             </p>
 
