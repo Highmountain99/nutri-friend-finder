@@ -123,7 +123,7 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">3.3</h3>
             <p>
-              EatSuite ansvarar inte för otillåten användning av ett Användarkonto av en extern person och inte 
+              Gut Feeling ansvarar inte för otillåten användning av ett Användarkonto av en extern person och inte 
               heller för eventuella konsekvenser och/eller skada som uppstår av sådan användning.
             </p>
 
