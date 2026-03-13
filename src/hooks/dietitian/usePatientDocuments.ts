@@ -28,15 +28,11 @@ export function usePatientDocuments(patientId?: string) {
         .upload(filePath, file);
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("patient-documents")
-        .getPublicUrl(filePath);
-
       const { error: dbError } = await supabase.from("patient_documents").insert({
         patient_id: patientId!,
         uploaded_by: user!.id,
         file_name: file.name,
-        file_url: urlData.publicUrl,
+        file_url: filePath,
         file_type: file.type,
       });
       if (dbError) throw dbError;
