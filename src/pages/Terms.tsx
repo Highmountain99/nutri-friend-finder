@@ -39,7 +39,7 @@ export default function Terms() {
 
             <h3 className="text-base font-medium text-foreground">1.2</h3>
             <p>
-              EatSuite är registrerad vårdgivare (nedan kallat "Vårdgivare") under tillsyn av Inspektionen för 
+              Gut Feeling är registrerad vårdgivare (nedan kallat "Vårdgivare") under tillsyn av Inspektionen för 
               vård och omsorg (IVO) och arbetar uteslutande med etablerade, legitimerade dietister och/eller 
               kvalificerade kostrådgivare i enlighet med gällande krav.
             </p>
