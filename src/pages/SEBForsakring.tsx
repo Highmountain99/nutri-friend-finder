@@ -41,10 +41,10 @@ export default function SEBForsakring() {
             <Shield className="w-12 h-12 text-primary" />
           </div>
           <h2 className="text-xl font-semibold text-foreground text-center">
-            SEB + EatSuite
+            SEB + Gut Feeling
           </h2>
           <p className="text-muted-foreground text-center mt-2 max-w-sm">
-            Genom SEB:s försäkring har du tillgång till kostrådgivning via EatSuite
+            Genom SEB:s försäkring har du tillgång till kostrådgivning via Gut Feeling
           </p>
         </div>
 
