@@ -25,6 +25,7 @@ import Frikort from "./pages/Frikort";
 import Koder from "./pages/Koder";
 import SEBForsakring from "./pages/SEBForsakring";
 import Admin from "./pages/Admin";
+import AdminSetup from "./pages/AdminSetup";
 import MeetingHistory from "./pages/MeetingHistory";
 import BookingSuccess from "./pages/BookingSuccess";
 import { DietitianRoute } from "@/components/dietitian/DietitianRoute";
