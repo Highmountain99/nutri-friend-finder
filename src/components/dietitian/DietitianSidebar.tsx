@@ -8,6 +8,9 @@ import {
   LogOut,
   ChevronsUpDown,
   UtensilsCrossed,
+  ChevronDown,
+  User,
+  ShieldCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -15,6 +18,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useDietitianProfile } from "@/hooks/dietitian/useDietitianProfile";
 import { useUnreadMessages } from "@/hooks/dietitian/useUnreadMessages";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +32,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,16 +51,30 @@ const items = [
   { title: "Meddelanden", url: "/dietitian/messages", icon: MessageSquare, badgeKey: "messages" },
   { title: "Recept", url: "/dietitian/recipes", icon: UtensilsCrossed },
   { title: "Statistik", url: "/dietitian/statistics", icon: BarChart3 },
-  { title: "Inställningar", url: "/dietitian/profile", icon: Settings },
 ];
 
 export function DietitianSidebar() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { data: profile } = useDietitianProfile();
   const { data: unread } = useUnreadMessages();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["user-role-admin", user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin" as const,
+      });
+      return !!data;
+    },
+    enabled: !!user,
+  });
+
+  const settingsOpen = location.pathname.startsWith("/dietitian/profile") || location.pathname.startsWith("/dietitian/admin");
 
   const initials = profile
     ? `${profile.first_name?.[0] ?? ""}${profile.last_name?.[0] ?? ""}`
