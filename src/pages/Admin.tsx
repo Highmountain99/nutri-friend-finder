@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { recipeImportApi } from "@/lib/api/recipeImport";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   RefreshCw, 
   Search, 
@@ -18,7 +19,10 @@ import {
   Clock,
   XCircle,
   Play,
-  Trash2
+  Trash2,
+  Ticket,
+  Copy,
+  Check
 } from "lucide-react";
 
 interface ImportStats {
@@ -43,15 +47,55 @@ const Admin = () => {
   const [searchFilter, setSearchFilter] = useState("");
   const [batchSize, setBatchSize] = useState(10);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [inviteCodes, setInviteCodes] = useState<any[]>([]);
+  const [generatingCode, setGeneratingCode] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const fetchStats = async () => {
     const data = await recipeImportApi.getStats();
     setStats(data);
   };
 
+  const fetchInviteCodes = async () => {
+    const { data } = await supabase
+      .from("dietitian_invite_codes" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setInviteCodes(data);
+  };
+
+  const handleGenerateCode = async () => {
+    setGeneratingCode(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { error } = await supabase
+        .from("dietitian_invite_codes" as any)
+        .insert({ created_by: user.id });
+
+      if (error) {
+        toast({ title: "Fel", description: "Kunde inte skapa inbjudningskod", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Kod skapad!", description: "En ny inbjudningskod har genererats" });
+      fetchInviteCodes();
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 5000); // Refresh every 5 seconds
+    fetchInviteCodes();
+    const interval = setInterval(fetchStats, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -226,11 +270,82 @@ const Admin = () => {
     : 0;
 
   return (
-    <div className="container mx-auto p-4 md:p-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Receptimport</h1>
-        <p className="text-muted-foreground">Importera recept från ICA:s receptdatabas</p>
+    <div className="container mx-auto p-4 md:p-6 max-w-4xl space-y-8">
+      {/* Dietitian Invite Codes */}
+      <div>
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold">Administration</h1>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ticket className="h-5 w-5" />
+              Dietist-inbjudningar
+            </CardTitle>
+            <CardDescription>
+              Skapa inbjudningskoder som nya dietister använder för att registrera sig
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={handleGenerateCode} disabled={generatingCode}>
+              {generatingCode ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Ticket className="h-4 w-4 mr-2" />
+              )}
+              Skapa ny inbjudningskod
+            </Button>
+
+            {inviteCodes.length > 0 && (
+              <div className="space-y-2">
+                {inviteCodes.map((ic: any) => (
+                  <div key={ic.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <div className="flex items-center gap-3">
+                      <code className="rounded bg-muted px-2 py-1 text-sm font-mono font-semibold">
+                        {ic.code}
+                      </code>
+                      {ic.used_by ? (
+                        <Badge variant="secondary">Använd</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-green-700 border-green-300">Tillgänglig</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(ic.created_at).toLocaleDateString("sv-SE")}
+                      </span>
+                      {!ic.used_by && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => copyCode(ic.code)}
+                        >
+                          {copiedCode === ic.code ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      <Separator />
+
+      {/* Recipe Import */}
+      <div>
+        <div className="mb-6">
+          <h2 className="text-xl font-bold">Receptimport</h2>
+          <p className="text-muted-foreground">Importera recept från ICA:s receptdatabas</p>
+        </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
@@ -433,6 +548,7 @@ const Admin = () => {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 };
