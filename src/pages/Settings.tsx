@@ -345,6 +345,7 @@ export default function Settings() {
                   className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
                   onClick={() => {
                     if (item.label === "Personuppgifter") setIsPersonalInfoOpen(true);
+                    if (item.label === "Betalningsmetoder") setIsPaymentMethodsOpen(true);
                   }}
                 >
                   <div className="flex items-center gap-3">
