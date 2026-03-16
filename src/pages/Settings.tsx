@@ -67,6 +67,10 @@ export default function Settings() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, signOut } = useAuth();
+  const [isGoalsDialogOpen, setIsGoalsDialogOpen] = useState(false);
+  const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(false);
+  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Show toast if returning from Stripe after adding a card
   useEffect(() => {
@@ -75,10 +79,6 @@ export default function Settings() {
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
-  const [isGoalsDialogOpen, setIsGoalsDialogOpen] = useState(false);
-  const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(false);
-  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   // Journal settings state
   const [nutritionSettings, setNutritionSettings] = useState<NutritionSettings>({
