@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { StepLayout } from './StepLayout';
 import { DietitianSelectionStep } from '@/components/booking/DietitianSelectionStep';
 import { DietitianCalendarStep } from '@/components/booking/DietitianCalendarStep';
@@ -36,7 +35,6 @@ export function BookingStep({
   isLoading = false,
   triageResult = 'dietist',
 }: BookingStepProps) {
-  const navigate = useNavigate();
   const { bookAppointment, cancelUpcomingBookedAppointments } = useAppointments();
   const [phase, setPhase] = useState<BookingPhase>('selection');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -52,7 +50,7 @@ export function BookingStep({
 
     if (result) {
       setSheetOpen(false);
-      navigate('/', { state: { bookingConfirmed: true } });
+      onComplete();
     }
   };
 
