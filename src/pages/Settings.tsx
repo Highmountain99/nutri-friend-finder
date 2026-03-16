@@ -388,6 +388,7 @@ export default function Settings() {
 
       {/* Personal Info Sheet */}
       <PersonalInfoSheet open={isPersonalInfoOpen} onOpenChange={setIsPersonalInfoOpen} />
+      <PaymentMethodsSheet open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen} />
 
       {/* Goals Dialog */}
       <Dialog open={isGoalsDialogOpen} onOpenChange={setIsGoalsDialogOpen}>
