@@ -214,10 +214,10 @@ export default function DietitianRecipes() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as "all" | "mine"); clearSelection(); }}>
-        <TabsList>
-          <TabsTrigger value="all">Alla recept</TabsTrigger>
-          <TabsTrigger value="mine">Mina recept</TabsTrigger>
-        </TabsList>
+         <TabsList>
+           <TabsTrigger value="mine">Mina recept</TabsTrigger>
+           <TabsTrigger value="all">Alla recept</TabsTrigger>
+         </TabsList>
       </Tabs>
 
       {/* Selection bar */}
