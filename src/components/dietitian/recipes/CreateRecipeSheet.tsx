@@ -176,7 +176,7 @@ export function CreateRecipeSheet({ open, onOpenChange, initialData, editId }: C
         servings: form.servings || null,
         ingredients: ingredientsList,
         instructions: instructionsList,
-        calories_per_serving: form.caloriesPerServing || null,
+        calories_per_serving: form.caloriesPerServing ? Math.round(Number(form.caloriesPerServing)) : null,
         protein_per_serving: form.proteinPerServing || null,
         carbs_per_serving: form.carbsPerServing || null,
         fat_per_serving: form.fatPerServing || null,
