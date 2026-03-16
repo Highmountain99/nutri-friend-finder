@@ -13,6 +13,7 @@ import { AddSymptomSheet } from "@/components/journal/AddSymptomSheet";
 import { EditSymptomSheet } from "@/components/journal/EditSymptomSheet";
 import { EditNutritionGoalsSheet } from "@/components/journal/EditNutritionGoalsSheet";
 import { useJournalData, type Ingredient, type NutritionEntry, type SymptomEntry } from "@/hooks/useJournalData";
+import { calculateNutritionGoals } from "@/lib/nutritionCalculator";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { cn } from "@/lib/utils";
 type JournalView = "main" | "ai-setup";
