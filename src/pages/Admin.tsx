@@ -47,6 +47,9 @@ const Admin = () => {
   const [searchFilter, setSearchFilter] = useState("");
   const [batchSize, setBatchSize] = useState(10);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [inviteCodes, setInviteCodes] = useState<any[]>([]);
+  const [generatingCode, setGeneratingCode] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const fetchStats = async () => {
     const data = await recipeImportApi.getStats();
