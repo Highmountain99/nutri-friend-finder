@@ -25,6 +25,7 @@ import Frikort from "./pages/Frikort";
 import Koder from "./pages/Koder";
 import SEBForsakring from "./pages/SEBForsakring";
 import Admin from "./pages/Admin";
+import AdminSetup from "./pages/AdminSetup";
 import MeetingHistory from "./pages/MeetingHistory";
 import BookingSuccess from "./pages/BookingSuccess";
 import { DietitianRoute } from "@/components/dietitian/DietitianRoute";
@@ -53,6 +54,7 @@ const App = () => (
             {/* Auth routes - no layout */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/dietitian/login" element={<DietitianLogin />} />
+            <Route path="/admin/setup" element={<AdminSetup />} />
             <Route path="/invite/:code" element={<Invite />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
