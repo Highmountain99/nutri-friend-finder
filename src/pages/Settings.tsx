@@ -65,7 +65,16 @@ const settingsSections = [
 
 export default function Settings() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, signOut } = useAuth();
+  
+  // Show toast if returning from Stripe after adding a card
+  useEffect(() => {
+    if (searchParams.get("payment_added") === "true") {
+      setIsPaymentMethodsOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const [isGoalsDialogOpen, setIsGoalsDialogOpen] = useState(false);
   const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(false);
   const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
