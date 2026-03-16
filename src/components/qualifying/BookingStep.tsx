@@ -35,7 +35,6 @@ export function BookingStep({
   isLoading = false,
   triageResult = 'dietist',
 }: BookingStepProps) {
-  const navigate = useNavigate();
   const { bookAppointment, cancelUpcomingBookedAppointments } = useAppointments();
   const [phase, setPhase] = useState<BookingPhase>('selection');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
