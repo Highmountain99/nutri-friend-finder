@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { recipeImportApi } from "@/lib/api/recipeImport";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   RefreshCw, 
   Search, 
@@ -18,7 +19,10 @@ import {
   Clock,
   XCircle,
   Play,
-  Trash2
+  Trash2,
+  Ticket,
+  Copy,
+  Check
 } from "lucide-react";
 
 interface ImportStats {
