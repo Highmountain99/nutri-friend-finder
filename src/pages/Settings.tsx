@@ -68,6 +68,7 @@ export default function Settings() {
   const { user, signOut } = useAuth();
   const [isGoalsDialogOpen, setIsGoalsDialogOpen] = useState(false);
   const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(false);
+  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   // Journal settings state
