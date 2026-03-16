@@ -1,130 +1,44 @@
 
 
-# Plan: Dietist-dashboard Receptverktyg
+## Plan: AI Nutrition Onboarding Card for New Users
 
-## Nuläge
-- `DietitianRecipes.tsx` är en enkel sida (~290 rader) med grundläggande skapa/sök/föreslå-funktionalitet
-- `recipes`-tabellen har redan `cuisine_types`, `meal_types`, `health_plans`, `dietary_needs`, `allergen_free`, `source_url` som array-kolumner
-- Tabellen saknar `is_published`, `prep_time_minutes` och `fiber_per_serving`
-- Firecrawl-connector och edge functions för discover/scrape/parse finns redan
-- Ingen storage bucket `recipe-images` existerar ännu
+### What the user wants
+When a new user first opens the Journal page, they should see a card overlaying the daily nutrition goals area. This card offers two options:
+1. **Activate** — Opens a setup form (gender, height, weight, activity level), then calculates personalized daily macro goals using the Mifflin-St Jeor equation
+2. **Decline** — Keeps the current default goals (2000 kcal, 50g protein, 250g carbs, 65g fat)
 
-## Databasändringar
+### Current state
+- The `AITrackingOnboarding` card exists but only shows when `aiTrackingEnabled=true && aiTrackingOnboardingCompleted=false` — new users never see it because `aiTrackingEnabled` defaults to `false`
+- The `AITrackingSetupForm` collects body data but does NOT calculate personalized goals
+- Default goals are hardcoded (2000/50/250/65)
 
-**Migration 1** – Lägg till kolumner i `recipes`:
-- `is_published boolean DEFAULT true` (befintliga recept blir publicerade)
-- `prep_time_minutes integer` (separat från `time_minutes` som blir cook_time)
-- `fiber_per_serving numeric`
+### Changes
 
-**Migration 2** – Skapa storage bucket `recipe-images` (public)
+**1. Update show-condition for onboarding card** (`Journal.tsx`)
+- Change `showOnboarding` from `settings.aiTrackingEnabled && !settings.aiTrackingOnboardingCompleted` to just `!settings.aiTrackingOnboardingCompleted`
+- This makes the card appear for all new users who haven't made a choice yet
 
-**Migration 3** – Skapa `recipe_suggestions`-tabell (separat från `user_recipe_interactions` för renare modell):
-```
-id uuid PK
-recipe_id uuid FK → recipes
-dietitian_id uuid
-patient_id uuid
-message text nullable
-status text DEFAULT 'suggested' (suggested/saved/dismissed)
-created_at timestamp
-```
-Med RLS: dietister kan hantera för sina tilldelade patienter, patienter kan se och uppdatera sina egna.
+**2. Update onboarding card copy** (`AITrackingOnboarding.tsx`)
+- Reframe from "AI photo tracking" to "personalized nutrition goals"
+- Title: "Vill du ha personliga näringmål?"
+- Description: Explain that goals will be calculated based on body measurements
+- Keep "Inte nu" and "Aktivera" buttons
 
-**Migration 4** – Seed 15 demo-recept + 4 recipe_suggestions
+**3. Add macro calculation logic** (`useJournalData.ts` or new utility)
+- Implement Mifflin-St Jeor BMR formula:
+  - Male: `10 × weight(kg) + 6.25 × height(cm) − 5 × age − 161` (simplified without age, use 30 as default)
+  - Female: same minus 161
+- Apply activity multiplier for TDEE
+- Derive macros: protein ~1.6g/kg, fat ~30% of TDEE, carbs fill remaining
+- On form completion, save calculated goals to `user_nutrition_goals` table
 
-## Frontend-komponenter (ny filstruktur)
+**4. Update `handleAISetupComplete`** (`Journal.tsx`)
+- After saving settings, calculate goals from the body data and call `updateGoals()` with the computed values
+- Mark `aiTrackingOnboardingCompleted = true`
 
-Befintliga `DietitianRecipes.tsx` skrivs om helt och bryts ut i delkomponenter under `src/components/dietitian/recipes/`:
+**5. Update skip handler**
+- `handleSkipAITracking` already marks onboarding completed — no change needed, defaults remain
 
-### 1. `DietitianRecipesPage.tsx` (huvudsida)
-- Action-bar med rubrik + 3 knappar: "Skapa recept", "Importera recept", "Hämta från länk"
-- Kollapsbar filtersektion med 5 grupper av chip-taggar + sökfält + "Rensa filter" + "Visar X av Y"
-- Receptrutnät (3/2/1 kolumner), skeleton loading
-- Hanterar state för filter, sök, modaler
-
-### 2. `RecipeFilterPanel.tsx`
-- Kollapsbar panel med filter-ikon + badge för aktiva filter
-- 5 grupper med chip-knappar (toggle grön/grå)
-- Sökfält och "Rensa filter"
-- Tagmappning: DB-värden (english) ↔ visningsnamn (svenska)
-
-### 3. `DietitianRecipeCard.tsx`
-- Bild/platshållare, titel (max 2 rader), tid, portioner, max 3 taggar + "+N till"
-- Tre-pricks-meny: Föreslå, Redigera, Duplicera, Ta bort
-- Visar "Utkast"-badge om `is_published === false`
-
-### 4. `CreateRecipeSheet.tsx` (fullskärmsmodal/sheet)
-- Formulär: titel, beskrivning, bilduppladdning (drag-and-drop → `recipe-images` bucket)
-- Tider & portioner (3 fält i rad)
-- Ingredienslista med mängd/enhet-dropdown/ingrediens + "Klistra in lista"-parser
-- Numrerade instruktionssteg med drag-and-drop
-- Näringsvärden (expanderbar): kcal, protein, kolhydrater, fett, fiber
-- Tagg-sektion med alla 5 filtergrupper
-- Knappar: Spara utkast / Publicera / Avbryt
-
-### 5. `ImportRecipeModal.tsx`
-- Tabs med 3 alternativ: Klistra in text / Ladda upp fil / Flera filer
-- **Klistra in text**: textarea + "Tolka recept"-knapp med regex-parser
-- **Ladda upp fil**: drag-and-drop för .txt/.docx/.pdf/.csv – parsear via edge function eller client-side text
-- **Flera filer**: multi-fil-uppladdning
-- Förhandsgranskning av tolkade recept med checkboxar
-- Importerar som utkast, visar resultat
-
-### 6. `FetchRecipeFromUrlModal.tsx`
-- URL-fält + "Hämta recept"-knapp
-- Anropar ny edge function `scrape-recipe` som:
-  1. Fetchar URL server-side
-  2. Extraherar JSON-LD (`@type: Recipe`) från HTML
-  3. Fallback till meta-taggar + Firecrawl scraping
-  4. Returnerar strukturerad data
-- Förhandsvisning i redigerbart formulär
-- Auto-taggning baserat på innehåll (sparkle-ikon)
-- Spara som utkast eller publicera
-
-### 7. `SuggestRecipeModal.tsx` (uppgraderad)
-- Från receptkort: visar receptinfo + sökbar patientlista med checkboxar + allergibadges + meddelandefält
-- Från patientprofil: auto-applicerar patientens allergier/kostbehov som filter + filtrerad receptlista
-- Sparar till `recipe_suggestions` + skickar chattmeddelande
-
-### 8. `EditRecipeSheet.tsx`
-- Samma formulär som CreateRecipeSheet men förpopulerat med befintlig data
-- Uppdaterar via `.update()`
-
-## Edge Function: `scrape-recipe`
-
-Ny edge function under `supabase/functions/scrape-recipe/index.ts`:
-- Tar emot `{ url: string }`
-- Fetchar HTML server-side (eller via Firecrawl om direkt fetch misslyckas)
-- Parsear JSON-LD structured data (`schema.org/Recipe`)
-- Fallback: meta-taggar + Firecrawl scrape + AI-parsning
-- Returnerar `{ success, recipe: { title, ingredients, instructions, image, nutrition, ... } }`
-
-## Ingrediens-parser (client-side utility)
-
-`src/lib/recipeParser.ts`:
-- `parseIngredientList(text: string)` – splittar på newlines, regex: `(\d+\.?\d*)\s*(g|kg|ml|dl|l|msk|tsk|st|krm)?\s*(.+)`
-- `parseRecipeText(text: string)` – extraherar titel, ingredienser, instruktioner, portioner, tid från fritext
-- `autoSuggestTags(recipe)` – föreslår taggar baserat på ingredienser/titel
-
-## Tagmappning
-
-Konstant-fil `src/lib/recipeTags.ts` med mappning mellan DB-värden och svenska visningsnamn:
-```typescript
-export const TAG_GROUPS = {
-  cuisine: { label: 'Kök', options: [{ id: 'mediterranean', label: 'Medelhav' }, ...] },
-  mealType: { label: 'Måltidstyp', options: [...] },
-  // ...
-};
-```
-Används av både dietist-dashboard och patient-sidan (ersätter duplicerade listor i `RecipeFiltersBar.tsx`).
-
-## Sammanfattning av arbetsuppgifter
-
-1. Databasmigration: `is_published`, `prep_time_minutes`, `fiber_per_serving`, `recipe_suggestions`-tabell, `recipe-images` bucket
-2. Seed 15 demo-recept + 4 suggestions
-3. Utility-filer: `recipeTags.ts`, `recipeParser.ts`
-4. Edge function: `scrape-recipe`
-5. Komponenter: FilterPanel, RecipeCard, CreateRecipeSheet, ImportRecipeModal, FetchFromUrlModal, SuggestRecipeModal, EditRecipeSheet
-6. Huvudsida: `DietitianRecipes.tsx` omskriven med ny layout
-7. Uppdatera `RecipeFiltersBar.tsx` på patientsidan att använda delade tagg-konstanter
+### No database changes needed
+The existing `user_nutrition_settings` and `user_nutrition_goals` tables already support all required fields.
 
