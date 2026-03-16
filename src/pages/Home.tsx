@@ -57,7 +57,7 @@ export default function Home() {
               </div>
               <Button
                 size="sm"
-                onClick={() => navigate("/booking", { state: { mode: "new" } })}
+                onClick={() => navigate("/booking", { state: { mode: "new", preselectedDietitian: dietitian } })}
                 className="gap-1.5 shrink-0"
               >
                 <CalendarPlus className="h-3.5 w-3.5" />
