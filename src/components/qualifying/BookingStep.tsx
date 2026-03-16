@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { StepLayout } from './StepLayout';
 import { StepLayout } from './StepLayout';
 import { DietitianSelectionStep } from '@/components/booking/DietitianSelectionStep';
 import { DietitianCalendarStep } from '@/components/booking/DietitianCalendarStep';
