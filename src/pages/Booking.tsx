@@ -21,13 +21,30 @@ export default function Booking() {
   const location = useLocation();
   const { bookAppointment, cancelUpcomingBookedAppointments } = useAppointments();
 
-  const isRebook = (location.state as { mode?: string } | null)?.mode === 'rebook';
-  
-  const [phase, setPhase] = useState<BookingPhase>('selection');
+  const locationState = location.state as { mode?: string; preselectedDietitian?: any } | null;
+  const isRebook = locationState?.mode === 'rebook';
+  const preselected = locationState?.preselectedDietitian;
+
+  const [phase, setPhase] = useState<BookingPhase>(preselected ? 'all' : 'selection');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedDietitian, setSelectedDietitian] = useState<DietitianProfile | null>(null);
+  const [selectedDietitian, setSelectedDietitian] = useState<DietitianProfile | null>(
+    preselected ? {
+      id: preselected.id,
+      userId: preselected.user_id || '',
+      firstName: preselected.first_name,
+      lastName: preselected.last_name,
+      title: preselected.title,
+      specializations: preselected.specializations || [],
+      languages: preselected.languages || [],
+      avatarUrl: preselected.avatar_url || null,
+      bio: preselected.bio || null,
+      isAvailable: preselected.is_available ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } : null
+  );
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(!!preselected);
 
   const handleBack = () => {
     switch (phase) {
