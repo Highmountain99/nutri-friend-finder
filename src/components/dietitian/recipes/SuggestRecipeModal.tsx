@@ -111,7 +111,7 @@ export function SuggestRecipeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {recipesToSuggest.length > 1
@@ -120,25 +120,25 @@ export function SuggestRecipeModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 overflow-hidden flex-1">
           {/* Recipe info */}
           {recipesToSuggest.length === 1 ? (
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg shrink-0">
               {recipesToSuggest[0].image ? (
-                <img src={recipesToSuggest[0].image} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                <img src={recipesToSuggest[0].image} alt="" className="h-12 w-12 rounded-lg object-cover shrink-0" />
               ) : (
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary/30 text-xs">🍽</div>
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary/30 text-xs shrink-0">🍽</div>
               )}
               <p className="font-medium text-sm">{recipesToSuggest[0].title}</p>
             </div>
           ) : (
-            <div className="p-3 bg-muted/50 rounded-lg space-y-1.5 max-h-[120px] overflow-auto">
+            <div className="p-3 bg-muted/50 rounded-lg space-y-2 max-h-[120px] overflow-y-auto shrink-0">
               {recipesToSuggest.map((r) => (
-                <div key={r.id} className="flex items-center gap-2">
+                <div key={r.id} className="flex items-center gap-2.5">
                   {r.image ? (
-                    <img src={r.image} alt="" className="h-8 w-8 rounded object-cover flex-shrink-0" />
+                    <img src={r.image} alt="" className="h-8 w-8 rounded object-cover shrink-0" />
                   ) : (
-                    <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-primary/30 text-[10px] flex-shrink-0">🍽</div>
+                    <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-primary/30 text-[10px] shrink-0">🍽</div>
                   )}
                   <p className="text-sm truncate">{r.title}</p>
                 </div>
@@ -147,32 +147,32 @@ export function SuggestRecipeModal({
           )}
 
           {/* Search patients */}
-          <div className="relative">
+          <div className="relative shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Sök patient..."
-              className="pl-9 h-9"
+              className="pl-9 h-10"
             />
           </div>
 
           {/* Patient list */}
-          <div className="space-y-1.5 max-h-[200px] overflow-auto">
+          <div className="space-y-0.5 overflow-y-auto min-h-0 flex-1 -mx-1 px-1">
             {filteredPatients.map((p) => (
               <label
                 key={p.patient_id}
-                className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-accent/30"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-accent/40 transition-colors"
               >
                 <Checkbox
                   checked={selectedIds.includes(p.patient_id)}
                   onCheckedChange={() => togglePatient(p.patient_id)}
                 />
-                <span className="text-sm flex-1">{getPatientDisplayName(p)}</span>
+                <span className="text-sm">{getPatientDisplayName(p)}</span>
               </label>
             ))}
             {filteredPatients.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">Inga patienter hittades</p>
+              <p className="text-sm text-muted-foreground text-center py-6">Inga patienter hittades</p>
             )}
           </div>
 
@@ -182,9 +182,10 @@ export function SuggestRecipeModal({
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Lägg till en kommentar (valfritt)..."
             rows={2}
+            className="shrink-0"
           />
 
-          <Button className="w-full" onClick={handleSend} disabled={selectedIds.length === 0 || sending}>
+          <Button className="w-full shrink-0" onClick={handleSend} disabled={selectedIds.length === 0 || sending}>
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
