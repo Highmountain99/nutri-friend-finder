@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -38,7 +40,6 @@ function extractJsonLd(html: string): any | null {
   while ((match = regex.exec(html)) !== null) {
     try {
       const data = JSON.parse(match[1]);
-      // Could be an array or single object
       const items = Array.isArray(data) ? data : [data];
       for (const item of items) {
         if (item['@type'] === 'Recipe') return item;
@@ -116,12 +117,61 @@ function parseRecipeFromJsonLd(data: any): ParsedRecipe {
   };
 }
 
+// URL allowlist for SSRF protection
+const ALLOWED_DOMAINS = [
+  'ica.se', 'www.ica.se',
+  'coop.se', 'www.coop.se',
+  'koket.se', 'www.koket.se',
+  'arla.se', 'www.arla.se',
+  'tasteline.com', 'www.tasteline.com',
+  'recepten.se', 'www.recepten.se',
+  'alltommat.se', 'www.alltommat.se',
+  'mathem.se', 'www.mathem.se',
+  'receptfavoriter.se', 'www.receptfavoriter.se',
+  'allrecipes.com', 'www.allrecipes.com',
+];
+
+function isAllowedUrl(urlStr: string): boolean {
+  try {
+    const parsed = new URL(urlStr);
+    // Only allow https
+    if (parsed.protocol !== 'https:') return false;
+    // Check domain allowlist
+    const hostname = parsed.hostname.toLowerCase();
+    return ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Authenticate the caller
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid or expired token' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { url } = await req.json();
     if (!url) {
       return new Response(JSON.stringify({ success: false, error: 'URL krävs' }), {
@@ -131,6 +181,13 @@ Deno.serve(async (req) => {
 
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith('http')) formattedUrl = `https://${formattedUrl}`;
+
+    // SSRF protection: validate URL against allowlist
+    if (!isAllowedUrl(formattedUrl)) {
+      return new Response(JSON.stringify({ success: false, error: 'Denna webbplats stöds inte för receptimport. Prova att kopiera receptet manuellt.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     console.log('Scraping recipe from:', formattedUrl);
 
@@ -209,7 +266,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error scraping recipe:', error);
-    return new Response(JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Okänt fel' }), {
+    return new Response(JSON.stringify({ success: false, error: 'Något gick fel vid receptimport' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

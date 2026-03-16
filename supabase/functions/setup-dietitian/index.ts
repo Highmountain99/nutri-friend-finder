@@ -46,15 +46,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Only allow users to set up their own dietitian profile — no privilege escalation
-    if (userId !== callerId) {
-      return new Response(JSON.stringify({ error: "You can only set up your own dietitian profile" }), {
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Only admins can create dietitian accounts — no self-registration
+    const { data: isAdmin } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", callerId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Only administrators can create dietitian accounts" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Prevent re-assignment if user already has the dietist role
     const { data: existingRole } = await supabaseAdmin
