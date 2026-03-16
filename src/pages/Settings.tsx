@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Bell, Shield, CreditCard, HelpCircle, ChevronRight, Sparkles, Target, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PersonalInfoSheet from "@/components/settings/PersonalInfoSheet";
+import { PaymentMethodsSheet } from "@/components/settings/PaymentMethodsSheet";
 
 interface NutritionGoals {
   caloriesGoal: number;
@@ -64,10 +65,20 @@ const settingsSections = [
 
 export default function Settings() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, signOut } = useAuth();
   const [isGoalsDialogOpen, setIsGoalsDialogOpen] = useState(false);
   const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(false);
+  const [isPaymentMethodsOpen, setIsPaymentMethodsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Show toast if returning from Stripe after adding a card
+  useEffect(() => {
+    if (searchParams.get("payment_added") === "true") {
+      setIsPaymentMethodsOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   
   // Journal settings state
   const [nutritionSettings, setNutritionSettings] = useState<NutritionSettings>({
@@ -343,6 +354,7 @@ export default function Settings() {
                   className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
                   onClick={() => {
                     if (item.label === "Personuppgifter") setIsPersonalInfoOpen(true);
+                    if (item.label === "Betalningsmetoder") setIsPaymentMethodsOpen(true);
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -385,6 +397,7 @@ export default function Settings() {
 
       {/* Personal Info Sheet */}
       <PersonalInfoSheet open={isPersonalInfoOpen} onOpenChange={setIsPersonalInfoOpen} />
+      <PaymentMethodsSheet open={isPaymentMethodsOpen} onOpenChange={setIsPaymentMethodsOpen} />
 
       {/* Goals Dialog */}
       <Dialog open={isGoalsDialogOpen} onOpenChange={setIsGoalsDialogOpen}>
