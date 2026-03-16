@@ -502,13 +502,14 @@ export function useJournalData(selectedDate: Date) {
       setGoals(updated);
 
       // Upsert goals
-      await supabase.from("user_nutrition_goals").update({
+      await supabase.from("user_nutrition_goals").upsert({
+        user_id: user.id,
         calories_goal: updated.caloriesGoal,
         protein_goal: updated.proteinGoal,
         carbs_goal: updated.carbsGoal,
         fat_goal: updated.fatGoal,
         set_by_dietist: false,
-      }).eq("user_id", user.id);
+      }, { onConflict: "user_id" });
 
       // If the goals were set by a dietist, notify them
       if (wasSetByDietist) {
