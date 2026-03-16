@@ -30,13 +30,17 @@ export default function Booking() {
   const [selectedDietitian, setSelectedDietitian] = useState<DietitianProfile | null>(
     preselected ? {
       id: preselected.id,
-      name: `${preselected.first_name} ${preselected.last_name}`,
+      userId: preselected.user_id || '',
+      firstName: preselected.first_name,
+      lastName: preselected.last_name,
       title: preselected.title,
       specializations: preselected.specializations || [],
       languages: preselected.languages || [],
-      image: preselected.avatar_url || undefined,
-      bio: preselected.bio || '',
+      avatarUrl: preselected.avatar_url || null,
+      bio: preselected.bio || null,
       isAvailable: preselected.is_available ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     } : null
   );
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
