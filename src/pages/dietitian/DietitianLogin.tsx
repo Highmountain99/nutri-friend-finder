@@ -5,14 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Loader2, Ticket } from "lucide-react";
 import { toast } from "sonner";
+
+type Mode = "login" | "register";
 
 export default function DietitianLogin() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
+  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -24,7 +30,6 @@ export default function DietitianLogin() {
         return;
       }
 
-      // Check if user has dietist role
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Kunde inte hämta användare");
@@ -37,7 +42,7 @@ export default function DietitianLogin() {
       });
 
       if (!hasRole) {
-        toast.error("Det här kontot har inte dietistbehörighet. Kontakta en administratör.");
+        toast.error("Det här kontot har inte dietistbehörighet. Registrera dig som ny dietist med en inbjudningskod.");
         await supabase.auth.signOut();
         return;
       }
@@ -50,9 +55,63 @@ export default function DietitianLogin() {
     }
   };
 
+  const handleRegister = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("Fyll i för- och efternamn");
+      return;
+    }
+    if (!inviteCode.trim()) {
+      toast.error("Ange en inbjudningskod");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dietitian`,
+        },
+      });
+
+      if (signUpError) {
+        toast.error(signUpError.message);
+        return;
+      }
+
+      if (!signUpData.user) {
+        toast.error("Kunde inte skapa konto");
+        return;
+      }
+
+      const { error: setupError } = await supabase.functions.invoke("setup-dietitian", {
+        body: {
+          userId: signUpData.user.id,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          inviteCode: inviteCode.trim(),
+        },
+      });
+
+      if (setupError) {
+        toast.error("Ogiltig eller redan använd inbjudningskod. Kontakta din administratör.");
+        return;
+      }
+
+      toast.success("Konto skapat! Kontrollera din e-post för att verifiera kontot.");
+      setMode("login");
+    } catch (e: any) {
+      toast.error(e.message || "Något gick fel");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleLogin();
+    if (mode === "login") handleLogin();
+    else handleRegister();
   };
 
   return (
@@ -73,11 +132,54 @@ export default function DietitianLogin() {
             <h1 className="text-2xl font-bold text-foreground">Gut Feeling</h1>
             <p className="text-xs font-medium tracking-wider text-muted-foreground/60 uppercase">EatSuite</p>
             <p className="text-sm text-muted-foreground">
-              Logga in som dietist
+              {mode === "login" ? "Logga in som dietist" : "Skapa dietistkonto"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "register" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">Förnamn</Label>
+                    <Input
+                      id="firstName"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Anna"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Efternamn</Label>
+                    <Input
+                      id="lastName"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Svensson"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="inviteCode">Inbjudningskod</Label>
+                  <div className="relative">
+                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="inviteCode"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value)}
+                      placeholder="Ange din kod"
+                      className="pl-9"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Du har fått denna kod av din klinikadministratör</p>
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">E-post</Label>
               <Input
@@ -105,16 +207,33 @@ export default function DietitianLogin() {
 
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Logga in
+              {mode === "login" ? "Logga in" : "Skapa konto"}
             </Button>
           </form>
 
-          <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/50 p-4">
-            <ShieldAlert className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Dietistkonton skapas av en administratör. Kontakta din klinikadministratör om du behöver ett konto.
-            </p>
-          </div>
+          <p className="text-center text-sm text-muted-foreground">
+            {mode === "login" ? (
+              <>
+                Ny dietist?{" "}
+                <button
+                  onClick={() => setMode("register")}
+                  className="font-semibold text-foreground underline"
+                >
+                  Skapa konto
+                </button>
+              </>
+            ) : (
+              <>
+                Har redan konto?{" "}
+                <button
+                  onClick={() => setMode("login")}
+                  className="font-semibold text-foreground underline"
+                >
+                  Logga in
+                </button>
+              </>
+            )}
+          </p>
         </div>
       </div>
     </div>

@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     }
 
     const callerId = data.claims.sub as string;
-    const { userId, firstName, lastName } = await req.json();
+    const { userId, firstName, lastName, inviteCode } = await req.json();
 
     if (!userId || !firstName || !lastName) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
@@ -46,18 +46,41 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Only allow users to set up their own dietitian profile
+    if (userId !== callerId) {
+      return new Response(JSON.stringify({ error: "You can only set up your own dietitian profile" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Only admins can create dietitian accounts — no self-registration
-    const { data: isAdmin } = await supabaseAdmin
-      .from("user_roles")
-      .select("id")
-      .eq("user_id", callerId)
-      .eq("role", "admin")
+    // Validate invite code — required for self-registration
+    if (!inviteCode) {
+      return new Response(JSON.stringify({ error: "Inbjudningskod krävs" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: invite, error: inviteError } = await supabaseAdmin
+      .from("dietitian_invite_codes")
+      .select("*")
+      .eq("code", inviteCode.trim().toLowerCase())
+      .is("used_by", null)
       .maybeSingle();
 
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Only administrators can create dietitian accounts" }), {
+    if (inviteError || !invite) {
+      return new Response(JSON.stringify({ error: "Ogiltig eller redan använd inbjudningskod" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check expiry
+    if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+      return new Response(JSON.stringify({ error: "Inbjudningskoden har gått ut" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -73,6 +96,20 @@ Deno.serve(async (req) => {
 
     if (existingRole) {
       return new Response(JSON.stringify({ success: true, message: "Already a dietitian" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Mark invite code as used
+    const { error: markError } = await supabaseAdmin
+      .from("dietitian_invite_codes")
+      .update({ used_by: userId, used_at: new Date().toISOString() })
+      .eq("id", invite.id);
+
+    if (markError) {
+      console.error("Failed to mark invite as used:", markError);
+      return new Response(JSON.stringify({ error: "Kunde inte använda inbjudningskoden" }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
