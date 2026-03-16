@@ -145,8 +145,9 @@ export default function Journal() {
   // Filter to only show visible nutrition cards
   const nutritionCards = allNutritionCards.filter(card => card.visible);
 
-  const handleAISetupComplete = (data: AITrackingFormData) => {
-    updateSettings({
+  const handleAISetupComplete = async (data: AITrackingFormData) => {
+    // Save body data + mark onboarding complete
+    await updateSettings({
       aiTrackingEnabled: true,
       aiTrackingOnboardingCompleted: true,
       gender: data.gender,
@@ -154,6 +155,21 @@ export default function Journal() {
       weightKg: data.weightKg,
       activityLevel: data.activityLevel
     });
+
+    // Calculate personalized goals
+    const calculated = calculateNutritionGoals(
+      data.gender,
+      data.heightCm,
+      data.weightKg,
+      data.activityLevel
+    );
+    await updateGoals({
+      caloriesGoal: calculated.calories,
+      proteinGoal: calculated.protein,
+      carbsGoal: calculated.carbs,
+      fatGoal: calculated.fat,
+    });
+
     setView("main");
   };
 
