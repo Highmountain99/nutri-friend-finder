@@ -98,7 +98,7 @@ const App = () => (
             {/* Dietitian dashboard routes */}
             <Route element={<DietitianRoute />}>
               <Route element={<DietitianLayout />}>
-                <Route path="/dietitian" element={<DietitianDashboard />} />
+              <Route path="/dietitian" element={<DietitianDashboard />} />
                 <Route path="/dietitian/patients" element={<DietitianPatients />} />
                 <Route path="/dietitian/patients/:id" element={<DietitianPatientDetail />} />
                 <Route path="/dietitian/schedule" element={<DietitianSchedule />} />
@@ -106,6 +106,7 @@ const App = () => (
                 <Route path="/dietitian/messages" element={<DietitianMessages />} />
                 <Route path="/dietitian/profile" element={<DietitianProfile />} />
                 <Route path="/dietitian/statistics" element={<DietitianStatistics />} />
+                <Route path="/dietitian/admin" element={<Admin />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
