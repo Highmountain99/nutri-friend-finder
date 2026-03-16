@@ -52,7 +52,7 @@ export function BookingStep({
 
     if (result) {
       setSheetOpen(false);
-      navigate('/', { state: { bookingConfirmed: true } });
+      onComplete();
     }
   };
 
