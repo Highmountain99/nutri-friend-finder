@@ -56,6 +56,42 @@ const Admin = () => {
     setStats(data);
   };
 
+  const fetchInviteCodes = async () => {
+    const { data } = await supabase
+      .from("dietitian_invite_codes" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setInviteCodes(data);
+  };
+
+  const handleGenerateCode = async () => {
+    setGeneratingCode(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { error } = await supabase
+        .from("dietitian_invite_codes" as any)
+        .insert({ created_by: user.id });
+
+      if (error) {
+        toast({ title: "Fel", description: "Kunde inte skapa inbjudningskod", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Kod skapad!", description: "En ny inbjudningskod har genererats" });
+      fetchInviteCodes();
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
   useEffect(() => {
     fetchStats();
     const interval = setInterval(fetchStats, 5000); // Refresh every 5 seconds
