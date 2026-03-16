@@ -123,6 +123,49 @@ export function DietitianSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Collapsible Settings */}
+              <SidebarMenuItem>
+                <Collapsible defaultOpen={settingsOpen}>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground w-full ${settingsOpen ? "text-sidebar-primary font-medium" : "text-sidebar-foreground/70"}`}>
+                      <Settings className="h-4 w-4 shrink-0" />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 text-left">Inställningar</span>
+                          <ChevronDown className="h-3.5 w-3.5 opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                        </>
+                      )}
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="ml-4 border-l border-sidebar-border pl-3 mt-1 space-y-0.5">
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to="/dietitian/profile"
+                          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                          activeClassName="bg-sidebar-primary/10 text-sidebar-primary font-medium"
+                        >
+                          <User className="h-3.5 w-3.5 shrink-0" />
+                          {!collapsed && <span>Profil</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                      {isAdmin && (
+                        <SidebarMenuButton asChild>
+                          <NavLink
+                            to="/dietitian/admin"
+                            className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                            activeClassName="bg-sidebar-primary/10 text-sidebar-primary font-medium"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                            {!collapsed && <span>Administration</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
