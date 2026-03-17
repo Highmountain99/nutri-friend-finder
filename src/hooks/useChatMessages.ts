@@ -138,11 +138,26 @@ export function useChatMessages() {
     [user, messages]
   );
 
+  // Mark a message as read
+  const markAsRead = useCallback(
+    async (messageId: string) => {
+      if (!user) return;
+      await supabase
+        .from("chat_messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", messageId)
+        .eq("user_id", user.id)
+        .is("read_at", null);
+    },
+    [user]
+  );
+
   return {
     messages,
     loading,
     sending,
     error,
     sendMessage,
+    markAsRead,
   };
 }
