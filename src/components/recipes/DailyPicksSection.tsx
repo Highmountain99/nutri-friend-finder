@@ -58,6 +58,7 @@ export function DailyPicksSection({ onRecipeSelect }: DailyPicksSectionProps) {
 
   const currentRecipe = picks[currentIndex];
   const isFinished = currentIndex >= picks.length || !currentRecipe;
+  const stackCards = picks.slice(currentIndex + 1, currentIndex + 3);
 
   return (
     <section className="space-y-3">
@@ -72,59 +73,42 @@ export function DailyPicksSection({ onRecipeSelect }: DailyPicksSectionProps) {
 
       {isFinished ? (
         <div className="bg-muted/50 rounded-lg p-8 text-center space-y-4">
-          <p className="text-muted-foreground">
-            Du har gått igenom alla dagens tips!
-          </p>
+          <p className="text-muted-foreground">Du har gått igenom alla dagens tips!</p>
           {hasSkippedRecipes ? (
-            <Button
-              variant="outline"
-              onClick={handleReviewSkipped}
-              className="gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Granska hoppade recept
+            <Button variant="outline" onClick={handleReviewSkipped} className="gap-2">
+              <RefreshCw className="w-4 h-4" />Granska hoppade recept
             </Button>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Kom tillbaka imorgon för nya förslag!
-            </p>
+            <p className="text-sm text-muted-foreground">Kom tillbaka imorgon för nya förslag!</p>
           )}
         </div>
       ) : (
-        <div className="relative pb-6">
-          {/* Stack effect - show actual cards behind */}
-          {picks
-            .slice(currentIndex + 1, currentIndex + 3)
-            .reverse()
-            .map((recipe, reverseIndex) => {
-              const stackSize = Math.min(picks.length - currentIndex - 1, 2);
-              const i = stackSize - 1 - reverseIndex;
+        <div className="relative" style={{ paddingBottom: `${stackCards.length * 12}px` }}>
+          {/* Stack cards behind – rendered bottom-up so z-order is correct */}
+          {stackCards
+            .map((recipe, idx) => {
+              const depth = idx + 1; // 1 = directly behind, 2 = further back
               return (
                 <div
                   key={recipe.id}
-                  className="absolute inset-x-0 top-0 bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden pointer-events-none"
+                  className="absolute inset-x-0 top-0 rounded-xl border border-border/40 overflow-hidden pointer-events-none bg-card"
                   style={{
-                    transform: `translateY(${(i + 1) * 16}px) scale(${1 - (i + 1) * 0.05})`,
-                    zIndex: -i - 1,
+                    transform: `translateY(${depth * 12}px) scale(${1 - depth * 0.04})`,
+                    zIndex: -depth,
+                    filter: `brightness(${1 - depth * 0.06})`,
+                    transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1), filter 0.35s ease",
                   }}
                 >
-                  {/* Show preview of stacked card image */}
-                  <div className="h-48 bg-muted relative">
+                  <div className="h-48 bg-muted">
                     {recipe.image_url ? (
-                      <img
-                        src={recipe.image_url}
-                        alt=""
-                        className="w-full h-full object-cover opacity-70"
-                        draggable={false}
-                      />
+                      <img src={recipe.image_url} alt="" className="w-full h-full object-cover" draggable={false} />
                     ) : (
                       <div className="w-full h-full bg-muted" />
                     )}
                   </div>
-                  {/* Placeholder content area */}
-                  <div className="p-4 bg-card">
-                    <div className="h-5 bg-muted/30 rounded w-3/4 mb-2" />
-                    <div className="h-4 bg-muted/20 rounded w-1/2" />
+                  <div className="p-4">
+                    <h3 className="font-semibold text-foreground line-clamp-1 text-base">{recipe.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{recipe.description}</p>
                   </div>
                 </div>
               );

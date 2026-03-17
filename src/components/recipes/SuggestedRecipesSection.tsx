@@ -60,7 +60,6 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
     );
   }
 
-  // True empty state: no suggestions at all (not saved, not dismissed, not active)
   if (active.length === 0 && !hasDismissed && !hasSaved) {
     return (
       <section className="space-y-4">
@@ -81,6 +80,7 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
 
   const currentRecipe = active[currentIndex];
   const isFinished = currentIndex >= active.length || !currentRecipe;
+  const stackCards = active.slice(currentIndex + 1, currentIndex + 3);
 
   return (
     <section className="space-y-3">
@@ -98,52 +98,44 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
 
       {isFinished ? (
         <div className="bg-muted/50 rounded-lg p-8 text-center space-y-4">
-          <p className="text-muted-foreground">
-            Du har gått igenom alla förslag från din dietist!
-          </p>
+          <p className="text-muted-foreground">Du har gått igenom alla förslag från din dietist!</p>
           {hasDismissed ? (
             <Button variant="outline" onClick={handleRestoreDismissed} className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Se borttagna förslag igen
+              <RefreshCw className="w-4 h-4" />Se borttagna förslag igen
             </Button>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Dina sparade recept hittar du under "Mina recept".
-            </p>
+            <p className="text-sm text-muted-foreground">Dina sparade recept hittar du under "Mina recept".</p>
           )}
         </div>
       ) : (
-        <div className="relative pb-6">
-          {/* Stack effect */}
-          {active
-            .slice(currentIndex + 1, currentIndex + 3)
-            .reverse()
-            .map((recipe, reverseIndex) => {
-              const stackSize = Math.min(active.length - currentIndex - 1, 2);
-              const i = stackSize - 1 - reverseIndex;
-              return (
-                <div
-                  key={recipe.id}
-                  className="absolute inset-x-0 top-0 bg-card rounded-xl shadow-soft border border-border/50 overflow-hidden pointer-events-none"
-                  style={{
-                    transform: `translateY(${(i + 1) * 16}px) scale(${1 - (i + 1) * 0.05})`,
-                    zIndex: -i - 1,
-                  }}
-                >
-                  <div className="h-48 bg-muted relative">
-                    {recipe.image_url ? (
-                      <img src={recipe.image_url} alt="" className="w-full h-full object-cover opacity-70" draggable={false} />
-                    ) : (
-                      <div className="w-full h-full bg-muted" />
-                    )}
-                  </div>
-                  <div className="p-4 bg-card">
-                    <div className="h-5 bg-muted/30 rounded w-3/4 mb-2" />
-                    <div className="h-4 bg-muted/20 rounded w-1/2" />
-                  </div>
+        <div className="relative" style={{ paddingBottom: `${stackCards.length * 12}px` }}>
+          {stackCards.map((recipe, idx) => {
+            const depth = idx + 1;
+            return (
+              <div
+                key={recipe.id}
+                className="absolute inset-x-0 top-0 rounded-xl border border-border/40 overflow-hidden pointer-events-none bg-card"
+                style={{
+                  transform: `translateY(${depth * 12}px) scale(${1 - depth * 0.04})`,
+                  zIndex: -depth,
+                  filter: `brightness(${1 - depth * 0.06})`,
+                  transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1), filter 0.35s ease",
+                }}
+              >
+                <div className="h-48 bg-muted">
+                  {recipe.image_url ? (
+                    <img src={recipe.image_url} alt="" className="w-full h-full object-cover" draggable={false} />
+                  ) : (
+                    <div className="w-full h-full bg-muted" />
+                  )}
                 </div>
-              );
-            })}
+                <div className="p-4">
+                  <h3 className="font-semibold text-foreground line-clamp-1 text-base">{recipe.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{recipe.message || recipe.description}</p>
+                </div>
+              </div>
+            );
+          })}
 
           <SuggestedRecipeCard
             recipe={currentRecipe}
