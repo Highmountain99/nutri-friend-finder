@@ -62,7 +62,6 @@ export default function Messages() {
     const atts = [...pendingAttachments];
     setInputValue("");
     setPendingAttachments([]);
-    // Store pending and show choice dialog
     setPendingMessage({ text: message, attachments: atts.length > 0 ? atts : undefined });
     setChoiceDialogOpen(true);
   };
@@ -84,6 +83,18 @@ export default function Messages() {
   const handleBookingRequest = () => {
     setBookingSheetOpen(true);
   };
+
+  useEffect(() => {
+    if (messagesLoading || messages.length === 0) return;
+
+    const hasUnreadIncomingMessages = messages.some(
+      (message) => message.sender !== "user" && !message.read_at && !message.id.startsWith("temp-")
+    );
+
+    if (!hasUnreadIncomingMessages) return;
+
+    void markAllAsRead();
+  }, [messages, messagesLoading, markAllAsRead]);
 
   const loading = appointmentLoading || messagesLoading;
 
