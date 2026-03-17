@@ -91,6 +91,18 @@ export function RecipeFilterPanel({ filters, onChange, totalCount, filteredCount
           />
         </div>
 
+        <Select value={sortBy} onValueChange={(v) => onSortChange(v as RecipeSortOption)}>
+          <SelectTrigger className="w-[160px] h-9">
+            <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(SORT_LABELS) as RecipeSortOption[]).map((key) => (
+              <SelectItem key={key} value={key}>{SORT_LABELS[key]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           Visar {filteredCount} av {totalCount} recept
         </span>
