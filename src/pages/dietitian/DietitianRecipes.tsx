@@ -97,6 +97,22 @@ export default function DietitianRecipes() {
     return true;
   });
 
+  // Sort
+  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return (b.created_at || "").localeCompare(a.created_at || "");
+      case "oldest":
+        return (a.created_at || "").localeCompare(b.created_at || "");
+      case "rating":
+        return (b.rating ?? 0) - (a.rating ?? 0);
+      case "time_asc":
+        return (a.time_minutes ?? 999) - (b.time_minutes ?? 999);
+      default:
+        return 0;
+    }
+  });
+
   const deleteRecipe = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("recipes").delete().eq("id", id);
