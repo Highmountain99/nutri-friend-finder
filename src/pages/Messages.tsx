@@ -241,6 +241,13 @@ export default function Messages() {
         onOpenChange={setBookingSheetOpen}
         dietitian={dietitianInfo}
       />
+
+      {/* Response Choice Dialog */}
+      <ResponseChoiceDialog
+        open={choiceDialogOpen}
+        onChoice={handleResponseChoice}
+        dietitianName={dietitianInfo?.firstName}
+      />
     </>
   );
 }
