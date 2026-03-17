@@ -169,16 +169,18 @@ export function useChatMessages() {
   const markAllAsRead = useCallback(async () => {
     if (!user) return 0;
 
-    const hasUnreadIncomingMessages = messages.some(
-      (message) => message.sender !== "user" && !message.read_at && !message.id.startsWith("temp-")
-    );
+    const unreadIncomingMessageIds = messages
+      .filter(
+        (message) => message.sender !== "user" && !message.read_at && !message.id.startsWith("temp-")
+      )
+      .map((message) => message.id);
 
-    if (!hasUnreadIncomingMessages) return 0;
+    if (unreadIncomingMessageIds.length === 0) return 0;
 
     const readAt = new Date().toISOString();
     setMessages((prev) =>
       prev.map((message) =>
-        message.sender !== "user" && !message.read_at && !message.id.startsWith("temp-")
+        unreadIncomingMessageIds.includes(message.id)
           ? { ...message, read_at: readAt }
           : message
       )
@@ -190,7 +192,7 @@ export function useChatMessages() {
       console.error("Error marking all chat messages as read:", error);
       setMessages((prev) =>
         prev.map((message) =>
-          message.sender !== "user" && !message.id.startsWith("temp-")
+          unreadIncomingMessageIds.includes(message.id)
             ? { ...message, read_at: null }
             : message
         )
