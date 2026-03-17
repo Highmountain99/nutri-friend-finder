@@ -103,28 +103,28 @@ export function PregnancyTriageStep({
             </p>
           </div>
 
-          {[
-            { value: true, label: 'Ja' },
-            { value: false, label: 'Nej' },
-            { value: undefined, label: 'Osäker', isUnsure: true },
-          ].map((option) => (
+          {([
+            { value: true as const, label: 'Ja' },
+            { value: false as const, label: 'Nej' },
+            { value: "unsure" as const, label: 'Osäker' },
+          ] satisfies { value: boolean | "unsure"; label: string }[]).map((option) => (
             <button
               key={String(option.value)}
-              onClick={() => handleReferralSelect(option.isUnsure ? true : option.value as boolean)}
+              onClick={() => handleReferralSelect(option.value)}
               className={cn(
                 "w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all",
-                referredByCare === option.value || (option.isUnsure && referredByCare === true)
+                referredByCare === option.value
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/50"
               )}
             >
               <div className={cn(
                 "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                referredByCare === option.value || (option.isUnsure && referredByCare === true)
+                referredByCare === option.value
                   ? "border-primary"
                   : "border-muted-foreground/30"
               )}>
-                {(referredByCare === option.value || (option.isUnsure && referredByCare === true)) && (
+                {referredByCare === option.value && (
                   <div className="w-2.5 h-2.5 rounded-full bg-primary" />
                 )}
               </div>
