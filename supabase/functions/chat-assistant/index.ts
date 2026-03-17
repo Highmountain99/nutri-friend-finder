@@ -174,7 +174,9 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory } = await req.json();
+    const { message, conversationHistory, mode } = await req.json();
+    // mode: "ai" = send AI response directly to patient
+    //        "wait" = save AI response as draft for dietitian to review
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return new Response(
@@ -182,6 +184,7 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const responseMode = mode === "wait" ? "wait" : "ai";
 
     const sanitizedMessage = message.trim().slice(0, 2000);
 
