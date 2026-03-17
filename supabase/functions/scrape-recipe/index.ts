@@ -165,8 +165,8 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+    if (userError || !user) {
       return new Response(JSON.stringify({ success: false, error: 'Invalid or expired token' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
