@@ -286,7 +286,7 @@ export default function DietitianRecipes() {
             </div>
           ))}
         </div>
-      ) : filteredRecipes.length === 0 ? (
+      ) : sortedRecipes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <UtensilsCrossed className="h-12 w-12 mb-3 opacity-30" />
           <p className="font-medium">Inga recept hittades</p>
@@ -298,7 +298,7 @@ export default function DietitianRecipes() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredRecipes.map((recipe) => {
+          {sortedRecipes.map((recipe) => {
             const isOwn = recipe.created_by === user?.id;
             const isSaved = savedIds.has(recipe.id);
             const isSelected = selectedIds.has(recipe.id);
