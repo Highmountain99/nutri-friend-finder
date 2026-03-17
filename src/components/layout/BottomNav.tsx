@@ -1,6 +1,7 @@
 import { Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useUnreadPatientMessages } from "@/hooks/useUnreadPatientMessages";
 
 const navItems = [
   { path: "/", icon: Home, label: "Hem" },
@@ -11,6 +12,8 @@ const navItems = [
 ];
 
 export function BottomNav() {
+  const unreadCount = useUnreadPatientMessages();
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
@@ -31,11 +34,16 @@ export function BottomNav() {
               <>
                 <div
                   className={cn(
-                    "p-1.5 rounded-lg transition-all duration-200",
+                    "relative p-1.5 rounded-lg transition-all duration-200",
                     isActive && "bg-primary-soft"
                   )}
                 >
                   <item.icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+                  {item.path === "/messages" && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </div>
                 <span className="text-[10px] font-medium">{item.label}</span>
               </>
