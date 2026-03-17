@@ -17,7 +17,7 @@ export default function Messages() {
   const { user } = useAuth();
   const { getUpcomingAppointment, loading: appointmentLoading } = useAppointments();
   const upcomingAppointment = getUpcomingAppointment();
-  const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead } = useChatMessages();
+  const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead, markAllAsRead } = useChatMessages();
 
   const [inputValue, setInputValue] = useState("");
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
