@@ -64,15 +64,15 @@ export function PregnancyTriageStep({
     }
   };
 
-  const handleReferralSelect = (referred: boolean) => {
-    setReferredByCare(referred);
+  const handleReferralSelect = (value: boolean | "unsure") => {
+    setReferredByCare(value);
   };
 
   const handleReferralNext = () => {
     if (selectedReason === undefined) return;
     onNext({
       pregnancyTriageReason: selectedReason,
-      pregnancyReferredByCare: referredByCare,
+      pregnancyReferredByCare: referredByCare === "unsure" ? true : referredByCare === true ? true : false,
     });
   };
 
