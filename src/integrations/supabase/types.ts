@@ -1313,6 +1313,7 @@ export type Database = {
         Returns: boolean
       }
       is_assigned_dietist: { Args: { _patient_id: string }; Returns: boolean }
+      mark_all_chat_messages_read: { Args: never; Returns: number }
       mark_chat_message_read: {
         Args: { _message_id: string }
         Returns: boolean
