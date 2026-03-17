@@ -43,7 +43,7 @@ interface RecipeFilterPanelProps {
   onSortChange: (sort: RecipeSortOption) => void;
 }
 
-export function RecipeFilterPanel({ filters, onChange, totalCount, filteredCount }: RecipeFilterPanelProps) {
+export function RecipeFilterPanel({ filters, onChange, totalCount, filteredCount, sortBy, onSortChange }: RecipeFilterPanelProps) {
   const [open, setOpen] = useState(false);
 
   const activeCount =
