@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Upload, Link, UtensilsCrossed, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables, Json } from "@/integrations/supabase/types";
-import { RecipeFilterPanel, type RecipeFilterState, emptyFilterState } from "@/components/dietitian/recipes/RecipeFilterPanel";
+import { RecipeFilterPanel, type RecipeFilterState, emptyFilterState, type RecipeSortOption } from "@/components/dietitian/recipes/RecipeFilterPanel";
 import { DietitianRecipeCard } from "@/components/dietitian/recipes/DietitianRecipeCard";
 import { CreateRecipeSheet, type RecipeFormData } from "@/components/dietitian/recipes/CreateRecipeSheet";
 import { ImportRecipeModal } from "@/components/dietitian/recipes/ImportRecipeModal";
