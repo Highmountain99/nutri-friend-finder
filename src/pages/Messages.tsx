@@ -10,6 +10,7 @@ import { ChatHeader } from "@/components/messages/ChatHeader";
 import { ChatMessage } from "@/components/messages/ChatMessage";
 import { ChatBookingSheet } from "@/components/messages/ChatBookingSheet";
 import { ChatAttachmentPicker, AttachmentPreview } from "@/components/messages/ChatAttachmentPicker";
+import { ResponseChoiceDialog } from "@/components/messages/ResponseChoiceDialog";
 import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 
 export default function Messages() {
@@ -22,6 +23,8 @@ export default function Messages() {
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   const [attachmentPickerOpen, setAttachmentPickerOpen] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+  const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<{ text: string; attachments?: ChatAttachment[] } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -59,7 +62,16 @@ export default function Messages() {
     const atts = [...pendingAttachments];
     setInputValue("");
     setPendingAttachments([]);
-    await sendMessage(message, atts.length > 0 ? atts : undefined);
+    // Store pending and show choice dialog
+    setPendingMessage({ text: message, attachments: atts.length > 0 ? atts : undefined });
+    setChoiceDialogOpen(true);
+  };
+
+  const handleResponseChoice = async (choice: "ai" | "wait") => {
+    setChoiceDialogOpen(false);
+    if (!pendingMessage) return;
+    await sendMessage(pendingMessage.text, pendingMessage.attachments, choice);
+    setPendingMessage(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
