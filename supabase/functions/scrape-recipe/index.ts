@@ -117,28 +117,20 @@ function parseRecipeFromJsonLd(data: any): ParsedRecipe {
   };
 }
 
-// URL allowlist for SSRF protection
-const ALLOWED_DOMAINS = [
-  'ica.se', 'www.ica.se',
-  'coop.se', 'www.coop.se',
-  'koket.se', 'www.koket.se',
-  'arla.se', 'www.arla.se',
-  'tasteline.com', 'www.tasteline.com',
-  'recepten.se', 'www.recepten.se',
-  'alltommat.se', 'www.alltommat.se',
-  'mathem.se', 'www.mathem.se',
-  'receptfavoriter.se', 'www.receptfavoriter.se',
-  'allrecipes.com', 'www.allrecipes.com',
-];
-
+// SSRF protection: block internal/private IPs, require HTTPS
 function isAllowedUrl(urlStr: string): boolean {
   try {
     const parsed = new URL(urlStr);
-    // Only allow https
     if (parsed.protocol !== 'https:') return false;
-    // Check domain allowlist
     const hostname = parsed.hostname.toLowerCase();
-    return ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+    // Block private/internal hostnames
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0' ||
+        hostname.endsWith('.local') || hostname.endsWith('.internal') ||
+        hostname.startsWith('10.') || hostname.startsWith('192.168.') ||
+        hostname.startsWith('169.254.') || hostname.match(/^172\.(1[6-9]|2\d|3[01])\./)) {
+      return false;
+    }
+    return true;
   } catch {
     return false;
   }
