@@ -404,27 +404,29 @@ serve(async (req) => {
       }
     }
 
-    // Save AI response as DRAFT – dietitian must approve before patient sees it
+    // Save AI response – status depends on mode
     if (fullResponse.trim()) {
       const escalationKeywords = ["dietist", "kopplat på", "skickat ditt meddelande", "får titta på", "återkommer"];
       const isEscalated = escalationKeywords.some(keyword =>
         fullResponse.toLowerCase().includes(keyword.toLowerCase())
       );
 
+      const messageStatus = responseMode === "ai" ? "sent" : "draft";
+
       await supabaseService.from("chat_messages").insert({
         user_id: userId,
         sender: "ai",
         content: fullResponse.trim(),
-        conversation_type: "ai",
+        conversation_type: responseMode === "ai" ? "ai" : "dietitian",
         escalated: isEscalated,
         escalation_reason: isEscalated ? "AI detected need for dietitian involvement" : null,
-        status: "draft",
+        status: messageStatus,
       });
     }
 
-    // Return simple acknowledgment to patient (no AI content streamed)
+    // Return response
     return new Response(
-      JSON.stringify({ ok: true, draft: true }),
+      JSON.stringify({ ok: true, mode: responseMode }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
