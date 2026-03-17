@@ -3,8 +3,18 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Filter, Search, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowUpDown, Filter, Search, X } from "lucide-react";
 import { TAG_GROUPS, type TagGroup } from "@/lib/recipeTags";
+
+export type RecipeSortOption = "newest" | "oldest" | "rating" | "time_asc";
+
+export const SORT_LABELS: Record<RecipeSortOption, string> = {
+  newest: "Nyast",
+  oldest: "Äldst",
+  rating: "Betyg",
+  time_asc: "Tillagningstid",
+};
 
 export interface RecipeFilterState {
   cuisine_types: string[];
