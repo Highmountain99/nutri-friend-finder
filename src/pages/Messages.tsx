@@ -146,6 +146,11 @@ export default function Messages() {
                 escalated={msg.escalated}
                 onBookingRequest={handleBookingRequest}
                 attachments={msg.attachments}
+                onVisible={
+                  msg.sender !== "user" && !msg.id.startsWith("temp-")
+                    ? () => markAsRead(msg.id)
+                    : undefined
+                }
               />
             ))
           )}
