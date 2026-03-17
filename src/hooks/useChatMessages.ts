@@ -78,9 +78,9 @@ export function useChatMessages() {
     };
   }, [user]);
 
-  // Send message and stream AI response
+  // Send message – mode "ai" triggers AI assistant, "wait" just saves user message
   const sendMessage = useCallback(
-    async (messageText: string, attachments?: ChatAttachment[]) => {
+    async (messageText: string, attachments?: ChatAttachment[], mode: "ai" | "wait" = "ai") => {
       if (!user || (!messageText.trim() && (!attachments || attachments.length === 0))) return;
 
       setSending(true);
@@ -104,30 +104,40 @@ export function useChatMessages() {
           throw new Error("Inte inloggad");
         }
 
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              message: messageText.trim(),
-              conversationHistory: messages.slice(-10),
-              attachments: attachments || [],
-            }),
+        if (mode === "wait") {
+          // Just save the user message to DB – no AI call
+          const { error: insertErr } = await supabase.from("chat_messages").insert({
+            user_id: user.id,
+            sender: "user",
+            content: messageText.trim(),
+            conversation_type: "dietitian",
+            status: "sent",
+            attachments: (attachments || []) as any,
+          });
+          if (insertErr) throw insertErr;
+        } else {
+          // Call AI assistant – response is saved as draft for dietitian approval
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                message: messageText.trim(),
+                conversationHistory: messages.slice(-10),
+                attachments: attachments || [],
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || "Ett fel uppstod");
           }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || "Ett fel uppstod");
         }
-
-        // AI response is saved as draft for dietitian approval – no streaming
-        // Just update the user message with the real ID from server
-        // Patient will see the response once dietitian approves it
       } catch (err) {
         console.error("Send message error:", err);
         setError(err instanceof Error ? err.message : "Ett fel uppstod");
