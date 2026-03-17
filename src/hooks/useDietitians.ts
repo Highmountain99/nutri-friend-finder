@@ -27,7 +27,7 @@ export function useDietitians(filters?: DietitianFilters) {
       
       let query = supabase
         .from('dietitian_profiles')
-        .select('*')
+        .select('id, user_id, first_name, last_name, title, bio, avatar_url, specializations, languages, is_available, created_at, updated_at')
         .eq('is_available', true);
 
       // Filter by specializations if provided
