@@ -22,7 +22,7 @@ export function useMyDietitian() {
       // Get dietitian profile by user_id
       const { data: profile, error: profErr } = await supabase
         .from("dietitian_profiles")
-        .select("*")
+        .select("id, user_id, first_name, last_name, title, bio, avatar_url, specializations, languages, is_available, created_at, updated_at")
         .eq("user_id", assignment.dietist_id)
         .single();
 

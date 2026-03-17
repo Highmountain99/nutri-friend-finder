@@ -56,7 +56,7 @@ export function useDietitianRecommendations(selectedDate?: Date, limit: number =
       // Fetch dietitian profiles
       const { data: dietitianData, error: queryError } = await supabase
         .from('dietitian_profiles')
-        .select('*')
+        .select('id, user_id, first_name, last_name, title, bio, avatar_url, specializations, languages, is_available, created_at, updated_at')
         .eq('is_available', true)
         .in('id', availableDietitianIds);
 
