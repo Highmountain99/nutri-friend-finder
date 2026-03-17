@@ -55,14 +55,16 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">{dietitian.title}</p>
                 <p className="text-xs text-primary font-medium mt-0.5">Din dietist</p>
               </div>
-              <Button
-                size="sm"
-                onClick={() => navigate("/booking", { state: { mode: "new", preselectedDietitian: dietitian } })}
-                className="gap-1.5 shrink-0"
-              >
-                <CalendarPlus className="h-3.5 w-3.5" />
-                Boka samtal
-              </Button>
+              {!upcomingAppointment && (
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/booking", { state: { mode: "new", preselectedDietitian: dietitian } })}
+                  className="gap-1.5 shrink-0"
+                >
+                  <CalendarPlus className="h-3.5 w-3.5" />
+                  Boka samtal
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
