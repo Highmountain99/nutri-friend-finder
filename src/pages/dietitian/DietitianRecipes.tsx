@@ -268,7 +268,9 @@ export default function DietitianRecipes() {
         filters={filters}
         onChange={setFilters}
         totalCount={tabFiltered.length}
-        filteredCount={filteredRecipes.length}
+        filteredCount={sortedRecipes.length}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
       />
 
       {/* Recipe grid */}
