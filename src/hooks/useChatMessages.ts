@@ -78,7 +78,7 @@ export function useChatMessages() {
     };
   }, [user]);
 
-  // Send message – mode "ai" triggers AI assistant, "wait" just saves user message
+  // Send message – mode "ai" sends AI response directly, "wait" creates AI draft for dietitian
   const sendMessage = useCallback(
     async (messageText: string, attachments?: ChatAttachment[], mode: "ai" | "wait" = "ai") => {
       if (!user || (!messageText.trim() && (!attachments || attachments.length === 0))) return;
@@ -104,39 +104,27 @@ export function useChatMessages() {
           throw new Error("Inte inloggad");
         }
 
-        if (mode === "wait") {
-          // Just save the user message to DB – no AI call
-          const { error: insertErr } = await supabase.from("chat_messages").insert({
-            user_id: user.id,
-            sender: "user",
-            content: messageText.trim(),
-            conversation_type: "dietitian",
-            status: "sent",
-            attachments: (attachments || []) as any,
-          });
-          if (insertErr) throw insertErr;
-        } else {
-          // Call AI assistant – response is saved as draft for dietitian approval
-          const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                message: messageText.trim(),
-                conversationHistory: messages.slice(-10),
-                attachments: attachments || [],
-              }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || "Ett fel uppstod");
+        // Always call the AI assistant – mode determines if response is sent directly or as draft
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              message: messageText.trim(),
+              conversationHistory: messages.slice(-10),
+              attachments: attachments || [],
+              mode,
+            }),
           }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Ett fel uppstod");
         }
       } catch (err) {
         console.error("Send message error:", err);
