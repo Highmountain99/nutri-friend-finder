@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ interface ChatMessageProps {
   escalated?: boolean;
   onBookingRequest?: () => void;
   attachments?: ChatAttachment[];
+  onVisible?: () => void;
 }
 
 export function ChatMessage({
@@ -30,7 +32,24 @@ export function ChatMessage({
   escalated,
   onBookingRequest,
   attachments,
+  onVisible,
 }: ChatMessageProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!onVisible || !ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onVisible();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [onVisible]);
   const isUser = sender === "user";
 
   const time = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
@@ -40,7 +59,7 @@ export function ChatMessage({
     : "DD";
 
   return (
-    <div className={cn("flex gap-2", isUser ? "justify-end" : "justify-start")}>
+    <div ref={ref} className={cn("flex gap-2", isUser ? "justify-end" : "justify-start")}>
       {/* Avatar for non-user messages – always show dietitian avatar */}
       {!isUser && (
         <Avatar className="w-8 h-8 flex-shrink-0">
