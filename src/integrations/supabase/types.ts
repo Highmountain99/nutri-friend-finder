@@ -1313,6 +1313,10 @@ export type Database = {
         Returns: boolean
       }
       is_assigned_dietist: { Args: { _patient_id: string }; Returns: boolean }
+      mark_chat_message_read: {
+        Args: { _message_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       activity_level:
