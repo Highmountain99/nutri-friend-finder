@@ -24,6 +24,7 @@ export default function DietitianRecipes() {
 
   const [activeTab, setActiveTab] = useState<"all" | "mine">("all");
   const [filters, setFilters] = useState<RecipeFilterState>(emptyFilterState);
+  const [sortBy, setSortBy] = useState<RecipeSortOption>("newest");
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showFetch, setShowFetch] = useState(false);
