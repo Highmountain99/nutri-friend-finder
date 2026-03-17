@@ -11,6 +11,8 @@ export interface ChatMessage {
   escalated?: boolean;
   escalation_reason?: string;
   attachments?: ChatAttachment[];
+  read_at?: string | null;
+  status?: string;
 }
 
 export function useChatMessages() {
@@ -32,7 +34,7 @@ export function useChatMessages() {
       setLoading(true);
       const { data, error } = await supabase
         .from("chat_messages")
-        .select("id, sender, content, created_at, escalated, escalation_reason, status, attachments")
+        .select("id, sender, content, created_at, escalated, escalation_reason, status, attachments, read_at")
         .eq("user_id", user.id)
         .or("status.eq.sent,status.is.null")
         .order("created_at", { ascending: true });
@@ -64,8 +66,7 @@ export function useChatMessages() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          const newMessage = payload.new as ChatMessage & { status?: string };
-          // Only add if status is 'sent' (not draft) and from dietitian or AI
+          const newMessage = payload.new as ChatMessage;
           if (newMessage.sender !== "user" && (!newMessage.status || newMessage.status === "sent")) {
             setMessages((prev) => [...prev, newMessage]);
           }
@@ -86,7 +87,6 @@ export function useChatMessages() {
       setSending(true);
       setError(null);
 
-      // Optimistically add user message
       const userMessage: ChatMessage = {
         id: `temp-${Date.now()}`,
         sender: "user",
@@ -104,7 +104,6 @@ export function useChatMessages() {
           throw new Error("Inte inloggad");
         }
 
-        // Always call the AI assistant – mode determines if response is sent directly or as draft
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`,
           {
@@ -129,7 +128,6 @@ export function useChatMessages() {
       } catch (err) {
         console.error("Send message error:", err);
         setError(err instanceof Error ? err.message : "Ett fel uppstod");
-        // Remove the optimistic user message on error
         setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
       } finally {
         setSending(false);
@@ -138,19 +136,72 @@ export function useChatMessages() {
     [user, messages]
   );
 
-  // Mark a message as read
   const markAsRead = useCallback(
     async (messageId: string) => {
-      if (!user) return;
-      await supabase
-        .from("chat_messages")
-        .update({ read_at: new Date().toISOString() })
-        .eq("id", messageId)
-        .eq("user_id", user.id)
-        .is("read_at", null);
+      if (!user || messageId.startsWith("temp-")) return;
+
+      const targetMessage = messages.find((message) => message.id === messageId);
+      if (!targetMessage || targetMessage.sender === "user" || targetMessage.read_at) return;
+
+      const readAt = new Date().toISOString();
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === messageId ? { ...message, read_at: readAt } : message
+        )
+      );
+
+      const { error } = await supabase.rpc("mark_chat_message_read", {
+        _message_id: messageId,
+      });
+
+      if (error) {
+        console.error("Error marking chat message as read:", error);
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId ? { ...message, read_at: null } : message
+          )
+        );
+      }
     },
-    [user]
+    [user, messages]
   );
+
+  const markAllAsRead = useCallback(async () => {
+    if (!user) return 0;
+
+    const unreadIncomingMessageIds = messages
+      .filter(
+        (message) => message.sender !== "user" && !message.read_at && !message.id.startsWith("temp-")
+      )
+      .map((message) => message.id);
+
+    if (unreadIncomingMessageIds.length === 0) return 0;
+
+    const readAt = new Date().toISOString();
+    setMessages((prev) =>
+      prev.map((message) =>
+        unreadIncomingMessageIds.includes(message.id)
+          ? { ...message, read_at: readAt }
+          : message
+      )
+    );
+
+    const { data, error } = await supabase.rpc("mark_all_chat_messages_read");
+
+    if (error) {
+      console.error("Error marking all chat messages as read:", error);
+      setMessages((prev) =>
+        prev.map((message) =>
+          unreadIncomingMessageIds.includes(message.id)
+            ? { ...message, read_at: null }
+            : message
+        )
+      );
+      return 0;
+    }
+
+    return data ?? 0;
+  }, [user, messages]);
 
   return {
     messages,
@@ -159,5 +210,6 @@ export function useChatMessages() {
     error,
     sendMessage,
     markAsRead,
+    markAllAsRead,
   };
 }

@@ -17,7 +17,7 @@ export default function Messages() {
   const { user } = useAuth();
   const { getUpcomingAppointment, loading: appointmentLoading } = useAppointments();
   const upcomingAppointment = getUpcomingAppointment();
-  const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead } = useChatMessages();
+  const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead, markAllAsRead } = useChatMessages();
 
   const [inputValue, setInputValue] = useState("");
   const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
@@ -62,7 +62,6 @@ export default function Messages() {
     const atts = [...pendingAttachments];
     setInputValue("");
     setPendingAttachments([]);
-    // Store pending and show choice dialog
     setPendingMessage({ text: message, attachments: atts.length > 0 ? atts : undefined });
     setChoiceDialogOpen(true);
   };
@@ -84,6 +83,18 @@ export default function Messages() {
   const handleBookingRequest = () => {
     setBookingSheetOpen(true);
   };
+
+  useEffect(() => {
+    if (messagesLoading || messages.length === 0) return;
+
+    const hasUnreadIncomingMessages = messages.some(
+      (message) => message.sender !== "user" && !message.read_at && !message.id.startsWith("temp-")
+    );
+
+    if (!hasUnreadIncomingMessages) return;
+
+    void markAllAsRead();
+  }, [messages, messagesLoading, markAllAsRead]);
 
   const loading = appointmentLoading || messagesLoading;
 
@@ -147,7 +158,7 @@ export default function Messages() {
                 onBookingRequest={handleBookingRequest}
                 attachments={msg.attachments}
                 onVisible={
-                  msg.sender !== "user" && !msg.id.startsWith("temp-")
+                  msg.sender !== "user" && !msg.id.startsWith("temp-") && !msg.read_at
                     ? () => markAsRead(msg.id)
                     : undefined
                 }
