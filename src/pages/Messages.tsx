@@ -158,7 +158,7 @@ export default function Messages() {
                 onBookingRequest={handleBookingRequest}
                 attachments={msg.attachments}
                 onVisible={
-                  msg.sender !== "user" && !msg.id.startsWith("temp-")
+                  msg.sender !== "user" && !msg.id.startsWith("temp-") && !msg.read_at
                     ? () => markAsRead(msg.id)
                     : undefined
                 }
