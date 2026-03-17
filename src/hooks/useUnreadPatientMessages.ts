@@ -21,8 +21,8 @@ export function useUnreadPatientMessages() {
         .eq("status", "sent")
         .is("read_at", null);
 
-      if (!error && count) {
-        setUnreadCount(count);
+      if (!error) {
+        setUnreadCount(count ?? 0);
       }
     };
 
