@@ -99,7 +99,6 @@ export function RecipeDetailSheet({
     rateRecipe.mutate(
       { recipeId, rating },
       {
-        onSuccess: () => toast.success("Betyg sparat!"),
         onError: () => toast.error("Kunde inte spara betyg"),
       }
     );
