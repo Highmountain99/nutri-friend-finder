@@ -44,7 +44,9 @@ export function PregnancyTriageStep({
 }: PregnancyTriageStepProps) {
   const [internalStep, setInternalStep] = useState<Step>(initialReason && GENERAL_REASONS.includes(initialReason) ? 'referral' : 'reason');
   const [selectedReason, setSelectedReason] = useState<PregnancyTriageReason | undefined>(initialReason);
-  const [referredByCare, setReferredByCare] = useState<boolean | undefined>(initialReferredByCare);
+  const [referredByCare, setReferredByCare] = useState<boolean | "unsure" | undefined>(
+    initialReferredByCare === undefined ? undefined : initialReferredByCare
+  );
 
   const handleReasonSelect = (reason: PregnancyTriageReason) => {
     setSelectedReason(reason);
