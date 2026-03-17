@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Upload, Link, UtensilsCrossed, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Tables, Json } from "@/integrations/supabase/types";
-import { RecipeFilterPanel, type RecipeFilterState, emptyFilterState } from "@/components/dietitian/recipes/RecipeFilterPanel";
+import { RecipeFilterPanel, type RecipeFilterState, emptyFilterState, type RecipeSortOption } from "@/components/dietitian/recipes/RecipeFilterPanel";
 import { DietitianRecipeCard } from "@/components/dietitian/recipes/DietitianRecipeCard";
 import { CreateRecipeSheet, type RecipeFormData } from "@/components/dietitian/recipes/CreateRecipeSheet";
 import { ImportRecipeModal } from "@/components/dietitian/recipes/ImportRecipeModal";
@@ -24,6 +24,7 @@ export default function DietitianRecipes() {
 
   const [activeTab, setActiveTab] = useState<"all" | "mine">("all");
   const [filters, setFilters] = useState<RecipeFilterState>(emptyFilterState);
+  const [sortBy, setSortBy] = useState<RecipeSortOption>("newest");
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showFetch, setShowFetch] = useState(false);
@@ -94,6 +95,22 @@ export default function DietitianRecipes() {
     if (filters.dietary_needs.length > 0 && !filters.dietary_needs.some((t) => (r.dietary_needs || []).includes(t))) return false;
     if (filters.allergen_free.length > 0 && !filters.allergen_free.some((t) => (r.allergen_free || []).includes(t))) return false;
     return true;
+  });
+
+  // Sort
+  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return (b.created_at || "").localeCompare(a.created_at || "");
+      case "oldest":
+        return (a.created_at || "").localeCompare(b.created_at || "");
+      case "rating":
+        return (b.rating ?? 0) - (a.rating ?? 0);
+      case "time_asc":
+        return (a.time_minutes ?? 999) - (b.time_minutes ?? 999);
+      default:
+        return 0;
+    }
   });
 
   const deleteRecipe = useMutation({
@@ -251,7 +268,9 @@ export default function DietitianRecipes() {
         filters={filters}
         onChange={setFilters}
         totalCount={tabFiltered.length}
-        filteredCount={filteredRecipes.length}
+        filteredCount={sortedRecipes.length}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
       />
 
       {/* Recipe grid */}
@@ -267,7 +286,7 @@ export default function DietitianRecipes() {
             </div>
           ))}
         </div>
-      ) : filteredRecipes.length === 0 ? (
+      ) : sortedRecipes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <UtensilsCrossed className="h-12 w-12 mb-3 opacity-30" />
           <p className="font-medium">Inga recept hittades</p>
@@ -279,7 +298,7 @@ export default function DietitianRecipes() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredRecipes.map((recipe) => {
+          {sortedRecipes.map((recipe) => {
             const isOwn = recipe.created_by === user?.id;
             const isSaved = savedIds.has(recipe.id);
             const isSelected = selectedIds.has(recipe.id);

@@ -3,8 +3,18 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Filter, Search, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowUpDown, Filter, Search, X } from "lucide-react";
 import { TAG_GROUPS, type TagGroup } from "@/lib/recipeTags";
+
+export type RecipeSortOption = "newest" | "oldest" | "rating" | "time_asc";
+
+export const SORT_LABELS: Record<RecipeSortOption, string> = {
+  newest: "Nyast",
+  oldest: "Äldst",
+  rating: "Betyg",
+  time_asc: "Tillagningstid",
+};
 
 export interface RecipeFilterState {
   cuisine_types: string[];
@@ -29,9 +39,11 @@ interface RecipeFilterPanelProps {
   onChange: (filters: RecipeFilterState) => void;
   totalCount: number;
   filteredCount: number;
+  sortBy: RecipeSortOption;
+  onSortChange: (sort: RecipeSortOption) => void;
 }
 
-export function RecipeFilterPanel({ filters, onChange, totalCount, filteredCount }: RecipeFilterPanelProps) {
+export function RecipeFilterPanel({ filters, onChange, totalCount, filteredCount, sortBy, onSortChange }: RecipeFilterPanelProps) {
   const [open, setOpen] = useState(false);
 
   const activeCount =
@@ -78,6 +90,18 @@ export function RecipeFilterPanel({ filters, onChange, totalCount, filteredCount
             className="pl-9 h-9"
           />
         </div>
+
+        <Select value={sortBy} onValueChange={(v) => onSortChange(v as RecipeSortOption)}>
+          <SelectTrigger className="w-[160px] h-9">
+            <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(SORT_LABELS) as RecipeSortOption[]).map((key) => (
+              <SelectItem key={key} value={key}>{SORT_LABELS[key]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           Visar {filteredCount} av {totalCount} recept
