@@ -28,7 +28,7 @@ export function AdminRoute() {
     );
   }
 
-  if (!user || !isAdmin) return <Navigate to="/" replace />;
+  if (!user || !isAdmin) return <Navigate to="/home" replace />;
 
   return <Outlet />;
 }
