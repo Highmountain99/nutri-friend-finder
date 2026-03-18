@@ -53,6 +53,7 @@ const App = () => (
           <Routes>
             {/* Auth routes - no layout */}
             <Route path="/auth" element={<Auth />} />
+            <Route path="/start" element={<Auth />} />
             <Route path="/dietitian/login" element={<DietitianLogin />} />
             <Route path="/admin/setup" element={<AdminSetup />} />
             <Route path="/invite/:code" element={<Invite />} />
