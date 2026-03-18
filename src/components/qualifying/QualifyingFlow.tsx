@@ -149,7 +149,7 @@ export function QualifyingFlow() {
   };
 
   const handleBackToAuth = () => {
-    navigate('/auth', { replace: true });
+    navigate('/', { replace: true });
   };
 
   // Step handlers
