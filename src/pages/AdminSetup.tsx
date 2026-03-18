@@ -82,7 +82,7 @@ export default function AdminSetup() {
               <p className="text-sm text-muted-foreground mb-3">
                 Du måste vara inloggad först.
               </p>
-              <Button onClick={() => navigate("/auth")} variant="outline">
+              <Button onClick={() => navigate("/")} variant="outline">
                 Logga in
               </Button>
             </div>

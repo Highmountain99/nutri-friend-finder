@@ -278,7 +278,7 @@ export function QualifyingFlow() {
 
   const handleSkipBooking = async () => {
     await saveProfile({}, true);
-    navigate('/', { replace: true });
+    navigate('/home', { replace: true });
   };
 
   if (loading) {

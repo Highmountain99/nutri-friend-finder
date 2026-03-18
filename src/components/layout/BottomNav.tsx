@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useUnreadPatientMessages } from "@/hooks/useUnreadPatientMessages";
 
 const navItems = [
-  { path: "/", icon: Home, label: "Hem" },
+  { path: "/home", icon: Home, label: "Hem" },
   { path: "/journal", icon: BookOpen, label: "Journal" },
   { path: "/messages", icon: MessageCircle, label: "Meddelanden" },
   { path: "/recipes", icon: UtensilsCrossed, label: "Recept" },
