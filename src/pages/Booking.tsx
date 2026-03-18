@@ -164,7 +164,7 @@ export default function Booking() {
           dietitian={selectedDietitian!}
           date={selectedDate!}
           slot={selectedSlot!}
-          onGoHome={() => navigate('/')}
+          onGoHome={() => navigate('/home')}
         />
       );
 
