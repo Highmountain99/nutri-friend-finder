@@ -56,7 +56,7 @@ export default function AdminSetup() {
     <div className="min-h-screen bg-background flex flex-col">
       <div className="p-4">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/home")}
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -82,7 +82,7 @@ export default function AdminSetup() {
               <p className="text-sm text-muted-foreground mb-3">
                 Du måste vara inloggad först.
               </p>
-              <Button onClick={() => navigate("/auth")} variant="outline">
+              <Button onClick={() => navigate("/")} variant="outline">
                 Logga in
               </Button>
             </div>

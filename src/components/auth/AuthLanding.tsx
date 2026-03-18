@@ -10,7 +10,7 @@ export function AuthLanding() {
   const navigate = useNavigate();
 
   const redirectParam = searchParams.get("redirect");
-  const redirectTo = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/";
+  const redirectTo = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/home";
   const shouldOpenLogin = searchParams.get("openLogin") === "1";
 
   const [showOnboarding, setShowOnboarding] = useState(false);

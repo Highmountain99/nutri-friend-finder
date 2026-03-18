@@ -51,7 +51,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Auth routes - no layout */}
+            {/* Landing / Auth routes - no layout */}
+            <Route path="/" element={<Auth />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dietitian/login" element={<DietitianLogin />} />
             <Route path="/admin/setup" element={<AdminSetup />} />
@@ -72,7 +73,7 @@ const App = () => (
               <Route path="/booking-success" element={<BookingSuccess />} />
               
               <Route element={<AppLayout />}>
-                <Route path="/" element={<Home />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/booking" element={<Booking />} />
                 <Route path="/journal" element={<Journal />} />
                 <Route path="/messages" element={<Messages />} />

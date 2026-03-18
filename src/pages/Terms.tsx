@@ -9,7 +9,7 @@ export default function Terms() {
       {/* Header */}
       <header className="sticky top-0 bg-white border-b border-border px-4 py-3 flex items-center gap-3 z-10">
         <Button variant="ghost" size="icon" asChild>
-          <Link to="/auth">
+          <Link to="/">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>

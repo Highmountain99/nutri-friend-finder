@@ -129,7 +129,7 @@ export function QualifyingFlow() {
   // Redirect if already completed
   useEffect(() => {
     if (isCompleted) {
-      navigate('/', { replace: true });
+      navigate('/home', { replace: true });
     }
   }, [isCompleted, navigate]);
 
@@ -149,7 +149,7 @@ export function QualifyingFlow() {
   };
 
   const handleBackToAuth = () => {
-    navigate('/auth', { replace: true });
+    navigate('/', { replace: true });
   };
 
   // Step handlers
@@ -273,12 +273,12 @@ export function QualifyingFlow() {
 
   const handleBookingComplete = async () => {
     await saveProfile({}, true);
-    navigate('/', { replace: true });
+    navigate('/home', { replace: true });
   };
 
   const handleSkipBooking = async () => {
     await saveProfile({}, true);
-    navigate('/', { replace: true });
+    navigate('/home', { replace: true });
   };
 
   if (loading) {

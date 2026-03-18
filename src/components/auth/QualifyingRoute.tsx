@@ -22,14 +22,14 @@ export function QualifyingRoute({ requireQualifying = false }: QualifyingRoutePr
   }
 
   if (!session) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // If we need to check qualifying status
   if (requireQualifying) {
     // User must be in qualifying flow (not completed)
     if (isCompleted) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/home" replace />;
     }
     return <Outlet />;
   }

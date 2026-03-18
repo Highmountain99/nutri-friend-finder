@@ -197,7 +197,7 @@ export default function Invite() {
             <p className="text-sm text-muted-foreground">
               Länken kan ha gått ut eller redan använts.
             </p>
-            <Button onClick={() => navigate("/auth")}>Gå till inloggning</Button>
+            <Button onClick={() => navigate("/")}>Gå till inloggning</Button>
           </CardContent>
         </Card>
       </div>

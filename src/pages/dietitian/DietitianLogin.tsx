@@ -118,7 +118,7 @@ export default function DietitianLogin() {
     <div className="min-h-screen bg-background flex flex-col">
       <div className="p-4">
         <button
-          onClick={() => navigate("/auth")}
+          onClick={() => navigate("/")}
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

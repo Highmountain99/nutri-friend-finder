@@ -97,7 +97,7 @@ export default function Booking() {
 
     if (result) {
       setSheetOpen(false);
-      navigate('/', { state: { bookingConfirmed: true } });
+      navigate('/home', { state: { bookingConfirmed: true } });
     }
   };
 
@@ -164,7 +164,7 @@ export default function Booking() {
           dietitian={selectedDietitian!}
           date={selectedDate!}
           slot={selectedSlot!}
-          onGoHome={() => navigate('/')}
+          onGoHome={() => navigate('/home')}
         />
       );
 

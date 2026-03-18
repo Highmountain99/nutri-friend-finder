@@ -21,7 +21,7 @@ interface LoginSheetProps {
   redirectTo?: string;
 }
 
-export function LoginSheet({ open, onClose, redirectTo = "/" }: LoginSheetProps) {
+export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +29,7 @@ export function LoginSheet({ open, onClose, redirectTo = "/" }: LoginSheetProps)
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
-  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/";
+  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/home";
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);

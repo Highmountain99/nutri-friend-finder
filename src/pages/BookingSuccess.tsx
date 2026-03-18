@@ -101,7 +101,7 @@ export default function BookingSuccess() {
   }, [user, searchParams]);
 
   const handleGoHome = () => {
-    navigate('/');
+    navigate('/home');
   };
 
   if (status === 'loading') {

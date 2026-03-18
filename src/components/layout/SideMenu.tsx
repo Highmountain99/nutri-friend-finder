@@ -10,7 +10,7 @@ interface SideMenuProps {
 }
 
 const mainNavItems = [
-  { path: "/", icon: Home, label: "Hem" },
+  { path: "/home", icon: Home, label: "Hem" },
   { path: "/journal", icon: BookOpen, label: "Journal" },
   { path: "/messages", icon: MessageCircle, label: "Meddelanden" },
   { path: "/recipes", icon: UtensilsCrossed, label: "Recept" },
@@ -36,7 +36,7 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
   const handleLogout = async () => {
     await signOut();
     onClose();
-    navigate('/auth', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
