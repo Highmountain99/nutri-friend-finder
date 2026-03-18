@@ -29,7 +29,7 @@ export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetPr
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
-  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/";
+  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/home";
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
