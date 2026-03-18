@@ -273,7 +273,7 @@ export function QualifyingFlow() {
 
   const handleBookingComplete = async () => {
     await saveProfile({}, true);
-    navigate('/', { replace: true });
+    navigate('/home', { replace: true });
   };
 
   const handleSkipBooking = async () => {
