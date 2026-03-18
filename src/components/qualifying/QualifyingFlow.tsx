@@ -129,7 +129,7 @@ export function QualifyingFlow() {
   // Redirect if already completed
   useEffect(() => {
     if (isCompleted) {
-      navigate('/', { replace: true });
+      navigate('/home', { replace: true });
     }
   }, [isCompleted, navigate]);
 
