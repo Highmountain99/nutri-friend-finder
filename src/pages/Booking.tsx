@@ -97,7 +97,7 @@ export default function Booking() {
 
     if (result) {
       setSheetOpen(false);
-      navigate('/', { state: { bookingConfirmed: true } });
+      navigate('/home', { state: { bookingConfirmed: true } });
     }
   };
 
