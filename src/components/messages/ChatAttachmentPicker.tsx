@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Image, FileText, Video, BookOpen, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { RecipeLinkPicker } from "./RecipeLinkPicker";
+import { toast } from "@/hooks/use-toast";
 
 export interface ChatAttachment {
   type: "image" | "video" | "document" | "recipe_link";
