@@ -5,6 +5,7 @@ import { BottomNav } from "./BottomNav";
 import { SideMenu } from "./SideMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export function AppLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
