@@ -333,7 +333,7 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
               )}
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-muted-foreground">Analyserar måltiden...</p>
-              <p className="text-xs text-muted-foreground">Söker i Livsmedelsverkets databas...</p>
+              
             </div>
           )}
 

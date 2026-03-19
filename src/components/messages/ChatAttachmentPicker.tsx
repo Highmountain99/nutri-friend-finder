@@ -47,8 +47,13 @@ export function ChatAttachmentPicker({ patientId, open, onOpenChange, onAttach }
         mimeType: file.type,
       });
       onOpenChange(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
+      toast({
+        title: "Kunde inte ladda upp filen",
+        description: err?.message || "Försök igen senare.",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }
