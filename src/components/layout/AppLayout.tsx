@@ -11,6 +11,7 @@ export function AppLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useAuth();
   const [profileName, setProfileName] = useState<string | null>(null);
+  usePushNotifications();
 
   useEffect(() => {
     if (!user) return;
