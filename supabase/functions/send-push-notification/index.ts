@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
 
     // Action: return VAPID public key to client
     if (body.action === "get-vapid-key") {
-      const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+      const vapidPublicKey = (Deno.env.get("VAPID_PUBLIC_KEY") || "").replace(/^["']+|["']+$/g, "").trim();
       return new Response(JSON.stringify({ vapidPublicKey }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
