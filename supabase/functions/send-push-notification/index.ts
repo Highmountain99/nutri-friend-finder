@@ -39,8 +39,8 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const vapidPublicKey = (Deno.env.get("VAPID_PUBLIC_KEY") || "").replace(/^["']+|["']+$/g, "").trim();
-    const vapidPrivateKey = (Deno.env.get("VAPID_PRIVATE_KEY") || "").replace(/^["']+|["']+$/g, "").trim();
+    const vapidPublicKey = cleanKey("VAPID_PUBLIC_KEY");
+    const vapidPrivateKey = cleanKey("VAPID_PRIVATE_KEY");
 
     // Configure web-push with VAPID keys
     webpush.setVapidDetails(
