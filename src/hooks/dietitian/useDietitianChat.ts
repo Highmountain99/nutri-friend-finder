@@ -1,7 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
+
+async function sendPushToPatient(patientId: string) {
+  try {
+    await supabase.functions.invoke("send-push-notification", {
+      body: {
+        user_id: patientId,
+        title: "Nytt meddelande",
+        message: "Din dietist har skickat ett meddelande",
+        url: "/messages",
+      },
+    });
+  } catch {
+    // Silent fail – push is best-effort
+  }
+}
 
 export function useDietitianChat(patientId: string | undefined) {
   const queryClient = useQueryClient();
@@ -56,6 +72,12 @@ export function useDietitianChat(patientId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dietitian-chat", patientId] });
+      if (patientId) sendPushToPatient(patientId);
+    },
+    onError: (err) => {
+      toast.error("Kunde inte skicka meddelandet", {
+        description: err instanceof Error ? err.message : "Försök igen",
+      });
     },
   });
 
@@ -70,6 +92,7 @@ export function useDietitianChat(patientId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dietitian-chat", patientId] });
+      if (patientId) sendPushToPatient(patientId);
     },
   });
 
@@ -100,10 +123,11 @@ export function useDietitianChat(patientId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dietitian-chat", patientId] });
+      if (patientId) sendPushToPatient(patientId);
     },
   });
 
-  // Dismiss AI draft – delete or mark as rejected so it disappears
+  // Dismiss AI draft
   const dismissDraft = useMutation({
     mutationFn: async (messageId: string) => {
       const { error: deleteError } = await supabase

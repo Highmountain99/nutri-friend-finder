@@ -326,7 +326,7 @@ export default function DietitianMessages() {
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
                     className="flex-1"
                   />
-                  <Button size="icon" onClick={handleSend} disabled={sendMessage.isPending && !input.trim() && pendingAttachments.length === 0} className="bg-primary hover:bg-primary/90 shrink-0">
+                  <Button size="icon" onClick={handleSend} disabled={sendMessage.isPending || (!input.trim() && pendingAttachments.length === 0)} className="bg-primary hover:bg-primary/90 shrink-0">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
