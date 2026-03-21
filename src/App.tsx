@@ -40,6 +40,7 @@ import DietitianProfile from "./pages/dietitian/DietitianProfile";
 import DietitianLogin from "./pages/dietitian/DietitianLogin";
 import DietitianStatistics from "./pages/dietitian/DietitianStatistics";
 import Invite from "./pages/Invite";
+import DevTools from "./pages/DevTools";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/dietitian/login" element={<DietitianLogin />} />
             <Route path="/admin/setup" element={<AdminSetup />} />
             <Route path="/invite/:code" element={<Invite />} />
+            <Route path="/dev" element={<DevTools />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
