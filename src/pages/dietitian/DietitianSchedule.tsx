@@ -152,6 +152,7 @@ export default function DietitianSchedule() {
   const { data: patients } = useAssignedPatients();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [videoOpen, setVideoOpen] = useState(false);
+  const [videoAppointmentId, setVideoAppointmentId] = useState<string | null>(null);
   const [view, setView] = useState<"week" | "day">("week");
   const navigate = useNavigate();
 
