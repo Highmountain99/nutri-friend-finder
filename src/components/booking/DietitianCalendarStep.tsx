@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { sv } from "date-fns/locale";
-import { addDays } from "date-fns";
+import { addDays, startOfDay } from "date-fns";
 
 interface DietitianCalendarStepProps {
   selectedDate: Date | undefined;
