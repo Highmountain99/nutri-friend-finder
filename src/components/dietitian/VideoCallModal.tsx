@@ -33,7 +33,7 @@ export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = fal
   }, [open, appointmentId, devMode]);
 
   const createOrGetRoom = async () => {
-    if (!appointmentId) return;
+    if (!appointmentId && !devMode) return;
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
