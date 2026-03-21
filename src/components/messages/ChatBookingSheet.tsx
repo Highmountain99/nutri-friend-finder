@@ -9,7 +9,7 @@ import { TimeSlotPicker } from "@/components/booking/TimeSlotPicker";
 import { TimeSlot } from "@/types/dietitian";
 import { useDietitianAvailability } from "@/hooks/useDietitianAvailability";
 import { useAppointments } from "@/hooks/useAppointments";
-import { format, addDays } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 import { sv } from "date-fns/locale";
 
 type BookingPhase = 'calendar' | 'time';
