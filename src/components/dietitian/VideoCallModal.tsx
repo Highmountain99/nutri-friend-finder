@@ -24,13 +24,13 @@ export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = fal
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open && appointmentId) {
+    if (open && (appointmentId || devMode)) {
       createOrGetRoom();
     }
     if (!open) {
       setRoomUrl(null);
     }
-  }, [open, appointmentId]);
+  }, [open, appointmentId, devMode]);
 
   const createOrGetRoom = async () => {
     if (!appointmentId) return;
