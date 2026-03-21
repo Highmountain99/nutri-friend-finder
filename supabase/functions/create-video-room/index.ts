@@ -26,9 +26,9 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsErr } = await supabase.auth.getClaims(token);
-    if (claimsErr || !claims?.claims) {
+    // Validate user
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -43,16 +43,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
+    if (!wherebyKey) {
+      return new Response(
+        JSON.stringify({ error: "WHEREBY_API_KEY not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Dev mode: create a temporary room without appointment validation
     if (devMode) {
-      const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
-      if (!wherebyKey) {
-        return new Response(
-          JSON.stringify({ error: "WHEREBY_API_KEY not configured" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
       const endDate = new Date(Date.now() + 60 * 60 * 1000);
       const wherebyRes = await fetch("https://api.whereby.dev/v1/meetings", {
         method: "POST",
@@ -82,8 +82,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify user has access to this appointment (either as patient or dietitian)
-    const userId = claims.claims.sub as string;
+    // Normal flow: verify user has access to this appointment
+    const userId = user.id;
 
     const { data: appointment, error: aptErr } = await supabase
       .from("appointments")
@@ -137,14 +137,6 @@ Deno.serve(async (req) => {
     }
 
     // Create a Whereby meeting room
-    const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
-    if (!wherebyKey) {
-      return new Response(
-        JSON.stringify({ error: "WHEREBY_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const endDate = new Date(
       new Date(appointment.appointment_date).getTime() + 60 * 60 * 1000
     );
