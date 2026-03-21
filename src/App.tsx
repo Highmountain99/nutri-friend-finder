@@ -58,6 +58,7 @@ const App = () => (
             <Route path="/dietitian/login" element={<DietitianLogin />} />
             <Route path="/admin/setup" element={<AdminSetup />} />
             <Route path="/invite/:code" element={<Invite />} />
+            <Route path="/dev" element={<DevTools />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
