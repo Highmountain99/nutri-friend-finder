@@ -77,6 +77,7 @@ export default function DevTools() {
                   appointment={mockAppointment}
                   onRebook={() => {}}
                   onCancel={() => {}}
+                  devMode
                 />
               </div>
             )}
