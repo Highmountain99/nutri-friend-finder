@@ -16,9 +16,10 @@ interface VideoCallModalProps {
   onOpenChange: (open: boolean) => void;
   appointmentId?: string;
   isHost?: boolean;
+  devMode?: boolean;
 }
 
-export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = false }: VideoCallModalProps) {
+export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = false, devMode = false }: VideoCallModalProps) {
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
