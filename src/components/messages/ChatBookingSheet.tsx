@@ -126,7 +126,7 @@ export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingS
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date() || date > addDays(new Date(), 30)}
+                  disabled={(date) => date < startOfDay(new Date()) || date > addDays(new Date(), 30)}
                   locale={sv}
                   className="pointer-events-auto"
                 />
