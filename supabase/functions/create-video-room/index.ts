@@ -35,12 +35,51 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { appointmentId } = await req.json();
-    if (!appointmentId) {
+    const { appointmentId, devMode } = await req.json();
+    if (!appointmentId && !devMode) {
       return new Response(JSON.stringify({ error: "appointmentId required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Dev mode: create a temporary room without appointment validation
+    if (devMode) {
+      const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
+      if (!wherebyKey) {
+        return new Response(
+          JSON.stringify({ error: "WHEREBY_API_KEY not configured" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const endDate = new Date(Date.now() + 60 * 60 * 1000);
+      const wherebyRes = await fetch("https://api.whereby.dev/v1/meetings", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${wherebyKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          endDate: endDate.toISOString(),
+          fields: ["hostRoomUrl"],
+        }),
+      });
+
+      if (!wherebyRes.ok) {
+        const errBody = await wherebyRes.text();
+        console.error("Whereby API error:", wherebyRes.status, errBody);
+        return new Response(
+          JSON.stringify({ error: `Whereby API error: ${wherebyRes.status}` }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const wherebyData = await wherebyRes.json();
+      return new Response(
+        JSON.stringify({ roomUrl: wherebyData.roomUrl, hostRoomUrl: wherebyData.hostRoomUrl }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Verify user has access to this appointment (either as patient or dietitian)
