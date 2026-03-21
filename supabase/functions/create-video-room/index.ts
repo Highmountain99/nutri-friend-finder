@@ -12,47 +12,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    // Validate user
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const { appointmentId, devMode } = await req.json();
-    if (!appointmentId && !devMode) {
-      return new Response(JSON.stringify({ error: "appointmentId required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const authHeader = req.headers.get("Authorization");
 
-    const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
-    if (!wherebyKey) {
-      return new Response(
-        JSON.stringify({ error: "WHEREBY_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Dev mode: create a temporary room without appointment validation
+    // Dev mode: create a temporary room without any appointment or auth validation
     if (devMode) {
+      const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
+      if (!wherebyKey) {
+        return new Response(
+          JSON.stringify({ error: "WHEREBY_API_KEY not configured" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const endDate = new Date(Date.now() + 60 * 60 * 1000);
       const wherebyRes = await fetch("https://api.whereby.dev/v1/meetings", {
         method: "POST",
@@ -82,7 +54,36 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Normal flow: verify user has access to this appointment
+    // --- Normal flow below: require auth + appointmentId ---
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!appointmentId) {
+      return new Response(JSON.stringify({ error: "appointmentId required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !user) {
+      console.error("Auth error:", userErr?.message);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const userId = user.id;
 
     const { data: appointment, error: aptErr } = await supabase
@@ -117,26 +118,29 @@ Deno.serve(async (req) => {
     }
 
     // Check if room URL is already stored in notes as JSON
-    let existingRoomUrl: string | null = null;
     if (appointment.notes) {
       try {
         const notesData = JSON.parse(appointment.notes);
         if (notesData.wherebyRoomUrl) {
-          existingRoomUrl = notesData.wherebyRoomUrl;
+          return new Response(
+            JSON.stringify({ roomUrl: notesData.wherebyRoomUrl, hostRoomUrl: notesData.wherebyHostRoomUrl }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
       } catch {
         // notes is plain text, not JSON
       }
     }
 
-    if (existingRoomUrl) {
+    // Create a Whereby meeting room
+    const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
+    if (!wherebyKey) {
       return new Response(
-        JSON.stringify({ roomUrl: existingRoomUrl }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "WHEREBY_API_KEY not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Create a Whereby meeting room
     const endDate = new Date(
       new Date(appointment.appointment_date).getTime() + 60 * 60 * 1000
     );
@@ -172,14 +176,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const notesData = {
-      wherebyRoomUrl: roomUrl,
-      wherebyHostRoomUrl: hostRoomUrl,
-    };
-
     await serviceClient
       .from("appointments")
-      .update({ notes: JSON.stringify(notesData) })
+      .update({ notes: JSON.stringify({ wherebyRoomUrl: roomUrl, wherebyHostRoomUrl: hostRoomUrl }) })
       .eq("id", appointmentId);
 
     return new Response(
