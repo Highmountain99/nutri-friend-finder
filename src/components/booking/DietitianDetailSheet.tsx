@@ -16,7 +16,7 @@ import { DietitianProfile, specializationLabels, languageLabels, TimeSlot } from
 import { useDietitianAvailability } from "@/hooks/useDietitianAvailability";
 import { useAppointments } from "@/hooks/useAppointments";
 import { sv } from "date-fns/locale";
-import { format, addDays } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 
 interface DietitianDetailSheetProps {
   dietitian: DietitianProfile | null;
