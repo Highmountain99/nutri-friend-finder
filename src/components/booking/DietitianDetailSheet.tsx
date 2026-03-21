@@ -158,6 +158,7 @@ export function DietitianDetailSheet({
                 selectedSlot={selectedSlot}
                 onSelect={setSelectedSlot}
                 loading={loading}
+                selectedDate={selectedDate}
               />
             </div>
           )}

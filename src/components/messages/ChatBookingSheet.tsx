@@ -185,6 +185,7 @@ export function ChatBookingSheet({ open, onOpenChange, dietitian }: ChatBookingS
                   slots={availability.timeSlots}
                   selectedSlot={selectedSlot}
                   onSelect={handleSlotSelect}
+                  selectedDate={selectedDate}
                 />
               ) : (
                 <div className="text-center py-8">
