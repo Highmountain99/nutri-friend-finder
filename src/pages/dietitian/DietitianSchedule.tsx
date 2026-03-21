@@ -40,7 +40,7 @@ function AppointmentPopover({
   allAppointments: any[];
   children: React.ReactNode;
   onOpenPatient: (patientId: string) => void;
-  onStartVideo: () => void;
+  onStartVideo: (appointmentId: string) => void;
 }) {
   const patient = patients?.find((p) => p.patient_id === appointment.user_id);
   const patientName = patient
