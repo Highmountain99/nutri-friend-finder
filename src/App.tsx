@@ -40,6 +40,7 @@ import DietitianProfile from "./pages/dietitian/DietitianProfile";
 import DietitianLogin from "./pages/dietitian/DietitianLogin";
 import DietitianStatistics from "./pages/dietitian/DietitianStatistics";
 import Invite from "./pages/Invite";
+import DevTools from "./pages/DevTools";
 
 const queryClient = new QueryClient();
 
