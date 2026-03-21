@@ -501,7 +501,7 @@ interface DayViewProps {
   patients: any[] | undefined;
   allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
-  onStartVideo: () => void;
+  onStartVideo: (appointmentId: string) => void;
 }
 
 function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: DayViewProps) {
