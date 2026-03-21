@@ -206,6 +206,7 @@ export function AppointmentCard({ appointment, onRebook, onBook, onCancel, devMo
         open={videoOpen}
         onOpenChange={setVideoOpen}
         appointmentId={appointment.id}
+        devMode={devMode}
       />
     </>
   );
