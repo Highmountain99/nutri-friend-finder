@@ -16,23 +16,24 @@ interface VideoCallModalProps {
   onOpenChange: (open: boolean) => void;
   appointmentId?: string;
   isHost?: boolean;
+  devMode?: boolean;
 }
 
-export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = false }: VideoCallModalProps) {
+export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = false, devMode = false }: VideoCallModalProps) {
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open && appointmentId) {
+    if (open && (appointmentId || devMode)) {
       createOrGetRoom();
     }
     if (!open) {
       setRoomUrl(null);
     }
-  }, [open, appointmentId]);
+  }, [open, appointmentId, devMode]);
 
   const createOrGetRoom = async () => {
-    if (!appointmentId) return;
+    if (!appointmentId && !devMode) return;
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -42,7 +43,7 @@ export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = fal
       }
 
       const res = await supabase.functions.invoke("create-video-room", {
-        body: { appointmentId },
+        body: devMode ? { devMode: true } : { appointmentId },
       });
 
       if (res.error) throw res.error;

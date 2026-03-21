@@ -105,7 +105,7 @@ export default function DevTools() {
       <VideoCallModal
         open={videoOpen}
         onOpenChange={setVideoOpen}
-        appointmentId="dev-test-room"
+        devMode
       />
     </div>
   );
