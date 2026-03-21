@@ -382,7 +382,7 @@ interface WeekViewProps {
   patients: any[] | undefined;
   allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
-  onStartVideo: () => void;
+  onStartVideo: (appointmentId: string) => void;
 }
 
 function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: WeekViewProps) {
