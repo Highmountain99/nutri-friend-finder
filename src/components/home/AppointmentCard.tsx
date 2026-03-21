@@ -34,9 +34,10 @@ interface AppointmentCardProps {
   onRebook?: () => void;
   onBook?: () => void;
   onCancel?: () => void;
+  devMode?: boolean;
 }
 
-export function AppointmentCard({ appointment, onRebook, onBook, onCancel }: AppointmentCardProps) {
+export function AppointmentCard({ appointment, onRebook, onBook, onCancel, devMode = false }: AppointmentCardProps) {
   const [videoOpen, setVideoOpen] = useState(false);
   const [now, setNow] = useState(new Date());
 
@@ -205,6 +206,7 @@ export function AppointmentCard({ appointment, onRebook, onBook, onCancel }: App
         open={videoOpen}
         onOpenChange={setVideoOpen}
         appointmentId={appointment.id}
+        devMode={devMode}
       />
     </>
   );
