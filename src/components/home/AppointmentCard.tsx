@@ -18,11 +18,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format, differenceInHours } from "date-fns";
+import { format, differenceInHours, differenceInMinutes } from "date-fns";
 import { sv } from "date-fns/locale";
+import { useState, useEffect } from "react";
+import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
 
 interface AppointmentCardProps {
   appointment?: {
+    id?: string;
     date: Date;
     dietitianName: string;
     dietitianTitle?: string;
@@ -34,6 +37,15 @@ interface AppointmentCardProps {
 }
 
 export function AppointmentCard({ appointment, onRebook, onBook, onCancel }: AppointmentCardProps) {
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [now, setNow] = useState(new Date());
+
+  // Update "now" every 30 seconds so the button appears in real-time
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (!appointment) {
     return (
       <Card className="shadow-soft border-2 border-dashed border-primary/20 bg-primary-soft/30">
@@ -69,114 +81,131 @@ export function AppointmentCard({ appointment, onRebook, onBook, onCancel }: App
     .slice(0, 2)
     .toUpperCase();
 
-  // Check if within 24h of appointment
-  const hoursUntilAppointment = differenceInHours(appointment.date, new Date());
+  const hoursUntilAppointment = differenceInHours(appointment.date, now);
+  const minutesUntilAppointment = differenceInMinutes(appointment.date, now);
   const isWithin24Hours = hoursUntilAppointment <= 24 && hoursUntilAppointment >= 0;
+  const showVideoButton = minutesUntilAppointment <= 10 && minutesUntilAppointment >= -60;
 
   return (
-    <Card className="shadow-elevated overflow-hidden bg-card relative">
-      {/* Info icon for 24h policy */}
-      {isWithin24Hours && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="absolute top-3 right-3 w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
-              <Info className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72 text-sm" align="end">
-            <p className="font-medium mb-1">Avbokning ej möjlig</p>
-            <p className="text-muted-foreground">
-              Du kan avboka/omboka fram till 24h innan. No show-avgift debiteras med 275 kr.
-            </p>
-          </PopoverContent>
-        </Popover>
-      )}
+    <>
+      <Card className="shadow-elevated overflow-hidden bg-card relative">
+        {isWithin24Hours && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="absolute top-3 right-3 w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                <Info className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 text-sm" align="end">
+              <p className="font-medium mb-1">Avbokning ej möjlig</p>
+              <p className="text-muted-foreground">
+                Du kan avboka/omboka fram till 24h innan. No show-avgift debiteras med 275 kr.
+              </p>
+            </PopoverContent>
+          </Popover>
+        )}
 
-      <CardContent className="p-5">
-        {/* Dietitian info section */}
-        <div className="flex items-center gap-4 mb-6">
-          <Avatar className="w-14 h-14 flex-shrink-0 border-2 border-primary/20">
-            {appointment.dietitianImage ? (
-              <AvatarImage 
-                src={appointment.dietitianImage} 
-                alt={appointment.dietitianName}
-                className="object-cover"
-              />
-            ) : null}
-            <AvatarFallback className="bg-primary-soft text-primary font-semibold text-lg">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground text-lg">
-              {appointment.dietitianName}
-            </h3>
-            <p className="text-sm text-primary font-medium">
-              {appointment.dietitianTitle || "Legitimerad dietist"}
-            </p>
-          </div>
-        </div>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-4 mb-6">
+            <Avatar className="w-14 h-14 flex-shrink-0 border-2 border-primary/20">
+              {appointment.dietitianImage ? (
+                <AvatarImage
+                  src={appointment.dietitianImage}
+                  alt={appointment.dietitianName}
+                  className="object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="bg-primary-soft text-primary font-semibold text-lg">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
 
-        {/* Date and time section */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Calendar className="w-4 h-4 text-primary" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground text-lg">
+                {appointment.dietitianName}
+              </h3>
+              <p className="text-sm text-primary font-medium">
+                {appointment.dietitianTitle || "Legitimerad dietist"}
+              </p>
             </div>
-            <span className="text-foreground font-medium capitalize">
-              {dayName} {dateFormatted}
-            </span>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-primary font-semibold text-lg">
-              {time}
-            </span>
-          </div>
-        </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 mt-5">
-          <Button
-            variant="outline"
-            onClick={onRebook}
-            disabled={isWithin24Hours}
-            className="flex-1"
-          >
-            Ändra tid
-          </Button>
-          
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                disabled={isWithin24Hours}
-                className="flex-1"
-              >
-                Avboka
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Avboka möte</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Är du säker på att du vill avboka ditt möte med {appointment.dietitianName} den {dateFormatted} kl {time}?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                <AlertDialogAction onClick={onCancel}>
-                  Ja, avboka
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-4 h-4 text-primary" />
+              </div>
+              <span className="text-foreground font-medium capitalize">
+                {dayName} {dateFormatted}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 text-primary" />
+              </div>
+              <span className="text-primary font-semibold text-lg">
+                {time}
+              </span>
+            </div>
+          </div>
+
+          {/* Video call button - appears 10 min before appointment */}
+          {showVideoButton && (
+            <Button
+              onClick={() => setVideoOpen(true)}
+              className="w-full mt-5 gap-2"
+              size="lg"
+            >
+              <Video className="w-5 h-5" />
+              Starta videosamtal
+            </Button>
+          )}
+
+          <div className={`flex gap-3 ${showVideoButton ? 'mt-3' : 'mt-5'}`}>
+            <Button
+              variant="outline"
+              onClick={onRebook}
+              disabled={isWithin24Hours}
+              className="flex-1"
+            >
+              Ändra tid
+            </Button>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isWithin24Hours}
+                  className="flex-1"
+                >
+                  Avboka
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Avboka möte</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Är du säker på att du vill avboka ditt möte med {appointment.dietitianName} den {dateFormatted} kl {time}?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                  <AlertDialogAction onClick={onCancel}>
+                    Ja, avboka
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      <VideoCallModal
+        open={videoOpen}
+        onOpenChange={setVideoOpen}
+        appointmentId={appointment.id}
+      />
+    </>
   );
 }

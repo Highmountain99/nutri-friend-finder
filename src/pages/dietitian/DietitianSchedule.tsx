@@ -40,7 +40,7 @@ function AppointmentPopover({
   allAppointments: any[];
   children: React.ReactNode;
   onOpenPatient: (patientId: string) => void;
-  onStartVideo: () => void;
+  onStartVideo: (appointmentId: string) => void;
 }) {
   const patient = patients?.find((p) => p.patient_id === appointment.user_id);
   const patientName = patient
@@ -134,7 +134,7 @@ function AppointmentPopover({
             <Button
               size="sm"
               className="flex-1 gap-1.5 text-xs"
-              onClick={onStartVideo}
+              onClick={() => onStartVideo(appointment.id)}
               disabled={apptDate.getTime() - Date.now() > 15 * 60 * 1000}
             >
               <Video className="h-3.5 w-3.5" />
@@ -152,6 +152,7 @@ export default function DietitianSchedule() {
   const { data: patients } = useAssignedPatients();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [videoOpen, setVideoOpen] = useState(false);
+  const [videoAppointmentId, setVideoAppointmentId] = useState<string | null>(null);
   const [view, setView] = useState<"week" | "day">("week");
   const navigate = useNavigate();
 
@@ -253,7 +254,7 @@ export default function DietitianSchedule() {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} />
+      <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} appointmentId={videoAppointmentId || undefined} isHost />
 
       <div className="flex items-center justify-between">
         <div>
@@ -282,7 +283,7 @@ export default function DietitianSchedule() {
                 patients={patients}
                 allAppointments={appointments.data ?? []}
                 onOpenPatient={handleOpenPatient}
-                onStartVideo={() => setVideoOpen(true)}
+                onStartVideo={(id) => { setVideoAppointmentId(id); setVideoOpen(true); }}
               />
             ) : (
               <DayView
@@ -294,7 +295,7 @@ export default function DietitianSchedule() {
                 patients={patients}
                 allAppointments={appointments.data ?? []}
                 onOpenPatient={handleOpenPatient}
-                onStartVideo={() => setVideoOpen(true)}
+                onStartVideo={(id) => { setVideoAppointmentId(id); setVideoOpen(true); }}
               />
             )}
           </CardContent>
@@ -381,7 +382,7 @@ interface WeekViewProps {
   patients: any[] | undefined;
   allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
-  onStartVideo: () => void;
+  onStartVideo: (appointmentId: string) => void;
 }
 
 function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: WeekViewProps) {
@@ -500,7 +501,7 @@ interface DayViewProps {
   patients: any[] | undefined;
   allAppointments: any[];
   onOpenPatient: (patientId: string) => void;
-  onStartVideo: () => void;
+  onStartVideo: (appointmentId: string) => void;
 }
 
 function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: DayViewProps) {
