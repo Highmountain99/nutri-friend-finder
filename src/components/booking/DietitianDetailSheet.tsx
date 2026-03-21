@@ -16,7 +16,7 @@ import { DietitianProfile, specializationLabels, languageLabels, TimeSlot } from
 import { useDietitianAvailability } from "@/hooks/useDietitianAvailability";
 import { useAppointments } from "@/hooks/useAppointments";
 import { sv } from "date-fns/locale";
-import { format, addDays } from "date-fns";
+import { format, addDays, startOfDay } from "date-fns";
 
 interface DietitianDetailSheetProps {
   dietitian: DietitianProfile | null;
@@ -139,7 +139,7 @@ export function DietitianDetailSheet({
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => setSelectedDate(date)}
-                  disabled={(date) => date < new Date() || date > addDays(new Date(), 30)}
+                  disabled={(date) => date < startOfDay(new Date()) || date > addDays(new Date(), 30)}
                   locale={sv}
                   className="pointer-events-auto"
                 />
@@ -158,6 +158,7 @@ export function DietitianDetailSheet({
                 selectedSlot={selectedSlot}
                 onSelect={setSelectedSlot}
                 loading={loading}
+                selectedDate={selectedDate}
               />
             </div>
           )}

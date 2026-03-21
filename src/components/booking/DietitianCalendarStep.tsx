@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { sv } from "date-fns/locale";
-import { addDays } from "date-fns";
+import { addDays, startOfDay } from "date-fns";
 
 interface DietitianCalendarStepProps {
   selectedDate: Date | undefined;
@@ -38,7 +38,7 @@ export function DietitianCalendarStep({
             mode="single"
             selected={selectedDate}
             onSelect={onDateSelect}
-            disabled={(date) => date < new Date() || date > addDays(new Date(), 30)}
+            disabled={(date) => date < startOfDay(new Date()) || date > addDays(new Date(), 30)}
             locale={sv}
             className="pointer-events-auto"
           />
