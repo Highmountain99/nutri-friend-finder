@@ -18,6 +18,7 @@ export default function Home() {
 
   const formattedAppointment = upcomingAppointment
     ? {
+        id: upcomingAppointment.id,
         date: upcomingAppointment.appointmentDate,
         dietitianName: upcomingAppointment.dietitian
           ? `${upcomingAppointment.dietitian.firstName} ${upcomingAppointment.dietitian.lastName}`
