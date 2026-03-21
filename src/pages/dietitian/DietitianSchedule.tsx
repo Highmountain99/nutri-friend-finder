@@ -295,7 +295,7 @@ export default function DietitianSchedule() {
                 patients={patients}
                 allAppointments={appointments.data ?? []}
                 onOpenPatient={handleOpenPatient}
-                onStartVideo={() => setVideoOpen(true)}
+                onStartVideo={(id) => { setVideoAppointmentId(id); setVideoOpen(true); }}
               />
             )}
           </CardContent>
