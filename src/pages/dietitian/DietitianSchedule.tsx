@@ -134,7 +134,7 @@ function AppointmentPopover({
             <Button
               size="sm"
               className="flex-1 gap-1.5 text-xs"
-              onClick={onStartVideo}
+              onClick={() => onStartVideo(appointment.id)}
               disabled={apptDate.getTime() - Date.now() > 15 * 60 * 1000}
             >
               <Video className="h-3.5 w-3.5" />
