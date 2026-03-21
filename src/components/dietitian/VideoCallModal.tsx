@@ -43,7 +43,7 @@ export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = fal
       }
 
       const res = await supabase.functions.invoke("create-video-room", {
-        body: { appointmentId },
+        body: devMode ? { devMode: true } : { appointmentId },
       });
 
       if (res.error) throw res.error;
