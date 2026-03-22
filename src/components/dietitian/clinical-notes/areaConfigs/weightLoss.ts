@@ -6,7 +6,17 @@ const g = (d: Record<string, any>) => {
   const prevAttempts = (d.previous_attempts || []).join(", ") || "inga";
 
   return {
-    anamnesis: `Patient söker för ${goals || "viktminskning"}. Mål: ${goals}. Tidsram: ${d.timeframe || "—"}. Tidigare försök: ${prevAttempts}. Vikt: ${d.weight || "—"} kg, längd: ${d.height || "—"} cm. Vikttrend: ${d.weight_trend || "—"}, förändring senaste året: ${d.weight_change_year || "—"}, upplevd svårighet: ${d.difficulty || "—"}. Måltidsstruktur: ${d.meal_structure || "—"}, portioner: ${d.portion_size || "—"}, snabba kolhydrater: ${d.fast_carbs || "—"}, protein: ${d.protein || "—"}, småätande: ${d.snacking || "—"}, kvällsätande: ${d.evening_eating || "—"}. Äter av hunger/vana: ${d.eating_trigger || "—"}, äter snabbt: ${d.eats_fast || "—"}, stressätande: ${d.stress_eating || "—"}, kontrollförlust: ${d.loss_of_control || "—"}. Fysisk aktivitet: ${d.activity || "—"}, sömn: ${d.sleep || "—"}, stress: ${d.stress || "—"}/10. Motivation: ${d.motivation || "—"}/10. Hinder: ${barriers}.`,
+    anamnesis: [
+      `Mål: ${goals} · Tidsram: ${d.timeframe || "—"}`,
+      `Tidigare försök: ${prevAttempts}`,
+      `Antropometri: Vikt: ${d.weight || "—"} kg · Längd: ${d.height || "—"} cm`,
+      `Vikttrend: ${d.weight_trend || "—"} · Förändring senaste året: ${d.weight_change_year || "—"} · Upplevd svårighet: ${d.difficulty || "—"}`,
+      `Kost: Måltidsstruktur: ${d.meal_structure || "—"} · Portioner: ${d.portion_size || "—"} · Snabba KH: ${d.fast_carbs || "—"} · Protein: ${d.protein || "—"}`,
+      `Småätande: ${d.snacking || "—"} · Kvällsätande: ${d.evening_eating || "—"}`,
+      `Ätbeteende: Hunger/vana: ${d.eating_trigger || "—"} · Äter snabbt: ${d.eats_fast || "—"} · Stressätande: ${d.stress_eating || "—"} · Kontrollförlust: ${d.loss_of_control || "—"}`,
+      `Livsstil: Aktivitet: ${d.activity || "—"} · Sömn: ${d.sleep || "—"} · Stress: ${d.stress || "—"}/10`,
+      `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
+    ].join("\n"),
 
     assessment: `Energibalansen påverkas sannolikt av ${d.meal_structure === "Oregelbunden" ? "oregelbundet måltidsmönster" : ""}${d.snacking === "Högt" ? ", småätande" : ""}${d.activity === "Låg" ? " och låg fysisk aktivitet" : ""}.`.replace(/av ,/g, "av ").replace(/av  och/g, "av"),
 

@@ -2,25 +2,36 @@ import type { AreaConfig } from "../types";
 
 const g = (d: Record<string, any>) => {
   const reasons = (d.referral_reasons || []).join(", ") || "ej specificerat";
-  const fat = d.fat_source || "ej angivet";
-  const fiber = d.fiber || "ej angivet";
-  const fish = d.fish || "ej angivet";
-  const activity = d.activity || "ej angivet";
   const barriers = (d.barriers || []).join(", ") || "inga";
   const goals = (d.patient_goals || []).join(", ") || "inga";
 
-  return {
-    anamnesis: `Patient remitterad för ${reasons}. ${d.has_lab_values === "Ja" ? `Labvärden: LDL ${d.ldl || "—"}, HDL ${d.hdl || "—"}, Triglycerider ${d.triglycerides || "—"}, Blodtryck ${d.bp_syst || "—"}/${d.bp_diast || "—"}, HbA1c ${d.hba1c || "—"}.` : "Inga labvärden tillgängliga."} Diagnos: ${(d.diagnoses || []).join(", ") || "—"}. Mediciner: ${(d.medications || []).join(", ") || "—"}. Vikt ${d.weight || "—"} kg, längd ${d.height || "—"} cm${d.waist ? `, midjemått ${d.waist} cm` : ""}. Vikttrend: ${d.weight_trend || "—"}. Kostmönster: fettkälla ${fat}, mejeri ${d.dairy || "—"}, frukt/grönt ${d.fruit_veg || "—"}, fiber ${fiber}, fisk ${fish}, processad mat ${d.processed || "—"}, salt ${d.salt || "—"}, alkohol ${d.alcohol || "—"}, måltidsstruktur ${d.meal_structure || "—"}. Fysisk aktivitet: ${activity}. Rökning: ${d.smoking || "—"}. Sömn: ${d.sleep || "—"}. Stress: ${d.stress || "—"}/10. Motivation: ${d.motivation || "—"}/10. Hinder: ${barriers}. Patientens mål: ${goals}.`,
+  const labSection = d.has_lab_values === "Ja"
+    ? `LDL: ${d.ldl || "—"} · HDL: ${d.hdl || "—"} · Triglycerider: ${d.triglycerides || "—"}\nBlodtryck: ${d.bp_syst || "—"}/${d.bp_diast || "—"} · HbA1c: ${d.hba1c || "—"}`
+    : "Inga labvärden tillgängliga";
 
-    assessment: `${(d.referral_reasons || []).includes("Hyperlipidemi") ? "Förhöjd kardiometabol risk" : "Kardiometabol riskbedömning genomförd"} med förbättringspotential inom ${fat === "Smör/Bregott" ? "fettkvalitet" : ""}${fiber === "Lågt" ? ", fiberintag" : ""}${fish === "Aldrig" || fish === "1 gång/vecka" ? ", fiskintag" : ""}${activity === "Låg" ? ", fysisk aktivitet" : ""}.`.replace(/ ,/g, ",").replace(/inom ,/g, "inom "),
+  return {
+    anamnesis: [
+      `Remissorsak: ${reasons}`,
+      `Labvärden: ${labSection}`,
+      `Diagnoser: ${(d.diagnoses || []).join(", ") || "—"}`,
+      `Mediciner: ${(d.medications || []).join(", ") || "—"}`,
+      `Antropometri: Vikt ${d.weight || "—"} kg · Längd ${d.height || "—"} cm${d.waist ? ` · Midjemått ${d.waist} cm` : ""} · Vikttrend: ${d.weight_trend || "—"}`,
+      `Kost: Fettkälla: ${d.fat_source || "—"} · Mejeri: ${d.dairy || "—"} · Frukt/grönt: ${d.fruit_veg || "—"} · Fiber: ${d.fiber || "—"} · Fisk: ${d.fish || "—"}`,
+      `Processad mat: ${d.processed || "—"} · Salt: ${d.salt || "—"} · Alkohol: ${d.alcohol || "—"} · Måltidsstruktur: ${d.meal_structure || "—"}`,
+      `Livsstil: Aktivitet: ${d.activity || "—"} · Rökning: ${d.smoking || "—"} · Sömn: ${d.sleep || "—"} · Stress: ${d.stress || "—"}/10`,
+      `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
+      `Patientens mål: ${goals}`,
+    ].join("\n"),
+
+    assessment: `${(d.referral_reasons || []).includes("Hyperlipidemi") ? "Förhöjd kardiometabol risk" : "Kardiometabol riskbedömning genomförd"} med förbättringspotential inom ${d.fat_source === "Smör/Bregott" ? "fettkvalitet" : ""}${d.fiber === "Lågt" ? ", fiberintag" : ""}${(d.fish === "Aldrig" || d.fish === "1 gång/vecka") ? ", fiskintag" : ""}${d.activity === "Låg" ? ", fysisk aktivitet" : ""}.`.replace(/ ,/g, ",").replace(/inom ,/g, "inom "),
 
     action: [
-      fat === "Smör/Bregott" ? "Byt smör mot olja/flytande margarin" : null,
+      d.fat_source === "Smör/Bregott" ? "Byt smör mot olja/flytande margarin" : null,
       (d.fruit_veg === "0–1" || d.fruit_veg === "2–3") ? "Öka grönsaker till minst 3–5 portioner/dag" : null,
-      (fish === "Aldrig" || fish === "1 gång/vecka") ? "Ät fisk minst 2 gånger/vecka" : null,
-      fiber === "Lågt" ? "Öka fiberintag via fullkorn, baljväxter och grönsaker" : null,
+      (d.fish === "Aldrig" || d.fish === "1 gång/vecka") ? "Ät fisk minst 2 gånger/vecka" : null,
+      d.fiber === "Lågt" ? "Öka fiberintag via fullkorn, baljväxter och grönsaker" : null,
       d.salt === "Högt" ? "Minska saltintag" : null,
-      activity === "Låg" ? "Öka daglig fysisk aktivitet" : null,
+      d.activity === "Låg" ? "Öka daglig fysisk aktivitet" : null,
     ].filter(Boolean).slice(0, 5).join("\n") || "Inga specifika åtgärder identifierade.",
 
     next_steps: `Uppföljning om 4–6 veckor med fokus på följsamhet.${d.has_lab_values === "Ja" ? " Överväg kontroll av lipidprofil vid nästa besök." : ""}`,

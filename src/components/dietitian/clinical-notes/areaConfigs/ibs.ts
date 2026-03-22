@@ -10,7 +10,20 @@ const g = (d: Record<string, any>) => {
   const redFlags = (d.red_flags || []);
 
   return {
-    anamnesis: `Patient söker för ${reasons}. IBS-diagnos: ${d.ibs_diagnosis || "oklart"}, subtyp: ${subtype}. Symtom: ${symptoms}. Symtomfrekvens: ${d.symptom_frequency || "—"}. Avföringsfrekvens: ${d.stool_frequency || "—"}, konsistens: ${d.stool_consistency || "—"}, Bristol: ${d.bristol || "—"}. Symptom efter måltid: ${d.symptoms_after_meal || "—"}. Måltidsstruktur: ${d.meal_structure || "—"}, fiber: ${d.fiber || "—"}. Identifierade triggers: ${triggers}. Tidigare kostförsök: ${(d.previous_attempts || []).join(", ") || "inga"}. Stress: ${d.stress || "—"}/10, sömn: ${d.sleep || "—"}, fysisk aktivitet: ${d.activity || "—"}. Motivation: ${d.motivation || "—"}/10. Hinder: ${barriers}. Mål: ${goals}.${redFlags.length > 0 ? ` OBS Red flags: ${redFlags.join(", ")}.` : ""}`,
+    anamnesis: [
+      `Besöksorsak: ${reasons}`,
+      `IBS-diagnos: ${d.ibs_diagnosis || "oklart"} · Subtyp: ${subtype}`,
+      `Symtom: ${symptoms} · Frekvens: ${d.symptom_frequency || "—"}`,
+      `Avföring: Frekvens: ${d.stool_frequency || "—"} · Konsistens: ${d.stool_consistency || "—"} · Bristol: ${d.bristol || "—"}`,
+      `Symptom efter måltid: ${d.symptoms_after_meal || "—"}`,
+      `Kost: Måltidsstruktur: ${d.meal_structure || "—"} · Fiber: ${d.fiber || "—"}`,
+      `Triggers: ${triggers}`,
+      `Tidigare kostförsök: ${(d.previous_attempts || []).join(", ") || "inga"}`,
+      `Livsstil: Stress: ${d.stress || "—"}/10 · Sömn: ${d.sleep || "—"} · Aktivitet: ${d.activity || "—"}`,
+      `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
+      `Mål: ${goals}`,
+      ...(redFlags.length > 0 ? [`⚠ Red flags: ${redFlags.join(", ")}`] : []),
+    ].join("\n"),
 
     assessment: `Symtombilden talar för ${subtype !== "oklart" ? `IBS-${subtype}` : "IBS"} med ${d.symptom_frequency === "Dagligen" ? "hög" : "måttlig"} symtombörda. ${d.meal_structure === "Oregelbunden" ? "Oregelbunden måltidsstruktur kan bidra till symtom." : ""} ${d.stress && Number(d.stress) >= 7 ? "Förhöjd stressnivå som sannolikt påverkar symtombilden." : ""}${redFlags.length > 0 ? " Medicinsk uppföljning bör övervägas pga red flags." : ""}`,
 

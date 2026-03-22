@@ -6,12 +6,24 @@ const g = (d: Record<string, any>) => {
   const barriers = (d.barriers || []).join(", ") || "inga";
   const goals = (d.patient_goals || []).join(", ") || "inga";
 
-  const statusDetail = isPregnant
-    ? `Trimester: ${d.trimester || "—"}, första graviditet: ${d.first_pregnancy || "—"}. Viktutveckling: ${d.weight_dev || "—"}, illamående: ${d.nausea || "—"}, kräkningar: ${d.vomiting || "—"}, aptit: ${d.appetite || "—"}, sug/cravings: ${d.cravings || "—"}.`
-    : `Tid sedan förlossning: ${d.postpartum_time || "—"}, ammar: ${d.breastfeeding || "—"}. Energi: ${d.pp_energy || "—"}, återhämtning: ${d.recovery || "—"}, hunger: ${d.pp_hunger || "—"}, sömnbrist: ${d.pp_sleep_dep || "—"}.`;
+  const statusLines = isPregnant
+    ? [`Trimester: ${d.trimester || "—"} · Första graviditet: ${d.first_pregnancy || "—"}`,
+       `Viktutveckling: ${d.weight_dev || "—"} · Illamående: ${d.nausea || "—"} · Kräkningar: ${d.vomiting || "—"}`,
+       `Aptit: ${d.appetite || "—"} · Sug/cravings: ${d.cravings || "—"}`]
+    : [`Tid sedan förlossning: ${d.postpartum_time || "—"} · Ammar: ${d.breastfeeding || "—"}`,
+       `Energi: ${d.pp_energy || "—"} · Återhämtning: ${d.recovery || "—"} · Hunger: ${d.pp_hunger || "—"} · Sömnbrist: ${d.pp_sleep_dep || "—"}`];
 
   return {
-    anamnesis: `Patient ${isPregnant ? "gravid" : "postpartum"}. ${statusDetail} Symtom: trötthet ${d.fatigue || "—"}, yrsel ${d.dizziness || "—"}, förstoppning ${d.constipation || "—"}, halsbränna ${d.heartburn || "—"}, svullnad ${d.swelling || "—"}, blodsockersvängningar ${d.glucose_swings || "—"}, järnbrist ${d.iron_deficiency || "—"}. Måltidsstruktur: ${d.meal_structure || "—"}, protein: ${d.protein || "—"}, frukt/grönt: ${d.fruit_veg || "—"}, vätska: ${d.fluids || "—"}. Fysisk aktivitet: ${d.activity || "—"}, stress: ${d.stress || "—"}/10, socialt stöd: ${d.social_support || "—"}. Motivation: ${d.motivation || "—"}/10. Hinder: ${barriers}. Mål: ${goals}.`,
+    anamnesis: [
+      `Status: ${isPregnant ? "Gravid" : "Postpartum"}`,
+      ...statusLines,
+      `Symtom: Trötthet: ${d.fatigue || "—"} · Yrsel: ${d.dizziness || "—"} · Förstoppning: ${d.constipation || "—"}`,
+      `Halsbränna: ${d.heartburn || "—"} · Svullnad: ${d.swelling || "—"} · BS-svängningar: ${d.glucose_swings || "—"} · Järnbrist: ${d.iron_deficiency || "—"}`,
+      `Kost: Måltidsstruktur: ${d.meal_structure || "—"} · Protein: ${d.protein || "—"} · Frukt/grönt: ${d.fruit_veg || "—"} · Vätska: ${d.fluids || "—"}`,
+      `Livsstil: Aktivitet: ${d.activity || "—"} · Stress: ${d.stress || "—"}/10 · Socialt stöd: ${d.social_support || "—"}`,
+      `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
+      `Mål: ${goals}`,
+    ].join("\n"),
 
     assessment: isPregnant
       ? `Näringsintaget påverkas sannolikt av ${d.nausea === "Högt" ? "illamående" : "aptitförändringar"} och ${d.meal_structure === "Oregelbunden" ? "låg måltidsstruktur" : "nuvarande kostmönster"}. Fokus bör ligga på att säkerställa energi och näring.`
