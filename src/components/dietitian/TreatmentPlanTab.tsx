@@ -202,7 +202,7 @@ export function TreatmentPlanTab({ patientId }: Props) {
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
             <DialogHeader><DialogTitle>Ny behandlingsplan</DialogTitle></DialogHeader>
-            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreateAndArchive} isPending={createPlan.isPending} patientContext={patientContext} />
+            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreateAndArchive} isPending={createPlan.isPending} patientId={patientId} />
           </DialogContent>
         </Dialog>
       )}
