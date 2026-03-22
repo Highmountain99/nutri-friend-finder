@@ -26,24 +26,11 @@ const statusLabel: Record<string, string> = {
   completed: "Avklarad",
 };
 
-interface PatientContext {
-  concernCategory?: string;
-  concernSubcategory?: string;
-  supportAreas?: string[];
-  concernTags?: string[];
-  activityLevel?: string;
-  motivationLevel?: string;
-  aiFreeText?: string;
-  triageResult?: string;
-  preferenceTags?: string[];
-}
-
 interface Props {
   patientId: string;
-  patientContext?: PatientContext;
 }
 
-export function TreatmentPlanTab({ patientId, patientContext }: Props) {
+export function TreatmentPlanTab({ patientId }: Props) {
   const { activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan } = useTreatmentPlan(patientId);
   const [showCreate, setShowCreate] = useState(false);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
@@ -201,7 +188,7 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
                 <DialogHeader><DialogTitle>Ny behandlingsplan</DialogTitle></DialogHeader>
-                <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreate} isPending={createPlan.isPending} patientContext={patientContext} />
+                <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreate} isPending={createPlan.isPending} patientId={patientId} />
               </DialogContent>
             </Dialog>
           </CardContent>
@@ -215,7 +202,7 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
             <DialogHeader><DialogTitle>Ny behandlingsplan</DialogTitle></DialogHeader>
-            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreateAndArchive} isPending={createPlan.isPending} patientContext={patientContext} />
+            <CreatePlanForm form={form} setForm={setForm} addGoal={addGoal} removeGoal={removeGoal} updateGoal={updateGoal} addMilestone={addMilestone} updateMilestone={updateMilestone} onSubmit={handleCreateAndArchive} isPending={createPlan.isPending} patientId={patientId} />
           </DialogContent>
         </Dialog>
       )}
@@ -251,18 +238,14 @@ export function TreatmentPlanTab({ patientId, patientContext }: Props) {
   );
 }
 
-function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending, patientContext }: any) {
+function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending, patientId }: any) {
   const [aiLoading, setAiLoading] = useState(false);
 
   const handleAiSuggest = async () => {
-    if (!patientContext) {
-      toast.error("Ingen patientdata tillgänglig för AI-förslag");
-      return;
-    }
     setAiLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("suggest-treatment-plan", {
-        body: { patientContext },
+        body: { patientId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -295,10 +278,10 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
           variant="outline"
           className="w-full gap-2"
           onClick={handleAiSuggest}
-          disabled={aiLoading || !patientContext}
+          disabled={aiLoading}
         >
           {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {aiLoading ? "Genererar förslag…" : "AI-förslag baserat på patient"}
+          {aiLoading ? "Genererar förslag…" : "AI-förslag baserat på journal"}
         </Button>
       </div>
 

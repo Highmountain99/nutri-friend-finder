@@ -10,7 +10,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Authenticate the caller
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -32,9 +31,10 @@ serve(async (req) => {
       });
     }
 
-    // Verify caller is a dietist
     const callerId = claimsData.claims.sub as string;
     const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Verify dietist role
     const { data: isDietist } = await supabaseAdmin
       .from("user_roles")
       .select("id")
@@ -51,28 +51,72 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const { patientContext } = await req.json();
+    const { patientId } = await req.json();
+    if (!patientId) throw new Error("patientId is required");
+
+    // Verify assignment
+    const { data: assignment } = await supabaseAdmin
+      .from("dietist_patient_assignments")
+      .select("id")
+      .eq("dietist_id", callerId)
+      .eq("patient_id", patientId)
+      .maybeSingle();
+
+    if (!assignment) {
+      return new Response(JSON.stringify({ error: "Forbidden: not assigned to this patient" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fetch all journal entries for this patient
+    const { data: journalEntries, error: journalError } = await supabaseAdmin
+      .from("dietitian_journal_entries")
+      .select("anamnesis, assessment, action, next_steps, area_type, form_data, created_at")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: true });
+
+    if (journalError) throw journalError;
+
+    if (!journalEntries || journalEntries.length === 0) {
+      return new Response(JSON.stringify({ error: "Inga journalanteckningar finns för denna patient. Skapa minst en journalanteckning innan du genererar en behandlingsplan." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Build journal summary for AI
+    const journalSummary = journalEntries.map((entry, i) => {
+      const parts: string[] = [];
+      parts.push(`--- Anteckning ${i + 1} (${entry.created_at?.split("T")[0] || "okänt datum"})${entry.area_type ? ` [${entry.area_type}]` : ""} ---`);
+      if (entry.anamnesis) parts.push(`Anamnes: ${entry.anamnesis}`);
+      if (entry.assessment) parts.push(`Bedömning: ${entry.assessment}`);
+      if (entry.action) parts.push(`Åtgärd: ${entry.action}`);
+      if (entry.next_steps) parts.push(`Nästa steg: ${entry.next_steps}`);
+      return parts.join("\n");
+    }).join("\n\n");
 
     const systemPrompt = `Du är en klinisk dietist-assistent som hjälper dietister att skapa behandlingsplaner.
-Baserat på patientens information, föreslå en komplett behandlingsplan.
+
+VIKTIGA REGLER:
+- Du ska ENBART basera behandlingsplanen på informationen i journalanteckningarna nedan.
+- Du får INTE anta, gissa eller lägga till information som inte finns i journalen.
+- Du får INTE ge generiska råd utan stöd i journalanteckningarna.
+- Behandlingsplanen ska bygga på dokumenterade symptom, beteenden, mål, hinder, tidigare åtgärder och mönster.
+- Om journalunderlaget är begränsat, ange detta tydligt i planens beskrivning och anpassa antalet mål.
+- Alla texter ska vara på svenska, professionella och stödjande.
 
 Svara ENBART med tool call, aldrig med fritext.`;
 
-    const userPrompt = `Skapa en behandlingsplan baserat på denna patientinformation:
+    const userPrompt = `Skapa en behandlingsplan baserad ENBART på följande journalanteckningar:
 
-Primär kategori: ${patientContext.concernCategory || "Ej angiven"}
-Underkategori: ${patientContext.concernSubcategory || "Ej angiven"}
-Stödområden: ${patientContext.supportAreas?.join(", ") || "Ej angivna"}
-Concern-taggar: ${patientContext.concernTags?.join(", ") || "Inga"}
-Aktivitetsnivå: ${patientContext.activityLevel || "Ej angiven"}
-Motivationsnivå: ${patientContext.motivationLevel || "Ej angiven"}
-AI-fritext (patientens egna ord): ${patientContext.aiFreeText || "Ej angiven"}
-Triageresultat: ${patientContext.triageResult || "Ej angivet"}
-Preferenstaggar: ${patientContext.preferenceTags?.join(", ") || "Inga"}
+${journalSummary}
 
-Ge en plan med 2-4 realistiska mål. Varje mål ska ha 2-4 konkreta delmål.
-Alla texter ska vara på svenska, professionella men stöttande.
-Planera datumspann på 8-12 veckor framåt från idag (${new Date().toISOString().split("T")[0]}).`;
+Antal anteckningar: ${journalEntries.length}
+
+Instruktioner:
+- Utgå BARA från det som dokumenterats. Lägg inte till mål eller åtgärder som saknar stöd i anteckningarna.
+- Om underlaget är tunt (1-2 anteckningar), skapa en mer begränsad plan (1-2 mål) och notera i beskrivningen att planen baseras på ett begränsat underlag.
+- Varje mål ska ha 2-4 konkreta delmål som är direkt kopplade till journalinnehållet.
+- Planera datumspann på 8-12 veckor framåt från idag (${new Date().toISOString().split("T")[0]}).`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -91,12 +135,12 @@ Planera datumspann på 8-12 veckor framåt från idag (${new Date().toISOString(
             type: "function",
             function: {
               name: "suggest_treatment_plan",
-              description: "Return a structured treatment plan suggestion.",
+              description: "Return a structured treatment plan suggestion based on journal entries.",
               parameters: {
                 type: "object",
                 properties: {
                   title: { type: "string", description: "Kort titel för behandlingsplanen" },
-                  description: { type: "string", description: "Beskrivning av planens syfte och mål" },
+                  description: { type: "string", description: "Beskrivning av planens syfte, mål och eventuella begränsningar i underlaget" },
                   goals: {
                     type: "array",
                     items: {
@@ -153,7 +197,7 @@ Planera datumspann på 8-12 veckor framåt från idag (${new Date().toISOString(
     });
   } catch (e) {
     console.error("suggest-treatment-plan error:", e);
-    return new Response(JSON.stringify({ error: "Internal error" }), {
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Internal error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
