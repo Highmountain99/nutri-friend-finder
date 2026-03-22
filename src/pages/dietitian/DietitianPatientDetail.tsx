@@ -64,7 +64,7 @@ export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
   const { meals, symptoms, healthTracking, goals, intakeProfile, isLoading } = usePatientJournal(id);
   const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(id);
-  const { entries: journalEntries, addEntry } = useJournalEntries(id);
+  const { entries: journalEntries, addEntry, deleteEntry } = useJournalEntries(id);
   const { notes, upsertNote } = useDietitianNotes(id);
   const { documents, uploadDocument } = usePatientDocuments(id);
   const { activePlan } = useTreatmentPlan(id);

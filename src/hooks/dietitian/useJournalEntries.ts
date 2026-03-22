@@ -51,5 +51,16 @@ export function useJournalEntries(patientId?: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["journal-entries", patientId] }),
   });
 
-  return { entries, addEntry, updateEntry };
+  const deleteEntry = useMutation({
+    mutationFn: async (entryId: string) => {
+      const { error } = await supabase
+        .from("dietitian_journal_entries")
+        .delete()
+        .eq("id", entryId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["journal-entries", patientId] }),
+  });
+
+  return { entries, addEntry, updateEntry, deleteEntry };
 }
