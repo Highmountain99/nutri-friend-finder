@@ -364,6 +364,13 @@ export default function DietitianPatientDetail() {
                   </Card>
                 ))
               )}
+              <ClinicalNoteWizard
+                open={clinicalNoteOpen}
+                onOpenChange={setClinicalNoteOpen}
+                patientId={id!}
+                onSave={handleSaveClinicalNote}
+                isSaving={addEntry.isPending}
+              />
             </TabsContent>
 
             {/* Food Log tab */}
