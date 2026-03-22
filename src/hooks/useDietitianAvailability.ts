@@ -27,7 +27,7 @@ export function useDietitianAvailability(dietitianId?: string, date?: Date) {
 
     try {
       setLoading(true);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = format(date, 'yyyy-MM-dd');
 
       const { data, error: queryError } = await supabase
         .from('dietitian_availability')
