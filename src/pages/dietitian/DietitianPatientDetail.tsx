@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, ArrowLeft, Send, Plus, Upload, FileText, Calendar, Clock, User, AlertTriangle, Check, Pencil, X, Bot } from "lucide-react";
+import { Loader2, ArrowLeft, Send, Plus, Upload, FileText, Calendar, Clock, User, AlertTriangle, Check, Pencil, X, Bot, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -25,6 +26,7 @@ import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
 import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
 import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
 import { ClinicalNoteWizard } from "@/components/dietitian/clinical-notes/ClinicalNoteWizard";
+import { getAreaConfig } from "@/components/dietitian/clinical-notes/areaConfigs/index";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
@@ -63,7 +65,7 @@ export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
   const { meals, symptoms, healthTracking, goals, intakeProfile, isLoading } = usePatientJournal(id);
   const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(id);
-  const { entries: journalEntries, addEntry } = useJournalEntries(id);
+  const { entries: journalEntries, addEntry, deleteEntry } = useJournalEntries(id);
   const { notes, upsertNote } = useDietitianNotes(id);
   const { documents, uploadDocument } = usePatientDocuments(id);
   const { activePlan } = useTreatmentPlan(id);
@@ -72,6 +74,7 @@ export default function DietitianPatientDetail() {
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [configProgressOpen, setConfigProgressOpen] = useState(false);
   const [clinicalNoteOpen, setClinicalNoteOpen] = useState(false);
+  const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
   const [chatInput, setChatInput] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
@@ -79,6 +82,7 @@ export default function DietitianPatientDetail() {
   const [editedContent, setEditedContent] = useState("");
   const [showJournalForm, setShowJournalForm] = useState(false);
   const [journalForm, setJournalForm] = useState({ anamnesis: "", assessment: "", action: "", next_steps: "" });
+  const [freeNoteText, setFreeNoteText] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [noteInitialized, setNoteInitialized] = useState(false);
 
@@ -338,13 +342,24 @@ export default function DietitianPatientDetail() {
               {showJournalForm && (
                 <Card>
                   <CardContent className="space-y-3 pt-4">
-                    <div><label className="text-xs font-medium text-muted-foreground">Anamnes</label><Textarea value={journalForm.anamnesis} onChange={(e) => setJournalForm((p) => ({ ...p, anamnesis: e.target.value }))} rows={2} /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Bedömning</label><Textarea value={journalForm.assessment} onChange={(e) => setJournalForm((p) => ({ ...p, assessment: e.target.value }))} rows={2} /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Åtgärd</label><Textarea value={journalForm.action} onChange={(e) => setJournalForm((p) => ({ ...p, action: e.target.value }))} rows={2} /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Nästa steg</label><Textarea value={journalForm.next_steps} onChange={(e) => setJournalForm((p) => ({ ...p, next_steps: e.target.value }))} rows={2} /></div>
+                    <Textarea
+                      placeholder="Skriv en fri anteckning..."
+                      value={freeNoteText}
+                      onChange={(e) => setFreeNoteText(e.target.value)}
+                      rows={4}
+                    />
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={handleSaveJournal} disabled={addEntry.isPending}>Spara</Button>
-                      <Button size="sm" variant="outline" onClick={() => setShowJournalForm(false)}>Avbryt</Button>
+                      <Button size="sm" onClick={() => {
+                        if (!freeNoteText.trim()) return;
+                        addEntry.mutate({ anamnesis: freeNoteText.trim() }, {
+                          onSuccess: () => {
+                            setShowJournalForm(false);
+                            setFreeNoteText("");
+                            toast.success("Anteckning sparad");
+                          },
+                        });
+                      }} disabled={addEntry.isPending || !freeNoteText.trim()}>Spara</Button>
+                      <Button size="sm" variant="outline" onClick={() => { setShowJournalForm(false); setFreeNoteText(""); }}>Avbryt</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -352,17 +367,72 @@ export default function DietitianPatientDetail() {
               {!journalEntries.data?.length ? (
                 <p className="text-sm text-muted-foreground py-8 text-center">Inga journalanteckningar ännu.</p>
               ) : (
-                journalEntries.data.map((entry) => (
-                  <Card key={entry.id}>
-                    <CardContent className="py-4 space-y-2">
-                      <p className="text-xs text-muted-foreground">{format(new Date(entry.created_at), "d MMMM yyyy, HH:mm", { locale: sv })}</p>
-                      {entry.anamnesis && <div><p className="text-xs font-medium text-muted-foreground">Anamnes</p><p className="text-sm">{entry.anamnesis}</p></div>}
-                      {entry.assessment && <div><p className="text-xs font-medium text-muted-foreground">Bedömning</p><p className="text-sm">{entry.assessment}</p></div>}
-                      {entry.action && <div><p className="text-xs font-medium text-muted-foreground">Åtgärd</p><p className="text-sm">{entry.action}</p></div>}
-                      {entry.next_steps && <div><p className="text-xs font-medium text-muted-foreground">Nästa steg</p><p className="text-sm">{entry.next_steps}</p></div>}
-                    </CardContent>
-                  </Card>
-                ))
+                journalEntries.data.map((entry) => {
+                  const isExpanded = expandedEntryId === entry.id;
+                  const areaLabel = entry.area_type ? getAreaConfig(entry.area_type)?.title : null;
+                  const hasDetails = entry.anamnesis || entry.assessment || entry.action || entry.next_steps;
+                  return (
+                    <Card key={entry.id} className="overflow-hidden">
+                      <CardContent className="py-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 cursor-pointer" onClick={() => setExpandedEntryId(isExpanded ? null : entry.id)}>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs text-muted-foreground">{format(new Date(entry.created_at), "d MMMM yyyy, HH:mm", { locale: sv })}</p>
+                              {areaLabel && <Badge variant="secondary" className="text-xs">{areaLabel}</Badge>}
+                              {!areaLabel && !entry.area_type && <Badge variant="outline" className="text-xs">Fri anteckning</Badge>}
+                            </div>
+                            {!isExpanded && entry.anamnesis && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{entry.anamnesis}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {hasDetails && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpandedEntryId(isExpanded ? null : entry.id)}>
+                                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              </Button>
+                            )}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Ta bort journalanteckning?</AlertDialogTitle>
+                                  <AlertDialogDescription>Denna åtgärd kan inte ångras.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => deleteEntry.mutate(entry.id, { onSuccess: () => toast.success("Anteckning borttagen") })}
+                                  >
+                                    Ta bort
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div className="space-y-3 pt-2 border-t">
+                            {entry.anamnesis && <div><p className="text-xs font-medium text-muted-foreground">Anamnes</p><p className="text-sm whitespace-pre-wrap">{entry.anamnesis}</p></div>}
+                            {entry.assessment && <div><p className="text-xs font-medium text-muted-foreground">Bedömning</p><p className="text-sm whitespace-pre-wrap">{entry.assessment}</p></div>}
+                            {entry.action && <div><p className="text-xs font-medium text-muted-foreground">Åtgärd</p><p className="text-sm whitespace-pre-wrap">{entry.action}</p></div>}
+                            {entry.next_steps && <div><p className="text-xs font-medium text-muted-foreground">Nästa steg</p><p className="text-sm whitespace-pre-wrap">{entry.next_steps}</p></div>}
+                            {entry.form_data && Object.keys(entry.form_data as object).length > 0 && (
+                              <details className="text-xs">
+                                <summary className="text-muted-foreground cursor-pointer hover:text-foreground">Visa rådata från formulär</summary>
+                                <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto max-h-48">{JSON.stringify(entry.form_data, null, 2)}</pre>
+                              </details>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
               <ClinicalNoteWizard
                 open={clinicalNoteOpen}
