@@ -416,11 +416,53 @@ export default function DietitianPatientDetail() {
                           </div>
                         </div>
                         {isExpanded && (
-                          <div className="space-y-3 pt-2 border-t">
-                            {entry.anamnesis && <div><p className="text-xs font-medium text-muted-foreground">Anamnes</p><p className="text-sm whitespace-pre-wrap">{entry.anamnesis}</p></div>}
-                            {entry.assessment && <div><p className="text-xs font-medium text-muted-foreground">Bedömning</p><p className="text-sm whitespace-pre-wrap">{entry.assessment}</p></div>}
-                            {entry.action && <div><p className="text-xs font-medium text-muted-foreground">Åtgärd</p><p className="text-sm whitespace-pre-wrap">{entry.action}</p></div>}
-                            {entry.next_steps && <div><p className="text-xs font-medium text-muted-foreground">Nästa steg</p><p className="text-sm whitespace-pre-wrap">{entry.next_steps}</p></div>}
+                          <div className="space-y-4 pt-3 border-t">
+                            {entry.anamnesis && (
+                              <div>
+                                <p className="text-xs font-semibold text-primary mb-2">Anamnes</p>
+                                <div className="space-y-1">
+                                  {entry.anamnesis.split("\n").map((line, i) => {
+                                    const colonIdx = line.indexOf(":");
+                                    if (colonIdx > 0 && colonIdx < 30) {
+                                      const label = line.slice(0, colonIdx);
+                                      const value = line.slice(colonIdx + 1).trim();
+                                      return (
+                                        <p key={i} className="text-sm">
+                                          <span className="font-medium text-foreground">{label}:</span>{" "}
+                                          <span className="text-muted-foreground">{value}</span>
+                                        </p>
+                                      );
+                                    }
+                                    return <p key={i} className="text-sm text-muted-foreground">{line}</p>;
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {entry.assessment && (
+                              <div>
+                                <p className="text-xs font-semibold text-primary mb-1">Bedömning</p>
+                                <p className="text-sm whitespace-pre-wrap">{entry.assessment}</p>
+                              </div>
+                            )}
+                            {entry.action && (
+                              <div>
+                                <p className="text-xs font-semibold text-primary mb-1">Åtgärd</p>
+                                <ul className="space-y-1">
+                                  {entry.action.split("\n").map((line, i) => (
+                                    <li key={i} className="text-sm flex items-start gap-2">
+                                      <span className="text-primary mt-1">•</span>
+                                      <span>{line}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {entry.next_steps && (
+                              <div>
+                                <p className="text-xs font-semibold text-primary mb-1">Nästa steg</p>
+                                <p className="text-sm whitespace-pre-wrap">{entry.next_steps}</p>
+                              </div>
+                            )}
                             {entry.form_data && Object.keys(entry.form_data as object).length > 0 && (
                               <details className="text-xs">
                                 <summary className="text-muted-foreground cursor-pointer hover:text-foreground">Visa rådata från formulär</summary>
