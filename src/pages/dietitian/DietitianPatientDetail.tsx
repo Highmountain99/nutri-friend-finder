@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { toast } from "sonner";
 import { usePatientJournal } from "@/hooks/dietitian/usePatientJournal";
 import { useDietitianChat } from "@/hooks/dietitian/useDietitianChat";
 import { useJournalEntries } from "@/hooks/dietitian/useJournalEntries";
