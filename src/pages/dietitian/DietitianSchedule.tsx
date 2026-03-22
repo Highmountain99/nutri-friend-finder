@@ -20,7 +20,7 @@ import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
 import { useDragSelect } from "@/hooks/useDragSelect";
 import { toast } from "sonner";
 
-const HOURS = Array.from({ length: 10 }, (_, i) => i + 8); // 8-17
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23 (dygnet runt)
 const HALF_HOURS = HOURS.flatMap((h) => [
   `${h.toString().padStart(2, "0")}:00`,
   `${h.toString().padStart(2, "0")}:30`,
