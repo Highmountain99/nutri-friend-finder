@@ -342,13 +342,24 @@ export default function DietitianPatientDetail() {
               {showJournalForm && (
                 <Card>
                   <CardContent className="space-y-3 pt-4">
-                    <div><label className="text-xs font-medium text-muted-foreground">Anamnes</label><Textarea value={journalForm.anamnesis} onChange={(e) => setJournalForm((p) => ({ ...p, anamnesis: e.target.value }))} rows={2} /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Bedömning</label><Textarea value={journalForm.assessment} onChange={(e) => setJournalForm((p) => ({ ...p, assessment: e.target.value }))} rows={2} /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Åtgärd</label><Textarea value={journalForm.action} onChange={(e) => setJournalForm((p) => ({ ...p, action: e.target.value }))} rows={2} /></div>
-                    <div><label className="text-xs font-medium text-muted-foreground">Nästa steg</label><Textarea value={journalForm.next_steps} onChange={(e) => setJournalForm((p) => ({ ...p, next_steps: e.target.value }))} rows={2} /></div>
+                    <Textarea
+                      placeholder="Skriv en fri anteckning..."
+                      value={freeNoteText}
+                      onChange={(e) => setFreeNoteText(e.target.value)}
+                      rows={4}
+                    />
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={handleSaveJournal} disabled={addEntry.isPending}>Spara</Button>
-                      <Button size="sm" variant="outline" onClick={() => setShowJournalForm(false)}>Avbryt</Button>
+                      <Button size="sm" onClick={() => {
+                        if (!freeNoteText.trim()) return;
+                        addEntry.mutate({ anamnesis: freeNoteText.trim() }, {
+                          onSuccess: () => {
+                            setShowJournalForm(false);
+                            setFreeNoteText("");
+                            toast.success("Anteckning sparad");
+                          },
+                        });
+                      }} disabled={addEntry.isPending || !freeNoteText.trim()}>Spara</Button>
+                      <Button size="sm" variant="outline" onClick={() => { setShowJournalForm(false); setFreeNoteText(""); }}>Avbryt</Button>
                     </div>
                   </CardContent>
                 </Card>
