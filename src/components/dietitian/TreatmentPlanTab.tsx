@@ -238,18 +238,14 @@ export function TreatmentPlanTab({ patientId }: Props) {
   );
 }
 
-function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending, patientContext }: any) {
+function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMilestone, updateMilestone, onSubmit, isPending, patientId }: any) {
   const [aiLoading, setAiLoading] = useState(false);
 
   const handleAiSuggest = async () => {
-    if (!patientContext) {
-      toast.error("Ingen patientdata tillgänglig för AI-förslag");
-      return;
-    }
     setAiLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("suggest-treatment-plan", {
-        body: { patientContext },
+        body: { patientId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
