@@ -12,7 +12,7 @@ function SourceBadge({ source }: { source: "journal" | "dietist" | "ai" }) {
     return <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal bg-primary/10 text-primary border-0">Från journal</Badge>;
   if (source === "dietist")
     return <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal bg-accent/60 text-accent-foreground border-0">Din dietist</Badge>;
-  return <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal bg-amber-100 text-amber-700 border-0">✨ AI-förslag</Badge>;
+  return <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal bg-muted text-amber-700 border-0">✨ AI-förslag</Badge>;
 }
 
 function BlockHeader({ icon, title, source }: { icon: React.ReactNode; title: string; source: "journal" | "dietist" | "ai" }) {
