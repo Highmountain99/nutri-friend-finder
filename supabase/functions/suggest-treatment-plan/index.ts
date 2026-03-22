@@ -141,7 +141,7 @@ Instruktioner:
                 type: "object",
                 properties: {
                   title: { type: "string", description: "Kort titel för behandlingsplanen" },
-                  description: { type: "string", description: "Beskrivning av planens syfte, mål och eventuella begränsningar i underlaget" },
+                  description: { type: "string", description: "Kort sammanfattning av planens konkreta inriktning och fokusområden. Ingen meta-kommentar om datamängd." },
                   goals: {
                     type: "array",
                     items: {
