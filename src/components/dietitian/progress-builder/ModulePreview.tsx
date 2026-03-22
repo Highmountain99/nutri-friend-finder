@@ -419,10 +419,14 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   heart_healthy_choices: <Check className="h-3.5 w-3.5" />,
   heart_tip: <Heart className="h-3.5 w-3.5" />,
   // Eating disorder
-  affirmation: <Heart className="h-3.5 w-3.5" />,
-  meal_rhythm: <Calendar className="h-3.5 w-3.5" />,
-  meal_regularity: <Activity className="h-3.5 w-3.5" />,
-  next_appointment: <Calendar className="h-3.5 w-3.5" />,
+  ed_focus: <Heart className="h-3.5 w-3.5" />,
+  ed_meal_rhythm: <Calendar className="h-3.5 w-3.5" />,
+  ed_meal_structure: <Activity className="h-3.5 w-3.5" />,
+  ed_regularity_30d: <Activity className="h-3.5 w-3.5" />,
+  ed_behavior_goals: <Target className="h-3.5 w-3.5" />,
+  ed_symptom_patterns: <AlertCircle className="h-3.5 w-3.5" />,
+  ed_weekly_checkin: <Calendar className="h-3.5 w-3.5" />,
+  ed_follow_up: <Calendar className="h-3.5 w-3.5" />,
   // Women's health
   womens_metrics: <Scale className="h-3.5 w-3.5" />,
   focus_areas: <Sparkles className="h-3.5 w-3.5" />,
@@ -456,10 +460,56 @@ const PREVIEW_RENDERERS: Record<string, () => React.ReactNode> = {
   heart_healthy_choices: HeartHealthyChoicesPreview,
   heart_tip: HeartTipPreview,
   // Eating disorder
-  affirmation: AffirmationPreview,
-  meal_rhythm: MealRhythmPreview,
-  meal_regularity: MealRegularityPreview,
-  next_appointment: NextAppointmentPreview,
+  ed_focus: AffirmationPreview,
+  ed_meal_rhythm: MealRhythmPreview,
+  ed_meal_structure: () => (
+    <div className="flex items-center gap-2 px-2">
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+        <span className="text-[10px] font-bold text-primary">3.2</span>
+      </div>
+      <div>
+        <p className="text-[10px] font-medium">Delvis regelbunden</p>
+        <p className="text-[8px] text-muted-foreground">Snitt mål/dag</p>
+      </div>
+    </div>
+  ),
+  ed_regularity_30d: MealRegularityPreview,
+  ed_behavior_goals: () => (
+    <div className="space-y-1.5 px-2">
+      {[{ done: true, text: "Äta frukost varje dag" }, { done: false, text: "Prova en ny maträtt" }].map((m) => (
+        <div key={m.text} className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${m.done ? "bg-primary" : "border-2 border-muted-foreground/30"}`} />
+          <span className={`text-[10px] ${m.done ? "line-through text-muted-foreground" : ""}`}>{m.text}</span>
+        </div>
+      ))}
+    </div>
+  ),
+  ed_symptom_patterns: () => (
+    <div className="space-y-1 px-2">
+      {[{ time: "Kväll", count: 5 }, { time: "Lunch", count: 2 }].map((p) => (
+        <div key={p.time} className="flex items-center justify-between">
+          <span className="text-[10px]">{p.time}</span>
+          <div className="flex items-center gap-1">
+            <div className="w-10 h-1 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(p.count / 5) * 100}%` }} />
+            </div>
+            <span className="text-[8px] text-muted-foreground">{p.count}x</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+  ed_weekly_checkin: () => (
+    <div className="flex justify-around px-2">
+      {[{ val: "5", label: "Dagar" }, { val: "3.1", label: "Mål/dag" }].map((m) => (
+        <div key={m.label} className="text-center">
+          <p className="text-xs font-bold">{m.val}</p>
+          <p className="text-[8px] text-muted-foreground">{m.label}</p>
+        </div>
+      ))}
+    </div>
+  ),
+  ed_follow_up: NextAppointmentPreview,
   // Women's health
   womens_metrics: WomensMetricsPreview,
   focus_areas: FocusAreasPreview,
