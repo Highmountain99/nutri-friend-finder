@@ -86,8 +86,8 @@ export function useDietitianAvailabilityRange(dietitianId?: string, startDate?: 
 
     try {
       setLoading(true);
-      const startStr = startDate.toISOString().split('T')[0];
-      const endStr = endDate.toISOString().split('T')[0];
+      const startStr = format(startDate, 'yyyy-MM-dd');
+      const endStr = format(endDate, 'yyyy-MM-dd');
 
       const { data, error } = await supabase
         .from('dietitian_availability')
