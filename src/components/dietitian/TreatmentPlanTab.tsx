@@ -26,21 +26,8 @@ const statusLabel: Record<string, string> = {
   completed: "Avklarad",
 };
 
-interface PatientContext {
-  concernCategory?: string;
-  concernSubcategory?: string;
-  supportAreas?: string[];
-  concernTags?: string[];
-  activityLevel?: string;
-  motivationLevel?: string;
-  aiFreeText?: string;
-  triageResult?: string;
-  preferenceTags?: string[];
-}
-
 interface Props {
   patientId: string;
-  patientContext?: PatientContext;
 }
 
 export function TreatmentPlanTab({ patientId, patientContext }: Props) {
