@@ -6,14 +6,26 @@ const g = (d: Record<string, any>) => {
   const barriers = (d.barriers || []).join(", ") || "inga";
   const goals = (d.patient_goals || []).join(", ") || "inga";
 
-  const symptomDetails = area === "PCOS"
-    ? `Oregelbunden mens: ${d.irregular_period || "—"}, acne: ${d.acne || "—"}, behåring: ${d.hirsutism || "—"}, viktproblematik: ${d.weight_issue || "—"}, sötsug: ${d.cravings || "—"}.`
+  const symptomLines = area === "PCOS"
+    ? [`Symtom (PCOS): Oregelbunden mens: ${d.irregular_period || "—"} · Acne: ${d.acne || "—"} · Behåring: ${d.hirsutism || "—"}`,
+       `Viktproblematik: ${d.weight_issue || "—"} · Sötsug: ${d.cravings || "—"}`]
     : area === "Fertilitet"
-    ? `Försöker bli gravid: ${d.trying || "—"}, tid: ${d.trying_duration || "—"}, känd problematik: ${d.known_issue || "—"}, stress kring fertilitet: ${d.fertility_stress || "—"}/10.`
-    : `Värmevallningar: ${d.hot_flashes || "—"}, sömnproblem: ${d.sleep_issues || "—"}, humörsvängningar: ${d.mood || "—"}, viktförändring: ${d.weight_change || "—"}, energi: ${d.energy || "—"}.`;
+    ? [`Fertilitet: Försöker bli gravid: ${d.trying || "—"} · Tid: ${d.trying_duration || "—"}`,
+       `Känd problematik: ${d.known_issue || "—"} · Stress kring fertilitet: ${d.fertility_stress || "—"}/10`]
+    : [`Klimakteriet: Värmevallningar: ${d.hot_flashes || "—"} · Sömnproblem: ${d.sleep_issues || "—"}`,
+       `Humörsvängningar: ${d.mood || "—"} · Viktförändring: ${d.weight_change || "—"} · Energi: ${d.energy || "—"}`];
 
   return {
-    anamnesis: `Patient med fokus på ${area}. Ålder: ${d.age || "—"}. Diagnoser: ${diagnoses}. ${symptomDetails} Mensregelbundenhet: ${d.period_regularity || "—"}, cykellängd: ${d.cycle_length || "—"}. Måltidsstruktur: ${d.meal_structure || "—"}, kolhydratkvalitet: ${d.carb_quality || "—"}, protein: ${d.protein || "—"}, sötsug: ${d.sweet_cravings || "—"}. Fysisk aktivitet: ${d.activity || "—"}, stress: ${d.stress || "—"}/10. Motivation: ${d.motivation || "—"}/10. Hinder: ${barriers}. Mål: ${goals}.`,
+    anamnesis: [
+      `Fokusområde: ${area} · Ålder: ${d.age || "—"}`,
+      `Diagnoser: ${diagnoses}`,
+      ...symptomLines,
+      `Menscykel: Regelbundenhet: ${d.period_regularity || "—"} · Cykellängd: ${d.cycle_length || "—"}`,
+      `Kost: Måltidsstruktur: ${d.meal_structure || "—"} · KH-kvalitet: ${d.carb_quality || "—"} · Protein: ${d.protein || "—"} · Sötsug: ${d.sweet_cravings || "—"}`,
+      `Livsstil: Aktivitet: ${d.activity || "—"} · Stress: ${d.stress || "—"}/10`,
+      `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
+      `Mål: ${goals}`,
+    ].join("\n"),
 
     assessment: area === "PCOS"
       ? `Symtombilden talar för metabol och hormonell obalans där koststruktur och blodsockerreglering sannolikt spelar en central roll.${d.cravings === "Högt" ? " Högt sötsug tyder på instabilt blodsocker." : ""}`

@@ -8,7 +8,18 @@ const g = (d: Record<string, any>) => {
   const peaks = (d.sugar_peaks || []).join(", ") || "oklart";
 
   return {
-    anamnesis: `Patient med diabetes typ ${type}, duration ${d.duration || "oklart"}. Behandling: ${treatments}. Upplevd kontroll: ${d.control || "—"}/10. HbA1c: ${d.hba1c || "—"}, fastesocker: ${d.fasting_glucose || "—"}, postprandiellt: ${d.postprandial || "—"}. Blodsockervariation: ${d.glucose_variation || "—"}. Hypoglykemier: ${d.hypoglycemia || "—"}. Vikt: ${d.weight || "—"} kg. Måltidsstruktur: ${d.meal_structure || "—"}, kolhydratintag: ${d.carb_intake || "—"}, snabba kolhydrater: ${d.fast_carbs || "—"}, fullkorn: ${d.whole_grain || "—"}, protein: ${d.protein || "—"}. Blodsockertoppar: ${peaks}. Fysisk aktivitet: ${d.activity || "—"}. Stress: ${d.stress || "—"}/10. Motivation: ${d.motivation || "—"}/10. Hinder: ${barriers}. Mål: ${goals}.`,
+    anamnesis: [
+      `Diabetestyp: ${type} · Duration: ${d.duration || "oklart"}`,
+      `Behandling: ${treatments} · Upplevd kontroll: ${d.control || "—"}/10`,
+      `Mätvärden: HbA1c: ${d.hba1c || "—"} · Fastesocker: ${d.fasting_glucose || "—"} · Postprandiellt: ${d.postprandial || "—"}`,
+      `Blodsockervariation: ${d.glucose_variation || "—"} · Hypoglykemier: ${d.hypoglycemia || "—"}`,
+      `Antropometri: Vikt: ${d.weight || "—"} kg`,
+      `Kost: Måltidsstruktur: ${d.meal_structure || "—"} · Kolhydrater: ${d.carb_intake || "—"} · Snabba KH: ${d.fast_carbs || "—"} · Fullkorn: ${d.whole_grain || "—"} · Protein: ${d.protein || "—"}`,
+      `Blodsockertoppar: ${peaks}`,
+      `Livsstil: Aktivitet: ${d.activity || "—"} · Stress: ${d.stress || "—"}/10`,
+      `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
+      `Mål: ${goals}`,
+    ].join("\n"),
 
     assessment: `${d.hba1c && Number(d.hba1c) > 52 ? "Otillfredsställande blodsockerkontroll" : "Blodsockerkontroll bedömd"} med sannolik påverkan av ${d.meal_structure === "Oregelbunden" ? "oregelbundet måltidsmönster" : ""}${d.fast_carbs === "Högt" ? " och högt intag av snabba kolhydrater" : ""}. ${d.hypoglycemia === "Ja" ? "Hypoglykemier förekommer — stabilitet behöver prioriteras." : ""}`,
 

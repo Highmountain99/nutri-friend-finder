@@ -8,7 +8,19 @@ const g = (d: Record<string, any>) => {
   const goals = (d.patient_goals || []).join(", ") || "inga";
 
   return {
-    anamnesis: `Patient söker för ${reasons}. Tidigare diagnos: ${d.previous_diagnosis || "oklart"}, typ: ${diagnoses}. Måltidsstruktur: ${d.meal_structure || "—"}, hoppar över måltider: ${d.skips_meals || "—"}, hetsätning: ${d.binge || "—"}, kontrollförlust: ${d.loss_of_control || "—"}, restriktivt ätande: ${d.restrictive || "—"}. Kompensatoriska beteenden: ${compensatory}. Tankar kring mat: ${d.food_thoughts || "—"}, rädsla för livsmedel: ${d.food_fear || "—"}, kalorifokus: ${d.calorie_focus || "—"}. Kroppsmissnöje: ${d.body_dissatisfaction || "—"}, vägningsbeteende: ${d.weighing || "—"}, kontrollbehov: ${d.control_need || "—"}. Hungerkänsla: ${d.hunger || "—"}, mättnad: ${d.satiety || "—"}, energi: ${d.energy || "—"}. Stress: ${d.stress || "—"}/10. Motivation: ${d.motivation || "—"}/10. Hinder: ${barriers}. Mål: ${goals}.`,
+    anamnesis: [
+      `Kontaktorsak: ${reasons}`,
+      `Tidigare diagnos: ${d.previous_diagnosis || "oklart"} · Typ: ${diagnoses}`,
+      `Ätbeteende: Måltidsstruktur: ${d.meal_structure || "—"} · Hoppar över måltider: ${d.skips_meals || "—"}`,
+      `Hetsätning: ${d.binge || "—"} · Kontrollförlust: ${d.loss_of_control || "—"} · Restriktivt ätande: ${d.restrictive || "—"}`,
+      `Kompensatoriska beteenden: ${compensatory}`,
+      `Tankar kring mat: ${d.food_thoughts || "—"} · Rädsla för livsmedel: ${d.food_fear || "—"} · Kalorifokus: ${d.calorie_focus || "—"}`,
+      `Kroppsbild: Missnöje: ${d.body_dissatisfaction || "—"} · Vägning: ${d.weighing || "—"} · Kontrollbehov: ${d.control_need || "—"}`,
+      `Fysiska signaler: Hunger: ${d.hunger || "—"} · Mättnad: ${d.satiety || "—"} · Energi: ${d.energy || "—"}`,
+      `Livsstil: Stress: ${d.stress || "—"}/10`,
+      `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
+      `Mål: ${goals}`,
+    ].join("\n"),
 
     assessment: `Ätbeteendet och tankemönstret talar för en problematisk relation till mat där ${d.meal_structure === "Oregelbunden" ? "struktur" : "trygghet"} i ätandet behöver prioriteras.${d.loss_of_control === "Ja" ? " Perioder av kontrollförlust förekommer." : ""}${Number(d.stress) >= 7 ? " Förhöjd stressnivå påverkar sannolikt ätbeteendet." : ""}`,
 
