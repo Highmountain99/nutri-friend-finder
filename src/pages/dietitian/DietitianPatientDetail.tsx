@@ -334,7 +334,6 @@ export default function DietitianPatientDetail() {
                     <Plus className="h-4 w-4 mr-1" /> Fri anteckning
                   </Button>
                 </div>
-                </Button>
               </div>
               {showJournalForm && (
                 <Card>
