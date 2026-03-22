@@ -254,9 +254,11 @@ export type Database = {
           action: string | null
           anamnesis: string | null
           appointment_id: string | null
+          area_type: string | null
           assessment: string | null
           created_at: string
           dietitian_id: string
+          form_data: Json | null
           id: string
           next_steps: string | null
           patient_id: string
@@ -266,9 +268,11 @@ export type Database = {
           action?: string | null
           anamnesis?: string | null
           appointment_id?: string | null
+          area_type?: string | null
           assessment?: string | null
           created_at?: string
           dietitian_id: string
+          form_data?: Json | null
           id?: string
           next_steps?: string | null
           patient_id: string
@@ -278,9 +282,11 @@ export type Database = {
           action?: string | null
           anamnesis?: string | null
           appointment_id?: string | null
+          area_type?: string | null
           assessment?: string | null
           created_at?: string
           dietitian_id?: string
+          form_data?: Json | null
           id?: string
           next_steps?: string | null
           patient_id?: string

@@ -27,12 +27,14 @@ export function useJournalEntries(patientId?: string) {
       action?: string;
       next_steps?: string;
       appointment_id?: string;
+      form_data?: Record<string, any>;
+      area_type?: string;
     }) => {
       const { error } = await supabase.from("dietitian_journal_entries").insert({
         patient_id: patientId!,
         dietitian_id: user!.id,
         ...entry,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["journal-entries", patientId] }),

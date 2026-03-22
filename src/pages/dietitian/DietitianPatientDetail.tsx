@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { toast } from "sonner";
 import { usePatientJournal } from "@/hooks/dietitian/usePatientJournal";
 import { useDietitianChat } from "@/hooks/dietitian/useDietitianChat";
 import { useJournalEntries } from "@/hooks/dietitian/useJournalEntries";
@@ -23,6 +24,7 @@ import { FoodLogTab } from "@/components/dietitian/FoodLogTab";
 import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
 import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
 import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
+import { ClinicalNoteWizard } from "@/components/dietitian/clinical-notes/ClinicalNoteWizard";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
@@ -69,6 +71,7 @@ export default function DietitianPatientDetail() {
   const [activeTab, setActiveTab] = useState("overview");
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [configProgressOpen, setConfigProgressOpen] = useState(false);
+  const [clinicalNoteOpen, setClinicalNoteOpen] = useState(false);
 
   const [chatInput, setChatInput] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
@@ -104,6 +107,22 @@ export default function DietitianPatientDetail() {
       onSuccess: () => {
         setShowJournalForm(false);
         setJournalForm({ anamnesis: "", assessment: "", action: "", next_steps: "" });
+      },
+    });
+  };
+
+  const handleSaveClinicalNote = (entry: {
+    anamnesis: string;
+    assessment: string;
+    action: string;
+    next_steps: string;
+    form_data?: Record<string, any>;
+    area_type?: string;
+  }) => {
+    addEntry.mutate(entry, {
+      onSuccess: () => {
+        setClinicalNoteOpen(false);
+        toast.success("Journalanteckning sparad");
       },
     });
   };
@@ -307,9 +326,14 @@ export default function DietitianPatientDetail() {
             <TabsContent value="journal" className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-semibold">Journalanteckningar</h3>
-                <Button size="sm" onClick={() => setShowJournalForm(!showJournalForm)}>
-                  <Plus className="h-4 w-4 mr-1" /> Ny anteckning
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="default" onClick={() => setClinicalNoteOpen(true)}>
+                    <FileText className="h-4 w-4 mr-1" /> Nytt besök
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowJournalForm(!showJournalForm)}>
+                    <Plus className="h-4 w-4 mr-1" /> Fri anteckning
+                  </Button>
+                </div>
               </div>
               {showJournalForm && (
                 <Card>
@@ -340,6 +364,13 @@ export default function DietitianPatientDetail() {
                   </Card>
                 ))
               )}
+              <ClinicalNoteWizard
+                open={clinicalNoteOpen}
+                onOpenChange={setClinicalNoteOpen}
+                patientId={id!}
+                onSave={handleSaveClinicalNote}
+                isSaving={addEntry.isPending}
+              />
             </TabsContent>
 
             {/* Food Log tab */}
