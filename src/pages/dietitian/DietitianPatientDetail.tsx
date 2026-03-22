@@ -73,6 +73,7 @@ export default function DietitianPatientDetail() {
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [configProgressOpen, setConfigProgressOpen] = useState(false);
   const [clinicalNoteOpen, setClinicalNoteOpen] = useState(false);
+  const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
   const [chatInput, setChatInput] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
