@@ -158,7 +158,7 @@ export function SymptomPatternBlock({ patterns }: { patterns: SymptomPattern[] }
               <span className="text-sm text-foreground">{p.timeLabel}</span>
               <div className="flex items-center gap-2">
                 <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min((p.count / Math.max(...patterns.map((x) => x.count))) * 100, 100)}%` }} />
+                  <div className="h-full bg-destructive/60 rounded-full" style={{ width: `${Math.min((p.count / Math.max(...patterns.map((x) => x.count))) * 100, 100)}%` }} />
                 </div>
                 <span className="text-xs text-muted-foreground w-6 text-right">{p.count}x</span>
               </div>
