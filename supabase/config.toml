@@ -39,3 +39,7 @@ verify_jwt = false
 [functions.create-video-room]
 enabled = true
 verify_jwt = false
+
+[functions.clinical-note-ai]
+enabled = true
+verify_jwt = false
