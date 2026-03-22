@@ -1,150 +1,102 @@
 
 
-# Plan: Kliniskt journalföringssystem för dietister
+# Plan: Ätstörning — dynamiskt blockbaserat utvecklingsvy
 
 ## Sammanfattning
 
-Bygga ett komplett stegvist journalföringssystem med 7 behandlingsområden, strukturerad datainsamling via chips/radio/sliders, auto-genererad journaltext och AI-beslutsstöd. Systemet integreras i dietistens patientvy som en ny flik/åtgärd.
+Omarbeta utvecklingsvyn för ätstörningspatienter till ett dynamiskt blocksystem där dietisten väljer block och patientens journaldata automatiskt fyller/uppdaterar relevanta block. Inga kalorier, makros eller viktmål visas.
+
+## Nya blocktyper (utöver befintliga)
+
+Utöka `CATEGORY_SECTIONS` i `templateDefaults.ts` med nya eating_disorder-block:
+
+| Block-ID | Typ | Datakälla |
+|---|---|---|
+| `ed_focus` | Fokusblock | Manuellt av dietist / AI-förslag |
+| `ed_meal_rhythm` | Strukturblock | Auto från `nutrition_entries` idag |
+| `ed_meal_structure` | Strukturblock | Auto — analyserar senaste 7d |
+| `ed_regularity_30d` | Progressionsblock | Auto — 30d grid |
+| `ed_behavior_goals` | Beteendeblock | Manuellt / från behandlingsplan |
+| `ed_follow_up` | Uppföljningsblock | Manuellt / nästa appointment |
+| `ed_symptom_patterns` | Progressionsblock | Auto från `symptom_entries` |
+| `ed_weekly_checkin` | Progressionsblock | Auto — stabilitet 7d |
 
 ## Arkitektur
 
 ```text
-DietitianPatientDetail
-  └── "Journal" tab → ny knapp "Nytt besök"
-        └── ClinicalNoteWizard (fullscreen/sheet)
-              ├── AreaSelector (välj behandlingsområde)
-              ├── StepWizard (steg 1–N beroende på område)
-              │    └── Varje steg = formulärkomponent med chips/radio/sliders
-              ├── SummaryStep (auto-genererad journal + AI-förslag)
-              └── Spara → dietitian_journal_entries
+EatingDisorderProgress (patient-vy)
+  └── Renderar block baserat på patient_progress_config.visible_sections
+       ├── ed_focus → Visar dietistens fokustext (från treatment_plan notes)
+       ├── ed_meal_rhythm → Hämtar dagens nutrition_entries, visar ✅/⭕
+       ├── ed_meal_structure → Analyserar 7d: "3 mål + mellanmål" etc
+       ├── ed_regularity_30d → 30d grid, räknar dagar med 3+ måltider
+       ├── ed_behavior_goals → Hämtar milestones från aktiv behandlingsplan
+       ├── ed_symptom_patterns → Enkel mönsteranalys från symptom_entries
+       ├── ed_weekly_checkin → Sammanfattning senaste 7d
+       └── ed_follow_up → Nästa appointment + fokustext
 ```
 
-## Nya filer
+## Filändringar
 
-### Frontend-komponenter (~15 filer)
+### 1. `src/components/progress/EatingDisorderProgress.tsx` — Total omskrivning
+- Hämta `nutrition_entries` (senaste 30d) och `symptom_entries` via nya queries
+- Hämta `appointments` (nästa bokade)
+- Hämta aktiv `treatment_plan` med milestones
+- Rendera block dynamiskt baserat på `visibleSections` (från progress config)
+- Varje block som ett eget Card med ikon, titel, status-badge (manuell/auto/AI)
+- Inga kalorier, inga makros, inga viktvärden
 
-1. **`src/components/dietitian/clinical-notes/ClinicalNoteWizard.tsx`**
-   - Huvudcontainer. Sheet/fullscreen. Hanterar state för valt område och alla formulärdata.
-   - Top bar: titel, "Generera journal", "Generera AI-förslag", "Spara"
-   - Stegnavigering (progress bar + framåt/bakåt)
+### 2. `src/hooks/useEatingDisorderBlocks.ts` — Ny hook
+- Hämtar och beräknar all blockdata:
+  - **Måltidsrytm idag**: Grupperar dagens `nutrition_entries` efter `meal_type` → Frukost/Lunch/Middag/Mellanmål ✅/⭕
+  - **Måltidsstruktur**: Analyserar 7d — klassificerar som "regelbunden/delvis/oregelbunden"
+  - **Regelbundenhet 30d**: Räknar dagar med ≥3 entries, returnerar array för grid
+  - **Symptommönster**: Grupperar symptom efter tid/koppling till måltid
+  - **Vecko-checkin**: Antal loggade dagar, stabilitet
+- Hämtar nästa appointment från `appointments`
+- Hämtar beteendemål från aktiv treatment_plan milestones
 
-2. **`src/components/dietitian/clinical-notes/AreaSelector.tsx`**
-   - Välj behandlingsområde: Hjärthälsa, IBS, Diabetes, Kvinnohälsa, Ätstörning, Graviditet, Viktminskning
-   - Varje område har ikon och kort beskrivning
+### 3. `src/components/dietitian/progress-builder/templateDefaults.ts` — Uppdatera
+- Ersätt nuvarande `eating_disorder` sections med de nya blocken
+- Lägg till beskrivningar och labels
 
-3. **`src/components/dietitian/clinical-notes/shared/ChipSelect.tsx`**
-   - Återanvändbar multi-select chips-komponent
+### 4. `src/components/dietitian/progress-builder/ModulePreview.tsx` — Lägg till previews
+- Nya preview-komponenter för varje ed_-block
+- Uppdatera `SECTION_ICONS` och `PREVIEW_RENDERERS`
 
-4. **`src/components/dietitian/clinical-notes/shared/RadioField.tsx`**
-   - Återanvändbar radio-grupp med label
+### 5. `src/components/progress/shared/EDBlockCards.tsx` — Ny fil
+- Återanvändbara blockkomponenter:
+  - `FocusBlock` — visar fokustext med lugn gradient
+  - `MealRhythmBlock` — checkmarks för dagens måltider
+  - `MealStructureBlock` — sammanfattning av mönster
+  - `RegularityGridBlock` — 30d heatmap
+  - `BehaviorGoalsBlock` — checkbara milestones
+  - `SymptomPatternBlock` — enkel mönstervisning
+  - `WeeklyCheckinBlock` — 7d sammanfattning
+  - `FollowUpBlock` — nästa samtal + fokus
+- Varje block har badge: 🟢 "Från journal" / 🔵 "Din dietist" / ✨ "AI-förslag"
 
-5. **`src/components/dietitian/clinical-notes/shared/SliderField.tsx`**
-   - Slider 1–10 med label och värdevisning
+## Datakoppling (exakt)
 
-6. **`src/components/dietitian/clinical-notes/shared/NumericField.tsx`**
-   - Numeriskt input-fält med enhet
+| Block | Tabell | Logik |
+|---|---|---|
+| Måltidsrytm idag | `nutrition_entries` WHERE entry_date = today | Gruppera meal_type |
+| Struktur 7d | `nutrition_entries` WHERE entry_date >= 7d ago | Count per dag, klassificera |
+| Regelbundenhet 30d | `nutrition_entries` WHERE entry_date >= 30d ago | Dagar med ≥3 entries |
+| Symptommönster | `symptom_entries` WHERE entry_date >= 14d ago | Gruppera efter tid/meal_id |
+| Beteendemål | `treatment_milestones` via aktiv plan | Visa som checkbara kort |
+| Nästa samtal | `appointments` WHERE date > now, status = booked | Närmaste |
+| Fokus | `treatment_plans` → aktiv plan title/description | Manuellt satt |
 
-7. **Ett konfigurationsobjekt per område** (`areaConfigs/`):
-   - `heartHealth.ts` — steg, fält, options för Hjärthälsa
-   - `ibs.ts` — IBS/magbesvär
-   - `diabetes.ts` — Diabetes/blodsocker
-   - `womensHealth.ts` — Kvinnohälsa (PCOS/fertilitet/klimakteriet)
-   - `eatingDisorder.ts` — Ätstörning/relation till mat
-   - `pregnancy.ts` — Graviditet & postpartum
-   - `weightLoss.ts` — Viktminskning
+## Designprinciper
 
-   Varje config exporterar: `{ id, title, steps: [{ title, fields: [...] }] }` plus en `generateJournalText(data)` funktion som skapar anamnes/bedömning/åtgärd/nästa steg.
+- Lugna, varma färger (primary/5, primary/10)
+- Inga siffror för kalorier/makros/vikt
+- Kort, stödjande text
+- Checkmarks och enkla statusikoner
+- Varje block ≤100px högt
+- Tydlig badge per block: "Från din journal" vs "Din dietist"
 
-8. **`src/components/dietitian/clinical-notes/StepRenderer.tsx`**
-   - Tar en step-config och renderar fälten dynamiskt med rätt komponent (chips, radio, slider, numeric, dropdown)
-
-9. **`src/components/dietitian/clinical-notes/SummaryStep.tsx`**
-   - Visar auto-genererad journaltext i redigerbara textfält
-   - Visar AI-förslag (fokusområden, åtgärder, uppföljning) i kort
-   - Allt redigerbart innan sparning
-
-10. **`src/components/dietitian/clinical-notes/JournalPreview.tsx`**
-    - Renderar den färdiga journalen (Anamnes/Bedömning/Åtgärd/Nästa steg) som redigerbara textareas
-
-### Backend (1 ny Edge Function)
-
-11. **`supabase/functions/clinical-note-ai/index.ts`**
-    - Tar emot behandlingsområde + alla formulärdata
-    - Anropar Lovable AI Gateway med area-specifik prompt
-    - Returnerar strukturerad JSON: `{ summary, focusAreas[], actions[], followUp }`
-    - Använder tool calling för strukturerad output
-    - Hanterar 429/402
-
-### Hook
-
-12. **`src/hooks/dietitian/useClinicalNoteAI.ts`**
-    - Mutation som anropar `clinical-note-ai` edge function
-    - Returnerar AI-förslag
-
-## Dataflöde
-
-1. Dietist öppnar patientvy → Journal-tab → klickar "Nytt besök"
-2. Väljer behandlingsområde (t.ex. "Hjärthälsa")
-3. Klickar igenom 5–8 steg med chips/radio/sliders (alla valfria)
-4. Klickar "Generera journal" → lokal funktion skapar journaltext från formulärdata
-5. Klickar "Generera AI-förslag" → edge function returnerar fokusområden + åtgärder
-6. Redigerar text vid behov → klickar "Spara" → sparas i `dietitian_journal_entries`
-
-## Databasändring
-
-Inga nya tabeller behövs. Använder befintlig `dietitian_journal_entries` (anamnes, assessment, action, next_steps). Formulärdata kan sparas som JSON i en ny kolumn om det behövs för framtida analys:
-
-- **Migration**: Lägg till `form_data jsonb DEFAULT NULL` och `area_type text DEFAULT NULL` på `dietitian_journal_entries`
-
-## Integration i befintlig UI
-
-- I `DietitianPatientDetail.tsx`, Journal-tabben: lägg till knapp "Nytt besök" som öppnar `ClinicalNoteWizard` som en Sheet
-- Routing: ingen ny route behövs, wizarden öppnas som overlay
-
-## Dynamiska fält per område
-
-Varje config-fil definierar steg med fält i ett deklarativt format:
-
-```typescript
-{
-  id: 'heart_health',
-  title: 'Hjärthälsa',
-  steps: [
-    {
-      title: 'Remiss',
-      fields: [
-        { type: 'chips', key: 'referral_reasons', label: 'Vad gäller besöket?',
-          options: ['Hyperlipidemi', 'Hypertoni', 'Diabetes', 'Sekundärprevention', 'Annat'],
-          multi: true },
-        { type: 'radio', key: 'has_lab_values', label: 'Finns labvärden?',
-          options: ['Ja', 'Delvis', 'Nej'] },
-        { type: 'numeric', key: 'ldl', label: 'LDL', unit: 'mmol/L',
-          showIf: (data) => ['Ja','Delvis'].includes(data.has_lab_values) },
-        // ...
-      ]
-    },
-    // ...fler steg
-  ]
-}
-```
-
-## AI-prompt logik
-
-Edge function bygger area-specifik prompt med alla regler (max 3 fokusområden, max 5 åtgärder, inga extrema dieter, etc.) och returnerar strukturerad output via tool calling.
-
-## Designriktlinjer
-
-- Minimalistisk, clean, medicinsk känsla
-- Lugna färger (speciellt för ätstörning)
-- Alla fält valfria — framåtknapp alltid aktiv
-- Progress bar överst
-- Snabb att använda under videobesök
-- Responsiv men optimerad för desktop (dietistens arbetsyta)
-
-## Uppskattad storlek
-
-- ~15 nya filer
-- ~2500–3500 rader kod totalt
-- 1 edge function
-- 1 databasmigration
+## Ingen databasmigration behövs
+All data finns redan i befintliga tabeller.
 
