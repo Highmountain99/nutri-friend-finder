@@ -355,17 +355,72 @@ export default function DietitianPatientDetail() {
               {!journalEntries.data?.length ? (
                 <p className="text-sm text-muted-foreground py-8 text-center">Inga journalanteckningar ännu.</p>
               ) : (
-                journalEntries.data.map((entry) => (
-                  <Card key={entry.id}>
-                    <CardContent className="py-4 space-y-2">
-                      <p className="text-xs text-muted-foreground">{format(new Date(entry.created_at), "d MMMM yyyy, HH:mm", { locale: sv })}</p>
-                      {entry.anamnesis && <div><p className="text-xs font-medium text-muted-foreground">Anamnes</p><p className="text-sm">{entry.anamnesis}</p></div>}
-                      {entry.assessment && <div><p className="text-xs font-medium text-muted-foreground">Bedömning</p><p className="text-sm">{entry.assessment}</p></div>}
-                      {entry.action && <div><p className="text-xs font-medium text-muted-foreground">Åtgärd</p><p className="text-sm">{entry.action}</p></div>}
-                      {entry.next_steps && <div><p className="text-xs font-medium text-muted-foreground">Nästa steg</p><p className="text-sm">{entry.next_steps}</p></div>}
-                    </CardContent>
-                  </Card>
-                ))
+                journalEntries.data.map((entry) => {
+                  const isExpanded = expandedEntryId === entry.id;
+                  const areaLabel = entry.area_type ? getAreaConfig(entry.area_type)?.title : null;
+                  const hasDetails = entry.anamnesis || entry.assessment || entry.action || entry.next_steps;
+                  return (
+                    <Card key={entry.id} className="overflow-hidden">
+                      <CardContent className="py-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 cursor-pointer" onClick={() => setExpandedEntryId(isExpanded ? null : entry.id)}>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-xs text-muted-foreground">{format(new Date(entry.created_at), "d MMMM yyyy, HH:mm", { locale: sv })}</p>
+                              {areaLabel && <Badge variant="secondary" className="text-xs">{areaLabel}</Badge>}
+                              {!areaLabel && !entry.area_type && <Badge variant="outline" className="text-xs">Fri anteckning</Badge>}
+                            </div>
+                            {!isExpanded && entry.anamnesis && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{entry.anamnesis}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {hasDetails && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpandedEntryId(isExpanded ? null : entry.id)}>
+                                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              </Button>
+                            )}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Ta bort journalanteckning?</AlertDialogTitle>
+                                  <AlertDialogDescription>Denna åtgärd kan inte ångras.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => deleteEntry.mutate(entry.id, { onSuccess: () => toast.success("Anteckning borttagen") })}
+                                  >
+                                    Ta bort
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div className="space-y-3 pt-2 border-t">
+                            {entry.anamnesis && <div><p className="text-xs font-medium text-muted-foreground">Anamnes</p><p className="text-sm whitespace-pre-wrap">{entry.anamnesis}</p></div>}
+                            {entry.assessment && <div><p className="text-xs font-medium text-muted-foreground">Bedömning</p><p className="text-sm whitespace-pre-wrap">{entry.assessment}</p></div>}
+                            {entry.action && <div><p className="text-xs font-medium text-muted-foreground">Åtgärd</p><p className="text-sm whitespace-pre-wrap">{entry.action}</p></div>}
+                            {entry.next_steps && <div><p className="text-xs font-medium text-muted-foreground">Nästa steg</p><p className="text-sm whitespace-pre-wrap">{entry.next_steps}</p></div>}
+                            {entry.form_data && Object.keys(entry.form_data as object).length > 0 && (
+                              <details className="text-xs">
+                                <summary className="text-muted-foreground cursor-pointer hover:text-foreground">Visa rådata från formulär</summary>
+                                <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto max-h-48">{JSON.stringify(entry.form_data, null, 2)}</pre>
+                              </details>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
               <ClinicalNoteWizard
                 open={clinicalNoteOpen}
