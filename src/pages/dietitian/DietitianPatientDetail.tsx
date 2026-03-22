@@ -326,8 +326,14 @@ export default function DietitianPatientDetail() {
             <TabsContent value="journal" className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-semibold">Journalanteckningar</h3>
-                <Button size="sm" onClick={() => setShowJournalForm(!showJournalForm)}>
-                  <Plus className="h-4 w-4 mr-1" /> Ny anteckning
+                <div className="flex gap-2">
+                  <Button size="sm" variant="default" onClick={() => setClinicalNoteOpen(true)}>
+                    <FileText className="h-4 w-4 mr-1" /> Nytt besök
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowJournalForm(!showJournalForm)}>
+                    <Plus className="h-4 w-4 mr-1" /> Fri anteckning
+                  </Button>
+                </div>
                 </Button>
               </div>
               {showJournalForm && (
