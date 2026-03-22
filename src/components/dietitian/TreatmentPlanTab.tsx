@@ -281,7 +281,7 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
           disabled={aiLoading}
         >
           {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {aiLoading ? "Genererar förslag…" : "AI-förslag baserat på patient"}
+          {aiLoading ? "Genererar förslag…" : "AI-förslag baserat på journal"}
         </Button>
       </div>
 
