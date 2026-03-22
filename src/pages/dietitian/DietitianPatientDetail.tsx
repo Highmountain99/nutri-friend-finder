@@ -110,6 +110,22 @@ export default function DietitianPatientDetail() {
     });
   };
 
+  const handleSaveClinicalNote = (entry: {
+    anamnesis: string;
+    assessment: string;
+    action: string;
+    next_steps: string;
+    form_data?: Record<string, any>;
+    area_type?: string;
+  }) => {
+    addEntry.mutate(entry, {
+      onSuccess: () => {
+        setClinicalNoteOpen(false);
+        toast.success("Journalanteckning sparad");
+      },
+    });
+  };
+
   const handleSaveNote = useCallback(() => {
     const existingNote = notes.data?.[0];
     upsertNote.mutate({ id: existingNote?.id, content: noteContent });
