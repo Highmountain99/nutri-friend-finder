@@ -101,8 +101,10 @@ VIKTIGA REGLER:
 - Du får INTE anta, gissa eller lägga till information som inte finns i journalen.
 - Du får INTE ge generiska råd utan stöd i journalanteckningarna.
 - Behandlingsplanen ska bygga på dokumenterade symptom, beteenden, mål, hinder, tidigare åtgärder och mönster.
-- Om journalunderlaget är begränsat, ange detta tydligt i planens beskrivning och anpassa antalet mål.
 - Alla texter ska vara på svenska, professionella och stödjande.
+- Titeln ska vara en kort, konkret beskrivning av behandlingens fokus, t.ex. "Förbättra relation till mat och minska hetsätning" eller "Stabilisera måltidsstruktur och hantera stress". ALDRIG generiska titlar som "Behandlingsplan" eller "Plan baserad på journal".
+- Beskrivningen ska vara en kort sammanfattning av planens konkreta inriktning och fokusområden. Nämn ALDRIG att underlaget är begränsat, att det finns få anteckningar, eller liknande meta-kommentarer om datamängd.
+- Anpassa antalet mål efter vad journalen faktiskt stödjer (1-4 mål).
 
 Svara ENBART med tool call, aldrig med fritext.`;
 
@@ -110,13 +112,12 @@ Svara ENBART med tool call, aldrig med fritext.`;
 
 ${journalSummary}
 
-Antal anteckningar: ${journalEntries.length}
-
 Instruktioner:
 - Utgå BARA från det som dokumenterats. Lägg inte till mål eller åtgärder som saknar stöd i anteckningarna.
-- Om underlaget är tunt (1-2 anteckningar), skapa en mer begränsad plan (1-2 mål) och notera i beskrivningen att planen baseras på ett begränsat underlag.
 - Varje mål ska ha 2-4 konkreta delmål som är direkt kopplade till journalinnehållet.
-- Planera datumspann på 8-12 veckor framåt från idag (${new Date().toISOString().split("T")[0]}).`;
+- Planera datumspann på 8-12 veckor framåt från idag (${new Date().toISOString().split("T")[0]}).
+- Titeln ska beskriva det konkreta behandlingsfokuset, inte vara generisk.
+- Beskriv INTE i texten hur många anteckningar som finns eller om underlaget är begränsat.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
