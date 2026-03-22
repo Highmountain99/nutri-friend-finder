@@ -82,6 +82,7 @@ export default function DietitianPatientDetail() {
   const [editedContent, setEditedContent] = useState("");
   const [showJournalForm, setShowJournalForm] = useState(false);
   const [journalForm, setJournalForm] = useState({ anamnesis: "", assessment: "", action: "", next_steps: "" });
+  const [freeNoteText, setFreeNoteText] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [noteInitialized, setNoteInitialized] = useState(false);
 
