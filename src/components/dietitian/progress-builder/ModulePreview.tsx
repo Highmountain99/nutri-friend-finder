@@ -419,10 +419,14 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   heart_healthy_choices: <Check className="h-3.5 w-3.5" />,
   heart_tip: <Heart className="h-3.5 w-3.5" />,
   // Eating disorder
-  affirmation: <Heart className="h-3.5 w-3.5" />,
-  meal_rhythm: <Calendar className="h-3.5 w-3.5" />,
-  meal_regularity: <Activity className="h-3.5 w-3.5" />,
-  next_appointment: <Calendar className="h-3.5 w-3.5" />,
+  ed_focus: <Heart className="h-3.5 w-3.5" />,
+  ed_meal_rhythm: <Calendar className="h-3.5 w-3.5" />,
+  ed_meal_structure: <Activity className="h-3.5 w-3.5" />,
+  ed_regularity_30d: <Activity className="h-3.5 w-3.5" />,
+  ed_behavior_goals: <Target className="h-3.5 w-3.5" />,
+  ed_symptom_patterns: <AlertCircle className="h-3.5 w-3.5" />,
+  ed_weekly_checkin: <Calendar className="h-3.5 w-3.5" />,
+  ed_follow_up: <Calendar className="h-3.5 w-3.5" />,
   // Women's health
   womens_metrics: <Scale className="h-3.5 w-3.5" />,
   focus_areas: <Sparkles className="h-3.5 w-3.5" />,
