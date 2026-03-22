@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 import {
   DietitianAvailability,
   DbDietitianAvailability,
@@ -26,7 +27,7 @@ export function useDietitianAvailability(dietitianId?: string, date?: Date) {
 
     try {
       setLoading(true);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = format(date, 'yyyy-MM-dd');
 
       const { data, error: queryError } = await supabase
         .from('dietitian_availability')
@@ -85,8 +86,8 @@ export function useDietitianAvailabilityRange(dietitianId?: string, startDate?: 
 
     try {
       setLoading(true);
-      const startStr = startDate.toISOString().split('T')[0];
-      const endStr = endDate.toISOString().split('T')[0];
+      const startStr = format(startDate, 'yyyy-MM-dd');
+      const endStr = format(endDate, 'yyyy-MM-dd');
 
       const { data, error } = await supabase
         .from('dietitian_availability')
