@@ -278,7 +278,7 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
           variant="outline"
           className="w-full gap-2"
           onClick={handleAiSuggest}
-          disabled={aiLoading || !patientContext}
+          disabled={aiLoading}
         >
           {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           {aiLoading ? "Genererar förslag…" : "AI-förslag baserat på patient"}
