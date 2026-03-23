@@ -10,6 +10,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, GripVertical, EyeOff, Smartphone, Plus } from "lucide-react";
 import { ModulePreview } from "./progress-builder/ModulePreview";
+import { BlockPreview } from "./blocks/BlockPreview";
 import { TEMPLATE_SECTION_DEFAULTS, CATEGORY_SECTIONS, GENERIC_SECTIONS, type SectionDef } from "./progress-builder/templateDefaults";
 import { useBlockTemplates } from "@/hooks/dietitian/useBlockTemplates";
 import * as Icons from "lucide-react";
