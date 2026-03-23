@@ -38,18 +38,17 @@ interface ConfigureProgressSheetProps {
 
 // Unified item: either a standard module or a library block
 interface UnifiedItem {
-  id: string; // unique key
+  id: string;
   type: "module" | "block";
   label: string;
   description: string;
   enabled: boolean;
-  // module-specific
   sectionValue?: string;
-  // block-specific
-  blockId?: string; // patient_blocks.id
+  blockId?: string;
   templateId?: string;
   icon?: string;
   dataSource?: string;
+  dataConfig?: Record<string, any>;
 }
 
 export function ConfigureProgressSheet({ open, onOpenChange, patientId }: ConfigureProgressSheetProps) {
