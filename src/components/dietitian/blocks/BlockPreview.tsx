@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Circle, Flame, TrendingUp } from "lucide-react";
+import { Check, Circle, Flame, TrendingUp, TrendingDown } from "lucide-react";
 import * as Icons from "lucide-react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 
 interface BlockPreviewProps {
   title: string;
