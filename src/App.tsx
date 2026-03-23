@@ -110,6 +110,7 @@ const App = () => (
                 <Route path="/dietitian/messages" element={<DietitianMessages />} />
                 <Route path="/dietitian/profile" element={<DietitianProfile />} />
                 <Route path="/dietitian/statistics" element={<DietitianStatistics />} />
+                <Route path="/dietitian/blocks" element={<DietitianBlocks />} />
                 <Route path="/dietitian/admin" element={<Admin />} />
               </Route>
             </Route>
