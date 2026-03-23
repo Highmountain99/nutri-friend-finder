@@ -13,6 +13,7 @@ const DATA_SOURCE_OPTIONS = [
   { value: "macro_data", label: "Makro-/näringsdata", desc: "Protein, kolhydrater, fett" },
   { value: "treatment_goals", label: "Behandlingsmål", desc: "Milstolpar och mål" },
   { value: "progression", label: "Progression", desc: "Mönster och trender över tid" },
+  { value: "health_tracking", label: "Hälsomätvärden", desc: "Vikt, blodtryck, midjemått etc." },
 ];
 
 const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: string }[]> = {
