@@ -8,10 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, GripVertical, Eye, EyeOff, Smartphone, Blocks } from "lucide-react";
+import { Loader2, GripVertical, Eye, EyeOff, Smartphone, Blocks, X } from "lucide-react";
 import { ModulePreview } from "./progress-builder/ModulePreview";
 import { TEMPLATE_SECTION_DEFAULTS, CATEGORY_SECTIONS, GENERIC_SECTIONS, type SectionDef } from "./progress-builder/templateDefaults";
 import { BlockPickerSheet } from "./blocks/BlockPickerSheet";
+import * as Icons from "lucide-react";
 
 const TEMPLATE_OPTIONS: { value: string; label: string; description: string }[] = [
   { value: "auto", label: "Automatisk (från kvalificering)", description: "Baseras på patientens egna val" },
@@ -64,6 +65,36 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     },
     enabled: open,
   });
+
+  // Fetch added patient_blocks to show in the preview
+  const { data: patientBlocks } = useQuery({
+    queryKey: ["patient-blocks", patientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("patient_blocks")
+        .select("*, block_templates(*)")
+        .eq("patient_id", patientId)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data || []).map((b: any) => ({ ...b, template: b.block_templates }));
+    },
+    enabled: open,
+  });
+
+  const handleRemoveBlock = async (blockId: string) => {
+    try {
+      const { error } = await supabase
+        .from("patient_blocks")
+        .delete()
+        .eq("id", blockId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["patient-blocks"] });
+      toast.success("Block borttaget");
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
 
   const buildSectionsFromTemplate = useCallback((tmpl: string, savedSections?: string[] | null) => {
     const templateSections = getSectionsForTemplate(tmpl);
@@ -288,6 +319,42 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                 </div>
               </div>
             </div>
+
+            {/* Added blocks from library */}
+            {patientBlocks && patientBlocks.length > 0 && (
+              <div className="px-6 space-y-3">
+                <Separator />
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Block från biblioteket
+                </Label>
+                <div className="space-y-2">
+                  {patientBlocks.map((pb: any) => {
+                    const tmpl = pb.template;
+                    if (!tmpl) return null;
+                    const IconComp = (Icons as any)[tmpl.icon] || Icons.Square;
+                    return (
+                      <div key={pb.id} className="flex items-center gap-2 rounded-xl border border-border bg-card p-2.5 group">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
+                          <IconComp className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{pb.override_title || tmpl.title}</p>
+                          {tmpl.data_source !== "none" && (
+                            <p className="text-[10px] text-emerald-600">Datakopplat</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleRemoveBlock(pb.id)}
+                          className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
+                        >
+                          <X className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Disabled modules pool */}
             {disabledSections.length > 0 && (

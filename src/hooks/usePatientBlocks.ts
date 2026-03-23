@@ -44,7 +44,7 @@ export function usePatientBlocks(patientId: string | undefined) {
 
       // Fetch patient blocks with template
       const { data: blocks, error } = await supabase
-        .from("patient_blocks" as any)
+        .from("patient_blocks")
         .select("*, block_templates(*)")
         .eq("patient_id", patientId)
         .eq("is_active", true)
