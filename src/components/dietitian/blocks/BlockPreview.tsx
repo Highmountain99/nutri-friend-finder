@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Check, Circle, Flame, TrendingUp, TrendingDown, Minus, Calendar, Clock } from "lucide-react";
+import { Check, Circle, Flame, TrendingUp, TrendingDown, Minus, Calendar, Clock, Video, Heart } from "lucide-react";
 import * as Icons from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 
@@ -40,11 +40,15 @@ const SAMPLE_CHART_DATA: Record<string, { date: string; value: number }[]> = {
     { date: "1 mar", value: 30.1 }, { date: "8 mar", value: 29.6 }, { date: "15 mar", value: 29.1 },
     { date: "22 mar", value: 28.7 }, { date: "30 mar", value: 28.3 },
   ],
+  blood_sugar_fasting: [
+    { date: "1 mar", value: 7.8 }, { date: "8 mar", value: 7.4 }, { date: "15 mar", value: 7.1 },
+    { date: "22 mar", value: 6.8 }, { date: "30 mar", value: 6.5 },
+  ],
 };
 
 const METRIC_UNITS: Record<string, string> = {
   weight: "kg", waist: "cm", blood_pressure_systolic: "mmHg",
-  blood_pressure_diastolic: "mmHg", bmi: "",
+  blood_pressure_diastolic: "mmHg", bmi: "", blood_sugar_fasting: "mmol/L",
 };
 
 // ─── Reusable mini-components ───
@@ -100,27 +104,14 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
   const progression = dataConfig.progression || "none";
   const progressionTarget = dataConfig.progression_target || 7;
 
-  // Determine what visual to show
   const renderContent = () => {
     // ── Trend chart (health_tracking) ──
-    if (metric === "trend_chart" || metric === "latest_value") {
+    if (metric === "trend_chart") {
       const hm = dataConfig.health_metric || "weight";
       const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
       const unit = METRIC_UNITS[hm] || "kg";
       const first = chartData[0]?.value || 0;
       const last = chartData[chartData.length - 1]?.value || 0;
-
-      if (metric === "latest_value") {
-        return (
-          <div className="flex items-end justify-between mt-2">
-            <span className="text-3xl font-bold tabular-nums text-foreground">{last}</span>
-            <div className="flex flex-col items-end gap-0.5">
-              <span className="text-xs text-muted-foreground">{unit}</span>
-              <TrendBadge first={first} last={last} unit={unit} />
-            </div>
-          </div>
-        );
-      }
 
       return (
         <div className="mt-2 space-y-1">
@@ -130,6 +121,50 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
           </div>
           <MiniAreaChart data={chartData} id={`preview-${hm}`} />
           <p className="text-[10px] text-muted-foreground text-center">Senaste 30 dagarna</p>
+        </div>
+      );
+    }
+
+    // ── Latest value ──
+    if (metric === "latest_value") {
+      const hm = dataConfig.health_metric || "weight";
+      const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+      const unit = METRIC_UNITS[hm] || "kg";
+      const first = chartData[0]?.value || 0;
+      const last = chartData[chartData.length - 1]?.value || 0;
+
+      return (
+        <div className="flex items-end justify-between mt-2">
+          <span className="text-3xl font-bold tabular-nums text-foreground">{last}</span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-xs text-muted-foreground">{unit}</span>
+            <TrendBadge first={first} last={last} unit={unit} />
+          </div>
+        </div>
+      );
+    }
+
+    // ── Metric cards (weight metrics, blood sugar metrics) ──
+    if (metric === "metric_cards") {
+      const hm = dataConfig.health_metric || "weight";
+      const unit = METRIC_UNITS[hm] || "kg";
+      const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+      const current = chartData[chartData.length - 1]?.value || 0;
+      const start = chartData[0]?.value || 0;
+      const change = current - start;
+
+      return (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="p-2 rounded-lg bg-muted/50 text-center">
+            <p className="text-[10px] text-muted-foreground">Nuvarande</p>
+            <p className="text-lg font-bold tabular-nums text-foreground">{current}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{unit}</span></p>
+          </div>
+          <div className="p-2 rounded-lg bg-muted/50 text-center">
+            <p className="text-[10px] text-muted-foreground">Förändring</p>
+            <p className={`text-lg font-bold tabular-nums ${change < 0 ? "text-emerald-600" : "text-amber-600"}`}>
+              {change > 0 ? "+" : ""}{change.toFixed(1)}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{unit}</span>
+            </p>
+          </div>
         </div>
       );
     }
@@ -188,8 +223,78 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       );
     }
 
-    // ── Symptom count / by time / after meal ──
-    if (metric === "symptom_count" || metric === "symptom_by_time" || metric === "symptom_after_meal") {
+    // ── Meal structure 7d ──
+    if (metric === "structure_7d") {
+      const days = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
+      const mealCounts = [3, 4, 3, 2, 3, 4, 3];
+      return (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold tabular-nums text-foreground">3.1</span>
+            <span className="text-xs text-muted-foreground">mål/dag i snitt</span>
+          </div>
+          <div className="flex gap-1 items-end h-[40px]">
+            {days.map((d, i) => (
+              <div key={d} className="flex-1 flex flex-col items-center justify-end h-full gap-0.5">
+                <div className={`w-full rounded-t ${mealCounts[i] >= 3 ? "bg-primary/60" : "bg-amber-400/60"}`}
+                     style={{ height: `${(mealCounts[i] / 5) * 100}%` }} />
+                <span className="text-[8px] text-muted-foreground">{d}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Weekly checkin ──
+    if (metric === "weekly_checkin") {
+      const days = ["M", "T", "O", "T", "F", "L", "S"];
+      const logged = [true, true, true, true, false, true, false];
+      const loggedCount = logged.filter(Boolean).length;
+      return (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold tabular-nums text-foreground">{loggedCount}<span className="text-sm font-normal text-muted-foreground ml-0.5">/7 dagar</span></span>
+            <span className="text-xs text-emerald-600 font-medium">Stabil</span>
+          </div>
+          <div className="flex gap-1.5">
+            {days.map((d, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium ${
+                  logged[i] ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+                }`}>{d}</div>
+                {logged[i] && <div className="w-1 h-1 rounded-full bg-emerald-500" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Weekly overview ──
+    if (metric === "weekly_overview") {
+      const days = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
+      const active = [true, true, false, true, true, false, true];
+      const activeCount = active.filter(Boolean).length;
+      return (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold tabular-nums text-foreground">{activeCount}<span className="text-sm font-normal text-muted-foreground ml-0.5">/7</span></span>
+            <span className="text-xs text-muted-foreground">aktiva dagar</span>
+          </div>
+          <div className="flex gap-1">
+            {days.map((d, i) => (
+              <div key={i} className={`flex-1 py-1.5 rounded-md text-center text-[9px] font-medium ${
+                active[i] ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+              }`}>{d}</div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Symptom count / by time / after meal / pattern_by_time ──
+    if (metric === "symptom_count" || metric === "symptom_by_time" || metric === "symptom_after_meal" || metric === "pattern_by_time") {
       const bars = [
         { label: "Mån", h: 0 }, { label: "Tis", h: 1 }, { label: "Ons", h: 0 },
         { label: "Tor", h: 2 }, { label: "Fre", h: 0 }, { label: "Lör", h: 1 }, { label: "Sön", h: 0 },
@@ -197,7 +302,11 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       const maxH = 3;
       return (
         <div className="mt-3 space-y-1">
-          <div className="flex items-end gap-1 h-[48px]">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-2xl font-bold tabular-nums text-foreground">4</span>
+            <span className="text-xs text-muted-foreground">symptom / 7d</span>
+          </div>
+          <div className="flex items-end gap-1 h-[40px]">
             {bars.map((b, i) => (
               <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
                 <div className={`w-full rounded-t ${b.h > 0 ? "bg-amber-400/70" : "bg-muted"}`} style={{ height: `${Math.max((b.h / maxH) * 100, 8)}%` }} />
@@ -213,13 +322,32 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       );
     }
 
-    // ── Milestone progress ──
-    if (metric === "milestone_progress") {
+    // ── Symptom free days ──
+    if (metric === "symptom_free_days") {
+      const period = dataConfig.period_days || 7;
+      const freeDays = 5;
+      return (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-end justify-between">
+            <span className="text-3xl font-bold tabular-nums text-foreground">{freeDays}<span className="text-sm font-normal text-muted-foreground ml-0.5">/{period}</span></span>
+            <span className="text-xs text-emerald-600 font-medium">{Math.round((freeDays / period) * 100)}%</span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2">
+            <div className="bg-emerald-500 rounded-full h-2 transition-all" style={{ width: `${(freeDays / period) * 100}%` }} />
+          </div>
+          <p className="text-[10px] text-muted-foreground">symptomfria dagar</p>
+        </div>
+      );
+    }
+
+    // ── Milestone progress / milestones ──
+    if (metric === "milestone_progress" || metric === "milestones") {
       const milestones = [
         { label: "Regelbunden frukost", done: true },
         { label: "3 mål/dag i 5 dagar", done: true },
         { label: "Prova nytt mellanmål", done: false },
       ];
+      const doneCount = milestones.filter(m => m.done).length;
       return (
         <div className="mt-3 space-y-2">
           {milestones.map((m, i) => (
@@ -232,7 +360,7 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
             </div>
           ))}
           <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-            <div className="bg-primary rounded-full h-1.5" style={{ width: "66%" }} />
+            <div className="bg-primary rounded-full h-1.5" style={{ width: `${(doneCount / milestones.length) * 100}%` }} />
           </div>
         </div>
       );
@@ -256,7 +384,42 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       );
     }
 
-    // ── Manual / fallback ──
+    // ── Plan description (focus card) ──
+    if (metric === "plan_description") {
+      return (
+        <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+          <p className="text-xs text-foreground leading-relaxed">
+            {description || "Fokus denna vecka: bygg en trygg måltidsrutin med tre huvudmål"}
+          </p>
+        </div>
+      );
+    }
+
+    // ── Next appointment ──
+    if (metric === "next_appointment") {
+      return (
+        <div className="mt-3 flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Video className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">Tis 25 mar, 10:00</p>
+            <p className="text-[10px] text-muted-foreground">Videosamtal · 30 min</p>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Custom text / manual / fallback ──
+    if (metric === "custom_text" || !metric) {
+      return (
+        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+          {description || "Innehåll sätts per patient av dietisten"}
+        </p>
+      );
+    }
+
+    // Catch-all fallback
     return (
       <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
         {description || "Innehåll sätts per patient av dietisten"}

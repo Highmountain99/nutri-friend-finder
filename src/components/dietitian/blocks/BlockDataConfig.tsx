@@ -12,8 +12,10 @@ const DATA_SOURCE_OPTIONS = [
   { value: "symptom_log", label: "Symptomlogg", desc: "Symptom kopplade till måltider" },
   { value: "macro_data", label: "Makro-/näringsdata", desc: "Protein, kolhydrater, fett" },
   { value: "treatment_goals", label: "Behandlingsmål", desc: "Milstolpar och mål" },
+  { value: "treatment_plan", label: "Behandlingsplan", desc: "Aktiv plan, fokus och beskrivning" },
   { value: "progression", label: "Progression", desc: "Mönster och trender över tid" },
   { value: "health_tracking", label: "Hälsomätvärden", desc: "Vikt, blodtryck, midjemått etc." },
+  { value: "appointments", label: "Bokningar", desc: "Kommande och tidigare samtal" },
 ];
 
 const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: string }[]> = {
