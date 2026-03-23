@@ -106,10 +106,9 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-booking-checkout", { message: errorMessage });
+    console.error("[create-booking-checkout] Error:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An unexpected error occurred. Please try again." }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

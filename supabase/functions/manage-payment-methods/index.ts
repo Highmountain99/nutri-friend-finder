@@ -19,7 +19,8 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Not authenticated");
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
@@ -100,7 +101,8 @@ serve(async (req) => {
 
     throw new Error(`Unknown action: ${action}`);
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[manage-payment-methods] Error:", error);
+    return new Response(JSON.stringify({ error: "An unexpected error occurred. Please try again." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
