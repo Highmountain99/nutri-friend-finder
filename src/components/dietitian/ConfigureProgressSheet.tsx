@@ -10,6 +10,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, GripVertical, EyeOff, Smartphone, Plus } from "lucide-react";
 import { ModulePreview } from "./progress-builder/ModulePreview";
+import { BlockPreview } from "./blocks/BlockPreview";
 import { TEMPLATE_SECTION_DEFAULTS, CATEGORY_SECTIONS, GENERIC_SECTIONS, type SectionDef } from "./progress-builder/templateDefaults";
 import { useBlockTemplates } from "@/hooks/dietitian/useBlockTemplates";
 import * as Icons from "lucide-react";
@@ -37,18 +38,17 @@ interface ConfigureProgressSheetProps {
 
 // Unified item: either a standard module or a library block
 interface UnifiedItem {
-  id: string; // unique key
+  id: string;
   type: "module" | "block";
   label: string;
   description: string;
   enabled: boolean;
-  // module-specific
   sectionValue?: string;
-  // block-specific
-  blockId?: string; // patient_blocks.id
+  blockId?: string;
   templateId?: string;
   icon?: string;
   dataSource?: string;
+  dataConfig?: Record<string, any>;
 }
 
 export function ConfigureProgressSheet({ open, onOpenChange, patientId }: ConfigureProgressSheetProps) {
@@ -136,6 +136,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
       templateId: pb.block_template_id,
       icon: pb.template?.icon || "Square",
       dataSource: pb.template?.data_source || "none",
+      dataConfig: pb.template?.data_config || {},
     }));
 
     // Merge: enabled modules first, then blocks, then disabled modules
@@ -227,6 +228,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
         templateId: tmpl.id,
         icon: tmpl.icon || "Square",
         dataSource: tmpl.data_source || "none",
+        dataConfig: tmpl.data_config || {},
       };
 
       // Insert before disabled items
@@ -419,8 +421,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                         );
                       }
 
-                      // Block item
-                      const IconComp = (Icons as any)[item.icon || "Square"] || Icons.Square;
+                      // Block item — show mini BlockPreview
                       return (
                         <div
                           key={item.id}
@@ -430,11 +431,11 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                           onDragOver={(e) => e.preventDefault()}
                           onDragEnd={handleDragEnd}
                           className={`
-                            group relative rounded-xl border bg-card p-3 transition-all cursor-grab active:cursor-grabbing select-none
+                            group relative rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none overflow-hidden
                             ${isOver ? "border-primary ring-2 ring-primary/20 scale-[1.02]" : "border-primary/30 hover:border-primary/50"}
                           `}
                         >
-                          <div className="absolute -left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -left-0 top-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                             <GripVertical className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <button
@@ -443,16 +444,16 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                           >
                             <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                              <IconComp className="h-3.5 w-3.5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{item.label}</p>
-                              {item.dataSource && item.dataSource !== "none" && (
-                                <p className="text-[9px] text-emerald-600">Datakopplat</p>
-                              )}
-                            </div>
+                          <div className="transform scale-[0.85] origin-top pointer-events-none">
+                            <BlockPreview
+                              title={item.label}
+                              description={item.description}
+                              icon={item.icon || "Square"}
+                              dataSource={item.dataSource || "none"}
+                              dataConfig={item.dataConfig || {}}
+                              displayConfig={{}}
+                              blockType="progress"
+                            />
                           </div>
                         </div>
                       );
@@ -489,34 +490,33 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                     </button>
                   ))}
 
-                  {/* Available library blocks */}
-                  {availableTemplates.map((tmpl) => {
-                    const IconComp = (Icons as any)[tmpl.icon] || Icons.Square;
-                    return (
-                      <button
-                        key={tmpl.id}
-                        onClick={() => handleAddBlock(tmpl)}
-                        disabled={addingBlock === tmpl.id}
-                        className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group disabled:opacity-50"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="p-1 rounded-lg bg-primary/10 text-primary shrink-0">
-                            {addingBlock === tmpl.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <IconComp className="h-3 w-3" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-medium truncate">{tmpl.title}</p>
-                            {tmpl.data_source !== "none" && (
-                              <p className="text-[9px] text-emerald-600">Datakopplat</p>
-                            )}
-                          </div>
+                  {/* Available library blocks with visual preview */}
+                  {availableTemplates.map((tmpl) => (
+                    <button
+                      key={tmpl.id}
+                      onClick={() => handleAddBlock(tmpl)}
+                      disabled={addingBlock === tmpl.id}
+                      className="rounded-xl border border-dashed border-border bg-muted/30 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group disabled:opacity-50 overflow-hidden"
+                    >
+                      {addingBlock === tmpl.id ? (
+                        <div className="flex items-center justify-center p-6">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                         </div>
-                      </button>
-                    );
-                  })}
+                      ) : (
+                        <div className="transform scale-[0.82] origin-top pointer-events-none">
+                          <BlockPreview
+                            title={tmpl.title}
+                            description={tmpl.description || ""}
+                            icon={tmpl.icon || "Square"}
+                            dataSource={tmpl.data_source}
+                            dataConfig={(tmpl.data_config as Record<string, any>) || {}}
+                            displayConfig={(tmpl.display_config as Record<string, any>) || {}}
+                            blockType={tmpl.block_type}
+                          />
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
