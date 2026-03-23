@@ -19,6 +19,37 @@ function getIcon(iconName: string, className = "h-4 w-4") {
   return Icon ? <Icon className={className} /> : <Icons.Square className={className} />;
 }
 
+const HEALTH_METRIC_LABELS: Record<string, { label: string; unit: string }> = {
+  weight: { label: "Vikt", unit: "kg" },
+  waist: { label: "Midjemått", unit: "cm" },
+  blood_pressure_systolic: { label: "Blodtryck (syst)", unit: "mmHg" },
+  blood_pressure_diastolic: { label: "Blodtryck (diast)", unit: "mmHg" },
+  bmi: { label: "BMI", unit: "" },
+};
+
+const SAMPLE_CHART_DATA: Record<string, { date: string; value: number }[]> = {
+  weight: [
+    { date: "Jan", value: 92 }, { date: "Feb", value: 90.5 }, { date: "Mar", value: 89 },
+    { date: "Apr", value: 88.2 }, { date: "Maj", value: 87 }, { date: "Jun", value: 86.5 },
+  ],
+  waist: [
+    { date: "Jan", value: 98 }, { date: "Feb", value: 97 }, { date: "Mar", value: 95 },
+    { date: "Apr", value: 94.5 }, { date: "Maj", value: 93 }, { date: "Jun", value: 92 },
+  ],
+  blood_pressure_systolic: [
+    { date: "Jan", value: 145 }, { date: "Feb", value: 140 }, { date: "Mar", value: 138 },
+    { date: "Apr", value: 135 }, { date: "Maj", value: 132 }, { date: "Jun", value: 130 },
+  ],
+  blood_pressure_diastolic: [
+    { date: "Jan", value: 95 }, { date: "Feb", value: 92 }, { date: "Mar", value: 90 },
+    { date: "Apr", value: 88 }, { date: "Maj", value: 86 }, { date: "Jun", value: 85 },
+  ],
+  bmi: [
+    { date: "Jan", value: 30.1 }, { date: "Feb", value: 29.6 }, { date: "Mar", value: 29.1 },
+    { date: "Apr", value: 28.8 }, { date: "Maj", value: 28.5 }, { date: "Jun", value: 28.3 },
+  ],
+};
+
 const ROLE_LABELS: Record<string, string> = {
   action: "Action",
   insight: "Insikt",

@@ -162,6 +162,39 @@ export function BlockDataConfig({ dataSource, config, onChange, onSourceChange }
         </div>
       )}
 
+      {/* Health metric type selector */}
+      {dataSource === "health_tracking" && config.metric === "trend_chart" && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Vilket mätvärde?</Label>
+          <Select value={config.health_metric || "weight"} onValueChange={(v) => onChange({ ...config, health_metric: v })}>
+            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weight">Vikt (kg)</SelectItem>
+              <SelectItem value="waist">Midjemått (cm)</SelectItem>
+              <SelectItem value="blood_pressure_systolic">Blodtryck systoliskt</SelectItem>
+              <SelectItem value="blood_pressure_diastolic">Blodtryck diastoliskt</SelectItem>
+              <SelectItem value="bmi">BMI</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {dataSource === "health_tracking" && config.metric === "latest_value" && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Vilket mätvärde?</Label>
+          <Select value={config.health_metric || "weight"} onValueChange={(v) => onChange({ ...config, health_metric: v })}>
+            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weight">Vikt (kg)</SelectItem>
+              <SelectItem value="waist">Midjemått (cm)</SelectItem>
+              <SelectItem value="blood_pressure_systolic">Blodtryck systoliskt</SelectItem>
+              <SelectItem value="blood_pressure_diastolic">Blodtryck diastoliskt</SelectItem>
+              <SelectItem value="bmi">BMI</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* Interpretation */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Tolkning</Label>
