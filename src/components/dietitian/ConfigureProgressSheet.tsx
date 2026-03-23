@@ -228,6 +228,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
         templateId: tmpl.id,
         icon: tmpl.icon || "Square",
         dataSource: tmpl.data_source || "none",
+        dataConfig: tmpl.data_config || {},
       };
 
       // Insert before disabled items
