@@ -94,6 +94,57 @@ export type Database = {
           },
         ]
       }
+      block_templates: {
+        Row: {
+          block_type: string
+          category: string
+          created_at: string
+          data_config: Json | null
+          data_source: string
+          description: string | null
+          dietitian_id: string
+          display_config: Json | null
+          icon: string | null
+          id: string
+          is_shared: boolean
+          title: string
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          block_type?: string
+          category?: string
+          created_at?: string
+          data_config?: Json | null
+          data_source?: string
+          description?: string | null
+          dietitian_id: string
+          display_config?: Json | null
+          icon?: string | null
+          id?: string
+          is_shared?: boolean
+          title: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          block_type?: string
+          category?: string
+          created_at?: string
+          data_config?: Json | null
+          data_source?: string
+          description?: string | null
+          dietitian_id?: string
+          display_config?: Json | null
+          icon?: string | null
+          id?: string
+          is_shared?: boolean
+          title?: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           attachments: Json | null
@@ -607,6 +658,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      patient_blocks: {
+        Row: {
+          block_template_id: string
+          created_at: string
+          dietitian_id: string
+          id: string
+          is_active: boolean
+          manual_content: string | null
+          override_title: string | null
+          patient_id: string
+          sort_order: number
+        }
+        Insert: {
+          block_template_id: string
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          is_active?: boolean
+          manual_content?: string | null
+          override_title?: string | null
+          patient_id: string
+          sort_order?: number
+        }
+        Update: {
+          block_template_id?: string
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          is_active?: boolean
+          manual_content?: string | null
+          override_title?: string | null
+          patient_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_blocks_block_template_id_fkey"
+            columns: ["block_template_id"]
+            isOneToOne: false
+            referencedRelation: "block_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patient_documents: {
         Row: {
