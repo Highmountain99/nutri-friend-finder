@@ -11,6 +11,7 @@ import {
   ChevronDown,
   User,
   ShieldCheck,
+  Blocks,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -50,6 +51,7 @@ const items = [
   { title: "Kalender", url: "/dietitian/schedule", icon: CalendarDays },
   { title: "Meddelanden", url: "/dietitian/messages", icon: MessageSquare, badgeKey: "messages" },
   { title: "Recept", url: "/dietitian/recipes", icon: UtensilsCrossed },
+  { title: "Blockbibliotek", url: "/dietitian/blocks", icon: Blocks },
   { title: "Statistik", url: "/dietitian/statistics", icon: BarChart3 },
 ];
 

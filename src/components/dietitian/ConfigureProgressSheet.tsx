@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, GripVertical, Eye, EyeOff, Smartphone } from "lucide-react";
+import { Loader2, GripVertical, Eye, EyeOff, Smartphone, Blocks } from "lucide-react";
 import { ModulePreview } from "./progress-builder/ModulePreview";
 import { TEMPLATE_SECTION_DEFAULTS, CATEGORY_SECTIONS, GENERIC_SECTIONS, type SectionDef } from "./progress-builder/templateDefaults";
+import { BlockPickerSheet } from "./blocks/BlockPickerSheet";
 
 const TEMPLATE_OPTIONS: { value: string; label: string; description: string }[] = [
   { value: "auto", label: "Automatisk (från kvalificering)", description: "Baseras på patientens egna val" },
@@ -48,6 +49,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
   const [orderedSections, setOrderedSections] = useState<SectionItem[]>([]);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const dragNode = useRef<HTMLDivElement | null>(null);
 
   const { data: config, isLoading } = useQuery({
@@ -311,12 +313,18 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
               </div>
             )}
 
-            <div className="px-6 pt-2">
+            <div className="px-6 pt-2 space-y-2">
+              <Button variant="outline" onClick={() => setPickerOpen(true)} className="w-full rounded-xl">
+                <Blocks className="w-4 h-4 mr-2" />
+                Lägg till block från biblioteket
+              </Button>
               <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl">
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Spara design
               </Button>
             </div>
+
+            <BlockPickerSheet open={pickerOpen} onOpenChange={setPickerOpen} patientId={patientId} />
           </div>
         )}
       </SheetContent>

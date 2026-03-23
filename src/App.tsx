@@ -39,6 +39,7 @@ import DietitianMessages from "./pages/dietitian/DietitianMessages";
 import DietitianProfile from "./pages/dietitian/DietitianProfile";
 import DietitianLogin from "./pages/dietitian/DietitianLogin";
 import DietitianStatistics from "./pages/dietitian/DietitianStatistics";
+import DietitianBlocks from "./pages/dietitian/DietitianBlocks";
 import Invite from "./pages/Invite";
 import DevTools from "./pages/DevTools";
 
@@ -109,6 +110,7 @@ const App = () => (
                 <Route path="/dietitian/messages" element={<DietitianMessages />} />
                 <Route path="/dietitian/profile" element={<DietitianProfile />} />
                 <Route path="/dietitian/statistics" element={<DietitianStatistics />} />
+                <Route path="/dietitian/blocks" element={<DietitianBlocks />} />
                 <Route path="/dietitian/admin" element={<Admin />} />
               </Route>
             </Route>
