@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,15 +91,29 @@ export function BlockBuilderSheet({ open, onOpenChange, editTemplate }: BlockBui
   const create = useCreateBlockTemplate();
   const update = useUpdateBlockTemplate();
 
-  const [title, setTitle] = useState(editTemplate?.title || "");
-  const [description, setDescription] = useState(editTemplate?.description || "");
-  const [icon, setIcon] = useState(editTemplate?.icon || "Square");
-  const [blockType, setBlockType] = useState(editTemplate?.block_type || "action");
-  const [category, setCategory] = useState(editTemplate?.category || "general");
-  const [dataSource, setDataSource] = useState(editTemplate?.data_source || "none");
-  const [dataConfig, setDataConfig] = useState<Record<string, any>>(editTemplate?.data_config || {});
-  const [displayConfig, setDisplayConfig] = useState<Record<string, any>>(editTemplate?.display_config || {});
-  const [isShared, setIsShared] = useState(editTemplate?.is_shared || false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("Square");
+  const [blockType, setBlockType] = useState("action");
+  const [category, setCategory] = useState("general");
+  const [dataSource, setDataSource] = useState("none");
+  const [dataConfig, setDataConfig] = useState<Record<string, any>>({});
+  const [displayConfig, setDisplayConfig] = useState<Record<string, any>>({});
+  const [isShared, setIsShared] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setTitle(editTemplate?.title || "");
+      setDescription(editTemplate?.description || "");
+      setIcon(editTemplate?.icon || "Square");
+      setBlockType(editTemplate?.block_type || "action");
+      setCategory(editTemplate?.category || "general");
+      setDataSource(editTemplate?.data_source || "none");
+      setDataConfig(editTemplate?.data_config || {});
+      setDisplayConfig(editTemplate?.display_config || {});
+      setIsShared(editTemplate?.is_shared || false);
+    }
+  }, [open, editTemplate]);
 
   // Behavior mode derived from data source
   const behaviorMode = dataSource === "none"
