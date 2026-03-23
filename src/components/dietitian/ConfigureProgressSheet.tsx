@@ -313,12 +313,18 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
               </div>
             )}
 
-            <div className="px-6 pt-2">
+            <div className="px-6 pt-2 space-y-2">
+              <Button variant="outline" onClick={() => setPickerOpen(true)} className="w-full rounded-xl">
+                <Blocks className="w-4 h-4 mr-2" />
+                Lägg till block från biblioteket
+              </Button>
               <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl">
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Spara design
               </Button>
             </div>
+
+            <BlockPickerSheet open={pickerOpen} onOpenChange={setPickerOpen} patientId={patientId} />
           </div>
         )}
       </SheetContent>
