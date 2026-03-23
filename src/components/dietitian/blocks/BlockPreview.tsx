@@ -429,14 +429,15 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
   };
 
   return (
-    <Card className="p-4 bg-card border border-border shadow-sm overflow-hidden">
-      {/* Header: icon + title */}
-      <div className="flex items-center gap-2.5">
-        <div className="p-1.5 rounded-lg bg-primary/8 text-primary shrink-0">
-          {getIcon(icon, "h-4 w-4")}
+    <div className={compact ? "overflow-hidden" : ""}>
+      <Card className={`bg-card overflow-hidden ${compact ? "p-3 border-0 shadow-none" : "p-4 border border-border shadow-sm"}`}>
+        {/* Header: icon + title */}
+        <div className="flex items-center gap-2">
+          <div className={`rounded-lg bg-primary/8 text-primary shrink-0 ${compact ? "p-1" : "p-1.5"}`}>
+            {getIcon(icon, compact ? "h-3 w-3" : "h-4 w-4")}
+          </div>
+          <h4 className={`font-semibold truncate ${compact ? "text-xs" : "text-sm"}`}>{title || "Namnlöst block"}</h4>
         </div>
-        <h4 className="text-sm font-semibold truncate">{title || "Namnlöst block"}</h4>
-      </div>
 
       {/* Visual content */}
       {renderContent()}
