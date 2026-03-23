@@ -194,6 +194,76 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
               </div>
             </div>
           )}
+
+          {/* Trend chart */}
+          {metric === "trend_chart" && (
+            <div className="mt-2.5">
+              {(() => {
+                const hm = dataConfig.health_metric || "weight";
+                const metricInfo = HEALTH_METRIC_LABELS[hm] || { label: "Vikt", unit: "kg" };
+                const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+                const first = chartData[0]?.value || 0;
+                const last = chartData[chartData.length - 1]?.value || 0;
+                const diff = last - first;
+                const isDown = diff < 0;
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-muted-foreground">{metricInfo.label}</span>
+                      <div className="flex items-center gap-1">
+                        {isDown ? (
+                          <TrendingDown className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <TrendingUp className="h-3 w-3 text-amber-500" />
+                        )}
+                        <span className={`text-xs font-medium ${isDown ? "text-emerald-600" : "text-amber-600"}`}>
+                          {diff > 0 ? "+" : ""}{diff.toFixed(1)} {metricInfo.unit}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-[80px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                          <YAxis hide domain={["dataMin - 1", "dataMax + 1"]} />
+                          <Tooltip
+                            contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                            formatter={(v: number) => [`${v} ${metricInfo.unit}`, metricInfo.label]}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            dot={{ r: 2.5, fill: "hsl(var(--primary))" }}
+                            activeDot={{ r: 4 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Latest value */}
+          {metric === "latest_value" && (
+            <div className="mt-2.5">
+              {(() => {
+                const hm = dataConfig.health_metric || "weight";
+                const metricInfo = HEALTH_METRIC_LABELS[hm] || { label: "Vikt", unit: "kg" };
+                const sampleData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+                const latest = sampleData[sampleData.length - 1]?.value || 0;
+                return (
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold text-primary">{latest}</span>
+                    <span className="text-xs text-muted-foreground">{metricInfo.unit} ({metricInfo.label})</span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
       </div>
 
