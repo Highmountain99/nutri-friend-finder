@@ -136,6 +136,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
       templateId: pb.block_template_id,
       icon: pb.template?.icon || "Square",
       dataSource: pb.template?.data_source || "none",
+      dataConfig: pb.template?.data_config || {},
     }));
 
     // Merge: enabled modules first, then blocks, then disabled modules
