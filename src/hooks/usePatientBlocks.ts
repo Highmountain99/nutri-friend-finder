@@ -109,14 +109,13 @@ export function usePatientBlocks(patientId: string | undefined) {
       const computed: ComputedBlockData[] = patientBlocks.map((block) => {
         const config = block.template.data_config || {};
         const source = block.template.data_source;
+        const base = { chartData: null as { date: string; value: number }[] | null, chartMeta: null as { label: string; unit: string } | null };
 
         if (source === "none" || source === "custom_text") {
           return {
-            block,
+            block, ...base,
             computedLabel: block.manual_content || block.template.description || null,
-            computedItems: [],
-            computedValue: null,
-            computedTotal: null,
+            computedItems: [], computedValue: null, computedTotal: null,
             source: "dietitian" as const,
           };
         }
@@ -135,11 +134,8 @@ export function usePatientBlocks(patientId: string | undefined) {
               { key: "snack", label: "Mellanmål", done: types.some((t: string) => t.includes("mellanmål") || t === "snack") },
             ];
             return {
-              block,
-              computedLabel: null,
-              computedItems: items,
-              computedValue: items.filter((i) => i.done).length,
-              computedTotal: items.length,
+              block, ...base, computedLabel: null, computedItems: items,
+              computedValue: items.filter((i) => i.done).length, computedTotal: items.length,
               source: "journal" as const,
             };
           }
@@ -155,29 +151,20 @@ export function usePatientBlocks(patientId: string | undefined) {
               if (rule.condition === "lt" && count < rule.value) { label = rule.label; break; }
             }
             return {
-              block,
-              computedLabel: label,
-              computedItems: [],
-              computedValue: count,
-              computedTotal: null,
-              source: "journal" as const,
+              block, ...base, computedLabel: label, computedItems: [],
+              computedValue: count, computedTotal: null, source: "journal" as const,
             };
           }
 
           if (metric === "regularity_30d") {
             const dayMap: Record<string, number> = {};
-            mealEntries.forEach((m) => {
-              dayMap[m.entry_date] = (dayMap[m.entry_date] || 0) + 1;
-            });
+            mealEntries.forEach((m) => { dayMap[m.entry_date] = (dayMap[m.entry_date] || 0) + 1; });
             const threshold = config.threshold || 3;
             const daysWithEnough = Object.values(dayMap).filter((c) => c >= threshold).length;
-            const totalDays = 30;
             return {
-              block,
-              computedLabel: `${daysWithEnough}/${totalDays} dagar med ${threshold}+ måltider`,
-              computedItems: [],
-              computedValue: daysWithEnough,
-              computedTotal: totalDays,
+              block, ...base,
+              computedLabel: `${daysWithEnough}/30 dagar med ${threshold}+ måltider`,
+              computedItems: [], computedValue: daysWithEnough, computedTotal: 30,
               source: "journal" as const,
             };
           }
@@ -187,22 +174,63 @@ export function usePatientBlocks(patientId: string | undefined) {
           const recentSymptoms = symptomEntries.filter((s) => s.entry_date >= sevenDaysAgo);
           const count = recentSymptoms.length;
           return {
-            block,
+            block, ...base,
             computedLabel: count === 0 ? "Inga symptom loggade" : `${count} symptom senaste 7 dagarna`,
-            computedItems: [],
-            computedValue: count,
-            computedTotal: null,
+            computedItems: [], computedValue: count, computedTotal: null,
             source: "journal" as const,
           };
         }
 
+        if (source === "health_tracking") {
+          const healthMetric = config.health_metric || "weight";
+          const METRIC_META: Record<string, { label: string; unit: string }> = {
+            weight: { label: "Vikt", unit: "kg" },
+            waist: { label: "Midjemått", unit: "cm" },
+            blood_pressure_systolic: { label: "Blodtryck (syst)", unit: "mmHg" },
+            blood_pressure_diastolic: { label: "Blodtryck (diast)", unit: "mmHg" },
+            bmi: { label: "BMI", unit: "" },
+          };
+          const meta = METRIC_META[healthMetric] || { label: healthMetric, unit: "" };
+          const filtered = healthEntries.filter((e: any) => e.metric_type === healthMetric);
+
+          if (config.metric === "trend_chart") {
+            const chartData = filtered.map((e: any) => ({
+              date: format(new Date(e.entry_date), "d MMM"),
+              value: Number(e.value),
+            }));
+            const latest = chartData.length > 0 ? chartData[chartData.length - 1].value : null;
+            const first = chartData.length > 0 ? chartData[0].value : null;
+            const diff = latest !== null && first !== null ? latest - first : null;
+            return {
+              block,
+              computedLabel: diff !== null
+                ? `${diff > 0 ? "+" : ""}${diff.toFixed(1)} ${meta.unit} sedan start`
+                : "Ingen data ännu",
+              computedItems: [],
+              computedValue: latest,
+              computedTotal: null,
+              chartData: chartData.length > 0 ? chartData : null,
+              chartMeta: meta,
+              source: "journal" as const,
+            };
+          }
+
+          if (config.metric === "latest_value") {
+            const latest = filtered.length > 0 ? Number(filtered[filtered.length - 1].value) : null;
+            return {
+              block, ...base,
+              computedLabel: latest !== null ? `${meta.label}: ${latest} ${meta.unit}` : "Ingen data ännu",
+              computedItems: [], computedValue: latest, computedTotal: null,
+              chartMeta: meta, source: "journal" as const,
+            };
+          }
+        }
+
         // Default fallback
         return {
-          block,
+          block, ...base,
           computedLabel: block.manual_content || block.template.description || null,
-          computedItems: [],
-          computedValue: null,
-          computedTotal: null,
+          computedItems: [], computedValue: null, computedTotal: null,
           source: "dietitian" as const,
         };
       });
