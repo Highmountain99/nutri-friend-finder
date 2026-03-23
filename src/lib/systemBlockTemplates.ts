@@ -1,0 +1,273 @@
+/**
+ * System block templates that map to all existing progress view elements.
+ * These get auto-seeded into block_templates for each dietitian so they
+ * can customize and assign them to patients.
+ */
+
+export interface SystemBlockDef {
+  key: string; // unique identifier, also used as data_config.system_key
+  title: string;
+  description: string;
+  icon: string;
+  block_type: string;
+  category: string;
+  data_source: string;
+  data_config: Record<string, any>;
+  display_config: Record<string, any>;
+}
+
+export const SYSTEM_BLOCK_TEMPLATES: SystemBlockDef[] = [
+  // ── Eating Disorder ──
+  {
+    key: "ed_focus",
+    title: "Dagens fokus",
+    description: "Stödjande fokustext från behandlingsplanen",
+    icon: "Heart",
+    block_type: "insight",
+    category: "eating_disorder",
+    data_source: "treatment_plan",
+    data_config: { system_key: "ed_focus", metric: "plan_description" },
+    display_config: { render_as: "focus_card" },
+  },
+  {
+    key: "ed_meal_rhythm",
+    title: "Måltidsrytm idag",
+    description: "Visar vilka måltider som loggats idag",
+    icon: "Calendar",
+    block_type: "progress",
+    category: "eating_disorder",
+    data_source: "meal_log",
+    data_config: { system_key: "ed_meal_rhythm", metric: "meal_rhythm" },
+    display_config: { render_as: "meal_rhythm_card" },
+  },
+  {
+    key: "ed_meal_structure",
+    title: "Måltidsstruktur (7d)",
+    description: "Genomsnittlig måltidsstruktur senaste veckan",
+    icon: "Activity",
+    block_type: "progress",
+    category: "eating_disorder",
+    data_source: "meal_log",
+    data_config: { system_key: "ed_meal_structure", metric: "structure_7d" },
+    display_config: { render_as: "meal_structure_card" },
+  },
+  {
+    key: "ed_regularity_30d",
+    title: "Regelbundenhet (30d)",
+    description: "Antal dagar med 3+ måltider senaste 30 dagarna",
+    icon: "Activity",
+    block_type: "progress",
+    category: "eating_disorder",
+    data_source: "meal_log",
+    data_config: { system_key: "ed_regularity_30d", metric: "regularity_30d", threshold: 3 },
+    display_config: { render_as: "regularity_grid" },
+  },
+  {
+    key: "ed_behavior_goals",
+    title: "Beteendemål",
+    description: "Aktiva delmål från behandlingsplanen",
+    icon: "Target",
+    block_type: "action",
+    category: "eating_disorder",
+    data_source: "treatment_goals",
+    data_config: { system_key: "ed_behavior_goals", metric: "milestones" },
+    display_config: { render_as: "behavior_goals_card" },
+  },
+  {
+    key: "ed_symptom_patterns",
+    title: "Symptommönster (14d)",
+    description: "Symptom grupperade efter tid på dygnet",
+    icon: "AlertTriangle",
+    block_type: "insight",
+    category: "eating_disorder",
+    data_source: "symptom_log",
+    data_config: { system_key: "ed_symptom_patterns", metric: "pattern_by_time", period_days: 14 },
+    display_config: { render_as: "symptom_pattern_card" },
+  },
+  {
+    key: "ed_weekly_checkin",
+    title: "Veckoöversikt (7d)",
+    description: "Sammanfattning av senaste veckans loggning",
+    icon: "Sparkles",
+    block_type: "progress",
+    category: "eating_disorder",
+    data_source: "meal_log",
+    data_config: { system_key: "ed_weekly_checkin", metric: "weekly_checkin" },
+    display_config: { render_as: "weekly_checkin_card" },
+  },
+  {
+    key: "ed_follow_up",
+    title: "Nästa samtal",
+    description: "Kommande videosamtal med dietisten",
+    icon: "Calendar",
+    block_type: "follow_up",
+    category: "eating_disorder",
+    data_source: "appointments",
+    data_config: { system_key: "ed_follow_up", metric: "next_appointment" },
+    display_config: { render_as: "follow_up_card" },
+  },
+
+  // ── Weight Loss ──
+  {
+    key: "wl_metrics",
+    title: "Viktvärden",
+    description: "Nuvarande vikt, tappat och kvar till mål",
+    icon: "Scale",
+    block_type: "progress",
+    category: "weight_loss",
+    data_source: "health_tracking",
+    data_config: { system_key: "wl_metrics", health_metric: "weight", metric: "metric_cards" },
+    display_config: { render_as: "weight_metrics_card" },
+  },
+  {
+    key: "wl_trend",
+    title: "Vikttrendgraf",
+    description: "Viktutveckling över tid som linjegraf",
+    icon: "TrendingDown",
+    block_type: "progress",
+    category: "weight_loss",
+    data_source: "health_tracking",
+    data_config: { system_key: "wl_trend", health_metric: "weight", metric: "trend_chart" },
+    display_config: { render_as: "trend_chart" },
+  },
+  {
+    key: "wl_weekly",
+    title: "Veckoöversikt",
+    description: "Aktiva dagar och loggade måltider",
+    icon: "Calendar",
+    block_type: "progress",
+    category: "weight_loss",
+    data_source: "meal_log",
+    data_config: { system_key: "wl_weekly", metric: "weekly_overview" },
+    display_config: { render_as: "weekly_overview_card" },
+  },
+
+  // ── Diabetes ──
+  {
+    key: "db_blood_sugar",
+    title: "Blodsockervärden",
+    description: "Fastesocker & efter-mat med målstatus",
+    icon: "Activity",
+    block_type: "progress",
+    category: "diabetes",
+    data_source: "health_tracking",
+    data_config: { system_key: "db_blood_sugar", health_metric: "blood_sugar_fasting", metric: "metric_cards" },
+    display_config: { render_as: "blood_sugar_metrics_card" },
+  },
+  {
+    key: "db_trend",
+    title: "Blodsockertrendgraf",
+    description: "Blodsocker senaste 30 dagarna",
+    icon: "TrendingUp",
+    block_type: "progress",
+    category: "diabetes",
+    data_source: "health_tracking",
+    data_config: { system_key: "db_trend", health_metric: "blood_sugar_fasting", metric: "trend_chart" },
+    display_config: { render_as: "trend_chart" },
+  },
+
+  // ── Gut Health / IBS ──
+  {
+    key: "gh_symptom_free",
+    title: "Symptomfria dagar",
+    description: "Antal dagar utan symptom senaste 7 dagarna",
+    icon: "Check",
+    block_type: "progress",
+    category: "gut_health",
+    data_source: "symptom_log",
+    data_config: { system_key: "gh_symptom_free", metric: "symptom_free_days", period_days: 7 },
+    display_config: { render_as: "symptom_free_card" },
+  },
+  {
+    key: "gh_symptom_count",
+    title: "Symptomöversikt (7d)",
+    description: "Antal symptom senaste veckan",
+    icon: "AlertTriangle",
+    block_type: "insight",
+    category: "gut_health",
+    data_source: "symptom_log",
+    data_config: { system_key: "gh_symptom_count", metric: "symptom_count", period_days: 7 },
+    display_config: { render_as: "symptom_count_card" },
+  },
+
+  // ── Heart Health ──
+  {
+    key: "hh_bp_trend",
+    title: "Blodtryckstrend",
+    description: "Systoliskt blodtryck över tid",
+    icon: "Heart",
+    block_type: "progress",
+    category: "heart_health",
+    data_source: "health_tracking",
+    data_config: { system_key: "hh_bp_trend", health_metric: "blood_pressure_systolic", metric: "trend_chart" },
+    display_config: { render_as: "trend_chart" },
+  },
+  {
+    key: "hh_waist_trend",
+    title: "Midjemått trend",
+    description: "Midjemått över tid",
+    icon: "Ruler",
+    block_type: "progress",
+    category: "heart_health",
+    data_source: "health_tracking",
+    data_config: { system_key: "hh_waist_trend", health_metric: "waist", metric: "trend_chart" },
+    display_config: { render_as: "trend_chart" },
+  },
+
+  // ── Cross-category blocks ──
+  {
+    key: "meal_rhythm_today",
+    title: "Måltidsrytm idag",
+    description: "Visar vilka måltider som loggats idag",
+    icon: "Calendar",
+    block_type: "progress",
+    category: "general",
+    data_source: "meal_log",
+    data_config: { system_key: "meal_rhythm_today", metric: "meal_rhythm" },
+    display_config: { render_as: "meal_rhythm_card" },
+  },
+  {
+    key: "next_appointment",
+    title: "Nästa samtal",
+    description: "Kommande videosamtal med dietisten",
+    icon: "Calendar",
+    block_type: "follow_up",
+    category: "general",
+    data_source: "appointments",
+    data_config: { system_key: "next_appointment", metric: "next_appointment" },
+    display_config: { render_as: "follow_up_card" },
+  },
+  {
+    key: "behavior_goals",
+    title: "Behandlingsmål",
+    description: "Aktiva delmål från behandlingsplanen",
+    icon: "Target",
+    block_type: "action",
+    category: "general",
+    data_source: "treatment_goals",
+    data_config: { system_key: "behavior_goals", metric: "milestones" },
+    display_config: { render_as: "behavior_goals_card" },
+  },
+  {
+    key: "symptom_patterns",
+    title: "Symptommönster",
+    description: "Symptom grupperade efter tid på dygnet",
+    icon: "AlertTriangle",
+    block_type: "insight",
+    category: "general",
+    data_source: "symptom_log",
+    data_config: { system_key: "symptom_patterns", metric: "pattern_by_time", period_days: 14 },
+    display_config: { render_as: "symptom_pattern_card" },
+  },
+  {
+    key: "weight_trend",
+    title: "Viktutveckling",
+    description: "Viktkurva med trendindikator",
+    icon: "Scale",
+    block_type: "progress",
+    category: "general",
+    data_source: "health_tracking",
+    data_config: { system_key: "weight_trend", health_metric: "weight", metric: "trend_chart" },
+    display_config: { render_as: "trend_chart" },
+  },
+];
