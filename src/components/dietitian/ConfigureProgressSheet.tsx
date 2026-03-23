@@ -503,7 +503,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                         </div>
                       ) : (
-                        <div className="transform scale-[0.82] origin-top pointer-events-none">
+                        <div className="p-2">
                           <BlockPreview
                             title={tmpl.title}
                             description={tmpl.description || ""}
@@ -512,6 +512,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                             dataConfig={(tmpl.data_config as Record<string, any>) || {}}
                             displayConfig={(tmpl.display_config as Record<string, any>) || {}}
                             blockType={tmpl.block_type}
+                            compact
                           />
                         </div>
                       )}
