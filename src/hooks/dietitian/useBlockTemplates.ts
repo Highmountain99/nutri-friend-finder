@@ -33,12 +33,47 @@ export interface BlockTemplateInput {
   is_shared?: boolean;
 }
 
+async function seedSystemTemplates(userId: string) {
+  // Check if already seeded by looking for a system_key in data_config
+  const { data: existing } = await supabase
+    .from("block_templates" as any)
+    .select("data_config")
+    .eq("dietitian_id", userId);
+
+  const existingKeys = new Set(
+    (existing || [])
+      .map((t: any) => t.data_config?.system_key)
+      .filter(Boolean)
+  );
+
+  const toSeed = SYSTEM_BLOCK_TEMPLATES.filter(t => !existingKeys.has(t.key));
+  if (toSeed.length === 0) return;
+
+  const rows = toSeed.map(t => ({
+    dietitian_id: userId,
+    title: t.title,
+    description: t.description,
+    icon: t.icon,
+    block_type: t.block_type,
+    category: t.category,
+    data_source: t.data_source,
+    data_config: t.data_config,
+    display_config: t.display_config,
+    is_shared: false,
+  }));
+
+  await supabase.from("block_templates" as any).insert(rows);
+}
+
 export function useBlockTemplates(filters?: { category?: string; block_type?: string; data_source?: string }) {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ["block-templates", user?.id, filters],
     queryFn: async () => {
+      // Auto-seed system templates on first load
+      await seedSystemTemplates(user!.id);
+
       let query = supabase
         .from("block_templates" as any)
         .select("*")
