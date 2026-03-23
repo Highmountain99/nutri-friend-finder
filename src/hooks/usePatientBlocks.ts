@@ -31,6 +31,8 @@ export interface ComputedBlockData {
   computedItems: { key: string; label: string; done: boolean }[];
   computedValue: number | null;
   computedTotal: number | null;
+  chartData: { date: string; value: number }[] | null;
+  chartMeta: { label: string; unit: string } | null;
   source: "journal" | "dietitian" | "manual";
 }
 
