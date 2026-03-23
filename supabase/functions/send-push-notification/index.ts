@@ -19,13 +19,40 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
 
-    // Action: return VAPID public key to client
+    // Action: return VAPID public key to client (public info, no auth needed)
     if (body.action === "get-vapid-key") {
       const vapidPublicKey = cleanKey("VAPID_PUBLIC_KEY");
       return new Response(JSON.stringify({ vapidPublicKey }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // --- Authentication required for sending notifications ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Verify JWT and get caller identity
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerId = claimsData.claims.sub as string;
 
     // Action: send push notification
     const { user_id, title, message, url } = body;
@@ -37,22 +64,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Verify caller is a dietist assigned to this patient
+    const { data: assignment } = await serviceClient
+      .from("dietist_patient_assignments")
+      .select("id")
+      .eq("dietist_id", callerId)
+      .eq("patient_id", user_id)
+      .maybeSingle();
+
+    if (!assignment) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const vapidPublicKey = cleanKey("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = cleanKey("VAPID_PRIVATE_KEY");
 
-    // Configure web-push with VAPID keys
     webpush.setVapidDetails(
       "mailto:hello@gutfeeling.se",
       vapidPublicKey,
       vapidPrivateKey
     );
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
     // Get push subscriptions for this user
-    const { data: subscriptions, error } = await supabase
+    const { data: subscriptions, error } = await serviceClient
       .from("push_subscriptions")
       .select("endpoint, p256dh, auth")
       .eq("user_id", user_id);
@@ -87,8 +126,7 @@ Deno.serve(async (req) => {
         sent++;
       } catch (e: any) {
         if (e.statusCode === 404 || e.statusCode === 410) {
-          // Subscription expired, clean up
-          await supabase
+          await serviceClient
             .from("push_subscriptions")
             .delete()
             .eq("endpoint", sub.endpoint)
@@ -105,7 +143,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("Push notification error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
