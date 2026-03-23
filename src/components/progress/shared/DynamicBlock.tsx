@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Circle } from "lucide-react";
+import { Check, Circle, TrendingDown, TrendingUp } from "lucide-react";
 import * as Icons from "lucide-react";
 import { ComputedBlockData } from "@/hooks/usePatientBlocks";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 
 const SOURCE_BADGES: Record<string, { label: string; className: string }> = {
   journal: { label: "Från journal", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
@@ -20,7 +21,7 @@ interface DynamicBlockProps {
 }
 
 export function DynamicBlock({ data }: DynamicBlockProps) {
-  const { block, computedLabel, computedItems, computedValue, computedTotal, source } = data;
+  const { block, computedLabel, computedItems, computedValue, computedTotal, chartData, chartMeta, source } = data;
   const template = block.template;
   const title = block.override_title || template.title;
   const badge = SOURCE_BADGES[source] || SOURCE_BADGES.manual;
@@ -57,8 +58,55 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
             </div>
           )}
 
+          {/* Chart block */}
+          {chartData && chartData.length > 0 && (
+            <div className="mt-2">
+              {chartMeta && (
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">{chartMeta.label}</span>
+                  {chartData.length >= 2 && (() => {
+                    const diff = chartData[chartData.length - 1].value - chartData[0].value;
+                    const isDown = diff < 0;
+                    return (
+                      <div className="flex items-center gap-1">
+                        {isDown ? (
+                          <TrendingDown className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <TrendingUp className="h-3 w-3 text-amber-500" />
+                        )}
+                        <span className={`text-xs font-medium ${isDown ? "text-emerald-600" : "text-amber-600"}`}>
+                          {diff > 0 ? "+" : ""}{diff.toFixed(1)} {chartMeta.unit}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+              <div className="h-[80px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                    <YAxis hide domain={["dataMin - 1", "dataMax + 1"]} />
+                    <Tooltip
+                      contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                      formatter={(v: number) => [`${v} ${chartMeta?.unit || ""}`, chartMeta?.label || ""]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ r: 2.5, fill: "hsl(var(--primary))" }}
+                      activeDot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
           {/* Progress bar */}
-          {computedValue !== null && computedTotal !== null && computedItems.length === 0 && (
+          {computedValue !== null && computedTotal !== null && computedItems.length === 0 && !chartData && (
             <div className="mt-1.5">
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-semibold text-primary">{computedValue}</span>
@@ -74,13 +122,13 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
           )}
 
           {/* Simple label */}
-          {computedLabel && computedItems.length === 0 && computedTotal === null && (
+          {computedLabel && computedItems.length === 0 && computedTotal === null && !chartData && (
             <p className="text-xs text-muted-foreground mt-0.5">{computedLabel}</p>
           )}
 
-          {/* Label with value but no total */}
-          {computedLabel && computedValue !== null && computedTotal === null && (
-            <p className="text-xs text-muted-foreground mt-0.5">{computedLabel}</p>
+          {/* Label with chart (trend description) */}
+          {computedLabel && chartData && (
+            <p className="text-xs text-muted-foreground mt-1">{computedLabel}</p>
           )}
         </div>
       </div>
