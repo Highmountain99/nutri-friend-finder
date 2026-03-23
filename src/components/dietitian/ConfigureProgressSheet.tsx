@@ -490,34 +490,33 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                     </button>
                   ))}
 
-                  {/* Available library blocks */}
-                  {availableTemplates.map((tmpl) => {
-                    const IconComp = (Icons as any)[tmpl.icon] || Icons.Square;
-                    return (
-                      <button
-                        key={tmpl.id}
-                        onClick={() => handleAddBlock(tmpl)}
-                        disabled={addingBlock === tmpl.id}
-                        className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group disabled:opacity-50"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="p-1 rounded-lg bg-primary/10 text-primary shrink-0">
-                            {addingBlock === tmpl.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <IconComp className="h-3 w-3" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-medium truncate">{tmpl.title}</p>
-                            {tmpl.data_source !== "none" && (
-                              <p className="text-[9px] text-emerald-600">Datakopplat</p>
-                            )}
-                          </div>
+                  {/* Available library blocks with visual preview */}
+                  {availableTemplates.map((tmpl) => (
+                    <button
+                      key={tmpl.id}
+                      onClick={() => handleAddBlock(tmpl)}
+                      disabled={addingBlock === tmpl.id}
+                      className="rounded-xl border border-dashed border-border bg-muted/30 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group disabled:opacity-50 overflow-hidden"
+                    >
+                      {addingBlock === tmpl.id ? (
+                        <div className="flex items-center justify-center p-6">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                         </div>
-                      </button>
-                    );
-                  })}
+                      ) : (
+                        <div className="transform scale-[0.82] origin-top pointer-events-none">
+                          <BlockPreview
+                            title={tmpl.title}
+                            description={tmpl.description || ""}
+                            icon={tmpl.icon || "Square"}
+                            dataSource={tmpl.data_source}
+                            dataConfig={(tmpl.data_config as Record<string, any>) || {}}
+                            displayConfig={(tmpl.display_config as Record<string, any>) || {}}
+                            blockType={tmpl.block_type}
+                          />
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
