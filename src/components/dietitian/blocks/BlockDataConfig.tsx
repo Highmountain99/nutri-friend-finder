@@ -23,6 +23,9 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
     { value: "meal_rhythm", label: "Måltider idag", desc: "Visar vilka måltider som loggats" },
     { value: "meals_per_day", label: "Antal måltider per dag", desc: "Räknar loggade måltider" },
     { value: "regularity_30d", label: "Regelbundenhet", desc: "Dagar med tillräcklig struktur" },
+    { value: "structure_7d", label: "Måltidsstruktur (7d)", desc: "Genomsnittlig struktur senaste veckan" },
+    { value: "weekly_checkin", label: "Veckoöversikt", desc: "Sammanfattning senaste 7 dagarna" },
+    { value: "weekly_overview", label: "Aktiva dagar", desc: "Loggade dagar under veckan" },
   ],
   meal_times: [
     { value: "meal_rhythm", label: "Måltidsrytm idag", desc: "Vilka måltider loggats idag" },
@@ -32,6 +35,8 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
     { value: "symptom_count", label: "Antal symptom", desc: "Under vald tidsperiod" },
     { value: "symptom_by_time", label: "Symptom per tidpunkt", desc: "Mönster: efter lunch, kväll etc." },
     { value: "symptom_after_meal", label: "Symptom efter måltid", desc: "Kopplade till specifika måltider" },
+    { value: "symptom_free_days", label: "Symptomfria dagar", desc: "Antal dagar utan symptom" },
+    { value: "pattern_by_time", label: "Mönster efter tid", desc: "Symptom grupperade efter tid på dygnet" },
   ],
   treatment_goals: [
     { value: "milestone_progress", label: "Milstolpar genomförda", desc: "Antal avklarade av totalt" },
