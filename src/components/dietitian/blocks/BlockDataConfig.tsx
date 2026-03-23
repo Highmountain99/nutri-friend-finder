@@ -12,8 +12,10 @@ const DATA_SOURCE_OPTIONS = [
   { value: "symptom_log", label: "Symptomlogg", desc: "Symptom kopplade till måltider" },
   { value: "macro_data", label: "Makro-/näringsdata", desc: "Protein, kolhydrater, fett" },
   { value: "treatment_goals", label: "Behandlingsmål", desc: "Milstolpar och mål" },
+  { value: "treatment_plan", label: "Behandlingsplan", desc: "Aktiv plan, fokus och beskrivning" },
   { value: "progression", label: "Progression", desc: "Mönster och trender över tid" },
   { value: "health_tracking", label: "Hälsomätvärden", desc: "Vikt, blodtryck, midjemått etc." },
+  { value: "appointments", label: "Bokningar", desc: "Kommande och tidigare samtal" },
 ];
 
 const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: string }[]> = {
@@ -21,6 +23,9 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
     { value: "meal_rhythm", label: "Måltider idag", desc: "Visar vilka måltider som loggats" },
     { value: "meals_per_day", label: "Antal måltider per dag", desc: "Räknar loggade måltider" },
     { value: "regularity_30d", label: "Regelbundenhet", desc: "Dagar med tillräcklig struktur" },
+    { value: "structure_7d", label: "Måltidsstruktur (7d)", desc: "Genomsnittlig struktur senaste veckan" },
+    { value: "weekly_checkin", label: "Veckoöversikt", desc: "Sammanfattning senaste 7 dagarna" },
+    { value: "weekly_overview", label: "Aktiva dagar", desc: "Loggade dagar under veckan" },
   ],
   meal_times: [
     { value: "meal_rhythm", label: "Måltidsrytm idag", desc: "Vilka måltider loggats idag" },
@@ -30,6 +35,8 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
     { value: "symptom_count", label: "Antal symptom", desc: "Under vald tidsperiod" },
     { value: "symptom_by_time", label: "Symptom per tidpunkt", desc: "Mönster: efter lunch, kväll etc." },
     { value: "symptom_after_meal", label: "Symptom efter måltid", desc: "Kopplade till specifika måltider" },
+    { value: "symptom_free_days", label: "Symptomfria dagar", desc: "Antal dagar utan symptom" },
+    { value: "pattern_by_time", label: "Mönster efter tid", desc: "Symptom grupperade efter tid på dygnet" },
   ],
   treatment_goals: [
     { value: "milestone_progress", label: "Milstolpar genomförda", desc: "Antal avklarade av totalt" },
@@ -44,6 +51,13 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
   health_tracking: [
     { value: "trend_chart", label: "Trendgraf", desc: "Linjediagram över tid (vikt, midjemått etc.)" },
     { value: "latest_value", label: "Senaste värde", desc: "Visar senast loggade mätvärde" },
+    { value: "metric_cards", label: "Mätvärden", desc: "Nuvarande värde och förändring" },
+  ],
+  treatment_plan: [
+    { value: "plan_description", label: "Fokustext", desc: "Beskrivning och fokus från aktiv plan" },
+  ],
+  appointments: [
+    { value: "next_appointment", label: "Nästa samtal", desc: "Kommande bokat videosamtal" },
   ],
 };
 
