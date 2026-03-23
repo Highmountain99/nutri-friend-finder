@@ -70,9 +70,13 @@ export function usePatientBlocks(patientId: string | undefined) {
       const needsSymptomData = patientBlocks.some(
         (b) => b.template.data_source === "symptom_log"
       );
+      const needsHealthData = patientBlocks.some(
+        (b) => b.template.data_source === "health_tracking"
+      );
 
       let mealEntries: any[] = [];
       let symptomEntries: any[] = [];
+      let healthEntries: any[] = [];
 
       if (needsMealData) {
         const { data } = await supabase
@@ -90,6 +94,15 @@ export function usePatientBlocks(patientId: string | undefined) {
           .eq("user_id", patientId)
           .gte("entry_date", thirtyDaysAgo);
         symptomEntries = data || [];
+      }
+
+      if (needsHealthData) {
+        const { data } = await supabase
+          .from("health_tracking_entries")
+          .select("id, entry_date, metric_type, value, unit")
+          .eq("user_id", patientId)
+          .order("entry_date", { ascending: true });
+        healthEntries = data || [];
       }
 
       // Compute block data
