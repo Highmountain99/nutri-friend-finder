@@ -100,7 +100,7 @@ function HeatmapGrid({ filled, total }: { filled: number; total: number }) {
 
 // ─── Main Preview ───
 
-export function BlockPreview({ title, description, icon, dataSource, dataConfig, displayConfig = {}, blockType = "action" }: BlockPreviewProps) {
+export function BlockPreview({ title, description, icon, dataSource, dataConfig, displayConfig = {}, blockType = "action", compact = false }: BlockPreviewProps) {
   const metric = dataConfig.metric || "";
   const progression = dataConfig.progression || "none";
   const progressionTarget = dataConfig.progression_target || 7;
