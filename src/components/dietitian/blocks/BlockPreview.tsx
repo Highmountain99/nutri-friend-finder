@@ -11,6 +11,7 @@ interface BlockPreviewProps {
   dataConfig: Record<string, any>;
   displayConfig?: Record<string, any>;
   blockType?: string;
+  compact?: boolean;
 }
 
 function getIcon(iconName: string, className = "h-4 w-4") {
