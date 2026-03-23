@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -74,13 +74,13 @@ export function BlockPickerSheet({ open, onOpenChange, patientId }: BlockPickerS
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg w-full p-0">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="overflow-y-auto max-h-[85vh] sm:max-w-lg w-full p-0">
         <div className="p-6 pb-3">
-          <SheetHeader className="text-left">
-            <SheetTitle>Lägg till block från biblioteket</SheetTitle>
-            <SheetDescription>Välj block att lägga till i patientens utvecklingsvy.</SheetDescription>
-          </SheetHeader>
+          <DialogHeader className="text-left">
+            <DialogTitle>Lägg till block från biblioteket</DialogTitle>
+            <DialogDescription>Välj block att lägga till i patientens utvecklingsvy.</DialogDescription>
+          </DialogHeader>
         </div>
 
         <div className="px-6 space-y-4 pb-6">
@@ -138,7 +138,7 @@ export function BlockPickerSheet({ open, onOpenChange, patientId }: BlockPickerS
             </div>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
