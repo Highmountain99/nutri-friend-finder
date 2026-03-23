@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Circle, Flame, TrendingUp } from "lucide-react";
+import { Check, Circle, Flame, TrendingUp, TrendingDown } from "lucide-react";
 import * as Icons from "lucide-react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 
 interface BlockPreviewProps {
   title: string;
@@ -17,6 +18,37 @@ function getIcon(iconName: string, className = "h-4 w-4") {
   const Icon = (Icons as any)[iconName];
   return Icon ? <Icon className={className} /> : <Icons.Square className={className} />;
 }
+
+const HEALTH_METRIC_LABELS: Record<string, { label: string; unit: string }> = {
+  weight: { label: "Vikt", unit: "kg" },
+  waist: { label: "Midjemått", unit: "cm" },
+  blood_pressure_systolic: { label: "Blodtryck (syst)", unit: "mmHg" },
+  blood_pressure_diastolic: { label: "Blodtryck (diast)", unit: "mmHg" },
+  bmi: { label: "BMI", unit: "" },
+};
+
+const SAMPLE_CHART_DATA: Record<string, { date: string; value: number }[]> = {
+  weight: [
+    { date: "Jan", value: 92 }, { date: "Feb", value: 90.5 }, { date: "Mar", value: 89 },
+    { date: "Apr", value: 88.2 }, { date: "Maj", value: 87 }, { date: "Jun", value: 86.5 },
+  ],
+  waist: [
+    { date: "Jan", value: 98 }, { date: "Feb", value: 97 }, { date: "Mar", value: 95 },
+    { date: "Apr", value: 94.5 }, { date: "Maj", value: 93 }, { date: "Jun", value: 92 },
+  ],
+  blood_pressure_systolic: [
+    { date: "Jan", value: 145 }, { date: "Feb", value: 140 }, { date: "Mar", value: 138 },
+    { date: "Apr", value: 135 }, { date: "Maj", value: 132 }, { date: "Jun", value: 130 },
+  ],
+  blood_pressure_diastolic: [
+    { date: "Jan", value: 95 }, { date: "Feb", value: 92 }, { date: "Mar", value: 90 },
+    { date: "Apr", value: 88 }, { date: "Maj", value: 86 }, { date: "Jun", value: 85 },
+  ],
+  bmi: [
+    { date: "Jan", value: 30.1 }, { date: "Feb", value: 29.6 }, { date: "Mar", value: 29.1 },
+    { date: "Apr", value: 28.8 }, { date: "Maj", value: 28.5 }, { date: "Jun", value: 28.3 },
+  ],
+};
 
 const ROLE_LABELS: Record<string, string> = {
   action: "Action",
@@ -160,6 +192,76 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
                 <span className="text-xl font-bold text-primary">68g</span>
                 <span className="text-xs text-muted-foreground">protein idag</span>
               </div>
+            </div>
+          )}
+
+          {/* Trend chart */}
+          {metric === "trend_chart" && (
+            <div className="mt-2.5">
+              {(() => {
+                const hm = dataConfig.health_metric || "weight";
+                const metricInfo = HEALTH_METRIC_LABELS[hm] || { label: "Vikt", unit: "kg" };
+                const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+                const first = chartData[0]?.value || 0;
+                const last = chartData[chartData.length - 1]?.value || 0;
+                const diff = last - first;
+                const isDown = diff < 0;
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-muted-foreground">{metricInfo.label}</span>
+                      <div className="flex items-center gap-1">
+                        {isDown ? (
+                          <TrendingDown className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <TrendingUp className="h-3 w-3 text-amber-500" />
+                        )}
+                        <span className={`text-xs font-medium ${isDown ? "text-emerald-600" : "text-amber-600"}`}>
+                          {diff > 0 ? "+" : ""}{diff.toFixed(1)} {metricInfo.unit}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-[80px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                          <YAxis hide domain={["dataMin - 1", "dataMax + 1"]} />
+                          <Tooltip
+                            contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                            formatter={(v: number) => [`${v} ${metricInfo.unit}`, metricInfo.label]}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            dot={{ r: 2.5, fill: "hsl(var(--primary))" }}
+                            activeDot={{ r: 4 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Latest value */}
+          {metric === "latest_value" && (
+            <div className="mt-2.5">
+              {(() => {
+                const hm = dataConfig.health_metric || "weight";
+                const metricInfo = HEALTH_METRIC_LABELS[hm] || { label: "Vikt", unit: "kg" };
+                const sampleData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+                const latest = sampleData[sampleData.length - 1]?.value || 0;
+                return (
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold text-primary">{latest}</span>
+                    <span className="text-xs text-muted-foreground">{metricInfo.unit} ({metricInfo.label})</span>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

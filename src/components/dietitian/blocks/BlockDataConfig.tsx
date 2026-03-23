@@ -13,6 +13,7 @@ const DATA_SOURCE_OPTIONS = [
   { value: "macro_data", label: "Makro-/näringsdata", desc: "Protein, kolhydrater, fett" },
   { value: "treatment_goals", label: "Behandlingsmål", desc: "Milstolpar och mål" },
   { value: "progression", label: "Progression", desc: "Mönster och trender över tid" },
+  { value: "health_tracking", label: "Hälsomätvärden", desc: "Vikt, blodtryck, midjemått etc." },
 ];
 
 const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: string }[]> = {
@@ -39,6 +40,10 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
   progression: [
     { value: "regularity_30d", label: "Regelbundenhet 30 dagar", desc: "Grid med daglig status" },
     { value: "meals_per_day", label: "Mönster per dag", desc: "Trend i antal måltider" },
+  ],
+  health_tracking: [
+    { value: "trend_chart", label: "Trendgraf", desc: "Linjediagram över tid (vikt, midjemått etc.)" },
+    { value: "latest_value", label: "Senaste värde", desc: "Visar senast loggade mätvärde" },
   ],
 };
 
@@ -72,6 +77,7 @@ interface DataConfig {
   has_manual_text?: boolean;
   progression?: string;
   progression_target?: number;
+  health_metric?: string;
 }
 
 interface BlockDataConfigProps {
@@ -154,6 +160,39 @@ export function BlockDataConfig({ dataSource, config, onChange, onSourceChange }
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Health metric type selector */}
+      {dataSource === "health_tracking" && config.metric === "trend_chart" && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Vilket mätvärde?</Label>
+          <Select value={config.health_metric || "weight"} onValueChange={(v) => onChange({ ...config, health_metric: v })}>
+            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weight">Vikt (kg)</SelectItem>
+              <SelectItem value="waist">Midjemått (cm)</SelectItem>
+              <SelectItem value="blood_pressure_systolic">Blodtryck systoliskt</SelectItem>
+              <SelectItem value="blood_pressure_diastolic">Blodtryck diastoliskt</SelectItem>
+              <SelectItem value="bmi">BMI</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {dataSource === "health_tracking" && config.metric === "latest_value" && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">Vilket mätvärde?</Label>
+          <Select value={config.health_metric || "weight"} onValueChange={(v) => onChange({ ...config, health_metric: v })}>
+            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weight">Vikt (kg)</SelectItem>
+              <SelectItem value="waist">Midjemått (cm)</SelectItem>
+              <SelectItem value="blood_pressure_systolic">Blodtryck systoliskt</SelectItem>
+              <SelectItem value="blood_pressure_diastolic">Blodtryck diastoliskt</SelectItem>
+              <SelectItem value="bmi">BMI</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       )}
 
