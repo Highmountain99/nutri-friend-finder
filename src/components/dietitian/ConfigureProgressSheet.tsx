@@ -49,6 +49,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
   const [orderedSections, setOrderedSections] = useState<SectionItem[]>([]);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const dragNode = useRef<HTMLDivElement | null>(null);
 
   const { data: config, isLoading } = useQuery({
