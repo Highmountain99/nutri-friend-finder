@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, GripVertical, Eye, EyeOff, Smartphone } from "lucide-react";
+import { Loader2, GripVertical, Eye, EyeOff, Smartphone, Blocks } from "lucide-react";
 import { ModulePreview } from "./progress-builder/ModulePreview";
 import { TEMPLATE_SECTION_DEFAULTS, CATEGORY_SECTIONS, GENERIC_SECTIONS, type SectionDef } from "./progress-builder/templateDefaults";
+import { BlockPickerSheet } from "./blocks/BlockPickerSheet";
 
 const TEMPLATE_OPTIONS: { value: string; label: string; description: string }[] = [
   { value: "auto", label: "Automatisk (från kvalificering)", description: "Baseras på patientens egna val" },
