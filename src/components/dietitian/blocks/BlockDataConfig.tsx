@@ -77,6 +77,7 @@ interface DataConfig {
   has_manual_text?: boolean;
   progression?: string;
   progression_target?: number;
+  health_metric?: string;
 }
 
 interface BlockDataConfigProps {
