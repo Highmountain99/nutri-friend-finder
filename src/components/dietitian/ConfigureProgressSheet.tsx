@@ -320,6 +320,42 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
               </div>
             </div>
 
+            {/* Added blocks from library */}
+            {patientBlocks && patientBlocks.length > 0 && (
+              <div className="px-6 space-y-3">
+                <Separator />
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Block från biblioteket
+                </Label>
+                <div className="space-y-2">
+                  {patientBlocks.map((pb: any) => {
+                    const tmpl = pb.template;
+                    if (!tmpl) return null;
+                    const IconComp = (Icons as any)[tmpl.icon] || Icons.Square;
+                    return (
+                      <div key={pb.id} className="flex items-center gap-2 rounded-xl border border-border bg-card p-2.5 group">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
+                          <IconComp className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{pb.override_title || tmpl.title}</p>
+                          {tmpl.data_source !== "none" && (
+                            <p className="text-[10px] text-emerald-600">Datakopplat</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleRemoveBlock(pb.id)}
+                          className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
+                        >
+                          <X className="h-3.5 w-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Disabled modules pool */}
             {disabledSections.length > 0 && (
               <div className="px-6 space-y-3">

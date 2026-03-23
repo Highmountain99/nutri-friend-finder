@@ -37,16 +37,16 @@ export function BlockPickerSheet({ open, onOpenChange, patientId }: BlockPickerS
     try {
       // Get current max sort_order
       const { data: existing } = await supabase
-        .from("patient_blocks" as any)
+        .from("patient_blocks")
         .select("sort_order")
         .eq("patient_id", patientId)
         .order("sort_order", { ascending: false })
         .limit(1);
 
-      const nextOrder = ((existing as any)?.[0]?.sort_order ?? -1) + 1;
+      const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
       const { error } = await supabase
-        .from("patient_blocks" as any)
+        .from("patient_blocks")
         .insert({
           patient_id: patientId,
           block_template_id: template.id,
@@ -59,7 +59,7 @@ export function BlockPickerSheet({ open, onOpenChange, patientId }: BlockPickerS
 
       // Increment usage count
       await supabase
-        .from("block_templates" as any)
+        .from("block_templates")
         .update({ usage_count: template.usage_count + 1 })
         .eq("id", template.id);
 
