@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Trash2, Edit, Share2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BlockTemplate } from "@/hooks/dietitian/useBlockTemplates";
-import * as Icons from "lucide-react";
+import { BlockPreview } from "./BlockPreview";
 
 const BLOCK_TYPE_LABELS: Record<string, string> = {
   action: "Åtgärd",
@@ -25,6 +25,8 @@ const DATA_SOURCE_LABELS: Record<string, string> = {
   treatment_goals: "Behandlingsmål",
   progression: "Progression",
   combined: "Kombinerad",
+  health_tracking: "Hälsodata",
+  appointments: "Bokningar",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -38,11 +40,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   weight_loss: "Viktminskning",
 };
 
-function getIcon(iconName: string) {
-  const Icon = (Icons as any)[iconName];
-  return Icon ? <Icon className="h-5 w-5" /> : <Icons.Square className="h-5 w-5" />;
-}
-
 interface BlockCardProps {
   template: BlockTemplate;
   onEdit?: () => void;
@@ -51,38 +48,28 @@ interface BlockCardProps {
 
 export function BlockCard({ template, onEdit, onDelete }: BlockCardProps) {
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
-          {getIcon(template.icon)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-medium text-sm truncate">{template.title}</h3>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {onEdit && (
-                  <DropdownMenuItem onClick={onEdit}>
-                    <Edit className="h-4 w-4 mr-2" /> Redigera
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" /> Ta bort
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+    <Card className="overflow-hidden hover:shadow-md transition-shadow group">
+      {/* Preview area */}
+      <div className="p-3 pb-0">
+        <div className="rounded-lg border border-border/50 bg-muted/30 overflow-hidden">
+          <div className="transform scale-[0.92] origin-top">
+            <BlockPreview
+              title={template.title}
+              description={template.description}
+              icon={template.icon}
+              dataSource={template.data_source}
+              dataConfig={template.data_config || {}}
+              displayConfig={template.display_config || {}}
+              blockType={template.block_type}
+            />
           </div>
-          {template.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{template.description}</p>
-          )}
-          <div className="flex flex-wrap gap-1.5 mt-2">
+        </div>
+      </div>
+
+      {/* Footer with badges + menu */}
+      <div className="p-3 pt-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1 min-w-0">
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
               {BLOCK_TYPE_LABELS[template.block_type] || template.block_type}
             </Badge>
@@ -90,16 +77,30 @@ export function BlockCard({ template, onEdit, onDelete }: BlockCardProps) {
               {CATEGORY_LABELS[template.category] || template.category}
             </Badge>
             {template.data_source !== "none" && (
-              <Badge className="text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+              <Badge className="text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0">
                 {DATA_SOURCE_LABELS[template.data_source] || template.data_source}
               </Badge>
             )}
-            {template.is_shared && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                <Share2 className="h-2.5 w-2.5 mr-0.5" /> Delad
-              </Badge>
-            )}
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onEdit && (
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="h-4 w-4 mr-2" /> Redigera
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" /> Ta bort
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </Card>
