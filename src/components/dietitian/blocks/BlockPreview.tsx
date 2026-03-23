@@ -485,6 +485,7 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
           )}
         </div>
       )}
-    </Card>
+      </Card>
+    </div>
   );
 }
