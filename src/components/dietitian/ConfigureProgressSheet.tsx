@@ -66,6 +66,36 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     enabled: open,
   });
 
+  // Fetch added patient_blocks to show in the preview
+  const { data: patientBlocks } = useQuery({
+    queryKey: ["patient-blocks", patientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("patient_blocks")
+        .select("*, block_templates(*)")
+        .eq("patient_id", patientId)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data || []).map((b: any) => ({ ...b, template: b.block_templates }));
+    },
+    enabled: open,
+  });
+
+  const handleRemoveBlock = async (blockId: string) => {
+    try {
+      const { error } = await supabase
+        .from("patient_blocks")
+        .delete()
+        .eq("id", blockId);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["patient-blocks"] });
+      toast.success("Block borttaget");
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   const buildSectionsFromTemplate = useCallback((tmpl: string, savedSections?: string[] | null) => {
     const templateSections = getSectionsForTemplate(tmpl);
     const defaults = TEMPLATE_SECTION_DEFAULTS[tmpl] || TEMPLATE_SECTION_DEFAULTS["auto"];
