@@ -41,6 +41,10 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
     { value: "regularity_30d", label: "Regelbundenhet 30 dagar", desc: "Grid med daglig status" },
     { value: "meals_per_day", label: "Mönster per dag", desc: "Trend i antal måltider" },
   ],
+  health_tracking: [
+    { value: "trend_chart", label: "Trendgraf", desc: "Linjediagram över tid (vikt, midjemått etc.)" },
+    { value: "latest_value", label: "Senaste värde", desc: "Visar senast loggade mätvärde" },
+  ],
 };
 
 const INTERPRETATION_OPTIONS = [
