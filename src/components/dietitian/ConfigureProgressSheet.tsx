@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, GripVertical, EyeOff, Smartphone, X } from "lucide-react";
+import { Loader2, GripVertical, EyeOff, Smartphone, Plus } from "lucide-react";
 import { ModulePreview } from "./progress-builder/ModulePreview";
 import { TEMPLATE_SECTION_DEFAULTS, CATEGORY_SECTIONS, GENERIC_SECTIONS, type SectionDef } from "./progress-builder/templateDefaults";
 import { useBlockTemplates } from "@/hooks/dietitian/useBlockTemplates";
@@ -35,11 +35,20 @@ interface ConfigureProgressSheetProps {
   patientId: string;
 }
 
-interface SectionItem {
-  value: string;
+// Unified item: either a standard module or a library block
+interface UnifiedItem {
+  id: string; // unique key
+  type: "module" | "block";
   label: string;
   description: string;
   enabled: boolean;
+  // module-specific
+  sectionValue?: string;
+  // block-specific
+  blockId?: string; // patient_blocks.id
+  templateId?: string;
+  icon?: string;
+  dataSource?: string;
 }
 
 export function ConfigureProgressSheet({ open, onOpenChange, patientId }: ConfigureProgressSheetProps) {
@@ -47,7 +56,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [template, setTemplate] = useState("auto");
-  const [orderedSections, setOrderedSections] = useState<SectionItem[]>([]);
+  const [items, setItems] = useState<UnifiedItem[]>([]);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
   const [addingBlock, setAddingBlock] = useState<string | null>(null);
@@ -66,7 +75,6 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     enabled: open,
   });
 
-  // Fetch added patient_blocks
   const { data: patientBlocks } = useQuery({
     queryKey: ["patient-blocks", patientId],
     queryFn: async () => {
@@ -82,20 +90,106 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     enabled: open,
   });
 
-  // Fetch all block templates for the library
   const { data: blockTemplates } = useBlockTemplates();
 
-  // Filter out templates already added to this patient
-  const addedTemplateIds = new Set((patientBlocks || []).map((pb: any) => pb.block_template_id));
-  const availableTemplates = (blockTemplates || []).filter((t) => !addedTemplateIds.has(t.id));
+  // Build unified items from template sections + patient blocks
+  const buildItems = useCallback((tmpl: string, savedSections?: string[] | null, blocks?: any[]) => {
+    const templateSections = getSectionsForTemplate(tmpl);
+    const defaults = TEMPLATE_SECTION_DEFAULTS[tmpl] || TEMPLATE_SECTION_DEFAULTS["auto"];
 
-  const handleRemoveBlock = async (blockId: string) => {
+    // Build module items
+    const moduleItems: UnifiedItem[] = [];
+    const enabledValues = savedSections && savedSections.length > 0 ? savedSections : defaults;
+
+    for (const val of enabledValues) {
+      const opt = templateSections.find(s => s.value === val);
+      if (opt) moduleItems.push({
+        id: `mod_${opt.value}`,
+        type: "module",
+        label: opt.label,
+        description: opt.description,
+        enabled: true,
+        sectionValue: opt.value,
+      });
+    }
+    for (const opt of templateSections) {
+      if (!moduleItems.find(m => m.sectionValue === opt.value)) {
+        moduleItems.push({
+          id: `mod_${opt.value}`,
+          type: "module",
+          label: opt.label,
+          description: opt.description,
+          enabled: false,
+          sectionValue: opt.value,
+        });
+      }
+    }
+
+    // Build block items from patient_blocks
+    const blockItems: UnifiedItem[] = (blocks || []).map((pb: any) => ({
+      id: `blk_${pb.id}`,
+      type: "block" as const,
+      label: pb.override_title || pb.template?.title || "Block",
+      description: pb.template?.description || "",
+      enabled: true,
+      blockId: pb.id,
+      templateId: pb.block_template_id,
+      icon: pb.template?.icon || "Square",
+      dataSource: pb.template?.data_source || "none",
+    }));
+
+    // Merge: enabled modules first, then blocks, then disabled modules
+    const enabled = moduleItems.filter(m => m.enabled);
+    const disabled = moduleItems.filter(m => !m.enabled);
+    return [...enabled, ...blockItems, ...disabled];
+  }, []);
+
+  useEffect(() => {
+    const tmpl = config?.concern_category_override || "auto";
+    setTemplate(tmpl);
+    const savedSections = (config as any)?.visible_sections as string[] | null;
+    setItems(buildItems(tmpl, savedSections, patientBlocks));
+  }, [config, patientBlocks, buildItems]);
+
+  const handleTemplateChange = (newTemplate: string) => {
+    setTemplate(newTemplate);
+    // Keep existing blocks, rebuild modules
+    const blockItems = items.filter(i => i.type === "block");
+    const templateSections = getSectionsForTemplate(newTemplate);
+    const defaults = TEMPLATE_SECTION_DEFAULTS[newTemplate] || TEMPLATE_SECTION_DEFAULTS["auto"];
+
+    const moduleItems: UnifiedItem[] = [];
+    for (const val of defaults) {
+      const opt = templateSections.find(s => s.value === val);
+      if (opt) moduleItems.push({
+        id: `mod_${opt.value}`, type: "module", label: opt.label,
+        description: opt.description, enabled: true, sectionValue: opt.value,
+      });
+    }
+    for (const opt of templateSections) {
+      if (!moduleItems.find(m => m.sectionValue === opt.value)) {
+        moduleItems.push({
+          id: `mod_${opt.value}`, type: "module", label: opt.label,
+          description: opt.description, enabled: false, sectionValue: opt.value,
+        });
+      }
+    }
+
+    const enabled = moduleItems.filter(m => m.enabled);
+    const disabled = moduleItems.filter(m => !m.enabled);
+    setItems([...enabled, ...blockItems, ...disabled]);
+  };
+
+  const toggleItem = (id: string) => {
+    setItems(prev => prev.map(i => i.id === id ? { ...i, enabled: !i.enabled } : i));
+  };
+
+  const removeBlockItem = async (item: UnifiedItem) => {
+    if (!item.blockId) return;
     try {
-      const { error } = await supabase
-        .from("patient_blocks")
-        .delete()
-        .eq("id", blockId);
+      const { error } = await supabase.from("patient_blocks").delete().eq("id", item.blockId);
       if (error) throw error;
+      setItems(prev => prev.filter(i => i.id !== item.id));
       queryClient.invalidateQueries({ queryKey: ["patient-blocks"] });
       toast.success("Block borttaget");
     } catch (err: any) {
@@ -103,39 +197,48 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     }
   };
 
-  const handleAddBlock = async (template: any) => {
+  const handleAddBlock = async (tmpl: any) => {
     if (!user) return;
-    setAddingBlock(template.id);
+    setAddingBlock(tmpl.id);
     try {
-      const { data: existing } = await supabase
-        .from("patient_blocks")
-        .select("sort_order")
-        .eq("patient_id", patientId)
-        .order("sort_order", { ascending: false })
-        .limit(1);
-
-      const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
-
-      const { error } = await supabase
+      const maxSort = items.filter(i => i.enabled).length;
+      const { data: inserted, error } = await supabase
         .from("patient_blocks")
         .insert({
           patient_id: patientId,
-          block_template_id: template.id,
+          block_template_id: tmpl.id,
           dietitian_id: user.id,
-          sort_order: nextOrder,
+          sort_order: maxSort,
           is_active: true,
-        });
-
+        })
+        .select("id")
+        .single();
       if (error) throw error;
 
-      await supabase
-        .from("block_templates")
-        .update({ usage_count: (template.usage_count || 0) + 1 })
-        .eq("id", template.id);
+      await supabase.from("block_templates").update({ usage_count: (tmpl.usage_count || 0) + 1 }).eq("id", tmpl.id);
+
+      const newItem: UnifiedItem = {
+        id: `blk_${inserted.id}`,
+        type: "block",
+        label: tmpl.title,
+        description: tmpl.description || "",
+        enabled: true,
+        blockId: inserted.id,
+        templateId: tmpl.id,
+        icon: tmpl.icon || "Square",
+        dataSource: tmpl.data_source || "none",
+      };
+
+      // Insert before disabled items
+      setItems(prev => {
+        const enabledItems = prev.filter(i => i.enabled);
+        const disabledItems = prev.filter(i => !i.enabled);
+        return [...enabledItems, newItem, ...disabledItems];
+      });
 
       queryClient.invalidateQueries({ queryKey: ["patient-blocks"] });
       queryClient.invalidateQueries({ queryKey: ["block-templates"] });
-      toast.success(`"${template.title}" tillagt`);
+      toast.success(`"${tmpl.title}" tillagt`);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -143,53 +246,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     }
   };
 
-  const buildSectionsFromTemplate = useCallback((tmpl: string, savedSections?: string[] | null) => {
-    const templateSections = getSectionsForTemplate(tmpl);
-    const defaults = TEMPLATE_SECTION_DEFAULTS[tmpl] || TEMPLATE_SECTION_DEFAULTS["auto"];
-    
-    const ordered: SectionItem[] = [];
-    if (savedSections && savedSections.length > 0) {
-      for (const val of savedSections) {
-        const opt = templateSections.find(s => s.value === val);
-        if (opt) ordered.push({ ...opt, enabled: true });
-      }
-    } else {
-      for (const val of defaults) {
-        const opt = templateSections.find(s => s.value === val);
-        if (opt) ordered.push({ ...opt, enabled: true });
-      }
-    }
-    for (const opt of templateSections) {
-      if (!ordered.find(o => o.value === opt.value)) {
-        ordered.push({ ...opt, enabled: false });
-      }
-    }
-    return ordered;
-  }, []);
-
-  useEffect(() => {
-    if (config) {
-      const tmpl = config.concern_category_override || "auto";
-      setTemplate(tmpl);
-      const savedSections = (config as any).visible_sections as string[] | null;
-      setOrderedSections(buildSectionsFromTemplate(tmpl, savedSections));
-    } else {
-      setTemplate("auto");
-      setOrderedSections(buildSectionsFromTemplate("auto"));
-    }
-  }, [config, buildSectionsFromTemplate]);
-
-  const handleTemplateChange = (newTemplate: string) => {
-    setTemplate(newTemplate);
-    setOrderedSections(buildSectionsFromTemplate(newTemplate));
-  };
-
-  const toggleSection = (value: string) => {
-    setOrderedSections(prev =>
-      prev.map(s => s.value === value ? { ...s, enabled: !s.enabled } : s)
-    );
-  };
-
+  // Drag & drop
   const handleDragStart = useCallback((idx: number, e: React.DragEvent<HTMLDivElement>) => {
     setDragIdx(idx);
     dragNode.current = e.currentTarget;
@@ -206,7 +263,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
   const handleDragEnd = useCallback(() => {
     if (dragNode.current) dragNode.current.style.opacity = "1";
     if (dragIdx !== null && overIdx !== null && dragIdx !== overIdx) {
-      setOrderedSections(prev => {
+      setItems(prev => {
         const updated = [...prev];
         const [removed] = updated.splice(dragIdx, 1);
         updated.splice(overIdx, 0, removed);
@@ -218,34 +275,40 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     dragNode.current = null;
   }, [dragIdx, overIdx]);
 
+  // Save: persist both module sections and block sort_order
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
     try {
-      const enabledSections = orderedSections.filter(s => s.enabled).map(s => s.value);
+      const enabledModules = items.filter(i => i.enabled && i.type === "module").map(i => i.sectionValue!);
       const payload = {
         patient_id: patientId,
         dietitian_id: user.id,
         concern_category_override: template === "auto" ? null : template,
-        visible_sections: enabledSections,
+        visible_sections: enabledModules,
         visible_metrics: [],
         updated_at: new Date().toISOString(),
       };
 
       if (config) {
-        const { error } = await supabase
-          .from("patient_progress_config")
-          .update(payload)
-          .eq("id", config.id);
+        const { error } = await supabase.from("patient_progress_config").update(payload).eq("id", config.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("patient_progress_config")
-          .insert(payload);
+        const { error } = await supabase.from("patient_progress_config").insert(payload);
         if (error) throw error;
       }
 
+      // Update block sort_order based on position in list
+      const enabledBlocks = items.filter(i => i.enabled && i.type === "block");
+      for (let idx = 0; idx < enabledBlocks.length; idx++) {
+        const blk = enabledBlocks[idx];
+        if (blk.blockId) {
+          await supabase.from("patient_blocks").update({ sort_order: idx }).eq("id", blk.blockId);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["patient-progress-config"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-blocks"] });
       toast.success("Utvecklingsvy uppdaterad");
       onOpenChange(false);
     } catch (err: any) {
@@ -255,8 +318,12 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
     }
   };
 
-  const enabledSections = orderedSections.filter(s => s.enabled);
-  const disabledSections = orderedSections.filter(s => !s.enabled);
+  const enabledItems = items.filter(i => i.enabled);
+  const disabledModules = items.filter(i => !i.enabled && i.type === "module");
+
+  // Library blocks not yet added
+  const addedTemplateIds = new Set(items.filter(i => i.type === "block").map(i => i.templateId));
+  const availableTemplates = (blockTemplates || []).filter(t => !addedTemplateIds.has(t.id));
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -300,7 +367,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
 
             <Separator />
 
-            {/* Phone preview with active modules */}
+            {/* Phone preview with all enabled items */}
             <div className="px-6">
               <div className="flex items-center gap-2 mb-3">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
@@ -314,71 +381,82 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                   <div className="w-16 h-1 bg-muted-foreground/20 rounded-full" />
                 </div>
 
-                <div className="p-4 space-y-4 min-h-[340px]">
-                  {enabledSections.length === 0 && (!patientBlocks || patientBlocks.length === 0) ? (
+                <div className="p-4 space-y-3 min-h-[340px]">
+                  {enabledItems.length === 0 ? (
                     <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
                       Inga element valda
                     </div>
                   ) : (
-                    <>
-                      {enabledSections.map((section) => (
+                    enabledItems.map((item) => {
+                      const globalIdx = items.indexOf(item);
+                      const isOver = overIdx === globalIdx && dragIdx !== null;
+
+                      if (item.type === "module") {
+                        return (
+                          <div
+                            key={item.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(globalIdx, e)}
+                            onDragEnter={() => handleDragEnter(globalIdx)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDragEnd={handleDragEnd}
+                            className={`
+                              group relative rounded-xl border bg-card p-3 transition-all cursor-grab active:cursor-grabbing select-none
+                              ${isOver ? "border-primary ring-2 ring-primary/20 scale-[1.02]" : "border-border hover:border-primary/40"}
+                            `}
+                          >
+                            <div className="absolute -left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <GripVertical className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleItem(item.id); }}
+                              className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all z-10"
+                            >
+                              <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                            </button>
+                            <ModulePreview sectionValue={item.sectionValue!} label={item.label} />
+                          </div>
+                        );
+                      }
+
+                      // Block item
+                      const IconComp = (Icons as any)[item.icon || "Square"] || Icons.Square;
+                      return (
                         <div
-                          key={section.value}
-                          data-section-idx={orderedSections.findIndex(s => s.value === section.value)}
+                          key={item.id}
                           draggable
-                          onDragStart={(e) => handleDragStart(orderedSections.findIndex(s => s.value === section.value), e)}
-                          onDragEnter={() => handleDragEnter(orderedSections.findIndex(s => s.value === section.value))}
+                          onDragStart={(e) => handleDragStart(globalIdx, e)}
+                          onDragEnter={() => handleDragEnter(globalIdx)}
                           onDragOver={(e) => e.preventDefault()}
                           onDragEnd={handleDragEnd}
                           className={`
                             group relative rounded-xl border bg-card p-3 transition-all cursor-grab active:cursor-grabbing select-none
-                            ${overIdx === orderedSections.findIndex(s => s.value === section.value) && dragIdx !== null
-                              ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
-                              : "border-border hover:border-primary/40"
-                            }
+                            ${isOver ? "border-primary ring-2 ring-primary/20 scale-[1.02]" : "border-primary/30 hover:border-primary/50"}
                           `}
                         >
                           <div className="absolute -left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <GripVertical className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <button
-                            onClick={(e) => { e.stopPropagation(); toggleSection(section.value); }}
-                            className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-muted transition-all z-10"
+                            onClick={(e) => { e.stopPropagation(); removeBlockItem(item); }}
+                            className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all z-10"
                           >
                             <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
-                          <ModulePreview sectionValue={section.value} label={section.label} />
-                        </div>
-                      ))}
-
-                      {/* Show added library blocks in phone preview */}
-                      {patientBlocks && patientBlocks.map((pb: any) => {
-                        const tmpl = pb.template;
-                        if (!tmpl) return null;
-                        const IconComp = (Icons as any)[tmpl.icon] || Icons.Square;
-                        return (
-                          <div key={pb.id} className="group relative rounded-xl border border-primary/30 bg-primary/5 p-3">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                                <IconComp className="h-3.5 w-3.5" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium truncate">{pb.override_title || tmpl.title}</p>
-                                {tmpl.data_source !== "none" && (
-                                  <p className="text-[9px] text-emerald-600">Datakopplat</p>
-                                )}
-                              </div>
-                              <button
-                                onClick={() => handleRemoveBlock(pb.id)}
-                                className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
-                              >
-                                <X className="h-3 w-3 text-destructive" />
-                              </button>
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                              <IconComp className="h-3.5 w-3.5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{item.label}</p>
+                              {item.dataSource && item.dataSource !== "none" && (
+                                <p className="text-[9px] text-emerald-600">Datakopplat</p>
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
-                    </>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
 
@@ -389,7 +467,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
             </div>
 
             {/* Tillgängliga element */}
-            {(disabledSections.length > 0 || availableTemplates.length > 0) && (
+            {(disabledModules.length > 0 || availableTemplates.length > 0) && (
               <div className="px-6 space-y-3">
                 <Separator />
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -399,56 +477,47 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                   Klicka för att lägga till i vyn.
                 </p>
 
-                {/* Standard disabled sections */}
-                {disabledSections.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {disabledSections.map(section => (
-                      <button
-                        key={section.value}
-                        onClick={() => toggleSection(section.value)}
-                        className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group"
-                      >
-                        <ModulePreview sectionValue={section.value} label={section.label} compact />
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Disabled standard modules */}
+                  {disabledModules.map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => toggleItem(item.id)}
+                      className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                    >
+                      <ModulePreview sectionValue={item.sectionValue!} label={item.label} compact />
+                    </button>
+                  ))}
 
-                {/* Available library blocks */}
-                {availableTemplates.length > 0 && (
-                  <>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-2">Block från biblioteket</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {availableTemplates.map((tmpl) => {
-                        const IconComp = (Icons as any)[tmpl.icon] || Icons.Square;
-                        return (
-                          <button
-                            key={tmpl.id}
-                            onClick={() => handleAddBlock(tmpl)}
-                            disabled={addingBlock === tmpl.id}
-                            className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group disabled:opacity-50"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="p-1 rounded-lg bg-primary/10 text-primary shrink-0">
-                                {addingBlock === tmpl.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <IconComp className="h-3 w-3" />
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-medium truncate">{tmpl.title}</p>
-                                {tmpl.data_source !== "none" && (
-                                  <p className="text-[9px] text-emerald-600">Datakopplat</p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
+                  {/* Available library blocks */}
+                  {availableTemplates.map((tmpl) => {
+                    const IconComp = (Icons as any)[tmpl.icon] || Icons.Square;
+                    return (
+                      <button
+                        key={tmpl.id}
+                        onClick={() => handleAddBlock(tmpl)}
+                        disabled={addingBlock === tmpl.id}
+                        className="rounded-xl border border-dashed border-border bg-muted/30 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-all group disabled:opacity-50"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="p-1 rounded-lg bg-primary/10 text-primary shrink-0">
+                            {addingBlock === tmpl.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <IconComp className="h-3 w-3" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-medium truncate">{tmpl.title}</p>
+                            {tmpl.data_source !== "none" && (
+                              <p className="text-[9px] text-emerald-600">Datakopplat</p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
