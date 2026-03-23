@@ -1,8 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, Circle, Flame, TrendingUp, TrendingDown } from "lucide-react";
+import { Check, Circle, Flame, TrendingUp, TrendingDown, Minus, Calendar, Clock } from "lucide-react";
 import * as Icons from "lucide-react";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
+import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 
 interface BlockPreviewProps {
   title: string;
@@ -19,306 +18,303 @@ function getIcon(iconName: string, className = "h-4 w-4") {
   return Icon ? <Icon className={className} /> : <Icons.Square className={className} />;
 }
 
-const HEALTH_METRIC_LABELS: Record<string, { label: string; unit: string }> = {
-  weight: { label: "Vikt", unit: "kg" },
-  waist: { label: "Midjemått", unit: "cm" },
-  blood_pressure_systolic: { label: "Blodtryck (syst)", unit: "mmHg" },
-  blood_pressure_diastolic: { label: "Blodtryck (diast)", unit: "mmHg" },
-  bmi: { label: "BMI", unit: "" },
-};
-
 const SAMPLE_CHART_DATA: Record<string, { date: string; value: number }[]> = {
   weight: [
-    { date: "Jan", value: 92 }, { date: "Feb", value: 90.5 }, { date: "Mar", value: 89 },
-    { date: "Apr", value: 88.2 }, { date: "Maj", value: 87 }, { date: "Jun", value: 86.5 },
+    { date: "1 mar", value: 92 }, { date: "5 mar", value: 91.2 }, { date: "10 mar", value: 90.5 },
+    { date: "14 mar", value: 89.8 }, { date: "18 mar", value: 89 }, { date: "22 mar", value: 88.4 },
+    { date: "26 mar", value: 87.6 }, { date: "30 mar", value: 86.5 },
   ],
   waist: [
-    { date: "Jan", value: 98 }, { date: "Feb", value: 97 }, { date: "Mar", value: 95 },
-    { date: "Apr", value: 94.5 }, { date: "Maj", value: 93 }, { date: "Jun", value: 92 },
+    { date: "1 mar", value: 98 }, { date: "8 mar", value: 97 }, { date: "15 mar", value: 95.5 },
+    { date: "22 mar", value: 94 }, { date: "30 mar", value: 92 },
   ],
   blood_pressure_systolic: [
-    { date: "Jan", value: 145 }, { date: "Feb", value: 140 }, { date: "Mar", value: 138 },
-    { date: "Apr", value: 135 }, { date: "Maj", value: 132 }, { date: "Jun", value: 130 },
+    { date: "1 mar", value: 145 }, { date: "8 mar", value: 140 }, { date: "15 mar", value: 136 },
+    { date: "22 mar", value: 133 }, { date: "30 mar", value: 130 },
   ],
   blood_pressure_diastolic: [
-    { date: "Jan", value: 95 }, { date: "Feb", value: 92 }, { date: "Mar", value: 90 },
-    { date: "Apr", value: 88 }, { date: "Maj", value: 86 }, { date: "Jun", value: 85 },
+    { date: "1 mar", value: 95 }, { date: "8 mar", value: 92 }, { date: "15 mar", value: 89 },
+    { date: "22 mar", value: 87 }, { date: "30 mar", value: 85 },
   ],
   bmi: [
-    { date: "Jan", value: 30.1 }, { date: "Feb", value: 29.6 }, { date: "Mar", value: 29.1 },
-    { date: "Apr", value: 28.8 }, { date: "Maj", value: 28.5 }, { date: "Jun", value: 28.3 },
+    { date: "1 mar", value: 30.1 }, { date: "8 mar", value: 29.6 }, { date: "15 mar", value: 29.1 },
+    { date: "22 mar", value: 28.7 }, { date: "30 mar", value: 28.3 },
   ],
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  action: "Action",
-  insight: "Insikt",
-  progress: "Progress",
-  test: "Test",
-  reflection: "Reflektion",
-  follow_up: "Uppföljning",
+const METRIC_UNITS: Record<string, string> = {
+  weight: "kg", waist: "cm", blood_pressure_systolic: "mmHg",
+  blood_pressure_diastolic: "mmHg", bmi: "",
 };
 
-export function BlockPreview({ title, description, icon, dataSource, dataConfig, displayConfig = {}, blockType = "action" }: BlockPreviewProps) {
-  const sourceBadge = dataSource === "none"
-    ? { label: "Din dietist", className: "bg-blue-50 text-blue-700 border-blue-200" }
-    : { label: "Från journal", className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+// ─── Reusable mini-components ───
 
+function TrendBadge({ first, last, unit }: { first: number; last: number; unit: string }) {
+  const diff = last - first;
+  const isDown = diff < 0;
+  const isStable = Math.abs(diff) < 0.3;
+  return (
+    <div className={`flex items-center gap-1 text-xs font-semibold tabular-nums ${
+      isStable ? "text-muted-foreground" : isDown ? "text-emerald-600" : "text-amber-600"
+    }`}>
+      {isStable ? <Minus className="h-3 w-3" /> : isDown ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+      {diff > 0 ? "+" : ""}{diff.toFixed(1)} {unit}
+    </div>
+  );
+}
+
+function MiniAreaChart({ data, id }: { data: { date: string; value: number }[]; id: string }) {
+  return (
+    <div className="h-[72px] w-full -mx-1">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+          <defs>
+            <linearGradient id={`prev-grad-${id}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+          <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(var(--border))", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }} />
+          <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fill={`url(#prev-grad-${id})`} dot={false} activeDot={{ r: 3, fill: "hsl(var(--primary))" }} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function HeatmapGrid({ filled, total }: { filled: number; total: number }) {
+  return (
+    <div className="flex flex-wrap gap-[3px]">
+      {Array.from({ length: total }).map((_, i) => (
+        <div key={i} className={`w-[10px] h-[10px] rounded-[2px] ${i < filled ? "bg-primary/70" : "bg-muted"}`} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Preview ───
+
+export function BlockPreview({ title, description, icon, dataSource, dataConfig, displayConfig = {}, blockType = "action" }: BlockPreviewProps) {
   const metric = dataConfig.metric || "";
   const progression = dataConfig.progression || "none";
   const progressionTarget = dataConfig.progression_target || 7;
-  const interpretation = dataConfig.interpretation || "summary";
-  const tone = displayConfig.tone || "neutral";
 
-  // Simulated data for preview
-  const simulatedStreakDays = 4;
-  const simulatedWeeklyDays = 3;
-  const simulatedTimeLimitedDay = 2;
+  // Determine what visual to show
+  const renderContent = () => {
+    // ── Trend chart (health_tracking) ──
+    if (metric === "trend_chart" || metric === "latest_value") {
+      const hm = dataConfig.health_metric || "weight";
+      const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+      const unit = METRIC_UNITS[hm] || "kg";
+      const first = chartData[0]?.value || 0;
+      const last = chartData[chartData.length - 1]?.value || 0;
+
+      if (metric === "latest_value") {
+        return (
+          <div className="flex items-end justify-between mt-2">
+            <span className="text-3xl font-bold tabular-nums text-foreground">{last}</span>
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-xs text-muted-foreground">{unit}</span>
+              <TrendBadge first={first} last={last} unit={unit} />
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="mt-2 space-y-1">
+          <div className="flex items-end justify-between">
+            <span className="text-2xl font-bold tabular-nums text-foreground">{last}<span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span></span>
+            <TrendBadge first={first} last={last} unit={unit} />
+          </div>
+          <MiniAreaChart data={chartData} id={`preview-${hm}`} />
+          <p className="text-[10px] text-muted-foreground text-center">Senaste 30 dagarna</p>
+        </div>
+      );
+    }
+
+    // ── Meal rhythm checklist ──
+    if (metric === "meal_rhythm") {
+      const meals = [
+        { label: "Frukost", time: "07:45", done: true },
+        { label: "Lunch", time: "12:15", done: true },
+        { label: "Middag", time: "—", done: false },
+        { label: "Mellanmål", time: "—", done: false },
+      ];
+      return (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {meals.map((m) => (
+            <div key={m.label} className={`flex items-center gap-2 p-2 rounded-lg ${m.done ? "bg-emerald-50 dark:bg-emerald-950/20" : "bg-muted/50"}`}>
+              {m.done ? <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> : <Circle className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />}
+              <div className="min-w-0">
+                <p className={`text-xs font-medium ${m.done ? "text-foreground" : "text-muted-foreground"}`}>{m.label}</p>
+                {m.done && <p className="text-[10px] text-muted-foreground">{m.time}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ── Meals per day ──
+    if (metric === "meals_per_day") {
+      return (
+        <div className="mt-3 flex items-end justify-between">
+          <div>
+            <span className="text-3xl font-bold tabular-nums text-foreground">3</span>
+            <span className="text-sm text-muted-foreground ml-1.5">måltider</span>
+          </div>
+          <div className="flex gap-1">
+            {[true, true, true, false, false].map((filled, i) => (
+              <div key={i} className={`w-3 h-8 rounded-full ${filled ? "bg-primary/70" : "bg-muted"}`} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Regularity 30d ──
+    if (metric === "regularity_30d") {
+      return (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-end justify-between">
+            <span className="text-3xl font-bold tabular-nums text-foreground">22<span className="text-sm font-normal text-muted-foreground ml-0.5">/30</span></span>
+            <span className="text-xs text-emerald-600 font-medium">73%</span>
+          </div>
+          <HeatmapGrid filled={22} total={30} />
+          <p className="text-[10px] text-muted-foreground">Dagar med {dataConfig.threshold || 3}+ måltider</p>
+        </div>
+      );
+    }
+
+    // ── Symptom count / by time / after meal ──
+    if (metric === "symptom_count" || metric === "symptom_by_time" || metric === "symptom_after_meal") {
+      const bars = [
+        { label: "Mån", h: 0 }, { label: "Tis", h: 1 }, { label: "Ons", h: 0 },
+        { label: "Tor", h: 2 }, { label: "Fre", h: 0 }, { label: "Lör", h: 1 }, { label: "Sön", h: 0 },
+      ];
+      const maxH = 3;
+      return (
+        <div className="mt-3 space-y-1">
+          <div className="flex items-end gap-1 h-[48px]">
+            {bars.map((b, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                <div className={`w-full rounded-t ${b.h > 0 ? "bg-amber-400/70" : "bg-muted"}`} style={{ height: `${Math.max((b.h / maxH) * 100, 8)}%` }} />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-1">
+            {bars.map((b, i) => (
+              <span key={i} className="flex-1 text-center text-[9px] text-muted-foreground">{b.label}</span>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Milestone progress ──
+    if (metric === "milestone_progress") {
+      const milestones = [
+        { label: "Regelbunden frukost", done: true },
+        { label: "3 mål/dag i 5 dagar", done: true },
+        { label: "Prova nytt mellanmål", done: false },
+      ];
+      return (
+        <div className="mt-3 space-y-2">
+          {milestones.map((m, i) => (
+            <div key={i} className="flex items-center gap-2">
+              {m.done
+                ? <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><Check className="h-3 w-3 text-emerald-600" /></div>
+                : <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/20" />
+              }
+              <span className={`text-xs ${m.done ? "text-muted-foreground line-through" : "text-foreground font-medium"}`}>{m.label}</span>
+            </div>
+          ))}
+          <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+            <div className="bg-primary rounded-full h-1.5" style={{ width: "66%" }} />
+          </div>
+        </div>
+      );
+    }
+
+    // ── Macro value ──
+    if (metric === "macro_value") {
+      return (
+        <div className="mt-3 flex items-end justify-between">
+          <div>
+            <span className="text-3xl font-bold tabular-nums text-foreground">68</span>
+            <span className="text-sm text-muted-foreground ml-1">g protein</span>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-muted-foreground">Mål: 80g</p>
+            <div className="w-16 bg-muted rounded-full h-1.5 mt-1">
+              <div className="bg-primary rounded-full h-1.5" style={{ width: "85%" }} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Manual / fallback ──
+    return (
+      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+        {description || "Innehåll sätts per patient av dietisten"}
+      </p>
+    );
+  };
 
   return (
-    <Card className="p-4 bg-card border border-border shadow-sm">
-      {/* Top: icon + title + badges */}
-      <div className="flex items-start gap-3">
-        <div className="p-2 rounded-xl bg-primary/8 text-primary shrink-0">
-          {getIcon(icon, "h-5 w-5")}
+    <Card className="p-4 bg-card border border-border shadow-sm overflow-hidden">
+      {/* Header: icon + title */}
+      <div className="flex items-center gap-2.5">
+        <div className="p-1.5 rounded-lg bg-primary/8 text-primary shrink-0">
+          {getIcon(icon, "h-4 w-4")}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-semibold truncate">{title || "Namnlöst block"}</h4>
-            <Badge variant="outline" className={`text-[9px] px-1.5 py-0 shrink-0 ${sourceBadge.className}`}>
-              {sourceBadge.label}
-            </Badge>
-            {blockType && blockType !== "action" && (
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 shrink-0">
-                {ROLE_LABELS[blockType] || blockType}
-              </Badge>
-            )}
-          </div>
-
-          {/* Manual block */}
-          {dataSource === "none" && (
-            <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-              {description || "Manuellt innehåll sätts per patient"}
-            </p>
-          )}
-
-          {/* Meal rhythm checklist */}
-          {metric === "meal_rhythm" && (
-            <div className="flex flex-wrap gap-3 mt-2.5">
-              {[
-                { label: "Frukost", done: true },
-                { label: "Lunch", done: true },
-                { label: "Middag", done: false },
-                { label: "Mellanmål", done: false },
-              ].map((meal) => (
-                <div key={meal.label} className="flex items-center gap-1.5">
-                  {meal.done ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  ) : (
-                    <Circle className="h-3.5 w-3.5 text-muted-foreground/30" />
-                  )}
-                  <span className={`text-xs ${meal.done ? "text-foreground" : "text-muted-foreground"}`}>{meal.label}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Meals per day */}
-          {metric === "meals_per_day" && (
-            <div className="mt-2.5">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-bold text-primary">3</span>
-                <span className="text-xs text-muted-foreground">måltider idag</span>
-              </div>
-              {(dataConfig.rules || []).length > 0 && (
-                <p className={`text-xs mt-1 ${tone === "encouraging" ? "text-emerald-600" : "text-muted-foreground"}`}>
-                  {dataConfig.rules[0]?.label || "Status baserat på regler"}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Regularity 30d */}
-          {metric === "regularity_30d" && (
-            <div className="mt-2.5">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-bold text-primary">22</span>
-                <span className="text-xs text-muted-foreground">/ 30 dagar med {dataConfig.threshold || 3}+ måltider</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2 mt-2">
-                <div className="bg-primary rounded-full h-2 transition-all" style={{ width: "73%" }} />
-              </div>
-              {interpretation === "status" && (
-                <p className="text-xs text-emerald-600 mt-1.5">✓ Stabil regelbundenhet</p>
-              )}
-            </div>
-          )}
-
-          {/* Symptom data */}
-          {(metric === "symptom_count" || metric === "symptom_by_time" || metric === "symptom_after_meal") && (
-            <div className="mt-2.5">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-bold text-primary">2</span>
-                <span className="text-xs text-muted-foreground">
-                  {metric === "symptom_after_meal" ? "symptom kopplade till måltid" : "symptom senaste 7 dagarna"}
-                </span>
-              </div>
-              {interpretation === "trend" && (
-                <div className="flex items-center gap-1 mt-1">
-                  <TrendingUp className="h-3 w-3 text-amber-500" />
-                  <span className="text-xs text-amber-600">Ökat jämfört med förra veckan</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Treatment goals */}
-          {metric === "milestone_progress" && (
-            <div className="mt-2.5">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-bold text-primary">3</span>
-                <span className="text-xs text-muted-foreground">/ 5 milstolpar avklarade</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2 mt-2">
-                <div className="bg-primary rounded-full h-2" style={{ width: "60%" }} />
-              </div>
-            </div>
-          )}
-
-          {/* Macro data */}
-          {metric === "macro_value" && (
-            <div className="mt-2.5">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-bold text-primary">68g</span>
-                <span className="text-xs text-muted-foreground">protein idag</span>
-              </div>
-            </div>
-          )}
-
-          {/* Trend chart */}
-          {metric === "trend_chart" && (
-            <div className="mt-2.5">
-              {(() => {
-                const hm = dataConfig.health_metric || "weight";
-                const metricInfo = HEALTH_METRIC_LABELS[hm] || { label: "Vikt", unit: "kg" };
-                const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
-                const first = chartData[0]?.value || 0;
-                const last = chartData[chartData.length - 1]?.value || 0;
-                const diff = last - first;
-                const isDown = diff < 0;
-                return (
-                  <>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-muted-foreground">{metricInfo.label}</span>
-                      <div className="flex items-center gap-1">
-                        {isDown ? (
-                          <TrendingDown className="h-3 w-3 text-emerald-500" />
-                        ) : (
-                          <TrendingUp className="h-3 w-3 text-amber-500" />
-                        )}
-                        <span className={`text-xs font-medium ${isDown ? "text-emerald-600" : "text-amber-600"}`}>
-                          {diff > 0 ? "+" : ""}{diff.toFixed(1)} {metricInfo.unit}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="h-[80px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                          <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
-                          <YAxis hide domain={["dataMin - 1", "dataMax + 1"]} />
-                          <Tooltip
-                            contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
-                            formatter={(v: number) => [`${v} ${metricInfo.unit}`, metricInfo.label]}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="value"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth={2}
-                            dot={{ r: 2.5, fill: "hsl(var(--primary))" }}
-                            activeDot={{ r: 4 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          )}
-
-          {/* Latest value */}
-          {metric === "latest_value" && (
-            <div className="mt-2.5">
-              {(() => {
-                const hm = dataConfig.health_metric || "weight";
-                const metricInfo = HEALTH_METRIC_LABELS[hm] || { label: "Vikt", unit: "kg" };
-                const sampleData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
-                const latest = sampleData[sampleData.length - 1]?.value || 0;
-                return (
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-bold text-primary">{latest}</span>
-                    <span className="text-xs text-muted-foreground">{metricInfo.unit} ({metricInfo.label})</span>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </div>
+        <h4 className="text-sm font-semibold truncate">{title || "Namnlöst block"}</h4>
       </div>
 
-      {/* Progression section */}
+      {/* Visual content */}
+      {renderContent()}
+
+      {/* Progression footer */}
       {progression !== "none" && (
-        <div className="mt-3 pt-3 border-t border-border/50">
+        <div className="mt-3 pt-2.5 border-t border-border/50">
           {progression === "streak" && (
             <div className="flex items-center gap-2">
-              <Flame className="h-4 w-4 text-orange-500" />
-              <span className="text-xs font-medium">{simulatedStreakDays} dagar i rad</span>
-              <span className="text-[10px] text-muted-foreground">/ {progressionTarget}</span>
+              <Flame className="h-3.5 w-3.5 text-orange-500" />
+              <span className="text-xs font-medium tabular-nums">4 dagar i rad</span>
               <div className="flex gap-0.5 ml-auto">
-                {Array.from({ length: progressionTarget }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      i < simulatedStreakDays ? "bg-orange-400" : "bg-muted"
-                    }`}
-                  />
+                {Array.from({ length: Math.min(progressionTarget, 10) }).map((_, i) => (
+                  <div key={i} className={`w-2 h-2 rounded-full ${i < 4 ? "bg-orange-400" : "bg-muted"}`} />
                 ))}
               </div>
             </div>
           )}
-
           {progression === "weekly_goal" && (
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium">{simulatedWeeklyDays} / {progressionTarget} dagar denna vecka</span>
+              <span className="text-xs font-medium tabular-nums">3/{progressionTarget} dagar</span>
               <div className="flex gap-0.5 ml-auto">
                 {Array.from({ length: 7 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      i < simulatedWeeklyDays ? "bg-primary" : "bg-muted"
-                    }`}
-                  />
+                  <div key={i} className={`w-2 h-2 rounded-full ${i < 3 ? "bg-primary" : "bg-muted"}`} />
                 ))}
               </div>
             </div>
           )}
-
           {progression === "daily_check" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Check className="h-3.5 w-3.5 text-emerald-500" />
               <span className="text-xs font-medium text-emerald-700">Avklarat idag</span>
             </div>
           )}
-
           {progression === "time_limited" && (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">Dag {simulatedTimeLimitedDay} av {progressionTarget}</span>
-                <span className="text-[10px] text-muted-foreground">{Math.round((simulatedTimeLimitedDay / progressionTarget) * 100)}%</span>
+                <span className="text-xs font-medium tabular-nums">Dag 2 av {progressionTarget}</span>
+                <span className="text-[10px] text-muted-foreground">{Math.round((2 / progressionTarget) * 100)}%</span>
               </div>
               <div className="w-full bg-muted rounded-full h-1.5">
-                <div className="bg-primary rounded-full h-1.5 transition-all" style={{ width: `${(simulatedTimeLimitedDay / progressionTarget) * 100}%` }} />
+                <div className="bg-primary rounded-full h-1.5" style={{ width: `${(2 / progressionTarget) * 100}%` }} />
               </div>
             </div>
           )}
