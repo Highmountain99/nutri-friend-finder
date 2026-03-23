@@ -420,8 +420,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                         );
                       }
 
-                      // Block item
-                      const IconComp = (Icons as any)[item.icon || "Square"] || Icons.Square;
+                      // Block item — show mini BlockPreview
                       return (
                         <div
                           key={item.id}
@@ -431,11 +430,11 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                           onDragOver={(e) => e.preventDefault()}
                           onDragEnd={handleDragEnd}
                           className={`
-                            group relative rounded-xl border bg-card p-3 transition-all cursor-grab active:cursor-grabbing select-none
+                            group relative rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none overflow-hidden
                             ${isOver ? "border-primary ring-2 ring-primary/20 scale-[1.02]" : "border-primary/30 hover:border-primary/50"}
                           `}
                         >
-                          <div className="absolute -left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -left-0 top-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                             <GripVertical className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <button
@@ -444,16 +443,16 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                           >
                             <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                              <IconComp className="h-3.5 w-3.5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{item.label}</p>
-                              {item.dataSource && item.dataSource !== "none" && (
-                                <p className="text-[9px] text-emerald-600">Datakopplat</p>
-                              )}
-                            </div>
+                          <div className="transform scale-[0.85] origin-top pointer-events-none">
+                            <BlockPreview
+                              title={item.label}
+                              description={item.description}
+                              icon={item.icon || "Square"}
+                              dataSource={item.dataSource || "none"}
+                              dataConfig={item.dataConfig || {}}
+                              displayConfig={{}}
+                              blockType="progress"
+                            />
                           </div>
                         </div>
                       );
