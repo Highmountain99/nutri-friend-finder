@@ -46,6 +46,13 @@ const METRIC_OPTIONS: Record<string, { value: string; label: string; desc: strin
   health_tracking: [
     { value: "trend_chart", label: "Trendgraf", desc: "Linjediagram över tid (vikt, midjemått etc.)" },
     { value: "latest_value", label: "Senaste värde", desc: "Visar senast loggade mätvärde" },
+    { value: "metric_cards", label: "Mätvärden", desc: "Nuvarande värde och förändring" },
+  ],
+  treatment_plan: [
+    { value: "plan_description", label: "Fokustext", desc: "Beskrivning och fokus från aktiv plan" },
+  ],
+  appointments: [
+    { value: "next_appointment", label: "Nästa samtal", desc: "Kommande bokat videosamtal" },
   ],
 };
 
