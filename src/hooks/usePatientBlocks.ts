@@ -194,10 +194,10 @@ export function usePatientBlocks(patientId: string | undefined) {
         const config = block.template.data_config || {};
         const displayConfig = block.template.display_config || {};
         const source = block.template.data_source;
-        const renderAs = displayConfig.render_as || null;
-        const base: Partial<ComputedBlockData> = {
-          chartData: null,
-          chartMeta: null,
+        const renderAs = displayConfig.render_as || undefined;
+        const base = {
+          chartData: null as { date: string; value: number }[] | null,
+          chartMeta: null as { label: string; unit: string } | null,
           renderAs,
         };
 
