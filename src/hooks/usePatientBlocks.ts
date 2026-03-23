@@ -67,7 +67,7 @@ export interface ComputedBlockData {
   nextAppointment?: { appointment_date: string; notes?: string | null } | null;
   milestones?: { id: string; title: string; is_completed: boolean }[];
   focusText?: string;
-  renderAs?: string; // from display_config.render_as
+  renderAs?: string;
 }
 
 export function usePatientBlocks(patientId: string | undefined) {
