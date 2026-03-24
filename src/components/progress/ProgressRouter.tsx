@@ -29,7 +29,8 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const navigate = useNavigate();
 
   const hasCompletedAppointment = appointments.some(
-    (apt) => apt.status === "completed"
+    (apt) => apt.status === "completed" || 
+    (apt.status === "booked" && apt.appointmentDate < new Date())
   );
 
   if (progressData.loading || appointmentsLoading) {
