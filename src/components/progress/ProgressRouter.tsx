@@ -13,10 +13,14 @@ import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
 import { useAppointments } from "@/hooks/useAppointments";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, Eye } from "lucide-react";
+import { CalendarPlus, Eye, FlagTriangleRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export function ProgressRouter() {
+interface ProgressRouterProps {
+  onOpenJourney: () => void;
+}
+
+export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
   const [previewMode, setPreviewMode] = useState(false);
   const progressData = useProgressData();
@@ -83,12 +87,25 @@ export function ProgressRouter() {
     }
   })();
 
+  const journeyButton = (
+    <button
+      className="absolute top-2 right-4 z-10 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md active:scale-95 transition-transform"
+      onClick={onOpenJourney}
+      aria-label="Visa programöversikt"
+    >
+      <FlagTriangleRight className="w-5 h-5 text-primary-foreground" />
+    </button>
+  );
+
   // If no completed appointment yet, show locked state with blurred background
   if (!hasCompletedAppointment && !previewMode) {
     return (
       <div className="relative h-[calc(100vh-8rem)] overflow-hidden">
-        {/* Blurred background content */}
+        {/* Blurred background content — includes the flag button */}
         <div className="pointer-events-none select-none blur-md opacity-50" aria-hidden="true">
+          <div className="relative">
+            {journeyButton}
+          </div>
           {mainContent}
           {dynamicBlocks}
         </div>
@@ -130,26 +147,29 @@ export function ProgressRouter() {
   // Preview mode banner
   if (!hasCompletedAppointment && previewMode) {
     return (
-      <>
+      <div className="relative">
+        {journeyButton}
         <div className="mx-4 mb-4 mt-2 bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-3">
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">Förhandsvisning</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Boka ett möte för att aktivera din plan</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Det här är ett exempel på hur din plan kan se ut</p>
           </div>
-          <Button variant="outline" size="sm" className="rounded-xl text-xs h-8 shrink-0" onClick={() => setPreviewMode(false)}>
-            Tillbaka
+          <Button size="sm" className="rounded-xl text-xs h-8 shrink-0" onClick={() => { setPreviewMode(false); navigate("/booking"); }}>
+            <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
+            Boka tid
           </Button>
         </div>
         {mainContent}
         {dynamicBlocks}
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="relative">
+      {journeyButton}
       {mainContent}
       {dynamicBlocks}
-    </>
+    </div>
   );
 }
