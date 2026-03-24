@@ -72,6 +72,32 @@ export interface ComputedBlockData {
 }
 
 export function usePatientBlocks(patientId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  // Realtime subscription for instant updates when dietitian saves
+  useEffect(() => {
+    if (!patientId) return;
+    const channel = supabase
+      .channel(`patient-blocks-${patientId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "patient_blocks",
+          filter: `patient_id=eq.${patientId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["patient-blocks", patientId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [patientId, queryClient]);
+
   return useQuery({
     queryKey: ["patient-blocks", patientId],
     queryFn: async () => {
