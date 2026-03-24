@@ -131,9 +131,12 @@ export function ProgressRouter() {
   if (!hasCompletedAppointment && previewMode) {
     return (
       <>
-        <div className="mx-4 mb-3 mt-1 bg-muted/60 border border-border rounded-xl p-3 flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">Förhandsvisning — boka ett möte för att aktivera</p>
-          <Button variant="outline" size="sm" className="rounded-lg text-xs h-7" onClick={() => setPreviewMode(false)}>
+        <div className="mx-4 mb-4 mt-2 bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-3">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground">Förhandsvisning</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Boka ett möte för att aktivera din plan</p>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-xl text-xs h-8 shrink-0" onClick={() => setPreviewMode(false)}>
             Tillbaka
           </Button>
         </div>
