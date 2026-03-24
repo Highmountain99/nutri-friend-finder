@@ -234,7 +234,9 @@ export default function Messages() {
                 </Button>
               </div>
             </div>
-          )
+          )}
+
+          {/* Streaming indicator */}
           {sending && (
             <div className="flex gap-2 justify-start">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
