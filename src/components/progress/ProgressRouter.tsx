@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useProgressData } from "@/hooks/useProgressData";
 import { WeightLossProgress } from "./WeightLossProgress";
 import { DiabetesProgress } from "./DiabetesProgress";
@@ -12,11 +13,12 @@ import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
 import { useAppointments } from "@/hooks/useAppointments";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function ProgressRouter() {
   const { user } = useAuth();
+  const [previewMode, setPreviewMode] = useState(false);
   const progressData = useProgressData();
   const { data: patientBlocks } = usePatientBlocks(user?.id);
   const { appointments, loading: appointmentsLoading } = useAppointments();
@@ -82,7 +84,7 @@ export function ProgressRouter() {
   })();
 
   // If no completed appointment yet, show locked state with blurred background
-  if (!hasCompletedAppointment) {
+  if (!hasCompletedAppointment && !previewMode) {
     return (
       <div className="relative h-[calc(100vh-8rem)] overflow-hidden">
         {/* Blurred background content */}
@@ -111,9 +113,33 @@ export function ProgressRouter() {
               <CalendarPlus className="w-4 h-4 mr-2" />
               Boka tid med dietist
             </Button>
+            <Button
+              variant="ghost"
+              className="w-full rounded-xl mt-2 text-muted-foreground"
+              onClick={() => setPreviewMode(true)}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Hur kan det se ut?
+            </Button>
           </div>
         </div>
       </div>
+    );
+  }
+
+  // Preview mode banner
+  if (!hasCompletedAppointment && previewMode) {
+    return (
+      <>
+        <div className="mx-4 mb-3 mt-1 bg-muted/60 border border-border rounded-xl p-3 flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">Förhandsvisning — boka ett möte för att aktivera</p>
+          <Button variant="outline" size="sm" className="rounded-lg text-xs h-7" onClick={() => setPreviewMode(false)}>
+            Tillbaka
+          </Button>
+        </div>
+        {mainContent}
+        {dynamicBlocks}
+      </>
     );
   }
 
