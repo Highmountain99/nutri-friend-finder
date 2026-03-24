@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { usePatientJournal } from "@/hooks/dietitian/usePatientJournal";
 import { useDietitianChat } from "@/hooks/dietitian/useDietitianChat";
@@ -207,7 +208,7 @@ export default function DietitianPatientDetail() {
               <TabsTrigger value="journal">Journal</TabsTrigger>
               <TabsTrigger value="foodlog">Kostdagbok</TabsTrigger>
               <TabsTrigger value="treatment">Behandlingsplan</TabsTrigger>
-              <TabsTrigger value="visits">Besök</TabsTrigger>
+              <TabsTrigger value="visits">Diet</TabsTrigger>
               <TabsTrigger value="documents">Dokument</TabsTrigger>
               <TabsTrigger value="chat">Chatt</TabsTrigger>
             </TabsList>
@@ -505,24 +506,67 @@ export default function DietitianPatientDetail() {
               {id && <TreatmentPlanTab patientId={id} />}
             </TabsContent>
 
-            {/* Visits tab */}
+            {/* Diet tab */}
             <TabsContent value="visits" className="space-y-3 mt-4">
               {!meals.data?.length ? (
                 <p className="text-sm text-muted-foreground py-8 text-center">Inga måltider loggade ännu.</p>
               ) : (
-                meals.data.map((m) => (
-                  <Card key={m.id}>
-                    <CardContent className="py-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-sm font-medium">{m.meal_name || "Måltid"}</p>
-                          <p className="text-xs text-muted-foreground">{m.meal_type} · {format(new Date(m.entry_date), "d MMM", { locale: sv })}</p>
-                        </div>
-                        <div className="text-right text-xs text-muted-foreground"><p>{m.calories} kcal</p></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                <TooltipProvider delayDuration={200}>
+                  {meals.data.map((m) => {
+                    const linkedSymptoms = (symptoms.data ?? []).filter((s) => s.meal_id === m.id);
+                    return (
+                      <Tooltip key={m.id}>
+                        <TooltipTrigger asChild>
+                          <Card className="cursor-default hover:shadow-md transition-shadow">
+                            <CardContent className="py-3">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="text-sm font-medium">{m.meal_name || "Måltid"}</p>
+                                  <p className="text-xs text-muted-foreground">{m.meal_type} · {format(new Date(m.entry_date), "d MMM", { locale: sv })}</p>
+                                </div>
+                                <div className="text-right text-xs text-muted-foreground"><p>{m.calories} kcal</p></div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs p-0 overflow-hidden">
+                          <div className="space-y-0">
+                            {m.image_url && (
+                              <img src={m.image_url} alt={m.meal_name ?? "Måltid"} className="w-full h-32 object-cover" />
+                            )}
+                            <div className="p-3 space-y-2">
+                              <p className="font-semibold text-sm">{m.meal_name || "Måltid"}</p>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                <span className="text-muted-foreground">Kalorier</span>
+                                <span className="font-medium text-right">{m.calories ?? "–"} kcal</span>
+                                <span className="text-muted-foreground">Protein</span>
+                                <span className="font-medium text-right">{m.protein != null ? `${Math.round(m.protein)}g` : "–"}</span>
+                                <span className="text-muted-foreground">Kolhydrater</span>
+                                <span className="font-medium text-right">{m.carbs != null ? `${Math.round(m.carbs)}g` : "–"}</span>
+                                <span className="text-muted-foreground">Fett</span>
+                                <span className="font-medium text-right">{m.fat != null ? `${Math.round(m.fat)}g` : "–"}</span>
+                                {m.fiber != null && (
+                                  <>
+                                    <span className="text-muted-foreground">Fiber</span>
+                                    <span className="font-medium text-right">{Math.round(m.fiber)}g</span>
+                                  </>
+                                )}
+                              </div>
+                              {linkedSymptoms.length > 0 && (
+                                <div className="pt-1 border-t border-border">
+                                  <p className="text-xs font-semibold text-destructive mb-1">Symptom</p>
+                                  {linkedSymptoms.map((s) => (
+                                    <p key={s.id} className="text-xs text-muted-foreground">• {s.description}</p>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </TooltipProvider>
               )}
             </TabsContent>
 
