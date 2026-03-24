@@ -15,7 +15,29 @@ Deno.serve(async (req) => {
     const { appointmentId, devMode } = await req.json();
     const authHeader = req.headers.get("Authorization");
 
-    // Dev mode: create a temporary room without any appointment or auth validation
+    // Always require authentication first
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authErr } = await supabaseAuth.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Dev mode: create a temporary room (auth required, no appointment needed)
     if (devMode) {
       const wherebyKey = Deno.env.get("WHEREBY_API_KEY");
       if (!wherebyKey) {
