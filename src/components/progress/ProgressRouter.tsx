@@ -148,7 +148,6 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   if (!hasCompletedAppointment && previewMode) {
     return (
       <div className="relative">
-        {journeyButton}
         <div className="mx-4 mb-4 mt-2 bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-3">
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">Förhandsvisning</p>
@@ -158,6 +157,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
             <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
             Boka tid
           </Button>
+          {journeyButton}
         </div>
         {mainContent}
         {dynamicBlocks}
