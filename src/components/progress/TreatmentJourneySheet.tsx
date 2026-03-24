@@ -1,7 +1,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePatientTreatmentPlan } from "@/hooks/usePatientTreatmentPlan";
-import { Lock, Flag } from "lucide-react";
-import { differenceInWeeks, parseISO } from "date-fns";
+import { Lock, Flag, CheckCircle2 } from "lucide-react";
+import { differenceInWeeks, differenceInDays, parseISO } from "date-fns";
 
 interface TreatmentJourneySheetProps {
   open: boolean;
@@ -26,51 +26,75 @@ function getWeekRange(
   return { start: Math.max(1, start), end: Math.max(start, end) };
 }
 
-// Generates a winding S-curve path through goal nodes
-function generatePath(goalCount: number): string {
-  if (goalCount < 2) return "";
-  
-  const nodeSpacing = 140;
-  const centerX = 195; // ~center of 390px viewport
-  const amplitude = 70;
-  const points: { x: number; y: number }[] = [];
-
-  for (let i = 0; i < goalCount; i++) {
-    const isEven = i % 2 === 0;
-    const x = centerX + (isEven ? amplitude : -amplitude);
-    const y = 48 + i * nodeSpacing;
-    points.push({ x, y });
+function getStatusLabel(
+  goal: { status: string; planned_start: string | null; completed_at: string | null },
+  isActive: boolean,
+  isLocked: boolean
+) {
+  if (goal.status === "completed") return "Avklarat";
+  if (isLocked) return "Låst";
+  if (isActive) {
+    if (goal.planned_start) {
+      const days = differenceInDays(new Date(), parseISO(goal.planned_start));
+      if (days >= 0) return `Pågår · dag ${days + 1}`;
+    }
+    return "Pågår";
   }
-
-  // Add finish point
-  points.push({ x: centerX, y: 48 + goalCount * nodeSpacing });
-
-  let d = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const curr = points[i];
-    const next = points[i + 1];
-    const midY = (curr.y + next.y) / 2;
-    d += ` C ${curr.x} ${midY}, ${next.x} ${midY}, ${next.x} ${next.y}`;
-  }
-  return d;
+  return "";
 }
 
 export function TreatmentJourneySheet({ open, onOpenChange }: TreatmentJourneySheetProps) {
   const { data: plan, isLoading } = usePatientTreatmentPlan();
-
   const goals = plan?.goals ?? [];
-  const nodeSpacing = 140;
-  const centerX = 195;
-  const amplitude = 70;
-  const totalHeight = 48 + goals.length * nodeSpacing + 60;
+
+  const stepHeight = 160;
+  const nodeRadius = 32;
+  const svgWidth = 320;
+  const centerX = svgWidth / 2;
+  const amplitude = 50;
+  const startY = 48;
+
+  const getNodePos = (i: number) => {
+    const isEven = i % 2 === 0;
+    return {
+      x: centerX + (isEven ? amplitude : -amplitude),
+      y: startY + i * stepHeight,
+    };
+  };
+
+  const finishY = startY + goals.length * stepHeight;
+  const totalHeight = finishY + 80;
+
+  // Build the full path string
+  const buildPath = (count: number, includeFinish = false) => {
+    if (count < 1) return "";
+    const pts: { x: number; y: number }[] = [];
+    for (let i = 0; i < count; i++) pts.push(getNodePos(i));
+    if (includeFinish) pts.push({ x: centerX, y: finishY });
+
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const c = pts[i], n = pts[i + 1];
+      const my = (c.y + n.y) / 2;
+      d += ` C ${c.x} ${my}, ${n.x} ${my}, ${n.x} ${n.y}`;
+    }
+    return d;
+  };
+
+  const completedCount = goals.filter(g => g.status === "completed").length;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[92vh] rounded-t-3xl bg-[hsl(var(--background))] overflow-y-auto">
-        <SheetHeader className="pb-2">
-          <SheetTitle className="text-center text-lg font-bold text-foreground">
+        <SheetHeader className="pb-1">
+          <SheetTitle className="text-center text-lg font-bold text-foreground tracking-tight">
             Din resa
           </SheetTitle>
+          {goals.length > 0 && (
+            <p className="text-center text-xs text-muted-foreground">
+              {completedCount} av {goals.length} steg avklarade
+            </p>
+          )}
         </SheetHeader>
 
         {isLoading ? (
@@ -83,86 +107,47 @@ export function TreatmentJourneySheet({ open, onOpenChange }: TreatmentJourneySh
             <p className="mt-1">Kom tillbaka snart!</p>
           </div>
         ) : (
-          <div className="relative px-2 pt-6 pb-12">
-            <svg
-              width="100%"
-              height={totalHeight}
-              viewBox={`0 0 390 ${totalHeight}`}
-              className="absolute inset-0 pointer-events-none"
-              preserveAspectRatio="xMidYMin meet"
-            >
-              {/* Background trail (wider, faded) */}
-              <path
-                d={generatePath(goals.length)}
-                fill="none"
-                stroke="hsl(var(--primary) / 0.08)"
-                strokeWidth="24"
-                strokeLinecap="round"
-              />
-              {/* Dotted path */}
-              <path
-                d={generatePath(goals.length)}
-                fill="none"
-                stroke="hsl(var(--primary) / 0.25)"
-                strokeWidth="3"
-                strokeDasharray="6 8"
-                strokeLinecap="round"
-              />
-              {/* Completed portion - solid */}
-              {(() => {
-                const completedCount = goals.filter(g => g.status === "completed").length;
-                if (completedCount === 0) return null;
-                const points: { x: number; y: number }[] = [];
-                for (let i = 0; i <= completedCount && i < goals.length; i++) {
-                  const isEven = i % 2 === 0;
-                  const x = centerX + (isEven ? amplitude : -amplitude);
-                  const y = 48 + i * nodeSpacing;
-                  points.push({ x, y });
-                }
-                let d = `M ${points[0].x} ${points[0].y}`;
-                for (let i = 0; i < points.length - 1; i++) {
-                  const curr = points[i];
-                  const next = points[i + 1];
-                  const midY = (curr.y + next.y) / 2;
-                  d += ` C ${curr.x} ${midY}, ${next.x} ${midY}, ${next.x} ${next.y}`;
-                }
-                return (
+          <div className="flex justify-center pt-6 pb-12">
+            <div className="relative" style={{ width: svgWidth, height: totalHeight }}>
+              {/* SVG path layer */}
+              <svg
+                width={svgWidth}
+                height={totalHeight}
+                className="absolute inset-0 pointer-events-none"
+              >
+                {/* Wide soft trail */}
+                <path
+                  d={buildPath(goals.length, true)}
+                  fill="none"
+                  stroke="hsl(var(--primary) / 0.06)"
+                  strokeWidth="28"
+                  strokeLinecap="round"
+                />
+                {/* Upcoming path – dashed muted */}
+                <path
+                  d={buildPath(goals.length, true)}
+                  fill="none"
+                  stroke="hsl(var(--border))"
+                  strokeWidth="2.5"
+                  strokeDasharray="5 7"
+                  strokeLinecap="round"
+                />
+                {/* Completed path – solid primary */}
+                {completedCount > 0 && (
                   <path
-                    d={d}
+                    d={buildPath(Math.min(completedCount + 1, goals.length), false)}
                     fill="none"
                     stroke="hsl(var(--primary))"
                     strokeWidth="3"
                     strokeLinecap="round"
                   />
-                );
-              })()}
+                )}
+              </svg>
 
-              {/* Small decorative dots along the path */}
-              {goals.map((_, i) => {
-                if (i === goals.length - 1) return null;
-                const isEven = i % 2 === 0;
-                const currX = centerX + (isEven ? amplitude : -amplitude);
-                const currY = 48 + i * nodeSpacing;
-                const nextIsEven = (i + 1) % 2 === 0;
-                const nextX = centerX + (nextIsEven ? amplitude : -nextIsEven);
-                const midX = (currX + (centerX + ((i + 1) % 2 === 0 ? amplitude : -amplitude))) / 2;
-                const midY = (currY + 48 + (i + 1) * nodeSpacing) / 2;
-                return (
-                  <circle
-                    key={`dot-${i}`}
-                    cx={midX}
-                    cy={midY}
-                    r="2.5"
-                    fill="hsl(var(--primary) / 0.15)"
-                  />
-                );
-              })}
-            </svg>
-
-            {/* Goal nodes */}
-            <div className="relative" style={{ height: totalHeight }}>
+              {/* Goal nodes */}
               {goals.map((goal, i) => {
                 const isEven = i % 2 === 0;
+                const pos = getNodePos(i);
                 const weeks = plan
                   ? getWeekRange(plan.created_at, goal.planned_start, goal.planned_end, i)
                   : { start: i * 3 + 1, end: i * 3 + 3 };
@@ -170,60 +155,87 @@ export function TreatmentJourneySheet({ open, onOpenChange }: TreatmentJourneySh
                 const isActive = !isCompleted && (i === 0 || goals[i - 1].status === "completed");
                 const isLocked = !isCompleted && !isActive;
                 const emoji = GOAL_EMOJIS[i % GOAL_EMOJIS.length];
+                const statusLabel = getStatusLabel(goal, isActive, isLocked);
 
-                const nodeX = centerX + (isEven ? amplitude : -amplitude);
-                const nodeY = 48 + i * nodeSpacing;
+                // Text goes on opposite side of the curve
+                const textSide = isEven ? "left" : "right";
 
                 return (
-                  <div
-                    key={goal.id}
-                    className="absolute flex items-center gap-3"
-                    style={{
-                      left: nodeX,
-                      top: nodeY,
-                      transform: "translate(-50%, -50%)",
-                      flexDirection: isEven ? "row" : "row-reverse",
-                      width: "260px",
-                      marginLeft: isEven ? "0" : "0",
-                    }}
-                  >
-                    {/* Circle node */}
+                  <div key={goal.id}>
+                    {/* Node circle – centered on path */}
                     <div
-                      className={`relative flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-all duration-300
-                        ${isCompleted
-                          ? "bg-primary/15 border-2 border-primary shadow-[0_0_16px_hsl(var(--primary)/0.2)]"
-                          : isActive
-                            ? "bg-card border-2 border-primary/40 shadow-md"
-                            : "bg-muted/60 border-2 border-border/50"
-                        }`}
+                      className="absolute"
+                      style={{
+                        left: pos.x - nodeRadius,
+                        top: pos.y - nodeRadius,
+                        width: nodeRadius * 2,
+                        height: nodeRadius * 2,
+                      }}
                     >
-                      {isLocked ? (
-                        <Lock className="w-5 h-5 text-muted-foreground/60" />
-                      ) : (
-                        <span className={isActive ? "animate-[scale-in_0.3s_ease-out]" : ""}>{emoji}</span>
-                      )}
-                      {isCompleted && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                          <span className="text-primary-foreground text-[10px] font-bold">✓</span>
-                        </div>
-                      )}
+                      <div
+                        className={`w-full h-full rounded-full flex items-center justify-center text-xl transition-all
+                          ${isCompleted
+                            ? "bg-primary/15 border-[2.5px] border-primary"
+                            : isActive
+                              ? "bg-card border-[2.5px] border-primary shadow-lg"
+                              : "bg-muted/50 border-2 border-border/40"
+                          }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-6 h-6 text-primary" />
+                        ) : isLocked ? (
+                          <Lock className="w-4.5 h-4.5 text-muted-foreground/40" />
+                        ) : (
+                          <span>{emoji}</span>
+                        )}
+                      </div>
                       {isActive && (
-                        <div className="absolute -inset-1 rounded-full border-2 border-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
+                        <div className="absolute -inset-1.5 rounded-full border-2 border-primary/25 animate-[pulse_2.5s_ease-in-out_infinite]" />
                       )}
                     </div>
 
-                    {/* Label */}
-                    <div className={`flex-1 min-w-0 ${isEven ? "text-left" : "text-right"}`}>
-                      <p className={`text-sm font-semibold leading-tight ${
-                        isCompleted ? "text-primary" : isLocked ? "text-muted-foreground/60" : "text-foreground"
-                      }`}>
+                    {/* Text label */}
+                    <div
+                      className="absolute"
+                      style={{
+                        top: pos.y - 30,
+                        ...(textSide === "left"
+                          ? { right: svgWidth - pos.x + nodeRadius + 12, textAlign: "right" as const }
+                          : { left: pos.x + nodeRadius + 12, textAlign: "left" as const }),
+                        width: 130,
+                      }}
+                    >
+                      <p
+                        className={`text-[13px] font-semibold leading-snug ${
+                          isCompleted
+                            ? "text-primary"
+                            : isActive
+                              ? "text-foreground"
+                              : "text-muted-foreground/50"
+                        }`}
+                      >
                         {goal.title}
                       </p>
-                      <p className={`text-xs mt-0.5 ${
-                        isLocked ? "text-muted-foreground/40" : "text-muted-foreground"
-                      }`}>
+                      <p
+                        className={`text-[11px] mt-0.5 ${
+                          isLocked ? "text-muted-foreground/30" : "text-muted-foreground"
+                        }`}
+                      >
                         Vecka {weeks.start}{weeks.end > weeks.start ? `–${weeks.end}` : ""}
                       </p>
+                      {statusLabel && (
+                        <span
+                          className={`inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                            isCompleted
+                              ? "bg-primary/10 text-primary"
+                              : isActive
+                                ? "bg-accent text-accent-foreground"
+                                : "bg-muted text-muted-foreground/50"
+                          }`}
+                        >
+                          {statusLabel}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
@@ -231,17 +243,17 @@ export function TreatmentJourneySheet({ open, onOpenChange }: TreatmentJourneySh
 
               {/* Finish flag */}
               <div
-                className="absolute flex flex-col items-center gap-1"
+                className="absolute flex flex-col items-center"
                 style={{
-                  left: centerX,
-                  top: 48 + goals.length * nodeSpacing,
-                  transform: "translate(-50%, -50%)",
+                  left: centerX - 28,
+                  top: finishY - 28,
+                  width: 56,
                 }}
               >
                 <div className="w-14 h-14 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
-                  <Flag className="w-6 h-6 text-primary" />
+                  <Flag className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-xs font-medium text-primary mt-1">Mål</span>
+                <span className="text-[11px] font-semibold text-primary mt-1.5">Mål</span>
               </div>
             </div>
           </div>
