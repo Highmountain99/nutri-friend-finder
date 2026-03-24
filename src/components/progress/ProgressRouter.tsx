@@ -165,6 +165,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
           {mainContent}
           {dynamicBlocks}
         </div>
+      </div>
     );
   }
 
