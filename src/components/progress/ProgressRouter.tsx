@@ -84,7 +84,7 @@ export function ProgressRouter() {
   // If no completed appointment yet, show locked state with blurred background
   if (!hasCompletedAppointment) {
     return (
-      <div className="relative min-h-[70vh]">
+      <div className="relative h-[calc(100vh-8rem)] overflow-hidden">
         {/* Blurred background content */}
         <div className="pointer-events-none select-none blur-md opacity-50" aria-hidden="true">
           {mainContent}
