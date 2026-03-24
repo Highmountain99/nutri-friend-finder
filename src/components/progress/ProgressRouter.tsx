@@ -13,10 +13,14 @@ import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
 import { useAppointments } from "@/hooks/useAppointments";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, Eye } from "lucide-react";
+import { CalendarPlus, Eye, FlagTriangleRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export function ProgressRouter() {
+interface ProgressRouterProps {
+  onOpenJourney: () => void;
+}
+
+export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
   const [previewMode, setPreviewMode] = useState(false);
   const progressData = useProgressData();
