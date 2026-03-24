@@ -19,6 +19,11 @@ const concernLabels: Record<string, string> = {
   emotional_eating: "Emotionellt ätande",
   eating_disorder: "Ätstörning",
   heart_health: "Hjärthälsa",
+  healthy_habits: "Hälsosamma vanor",
+  energy_focus: "Energi & ork",
+  pregnancy: "Graviditet",
+  sports_nutrition: "Idrottsnutrition",
+  other: "Övrigt",
 };
 
 export default function DietitianPatients() {
