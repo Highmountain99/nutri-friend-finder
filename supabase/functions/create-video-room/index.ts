@@ -76,14 +76,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // --- Normal flow below: require auth + appointmentId ---
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    // --- Normal flow below: require appointmentId ---
     if (!appointmentId) {
       return new Response(JSON.stringify({ error: "appointmentId required" }), {
         status: 400,
@@ -91,21 +84,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) {
-      console.error("Auth error:", userErr?.message);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    // Reuse the already-authenticated client and user
+    const supabase = supabaseAuth;
     const userId = user.id;
 
     const { data: appointment, error: aptErr } = await supabase

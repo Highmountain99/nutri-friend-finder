@@ -64,6 +64,7 @@ const App = () => (
             
             {/* Qualifying flow - protected but no layout, requires incomplete profile */}
             <Route element={<ProtectedRoute />}>
+              <Route path="/dev" element={<DevTools />} />
               <Route element={<QualifyingRoute requireQualifying />}>
                 <Route path="/qualifying" element={<Qualifying />} />
               </Route>
