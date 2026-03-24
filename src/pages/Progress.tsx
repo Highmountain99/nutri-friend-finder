@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ProgressRouter } from "@/components/progress/ProgressRouter";
 import { TreatmentJourneySheet } from "@/components/progress/TreatmentJourneySheet";
-import { FlagTriangleRight } from "lucide-react";
 
 export default function Progress() {
   const [journeyOpen, setJourneyOpen] = useState(false);
