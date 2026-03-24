@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Loader2, Calendar } from "lucide-react";
+import { Send, Paperclip, Loader2, Calendar, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +25,8 @@ export default function Messages() {
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<{ text: string; attachments?: ChatAttachment[] } | null>(null);
+  const [waitChosenAt, setWaitChosenAt] = useState<number | null>(null);
+  const [aiFollowUpShown, setAiFollowUpShown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -56,12 +58,47 @@ export default function Messages() {
     }
   }, [inputValue]);
 
+  // Check if user recently chose "wait" (within 30 min)
+  const isInWaitWindow = waitChosenAt !== null && Date.now() - waitChosenAt < 30 * 60 * 1000;
+
+  // After 10 min of waiting with no dietitian reply, offer AI follow-up
+  useEffect(() => {
+    if (!waitChosenAt || aiFollowUpShown) return;
+    const elapsed = Date.now() - waitChosenAt;
+    const delay = Math.max(10 * 60 * 1000 - elapsed, 0);
+
+    // Check if dietitian has replied since choosing wait
+    const hasDietitianReplySince = messages.some(
+      (m) => m.sender === "dietitian" && new Date(m.created_at).getTime() > waitChosenAt
+    );
+    if (hasDietitianReplySince) return;
+
+    const timer = setTimeout(() => {
+      // Re-check dietitian reply at trigger time
+      const replied = messages.some(
+        (m) => m.sender === "dietitian" && new Date(m.created_at).getTime() > (waitChosenAt ?? 0)
+      );
+      if (!replied) {
+        setAiFollowUpShown(true);
+      }
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [waitChosenAt, aiFollowUpShown, messages]);
+
   const handleSend = async () => {
     if ((!inputValue.trim() && pendingAttachments.length === 0) || sending) return;
     const message = inputValue;
     const atts = [...pendingAttachments];
     setInputValue("");
     setPendingAttachments([]);
+
+    // If user recently chose "wait", skip dialog and send in wait mode
+    if (isInWaitWindow) {
+      await sendMessage(message, atts.length > 0 ? atts : undefined, "wait");
+      return;
+    }
+
     setPendingMessage({ text: message, attachments: atts.length > 0 ? atts : undefined });
     setChoiceDialogOpen(true);
   };
@@ -69,8 +106,20 @@ export default function Messages() {
   const handleResponseChoice = async (choice: "ai" | "wait") => {
     setChoiceDialogOpen(false);
     if (!pendingMessage) return;
+    if (choice === "wait") {
+      setWaitChosenAt(Date.now());
+      setAiFollowUpShown(false);
+    }
     await sendMessage(pendingMessage.text, pendingMessage.attachments, choice);
     setPendingMessage(null);
+  };
+
+  const handleAiFollowUp = async (accept: boolean) => {
+    setAiFollowUpShown(false);
+    if (accept) {
+      // Reset wait window so next message shows dialog again
+      setWaitChosenAt(null);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -164,6 +213,27 @@ export default function Messages() {
                 }
               />
             ))
+          )}
+
+          {/* AI follow-up after 10 min without dietitian reply */}
+          {aiFollowUpShown && (
+            <div className="mx-auto max-w-[300px] bg-muted/60 border border-border rounded-2xl p-4 text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Bot className="w-4 h-4" />
+                <span>{dietitianInfo?.firstName || "Dietisten"} har inte svarat ännu</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Vill du få ett svar från AI-assistenten istället?
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Button size="sm" variant="default" onClick={() => handleAiFollowUp(true)}>
+                  Ja, ge mig svar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => handleAiFollowUp(false)}>
+                  Nej tack
+                </Button>
+              </div>
+            </div>
           )}
 
           {/* Streaming indicator */}
