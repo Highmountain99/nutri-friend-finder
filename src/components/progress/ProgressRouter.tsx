@@ -10,13 +10,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
+import { useAppointments } from "@/hooks/useAppointments";
+import { Button } from "@/components/ui/button";
+import { CalendarPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function ProgressRouter() {
   const { user } = useAuth();
   const progressData = useProgressData();
   const { data: patientBlocks } = usePatientBlocks(user?.id);
+  const { appointments, loading: appointmentsLoading } = useAppointments();
+  const navigate = useNavigate();
 
-  if (progressData.loading) {
+  const hasCompletedAppointment = appointments.some(
+    (apt) => apt.status === "completed"
+  );
+
+  if (progressData.loading || appointmentsLoading) {
     return (
       <div className="px-4 py-6 space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -70,6 +80,42 @@ export function ProgressRouter() {
         return <GeneralHealthProgress data={progressData} show={show} />;
     }
   })();
+
+  // If no completed appointment yet, show locked state with blurred background
+  if (!hasCompletedAppointment) {
+    return (
+      <div className="relative min-h-[70vh]">
+        {/* Blurred background content */}
+        <div className="pointer-events-none select-none blur-md opacity-50" aria-hidden="true">
+          {mainContent}
+          {dynamicBlocks}
+        </div>
+
+        {/* Overlay CTA */}
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-2xl shadow-lg p-8 mx-6 text-center max-w-sm">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <CalendarPlus className="w-7 h-7 text-primary" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground mb-2">
+              Din utvecklingsplan väntar
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              Din utvecklingsplan aktiveras när du haft ett möte med din personliga dietist.
+            </p>
+            <Button
+              className="w-full rounded-xl"
+              size="lg"
+              onClick={() => navigate("/booking")}
+            >
+              <CalendarPlus className="w-4 h-4 mr-2" />
+              Boka tid med dietist
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
