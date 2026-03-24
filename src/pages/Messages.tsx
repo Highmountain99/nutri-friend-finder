@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Loader2, Calendar } from "lucide-react";
+import { Send, Paperclip, Loader2, Calendar, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -215,7 +215,26 @@ export default function Messages() {
             ))
           )}
 
-          {/* Streaming indicator */}
+          {/* AI follow-up after 10 min without dietitian reply */}
+          {aiFollowUpShown && (
+            <div className="mx-auto max-w-[300px] bg-muted/60 border border-border rounded-2xl p-4 text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Bot className="w-4 h-4" />
+                <span>{dietitianInfo?.firstName || "Dietisten"} har inte svarat ännu</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Vill du få ett svar från AI-assistenten istället?
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Button size="sm" variant="default" onClick={() => handleAiFollowUp(true)}>
+                  Ja, ge mig svar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => handleAiFollowUp(false)}>
+                  Nej tack
+                </Button>
+              </div>
+            </div>
+          )
           {sending && (
             <div className="flex gap-2 justify-start">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
