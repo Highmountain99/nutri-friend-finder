@@ -1,20 +1,12 @@
 import { useState } from "react";
-import { useProgressData } from "@/hooks/useProgressData";
-import { WeightLossProgress } from "./WeightLossProgress";
-import { DiabetesProgress } from "./DiabetesProgress";
-import { GutHealthProgress } from "./GutHealthProgress";
-import { EatingDisorderProgress } from "./EatingDisorderProgress";
-import { HeartHealthProgress } from "./HeartHealthProgress";
-import { WomensHealthProgress } from "./WomensHealthProgress";
-import { GeneralHealthProgress } from "./GeneralHealthProgress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
 import { useAppointments } from "@/hooks/useAppointments";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, Eye, FlagTriangleRight } from "lucide-react";
+import { CalendarPlus, Eye, FlagTriangleRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProgressRouterProps {
   onOpenJourney: () => void;
@@ -23,8 +15,7 @@ interface ProgressRouterProps {
 export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
   const [previewMode, setPreviewMode] = useState(false);
-  const progressData = useProgressData();
-  const { data: patientBlocks } = usePatientBlocks(user?.id);
+  const { data: patientBlocks, isLoading: blocksLoading } = usePatientBlocks(user?.id);
   const { appointments, loading: appointmentsLoading } = useAppointments();
   const navigate = useNavigate();
 
@@ -33,60 +24,48 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
     (apt.status === "booked" && apt.appointmentDate < new Date())
   );
 
-  if (progressData.loading || appointmentsLoading) {
+  if (blocksLoading || appointmentsLoading) {
     return (
       <div className="px-4 py-6 space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-32" />
-        <div className="grid grid-cols-2 gap-3">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-        </div>
+        <Skeleton className="h-24" />
         <Skeleton className="h-40" />
-        <Skeleton className="h-32" />
       </div>
     );
   }
 
-  const show = (section: string) => progressData.visibleSections.includes(section);
+  const hasBlocks = patientBlocks && patientBlocks.length > 0;
 
-  // Render dynamic blocks from block builder
-  const dynamicBlocks = patientBlocks && patientBlocks.length > 0 ? (
-    <div className="px-4 space-y-3 mt-4">
+  const dynamicBlocks = hasBlocks ? (
+    <div className="px-4 py-6 space-y-3 pb-24">
+      <div className="mb-2">
+        <h1 className="text-xl font-bold text-foreground">Din utveckling</h1>
+        <p className="text-sm text-muted-foreground">Följ dina framsteg</p>
+      </div>
       {patientBlocks.map((bd) => (
         <DynamicBlock key={bd.block.id} data={bd} />
       ))}
     </div>
-  ) : null;
-
-  // Route to appropriate layout based on concern category (unified or legacy)
-  const mainContent = (() => {
-    switch (progressData.concernCategory) {
-      case 'weight_loss':
-        return <WeightLossProgress data={progressData} show={show} />;
-      case 'muscle_building':
-      case 'training_nutrition':
-      case 'energy_focus':
-      case 'healthy_habits':
-      case 'plant_based':
-        return <GeneralHealthProgress data={progressData} show={show} />;
-      case 'diabetes':
-        return <DiabetesProgress data={progressData} show={show} />;
-      case 'gut_health':
-        return <GutHealthProgress data={progressData} show={show} />;
-      case 'heart_health':
-        return <HeartHealthProgress data={progressData} show={show} />;
-      case 'eating_disorder':
-      case 'emotional_eating':
-        return <EatingDisorderProgress data={progressData} show={show} />;
-      case 'womens_health':
-        return <WomensHealthProgress data={progressData} show={show} />;
-      case 'general_health':
-      case 'other':
-      default:
-        return <GeneralHealthProgress data={progressData} show={show} />;
-    }
-  })();
+  ) : (
+    <div className="px-4 py-6 pb-24">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-foreground">Din utveckling</h1>
+        <p className="text-sm text-muted-foreground">Följ dina framsteg</p>
+      </div>
+      <div className="text-center py-12">
+        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Sparkles className="w-7 h-7 text-primary" />
+        </div>
+        <h2 className="text-lg font-semibold text-foreground mb-2">
+          Inga block ännu
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+          Din dietist kommer att anpassa din utvecklingsvy med block som passar just din behandling.
+        </p>
+      </div>
+    </div>
+  );
 
   const journeyButton = (
     <button
@@ -98,20 +77,17 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
     </button>
   );
 
-  // If no completed appointment yet, show locked state with blurred background
+  // If no completed appointment yet, show locked state
   if (!hasCompletedAppointment && !previewMode) {
     return (
       <div className="relative h-[calc(100vh-8rem)] overflow-hidden">
-        {/* Blurred background content — includes the flag button */}
         <div className="pointer-events-none select-none blur-md opacity-50" aria-hidden="true">
           <div className="relative">
             {journeyButton}
           </div>
-          {mainContent}
           {dynamicBlocks}
         </div>
 
-        {/* Overlay CTA */}
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="bg-card/95 backdrop-blur-sm border border-border rounded-2xl shadow-lg p-8 mx-6 text-center max-w-sm">
             <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -163,7 +139,6 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
         </div>
         <div className="relative">
           {journeyButton}
-          {mainContent}
           {dynamicBlocks}
         </div>
       </div>
@@ -173,7 +148,6 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   return (
     <div className="relative">
       {journeyButton}
-      {mainContent}
       {dynamicBlocks}
     </div>
   );
