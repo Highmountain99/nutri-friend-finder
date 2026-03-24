@@ -71,6 +71,15 @@ export default function DietitianPatientDetail() {
   const { documents, uploadDocument } = usePatientDocuments(id);
   const { activePlan } = useTreatmentPlan(id);
   const { data: patients } = useAssignedPatients();
+  const { appointments } = useDietitianSchedule();
+
+  // Find next upcoming appointment for this patient
+  const now = new Date();
+  const patientAppointments = (appointments.data ?? [])
+    .filter((a) => a.user_id === id && a.status === "booked")
+    .sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
+  const nextAppointment = patientAppointments.find((a) => differenceInMinutes(new Date(a.appointment_date), now) >= -60);
+  const canStartCall = nextAppointment && differenceInMinutes(new Date(nextAppointment.appointment_date), now) <= 5;
   const [activeTab, setActiveTab] = useState("overview");
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [configProgressOpen, setConfigProgressOpen] = useState(false);
@@ -170,7 +179,7 @@ export default function DietitianPatientDetail() {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} />
+      <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} appointmentId={nextAppointment?.id} isHost />
 
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -704,9 +713,19 @@ export default function DietitianPatientDetail() {
           {/* Video call CTA */}
           <Card>
             <CardContent className="py-4">
-              <Button className="w-full" onClick={() => setVideoOpen(true)}>
-                <Calendar className="h-4 w-4 mr-2" /> Starta videosamtal
+              <Button
+                className="w-full"
+                onClick={() => setVideoOpen(true)}
+                disabled={!canStartCall}
+              >
+                <Video className="h-4 w-4 mr-2" />
+                {canStartCall ? "Starta videosamtal" : nextAppointment ? `Videosamtal ${format(new Date(nextAppointment.appointment_date), "HH:mm")}` : "Inget bokat möte"}
               </Button>
+              {nextAppointment && !canStartCall && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Tillgänglig 5 min innan mötet
+                </p>
+              )}
             </CardContent>
           </Card>
 
