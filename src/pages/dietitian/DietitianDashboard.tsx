@@ -31,6 +31,7 @@ export default function DietitianDashboard() {
   const { data: unread } = useUnreadMessages();
   const { notifications, markAsRead } = useDietitianNotifications();
   const [videoOpen, setVideoOpen] = useState(false);
+  const [videoAppointmentId, setVideoAppointmentId] = useState<string | null>(null);
 
   const now = new Date();
   const allAppointments = appointments.data ?? [];
@@ -70,7 +71,7 @@ export default function DietitianDashboard() {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} />
+      <VideoCallModal open={videoOpen} onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoAppointmentId(null); }} appointmentId={videoAppointmentId ?? undefined} isHost />
 
       {/* Greeting */}
       <div>
@@ -220,7 +221,7 @@ export default function DietitianDashboard() {
                         <Button
                           size="sm"
                           className="bg-primary hover:bg-primary/90"
-                          onClick={() => setVideoOpen(true)}
+                          onClick={() => { setVideoAppointmentId(a.id); setVideoOpen(true); }}
                         >
                           <Video className="h-4 w-4 mr-1" />
                           Starta videosamtal
