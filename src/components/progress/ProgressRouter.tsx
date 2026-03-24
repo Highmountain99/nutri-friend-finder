@@ -147,21 +147,24 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   // Preview mode banner
   if (!hasCompletedAppointment && previewMode) {
     return (
-      <div className="relative">
-        <div className="mx-4 mb-4 mt-2 bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-3">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Förhandsvisning</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Det här är ett exempel på hur din plan kan se ut</p>
+      <div>
+        <div className="mx-4 mb-2 mt-2 bg-primary/5 border border-primary/20 rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Förhandsvisning</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Det här är ett exempel på hur din plan kan se ut</p>
+            </div>
+            <Button size="sm" className="rounded-xl text-xs h-8 shrink-0" onClick={() => { setPreviewMode(false); navigate("/booking"); }}>
+              <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
+              Boka tid
+            </Button>
           </div>
-          <Button size="sm" className="rounded-xl text-xs h-8 shrink-0" onClick={() => { setPreviewMode(false); navigate("/booking"); }}>
-            <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
-            Boka tid
-          </Button>
-          {journeyButton}
         </div>
-        {mainContent}
-        {dynamicBlocks}
-      </div>
+        <div className="relative">
+          {journeyButton}
+          {mainContent}
+          {dynamicBlocks}
+        </div>
     );
   }
 
