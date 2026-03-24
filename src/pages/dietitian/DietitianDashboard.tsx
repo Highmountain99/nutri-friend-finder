@@ -182,7 +182,11 @@ export default function DietitianDashboard() {
             <div className="space-y-3">
               {todayAppointments.map((a) => {
                 const time = format(new Date(a.appointment_date), "HH:mm");
-                const isInitial = a.appointment_type === "initial" || a.appointment_type === "video";
+                // "Nybesök" only if this is the patient's very first appointment with the dietitian
+                const patientAppointments = allAppointments
+                  .filter((ap) => ap.user_id === a.user_id && ap.status !== "cancelled")
+                  .sort((x, y) => new Date(x.appointment_date).getTime() - new Date(y.appointment_date).getTime());
+                const isInitial = patientAppointments.length > 0 && patientAppointments[0].id === a.id;
                 const patient = patients?.find((p) => p.patient_id === a.user_id);
                 const concern = patient?.intake_profile?.primary_concern_category;
 
