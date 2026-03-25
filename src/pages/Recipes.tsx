@@ -42,7 +42,12 @@ function RecipesContent() {
         : "default";
 
   const handleRecipeIdSelect = (recipeId: string) => {
-    setSelectedRecipeId(recipeId);
+    if (selectedRecipeId && selectedRecipeId !== recipeId) {
+      setSelectedRecipeId(null);
+      setTimeout(() => setSelectedRecipeId(recipeId), 50);
+    } else {
+      setSelectedRecipeId(recipeId);
+    }
   };
 
   const handleCuisineSelect = (cuisineId: string) => {
