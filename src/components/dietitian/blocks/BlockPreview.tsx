@@ -401,9 +401,8 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
           </p>
           <p className="text-[9px] text-muted-foreground text-center mt-1.5">Genereras från behandlingsplanen</p>
         </div>
+      );
     }
-
-
     // ── Next appointment ──
     if (metric === "next_appointment") {
       return (
