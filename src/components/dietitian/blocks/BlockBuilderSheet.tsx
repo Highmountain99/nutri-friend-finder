@@ -506,6 +506,7 @@ export function BlockBuilderSheet({ open, onOpenChange, editTemplate }: BlockBui
             </Button>
           </div>
         </div>
+        </div>
       </SheetContent>
     </Sheet>
   );
