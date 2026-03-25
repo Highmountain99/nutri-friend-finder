@@ -71,11 +71,13 @@ export function MyRecipesSheet({ open, onOpenChange, onRecipeSelect }: MyRecipes
         </SheetHeader>
 
         {/* Filters */}
-        {recipes && recipes.length > 0 && (
-          <div className="px-4 pt-3 pb-1">
-            <RecipeFiltersBar filters={filters} onFiltersChange={setFilters} />
-          </div>
-        )}
+        <FilterPortalContext.Provider value={portalEl}>
+          {recipes && recipes.length > 0 && (
+            <div className="px-4 pt-3 pb-1">
+              <RecipeFiltersBar filters={filters} onFiltersChange={setFilters} />
+            </div>
+          )}
+        </FilterPortalContext.Provider>
 
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {isLoading ? (
