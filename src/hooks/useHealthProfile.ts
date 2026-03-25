@@ -18,6 +18,7 @@ export interface HealthProfileData {
   conditions: string[];
   goals: string[];
   bloodPressure?: BloodPressure;
+  waistCm?: number;
 }
 
 // Mappning av diagnoser till svenska etiketter
@@ -151,9 +152,9 @@ export function useHealthProfile() {
           .from("health_tracking_entries")
           .select("value, metric_type, entry_date")
           .eq("user_id", user.id)
-          .in("metric_type", ["blood_pressure_systolic", "blood_pressure_diastolic"])
+          .in("metric_type", ["blood_pressure_systolic", "blood_pressure_diastolic", "waist_circumference"])
           .order("entry_date", { ascending: false })
-          .limit(2),
+          .limit(10),
       ]);
 
       // Bygg blodtryck från senaste entries
@@ -174,6 +175,12 @@ export function useHealthProfile() {
         }
       }
 
+      // Midjemått
+      const waistEntry = bloodPressureResult.data?.find(
+        (e) => e.metric_type === "waist_circumference"
+      );
+      const waistCm = waistEntry ? Number(waistEntry.value) : undefined;
+
       const conditions = intakeResult.data
         ? mapConditions(
             intakeResult.data.unified_concern_category,
@@ -193,6 +200,7 @@ export function useHealthProfile() {
         conditions,
         goals,
         bloodPressure,
+        waistCm,
       };
     },
     enabled: !!user?.id,
