@@ -44,15 +44,43 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
   const template = block.template;
   const title = block.override_title || template.title;
 
-  // ── Focus card (treatment plan description) ──
+  // ── Focus card (AI-generated motivational text) ──
   if (renderAs === "focus_card") {
     return (
       <Card className="border-primary/20 shadow-sm bg-gradient-to-br from-primary/5 to-background">
         <CardContent className="p-5">
           <BlockHeader icon={<Heart className="w-4 h-4" />} title="Dagens fokus" source="dietitian" />
           <p className="text-base font-semibold text-foreground italic text-center leading-relaxed">
-            "{data.focusText || block.manual_content || "Varje måltid är ett steg framåt"}"
+            "{data.focusText || "Varje måltid är ett steg framåt — lita på processen"}"
           </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ── Weight metrics card (clickable → toggles to trend) ──
+  if (renderAs === "weight_metrics_card" && chartMeta) {
+    const latest = computedValue;
+    const first = chartData && chartData.length > 0 ? chartData[0].value : null;
+    const diff = latest !== null && first !== null ? latest - first : null;
+    return (
+      <Card className="border-border/50 shadow-sm cursor-pointer hover:border-primary/30 transition-colors">
+        <CardContent className="p-5">
+          <BlockHeader icon={getIcon(template.icon)} title={title} source="journal" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl bg-muted/40 text-center">
+              <p className="text-[10px] text-muted-foreground mb-1">Nuvarande</p>
+              <p className="text-2xl font-bold tabular-nums text-foreground">
+                {latest ?? "—"}<span className="text-xs font-normal text-muted-foreground ml-0.5">{chartMeta.unit}</span>
+              </p>
+            </div>
+            <div className="p-3 rounded-xl bg-muted/40 text-center">
+              <p className="text-[10px] text-muted-foreground mb-1">Sedan start</p>
+              <p className={`text-2xl font-bold tabular-nums ${diff !== null && diff < 0 ? "text-emerald-600" : diff !== null && diff > 0 ? "text-amber-600" : "text-foreground"}`}>
+                {diff !== null ? `${diff > 0 ? "+" : ""}${diff.toFixed(1)}` : "—"}<span className="text-xs font-normal text-muted-foreground ml-0.5">{chartMeta.unit}</span>
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
