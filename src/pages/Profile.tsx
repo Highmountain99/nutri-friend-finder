@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil } from "lucide-react";
+import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { EditActivitySheet } from "@/components/profile/EditActivitySheet";
 import { EditConditionsSheet } from "@/components/profile/EditConditionsSheet";
 import { EditGoalsSheet } from "@/components/profile/EditGoalsSheet";
 import { useHealthProfile, activityLevelLabels } from "@/hooks/useHealthProfile";
+import { useIntakeProfile } from "@/hooks/useIntakeProfile";
 
 type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "conditions" | "goals" | null;
 
