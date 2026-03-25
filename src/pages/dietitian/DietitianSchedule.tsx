@@ -526,8 +526,8 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
             })}
           </div>
         ))}
+        </div>
       </div>
-    </div>
   );
 }
 
