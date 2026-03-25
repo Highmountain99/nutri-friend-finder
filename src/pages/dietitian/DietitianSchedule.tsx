@@ -185,8 +185,6 @@ export default function DietitianSchedule() {
         const merged = Array.from(new Set([...existingDaySlots, ...slots])).sort();
         addAvailability.mutate({ date: ds, slots: merged });
       });
-
-      toast.success("Tillgänglighet sparad");
     },
     [weekDays, availability.data, addAvailability]
   );
@@ -195,7 +193,6 @@ export default function DietitianSchedule() {
     (selectedIds: string[]) => {
       const merged = Array.from(new Set([...existingSlots, ...selectedIds])).sort();
       addAvailability.mutate({ date: dateStr, slots: merged });
-      toast.success("Tillgänglighet sparad");
     },
     [existingSlots, dateStr, addAvailability]
   );
@@ -212,7 +209,6 @@ export default function DietitianSchedule() {
       } else {
         addAvailability.mutate({ date: ds, slots: updated });
       }
-      toast.success("Tid borttagen");
     },
     [availability.data, addAvailability, removeAvailability]
   );
