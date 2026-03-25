@@ -170,30 +170,31 @@ export function BlockBuilderSheet({ open, onOpenChange, editTemplate }: BlockBui
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg w-full p-0">
-        <div className="p-6 pb-3">
+      <SheetContent className="sm:max-w-lg w-full p-0 flex flex-col overflow-hidden">
+        <div className="p-6 pb-3 shrink-0">
           <SheetHeader className="text-left">
             <SheetTitle>{editTemplate ? "Redigera block" : "Bygg ett nytt block"}</SheetTitle>
             <SheetDescription>Definiera hur blocket ser ut, beter sig och kopplas till data.</SheetDescription>
           </SheetHeader>
         </div>
 
-        <div className="space-y-1 px-6 pb-6">
-          {/* ========== LIVE PREVIEW (always visible at top) ========== */}
-          <div className="space-y-2 pb-3">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Förhandsgranskning</Label>
-            <BlockPreview
-              title={title}
-              description={description}
-              icon={icon}
-              dataSource={dataSource}
-              dataConfig={dataConfig}
-              displayConfig={displayConfig}
-              blockType={blockType}
-            />
-          </div>
+        {/* ========== STICKY PREVIEW ========== */}
+        <div className="px-6 pb-3 shrink-0 border-b border-border/50 bg-muted/30">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Förhandsgranskning</Label>
+          <BlockPreview
+            title={title}
+            description={description}
+            icon={icon}
+            dataSource={dataSource}
+            dataConfig={dataConfig}
+            displayConfig={displayConfig}
+            blockType={blockType}
+          />
+        </div>
 
-          <Separator />
+        {/* ========== SCROLLABLE FORM ========== */}
+        <div className="flex-1 overflow-y-auto">
+        <div className="space-y-1 px-6 pb-6 pt-3">
 
           {/* ========== BASIC INFO ========== */}
           <div className="space-y-3 py-3">
