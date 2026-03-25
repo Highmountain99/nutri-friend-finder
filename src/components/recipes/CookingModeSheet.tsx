@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { RecipeDetail } from "@/hooks/useRecipeDetail";
 
 interface CookingModeSheetProps {
@@ -40,16 +40,7 @@ export function CookingModeSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[100vh] flex flex-col">
         <SheetHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-lg">{recipe.title}</SheetTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+          <SheetTitle className="text-lg pr-8">{recipe.title}</SheetTitle>
         </SheetHeader>
 
         <Tabs

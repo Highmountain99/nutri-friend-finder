@@ -61,6 +61,7 @@ export function EditWaistSheet({
               min={40}
               max={200}
               step={0.5}
+              autoFocus={false}
             />
           </div>
           <Button 
