@@ -156,13 +156,14 @@ export function usePatientBlocks(patientId: string | undefined) {
       const nextAppointment = (appointmentRes.data as any)?.[0] || null;
       const activePlan = (planRes.data as any)?.[0] || null;
 
-      // Fetch milestones if we have a plan
+      // Fetch milestones for current phase (in_progress goals only)
       let milestones: any[] = [];
       if (activePlan && needsTreatment) {
         const { data: goals } = await supabase
           .from("treatment_goals")
           .select("id")
-          .eq("plan_id", activePlan.id);
+          .eq("plan_id", activePlan.id)
+          .eq("status", "in_progress");
         const goalIds = (goals || []).map((g: any) => g.id);
         if (goalIds.length > 0) {
           const { data: ms } = await supabase
