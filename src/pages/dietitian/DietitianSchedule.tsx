@@ -456,9 +456,15 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
               return (
                 <div key={`${hour}:${minutes}`} className={`grid grid-cols-[60px_repeat(7,1fr)] ${isHour ? "border-b" : "border-b border-dashed border-border/40"} min-h-[28px]`}>
                   <div className="px-2 text-right pr-3 flex items-center justify-end">
-                    {isHour && (
-                      <span className="text-xs text-muted-foreground">{slotTime}</span>
-                    )}
+                    <span
+                      className={`font-mono tabular-nums ${
+                        isHour
+                          ? "text-xs text-muted-foreground"
+                          : "text-[10px] text-muted-foreground/60"
+                      }`}
+                    >
+                      {slotTime}
+                    </span>
                   </div>
                   {weekDays.map((day, dayIdx) => {
                     const cellId = `${dayIdx}:${slotTime}`;
@@ -498,7 +504,7 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
                             onStartVideo={onStartVideo}
                           >
                             <div
-                              className="text-xs p-1 rounded m-0.5 cursor-pointer hover:ring-1 hover:ring-blue-400/30 transition-all bg-blue-100 text-blue-700"
+                              className="absolute inset-0.5 flex items-center rounded px-1 text-xs cursor-pointer transition-all bg-primary/10 text-primary hover:ring-1 hover:ring-primary/30"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <p className="font-medium truncate text-[10px]">
@@ -616,7 +622,7 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onR
                   onStartVideo={onStartVideo}
                 >
                   <div
-                    className="p-2 rounded text-sm cursor-pointer hover:ring-1 hover:ring-blue-400/30 transition-all bg-blue-50 text-blue-700"
+                    className="p-2 rounded text-sm cursor-pointer transition-all bg-primary/10 text-primary hover:ring-1 hover:ring-primary/30"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="font-medium">
