@@ -548,6 +548,15 @@ interface DayViewProps {
 
 function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: DayViewProps) {
   const dayAppts = getAppointmentsForDay(selectedDate);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isTodaySelected = isToday(selectedDate);
+  const nowSlot = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes() < 30 ? "00" : "30"}`;
 
   return (
     <div className="p-4 space-y-1 select-none">
