@@ -26,6 +26,7 @@ import { TreatmentPlanTab } from "@/components/dietitian/TreatmentPlanTab";
 import { FoodLogTab } from "@/components/dietitian/FoodLogTab";
 import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
 import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
+import { PatientHealthProfileCard } from "@/components/dietitian/PatientHealthProfileCard";
 import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
 import { ClinicalNoteWizard } from "@/components/dietitian/clinical-notes/ClinicalNoteWizard";
 import { getAreaConfig } from "@/components/dietitian/clinical-notes/areaConfigs/index";
