@@ -61,6 +61,7 @@ export function EditHeightSheet({
               min={100}
               max={250}
               step={1}
+              autoFocus={false}
             />
           </div>
           <Button 

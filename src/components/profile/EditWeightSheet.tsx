@@ -61,6 +61,7 @@ export function EditWeightSheet({
               min={20}
               max={300}
               step={0.1}
+              autoFocus={false}
             />
           </div>
           <Button 

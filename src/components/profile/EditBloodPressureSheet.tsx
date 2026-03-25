@@ -72,6 +72,7 @@ export function EditBloodPressureSheet({
                 onChange={(e) => setSystolic(e.target.value)}
                 min={60}
                 max={250}
+                autoFocus={false}
               />
             </div>
             <div className="space-y-2">
@@ -85,6 +86,7 @@ export function EditBloodPressureSheet({
                 onChange={(e) => setDiastolic(e.target.value)}
                 min={40}
                 max={150}
+                autoFocus={false}
               />
             </div>
           </div>
