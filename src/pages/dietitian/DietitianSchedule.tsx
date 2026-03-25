@@ -500,7 +500,7 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
                             onStartVideo={onStartVideo}
                           >
                             <div
-                              className="absolute inset-0.5 flex items-center rounded px-1 text-xs cursor-pointer transition-all bg-primary/10 text-primary hover:ring-1 hover:ring-primary/30"
+                              className="absolute inset-0.5 flex items-center rounded px-1 text-xs cursor-pointer transition-all bg-accent/20 text-accent-foreground hover:ring-1 hover:ring-accent/40"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <p className="font-medium truncate text-[10px]">
@@ -618,7 +618,7 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onR
                   onStartVideo={onStartVideo}
                 >
                   <div
-                    className="p-2 rounded text-sm cursor-pointer transition-all bg-primary/10 text-primary hover:ring-1 hover:ring-primary/30"
+                    className="p-2 rounded text-sm cursor-pointer transition-all bg-accent/20 text-accent-foreground hover:ring-1 hover:ring-accent/40"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="font-medium">
