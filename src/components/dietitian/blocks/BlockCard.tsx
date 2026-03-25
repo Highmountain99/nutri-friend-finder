@@ -23,6 +23,7 @@ const DATA_SOURCE_LABELS: Record<string, string> = {
   symptom_log: "Symptomlogg",
   macro_data: "Makrodata",
   treatment_goals: "Behandlingsmål",
+  treatment_plan: "Behandlingsplan",
   progression: "Progression",
   combined: "Kombinerad",
   health_tracking: "Hälsodata",
@@ -31,6 +32,7 @@ const DATA_SOURCE_LABELS: Record<string, string> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   general: "Allmänt",
+  gut_health: "Maghälsa",
   ibs: "IBS",
   diabetes: "Diabetes",
   eating_disorder: "Ätstörning",
