@@ -648,6 +648,7 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onR
                 <span className="text-xs text-primary/60">Markeras...</span>
               ) : null}
             </div>
+            </div>
           </div>
         );
       })}
