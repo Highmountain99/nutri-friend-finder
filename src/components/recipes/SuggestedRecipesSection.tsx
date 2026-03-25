@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { RefreshCw, Sparkles, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SuggestedRecipeCard } from "./SuggestedRecipeCard";
 import { useSuggestedRecipes } from "@/hooks/useSuggestedRecipes";
-import { toast } from "sonner";
 
 interface SuggestedRecipesSectionProps {
   onRecipeSelect: (recipeId: string) => void;
@@ -19,33 +17,18 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
     saveRecipe,
     dismissRecipe,
     restoreDismissed,
-    isSaving,
-    isDismissing,
   } = useSuggestedRecipes();
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const handleSave = () => {
-    const current = active[currentIndex];
-    if (current) {
-      saveRecipe(current.suggestion_id);
-      toast.success("Recept sparat!");
-      setCurrentIndex((prev) => Math.min(prev + 1, active.length));
-    }
+  const handleSave = (suggestionId: string) => {
+    saveRecipe(suggestionId);
   };
 
-  const handleDismiss = () => {
-    const current = active[currentIndex];
-    if (current) {
-      dismissRecipe(current.suggestion_id);
-      setCurrentIndex((prev) => Math.min(prev + 1, active.length));
-    }
+  const handleDismiss = (suggestionId: string) => {
+    dismissRecipe(suggestionId);
   };
 
   const handleRestoreDismissed = () => {
     restoreDismissed();
-    setCurrentIndex(0);
-    toast.success("Borttagna förslag återställda");
   };
 
   if (isLoading) {
@@ -78,9 +61,9 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
     );
   }
 
-  const currentRecipe = active[currentIndex];
-  const isFinished = currentIndex >= active.length || !currentRecipe;
-  const stackCards = active.slice(currentIndex + 1, currentIndex + 3);
+  const isFinished = active.length === 0;
+  // Show up to 3 stack cards behind the top card
+  const visibleCards = active.slice(0, 4);
 
   return (
     <section className="space-y-3">
@@ -91,7 +74,7 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
         </div>
         {!isFinished && active.length > 0 && (
           <span className="text-sm text-muted-foreground">
-            {currentIndex + 1} / {active.length}
+            {active.length} kvar
           </span>
         )}
       </div>
@@ -108,42 +91,55 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
           )}
         </div>
       ) : (
-        <div className="relative" style={{ paddingBottom: `${stackCards.length * 12}px` }}>
-          {stackCards.map((recipe, idx) => {
-            const depth = idx + 1;
+        <div
+          className="relative"
+          style={{ paddingBottom: `${Math.min(visibleCards.length - 1, 3) * 12}px` }}
+        >
+          {/* Render cards in reverse order so the first card is on top */}
+          {visibleCards.map((recipe, idx) => {
+            const isTop = idx === 0;
+            const depth = idx;
+
+            if (!isTop) {
+              // Background stack cards — static, non-interactive
+              return (
+                <div
+                  key={recipe.suggestion_id}
+                  className="absolute inset-x-0 top-0 rounded-xl border border-border/40 overflow-hidden pointer-events-none bg-card"
+                  style={{
+                    transform: `translateY(${depth * 12}px) scale(${1 - depth * 0.04})`,
+                    zIndex: -depth,
+                    filter: `brightness(${1 - depth * 0.06})`,
+                    transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1), filter 0.35s ease",
+                  }}
+                >
+                  <div className="h-48 bg-muted">
+                    {recipe.image_url ? (
+                      <img src={recipe.image_url} alt="" className="w-full h-full object-cover" draggable={false} />
+                    ) : (
+                      <div className="w-full h-full bg-muted" />
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-foreground line-clamp-1 text-base">{recipe.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{recipe.message || recipe.description}</p>
+                  </div>
+                </div>
+              );
+            }
+
+            // Top interactive card
             return (
-              <div
-                key={recipe.id}
-                className="absolute inset-x-0 top-0 rounded-xl border border-border/40 overflow-hidden pointer-events-none bg-card"
-                style={{
-                  transform: `translateY(${depth * 12}px) scale(${1 - depth * 0.04})`,
-                  zIndex: -depth,
-                  filter: `brightness(${1 - depth * 0.06})`,
-                  transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1), filter 0.35s ease",
-                }}
-              >
-                <div className="h-48 bg-muted">
-                  {recipe.image_url ? (
-                    <img src={recipe.image_url} alt="" className="w-full h-full object-cover" draggable={false} />
-                  ) : (
-                    <div className="w-full h-full bg-muted" />
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-foreground line-clamp-1 text-base">{recipe.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{recipe.message || recipe.description}</p>
-                </div>
-              </div>
+              <SuggestedRecipeCard
+                key={recipe.suggestion_id}
+                recipe={recipe}
+                onSave={() => handleSave(recipe.suggestion_id)}
+                onDismiss={() => handleDismiss(recipe.suggestion_id)}
+                onTap={() => onRecipeSelect(recipe.id)}
+                disabled={false}
+              />
             );
           })}
-
-          <SuggestedRecipeCard
-            recipe={currentRecipe}
-            onSave={handleSave}
-            onDismiss={handleDismiss}
-            onTap={() => onRecipeSelect(currentRecipe.id)}
-            disabled={isSaving || isDismissing}
-          />
         </div>
       )}
     </section>
