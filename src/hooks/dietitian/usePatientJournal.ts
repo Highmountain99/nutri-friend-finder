@@ -75,12 +75,27 @@ export function usePatientJournal(patientId: string | undefined) {
     enabled: !!patientId,
   });
 
+  const nutritionSettings = useQuery({
+    queryKey: ["patient-nutrition-settings", patientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_nutrition_settings")
+        .select("weight_kg, height_cm")
+        .eq("user_id", patientId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!patientId,
+  });
+
   return {
     meals,
     symptoms,
     healthTracking,
     goals,
     intakeProfile,
+    nutritionSettings,
     isLoading: meals.isLoading || symptoms.isLoading || healthTracking.isLoading,
   };
 }
