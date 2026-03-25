@@ -772,6 +772,8 @@ export type Database = {
           created_at: string | null
           dietitian_id: string
           id: string
+          patient_conditions: string[] | null
+          patient_goals: string[] | null
           patient_id: string
           updated_at: string | null
           visible_metrics: string[] | null
@@ -782,6 +784,8 @@ export type Database = {
           created_at?: string | null
           dietitian_id: string
           id?: string
+          patient_conditions?: string[] | null
+          patient_goals?: string[] | null
           patient_id: string
           updated_at?: string | null
           visible_metrics?: string[] | null
@@ -792,6 +796,8 @@ export type Database = {
           created_at?: string | null
           dietitian_id?: string
           id?: string
+          patient_conditions?: string[] | null
+          patient_goals?: string[] | null
           patient_id?: string
           updated_at?: string | null
           visible_metrics?: string[] | null
