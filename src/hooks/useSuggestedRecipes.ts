@@ -20,13 +20,21 @@ export interface SuggestedRecipe {
   message: string | null;
 }
 
+interface SuggestedData {
+  active: SuggestedRecipe[];
+  dismissed: SuggestedRecipe[];
+  savedCount: number;
+}
+
+const QUERY_KEY = "suggested-recipes-stack";
+
 export function useSuggestedRecipes() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["suggested-recipes-stack", user?.id],
-    queryFn: async (): Promise<{ active: SuggestedRecipe[]; dismissed: SuggestedRecipe[]; savedCount: number }> => {
+    queryKey: [QUERY_KEY, user?.id],
+    queryFn: async (): Promise<SuggestedData> => {
       if (!user) return { active: [], dismissed: [], savedCount: 0 };
 
       const { data: rows, error } = await supabase
@@ -65,22 +73,27 @@ export function useSuggestedRecipes() {
         };
       };
 
-      const active = rows
-        .filter((s) => s.status === "suggested")
-        .map(mapRow)
-        .filter(Boolean) as SuggestedRecipe[];
-
-      const dismissed = rows
-        .filter((s) => s.status === "dismissed")
-        .map(mapRow)
-        .filter(Boolean) as SuggestedRecipe[];
-
+      const active = rows.filter((s) => s.status === "suggested").map(mapRow).filter(Boolean) as SuggestedRecipe[];
+      const dismissed = rows.filter((s) => s.status === "dismissed").map(mapRow).filter(Boolean) as SuggestedRecipe[];
       const savedCount = rows.filter((s) => s.status === "saved").length;
 
       return { active, dismissed, savedCount };
     },
     enabled: !!user,
   });
+
+  // Optimistic helper: move a recipe from active to a new status locally
+  const optimisticRemove = (suggestionId: string, newStatus: "saved" | "dismissed") => {
+    queryClient.setQueryData<SuggestedData>([QUERY_KEY, user?.id], (old) => {
+      if (!old) return old;
+      const recipe = old.active.find((r) => r.suggestion_id === suggestionId);
+      return {
+        active: old.active.filter((r) => r.suggestion_id !== suggestionId),
+        dismissed: newStatus === "dismissed" && recipe ? [...old.dismissed, recipe] : old.dismissed,
+        savedCount: newStatus === "saved" ? old.savedCount + 1 : old.savedCount,
+      };
+    });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async (suggestionId: string) => {
@@ -90,8 +103,6 @@ export function useSuggestedRecipes() {
         .eq("id", suggestionId);
       if (error) throw error;
 
-      // Also save to user_recipe_interactions so it shows in "My recipes"
-      // RLS requires source='algo' for user inserts, so we use that
       if (!user) return;
       const suggestion = data?.active.find((s) => s.suggestion_id === suggestionId);
       if (suggestion) {
@@ -107,9 +118,14 @@ export function useSuggestedRecipes() {
         );
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["suggested-recipes-stack"] });
+    onMutate: (suggestionId) => {
+      optimisticRemove(suggestionId, "saved");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["myRecipes"] });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 
@@ -121,8 +137,11 @@ export function useSuggestedRecipes() {
         .eq("id", suggestionId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["suggested-recipes-stack"] });
+    onMutate: (suggestionId) => {
+      optimisticRemove(suggestionId, "dismissed");
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 
@@ -136,8 +155,18 @@ export function useSuggestedRecipes() {
         .eq("status", "dismissed");
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["suggested-recipes-stack"] });
+    onMutate: () => {
+      queryClient.setQueryData<SuggestedData>([QUERY_KEY, user?.id], (old) => {
+        if (!old) return old;
+        return {
+          active: [...old.active, ...old.dismissed],
+          dismissed: [],
+          savedCount: old.savedCount,
+        };
+      });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 
