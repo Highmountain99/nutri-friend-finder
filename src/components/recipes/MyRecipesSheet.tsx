@@ -32,6 +32,10 @@ export function MyRecipesSheet({ open, onOpenChange, onRecipeSelect }: MyRecipes
   const queryClient = useQueryClient();
   const { data: recipes, isLoading } = useMyRecipes();
   const [filters, setFilters] = useState<RecipeFilters>(emptyFilters);
+  const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
+  const sheetRef = useCallback((node: HTMLDivElement | null) => {
+    setPortalEl(node);
+  }, []);
 
   const filteredRecipes = useMemo(() => {
     if (!recipes) return [];
@@ -61,7 +65,7 @@ export function MyRecipesSheet({ open, onOpenChange, onRecipeSelect }: MyRecipes
 
   return (
     <Sheet open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setFilters(emptyFilters); }}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl p-0 flex flex-col">
+      <SheetContent ref={sheetRef} side="bottom" className="h-[85vh] rounded-t-2xl p-0 flex flex-col">
         <SheetHeader className="px-4 pt-5 pb-3 border-b">
           <SheetTitle className="text-lg">Mina recept ({recipes?.length || 0})</SheetTitle>
         </SheetHeader>
