@@ -66,7 +66,7 @@ const activityLabels: Record<string, string> = {
 
 export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
-  const { meals, symptoms, healthTracking, goals, intakeProfile, isLoading } = usePatientJournal(id);
+  const { meals, symptoms, healthTracking, goals, intakeProfile, nutritionSettings, isLoading } = usePatientJournal(id);
   const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(id);
   const { entries: journalEntries, addEntry, deleteEntry } = useJournalEntries(id);
   const { notes, upsertNote } = useDietitianNotes(id);
