@@ -45,6 +45,10 @@ export function RecipeDetailSheet({
   const queryClient = useQueryClient();
   const { data: myRecipes } = useMyRecipes();
 
+  // Show loading when recipeId changes and data doesn't match yet
+  const isStale = recipe && recipeId && recipe.id !== recipeId;
+  const showLoading = isLoading || isStale || !recipe;
+
   const isSaved = myRecipes?.some((r) => r.id === recipeId) ?? false;
 
   const [showCookingMode, setShowCookingMode] = useState(false);
@@ -118,7 +122,7 @@ export function RecipeDetailSheet({
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-2xl">
-          {isLoading || !recipe ? (
+          {showLoading ? (
             <div className="space-y-4 p-4">
               <Skeleton className="h-48 w-full rounded-lg" />
               <Skeleton className="h-8 w-3/4" />
