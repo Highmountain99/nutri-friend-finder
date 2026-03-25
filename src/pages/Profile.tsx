@@ -90,6 +90,21 @@ export default function Profile() {
         </div>
       </section>
 
+      {/* Registration free text */}
+      {intakeProfile?.aiFreeText && (
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+            Från registrering
+          </h2>
+          <Card className="shadow-soft">
+            <CardContent className="p-4 flex gap-3">
+              <MessageSquareText className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <p className="text-foreground text-sm whitespace-pre-wrap">{intakeProfile.aiFreeText}</p>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
       {/* Conditions */}
       <section>
         <div className="flex items-center justify-between mb-3">
