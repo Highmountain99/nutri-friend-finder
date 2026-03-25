@@ -576,8 +576,17 @@ function DayView({ selectedDate, existingSlots, getAppointmentsForDay, drag, onR
         const isHour = minutes === 0;
 
         return (
-          <div
-            key={slotTime}
+          <div key={slotTime} className="relative">
+            {/* Current time indicator */}
+            {isTodaySelected && slotTime === nowSlot && (
+              <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ top: `${((now.getMinutes() % 30) / 30) * 100}%` }}>
+                <div className="flex items-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-destructive -ml-1" />
+                  <div className="flex-1 h-[2px] bg-destructive" />
+                </div>
+              </div>
+            )}
+            <div
             className={`flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer transition-colors ${
               isHour ? "border-t" : ""
             } ${
