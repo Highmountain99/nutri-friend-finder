@@ -165,7 +165,7 @@ export default function DietitianPatientDetail() {
   const concern = intake?.unified_concern_category || intake?.primary_concern_category;
 
   // Health profile data
-  const nutritionSettings = goals.data;
+  const nutritionGoals = goals.data;
   const weightEntries = (healthTracking.data ?? []).filter((h) => h.metric_type === "weight");
   const latestWeight = weightEntries[0]?.value;
   const heightCm = intake?.ai_parsed_fields && typeof intake.ai_parsed_fields === "object" ? (intake.ai_parsed_fields as any).height_cm : null;
