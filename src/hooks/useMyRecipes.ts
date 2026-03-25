@@ -16,6 +16,11 @@ export interface SavedRecipe {
   is_climate_smart: boolean | null;
   calories_per_serving: number | null;
   protein_per_serving: number | null;
+  cuisine_types: string[] | null;
+  meal_types: string[] | null;
+  health_plans: string[] | null;
+  dietary_needs: string[] | null;
+  allergen_free: string[] | null;
   saved_at: string;
 }
 
