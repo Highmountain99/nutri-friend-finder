@@ -18,6 +18,7 @@ type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "condition
 
 export default function Profile() {
   const { data, loading, updateWeight, updateHeight, updateBloodPressure, updateActivityLevel } = useHealthProfile();
+  const { profile: intakeProfile, loading: intakeLoading } = useIntakeProfile();
   const [openSheet, setOpenSheet] = useState<EditSheet>(null);
 
   const formatBloodPressure = () => {
