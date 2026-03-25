@@ -109,10 +109,16 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
     // ── Trend chart (health_tracking) ──
     if (metric === "trend_chart") {
       const hm = dataConfig.health_metric || "weight";
+      const periodDays = dataConfig.period_days || 30;
       const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
+      // Slice data based on period
+      const sliced = periodDays === "all" || periodDays >= 30
+        ? chartData
+        : chartData.slice(-Math.ceil(chartData.length * (periodDays / 30)));
       const unit = METRIC_UNITS[hm] || "kg";
-      const first = chartData[0]?.value || 0;
-      const last = chartData[chartData.length - 1]?.value || 0;
+      const first = sliced[0]?.value || 0;
+      const last = sliced[sliced.length - 1]?.value || 0;
+      const periodLabel = periodDays === "all" ? "Sedan start" : `Senaste ${periodDays} dagarna`;
 
       return (
         <div className="mt-2 space-y-1">
@@ -120,8 +126,8 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
             <span className="text-2xl font-bold tabular-nums text-foreground">{last}<span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span></span>
             <TrendBadge first={first} last={last} unit={unit} />
           </div>
-          <MiniAreaChart data={chartData} id={`preview-${hm}`} />
-          <p className="text-[10px] text-muted-foreground text-center">Senaste 30 dagarna</p>
+          <MiniAreaChart data={sliced} id={`preview-${hm}`} />
+          <p className="text-[10px] text-muted-foreground text-center">{periodLabel}</p>
         </div>
       );
     }
@@ -341,16 +347,17 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       );
     }
 
-    // ── Milestone progress / milestones ──
+    // ── Milestone progress / milestones (behavior goals — current phase) ──
     if (metric === "milestone_progress" || metric === "milestones") {
       const milestones = [
-        { label: "Regelbunden frukost", done: true },
-        { label: "3 mål/dag i 5 dagar", done: true },
-        { label: "Prova nytt mellanmål", done: false },
+        { label: "Ät fibrer 3 gånger denna veckan", done: true },
+        { label: "Logga alla måltider i 5 dagar", done: true },
+        { label: "Prova ett nytt mellanmål", done: false },
       ];
       const doneCount = milestones.filter(m => m.done).length;
       return (
         <div className="mt-3 space-y-2">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Aktuell fas</p>
           {milestones.map((m, i) => (
             <div key={i} className="flex items-center gap-2">
               {m.done
@@ -385,17 +392,17 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       );
     }
 
-    // ── Plan description (focus card) ──
+    // ── Plan description (focus card) — AI-generated motivational text ──
     if (metric === "plan_description") {
       return (
         <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
-          <p className="text-xs text-foreground leading-relaxed">
-            {description || "Fokus denna vecka: bygg en trygg måltidsrutin med tre huvudmål"}
+          <p className="text-xs text-foreground leading-relaxed italic text-center">
+            "Du gör framsteg varje dag — fortsätt lyssna på din kropp och ta det ett steg i taget"
           </p>
+          <p className="text-[9px] text-muted-foreground text-center mt-1.5">Genereras från behandlingsplanen</p>
         </div>
       );
     }
-
     // ── Next appointment ──
     if (metric === "next_appointment") {
       return (
