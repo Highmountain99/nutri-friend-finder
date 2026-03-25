@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil } from "lucide-react";
+import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +12,13 @@ import { EditActivitySheet } from "@/components/profile/EditActivitySheet";
 import { EditConditionsSheet } from "@/components/profile/EditConditionsSheet";
 import { EditGoalsSheet } from "@/components/profile/EditGoalsSheet";
 import { useHealthProfile, activityLevelLabels } from "@/hooks/useHealthProfile";
+import { useIntakeProfile } from "@/hooks/useIntakeProfile";
 
 type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "conditions" | "goals" | null;
 
 export default function Profile() {
   const { data, loading, updateWeight, updateHeight, updateBloodPressure, updateActivityLevel } = useHealthProfile();
+  const { profile: intakeProfile, loading: intakeLoading } = useIntakeProfile();
   const [openSheet, setOpenSheet] = useState<EditSheet>(null);
 
   const formatBloodPressure = () => {
@@ -87,6 +89,21 @@ export default function Profile() {
           />
         </div>
       </section>
+
+      {/* Registration free text */}
+      {intakeProfile?.aiFreeText && (
+        <section>
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+            Från registrering
+          </h2>
+          <Card className="shadow-soft">
+            <CardContent className="p-4 flex gap-3">
+              <MessageSquareText className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <p className="text-foreground text-sm whitespace-pre-wrap">{intakeProfile.aiFreeText}</p>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Conditions */}
       <section>
