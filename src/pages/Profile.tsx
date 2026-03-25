@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil, MessageSquareText } from "lucide-react";
+import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil, MessageSquareText, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +11,14 @@ import { EditBloodPressureSheet } from "@/components/profile/EditBloodPressureSh
 import { EditActivitySheet } from "@/components/profile/EditActivitySheet";
 import { EditConditionsSheet } from "@/components/profile/EditConditionsSheet";
 import { EditGoalsSheet } from "@/components/profile/EditGoalsSheet";
+import { EditWaistSheet } from "@/components/profile/EditWaistSheet";
 import { useHealthProfile, activityLevelLabels } from "@/hooks/useHealthProfile";
 import { useIntakeProfile } from "@/hooks/useIntakeProfile";
 
-type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "conditions" | "goals" | null;
+type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "conditions" | "goals" | "waist" | null;
 
 export default function Profile() {
-  const { data, loading, updateWeight, updateHeight, updateBloodPressure, updateActivityLevel } = useHealthProfile();
+  const { data, loading, updateWeight, updateHeight, updateBloodPressure, updateActivityLevel, updateWaist } = useHealthProfile();
   const { profile: intakeProfile, loading: intakeLoading } = useIntakeProfile();
   const [openSheet, setOpenSheet] = useState<EditSheet>(null);
 
@@ -86,6 +87,12 @@ export default function Profile() {
             label="Aktivitetsnivå"
             value={formatActivityLevel()}
             onEdit={() => setOpenSheet("activity")}
+          />
+          <EditableHealthCard
+            icon={Target}
+            label="Midjemått"
+            value={data.waistCm ? `${data.waistCm} cm` : undefined}
+            onEdit={() => setOpenSheet("waist")}
           />
         </div>
       </section>
@@ -217,6 +224,12 @@ export default function Profile() {
         open={openSheet === "goals"}
         onOpenChange={(open) => !open && setOpenSheet(null)}
         goals={data.goals}
+      />
+      <EditWaistSheet
+        open={openSheet === "waist"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        currentValue={data.waistCm}
+        onSave={updateWaist}
       />
     </div>
   );
