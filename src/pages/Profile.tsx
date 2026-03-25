@@ -88,6 +88,12 @@ export default function Profile() {
             value={formatActivityLevel()}
             onEdit={() => setOpenSheet("activity")}
           />
+          <EditableHealthCard
+            icon={Target}
+            label="Midjemått"
+            value={data.waistCm ? `${data.waistCm} cm` : undefined}
+            onEdit={() => setOpenSheet("waist")}
+          />
         </div>
       </section>
 
