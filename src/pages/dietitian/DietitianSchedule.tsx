@@ -442,10 +442,10 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
                 className="absolute w-2.5 h-2.5 rounded-full bg-destructive -translate-y-1/2"
                 style={{
                   left: `calc(${(todayIdx / 7) * 100}% - 5px)`,
-                  top: 0,
-                  transform: 'translateX(-4px) translateY(-4px)',
                 }}
               />
+            </div>
+          )}
             </div>
           )}
 
