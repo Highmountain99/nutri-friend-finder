@@ -446,8 +446,6 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
               />
             </div>
           )}
-            </div>
-          )}
 
         {HOURS.map((hour) => (
           <div key={hour}>
