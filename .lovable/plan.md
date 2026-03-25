@@ -1,161 +1,64 @@
 
 
-# Plan: Block Builder med datakoppling
+# Blockbyggare & blockrensning
 
 ## Sammanfattning
 
-Bygga ett komplett blockbibliotek-system där dietister kan skapa, spara och återanvända behandlingsblock med datakoppling till journaldata, kostlogg, symptom och behandlingsmål. Blocken integreras i den befintliga `ConfigureProgressSheet` och renderas dynamiskt i patientens utvecklingsvy.
+Förbättra blockbyggarens UX med sticky förhandsvisning, rensa upp duplicerade systemblock, och förbättra logiken i flera individuella block.
 
-## Databas
+## Ändringar
 
-**Ny tabell: `block_templates`**
+### 1. Sticky förhandsvisning i BlockBuilderSheet
 
-| Kolumn | Typ | Beskrivning |
-|---|---|---|
-| id | uuid PK | |
-| dietitian_id | uuid | Skaparen |
-| title | text | Blocktitel |
-| description | text | Kort beskrivning |
-| icon | text | Lucide-ikonnamn |
-| block_type | text | action / insight / progress / test / reflection / follow_up |
-| category | text | ibs / diabetes / eating_disorder / heart_health / womens_health / pregnancy / weight_loss / general |
-| data_source | text | none / journal / meal_log / meal_times / symptom_log / macro_data / treatment_goals / progression / combined |
-| data_config | jsonb | Logikdefinition: vilka fält, tröskelvärden, regler |
-| display_config | jsonb | Visuell config: layout, färger, tomlägestext |
-| is_shared | boolean | Synligt för andra dietister |
-| usage_count | int | Hur ofta blocket används |
-| created_at / updated_at | timestamptz | |
+Gör förhandsvisningen fast i toppen av sheeten så den syns medan man scrollar genom inställningarna. Lösning: flytta preview ut ur scroll-containern och ge den en fast position i toppen, medan resten av formuläret scrollar under.
 
-**RLS**: Dietist ser egna + shared block. CRUD på egna.
+### 2. Rensa duplicerade systemblock i `systemBlockTemplates.ts`
 
-**Ny tabell: `patient_blocks`** (kopplar block till patient)
+Ta bort dubbletter och slå ihop:
 
-| Kolumn | Typ | Beskrivning |
-|---|---|---|
-| id | uuid PK | |
-| patient_id | uuid | |
-| block_template_id | uuid FK | |
-| dietitian_id | uuid | |
-| sort_order | int | Ordning i patientens vy |
-| is_active | boolean | Synligt för patient |
-| override_title | text | Anpassad titel per patient |
-| manual_content | text | Manuellt satt text (för ej datadrivna block) |
-| created_at | timestamptz | |
+| Behåll | Ta bort (duplikat) |
+|--------|-------------------|
+| `behavior_goals` ("Beteendemål") | `ed_behavior_goals` (samma funktion) |
+| `symptom_patterns` ("Symptommönster") | `gh_symptom_count` ("Symptomöversikt"), `ed_symptom_patterns` |
+| `next_appointment` ("Nästa samtal") | `ed_follow_up` |
+| `meal_rhythm_today` ("Måltidsrytm idag") | `ed_meal_rhythm` |
+| `wl_weekly` → byt namn till "Loggade dagar" | `ed_weekly_checkin` ("Veckoöversikt") |
 
-**RLS**: Dietist hanterar tilldelade patienter. Patient ser egna aktiva block.
+### 3. Ta bort "(14d)", "(7d)", "(30d)" från blocktitlar
 
-## Arkitektur
+Rensa alla parenteser med tidsperioder ur titlarna i `systemBlockTemplates.ts`. Tidsperioden framgår i själva blocket.
 
-```text
-DietitianSidebar
-  └── "Blockbibliotek" (ny menyrad) → /dietitian/blocks
+### 4. Vikttrend — justerbar tidsperiod
 
-/dietitian/blocks (ny sida)
-  ├── Filter/sökning (blocktyp, kategori, datakälla)
-  ├── Lista av block_templates (kort)
-  └── "Skapa block" → BlockBuilderSheet
+Lägg till `period_days`-inställning i vikttrendsblocket (7, 14, 30, "all") som en enkel segmented-control/select i BlockPreview och i BlockBuilderSheet. Blocket behöver inte dupliceras — en enda instans med valbar period.
 
-BlockBuilderSheet (Sheet)
-  ├── Grundinfo: titel, beskrivning, ikon, kategori, blocktyp
-  ├── Datakoppling:
-  │    ├── Datakälla (dropdown)
-  │    ├── Logik-regler (formulärbaserade)
-  │    └── Tomlägestext
-  └── Live preview (hur blocket ser ut med exempeldata)
+### 5. Viktvärden — kopplat till vikttrend
 
-ConfigureProgressSheet (befintlig, utökas)
-  └── "Lägg till block från biblioteket" → öppnar picker
-       └── Väljer block → skapar patient_blocks-rad
+Visa nuvarande vikt och förändring sedan start. Gör blocket klickbart i patientvyn så det togglar mellan siffror och graf (viktvärden ↔ vikttrendgraf). I preview: visa "Nuvarande" och "Sedan start".
 
-Patientens Progress-vy
-  └── ProgressRouter renderar patient_blocks + befintliga sektioner
-       └── DynamicBlock-komponent: hämtar data, applicerar logik, renderar
-```
+### 6. Beteendemål — visa delmål för aktuell fas
 
-## Datakoppling — logikmotor
+Ändra så blocket hämtar milstolpar (`treatment_milestones`) för det mål som har status "in_progress" (aktuell fas). Översätt delmålen till veckliga, handlingsbara uppgifter. T.ex. "Introducera källor till lösliga fibrer" → "Ät fibrer 3 gånger denna veckan". Koppla till journalens data för progress-check.
 
-`data_config` i JSON definierar regler dietisten sätter via formulär:
+Uppdatera BlockPreview med exempeldata som reflekterar detta.
 
-```json
-{
-  "source": "meal_log",
-  "metric": "meals_per_day",
-  "period_days": 1,
-  "rules": [
-    { "condition": "gte", "value": 3, "label": "Bra struktur idag" },
-    { "condition": "lt", "value": 3, "label": "Saknar måltider" }
-  ],
-  "show_items": ["breakfast", "lunch", "dinner", "snack"],
-  "empty_text": "Inga måltider loggade ännu"
-}
-```
+### 7. Dagens fokus — uppmuntrande AI-genererad text
 
-Möjliga metrics:
-- `meals_per_day` — antal nutrition_entries idag/period
-- `meal_rhythm` — vilka meal_types som loggats
-- `regularity_30d` — dagar med 3+ måltider
-- `symptom_count` — antal symptom_entries per tidsperiod
-- `symptom_by_time` — symptom grupperade efter tid
-- `macro_value` — specifikt makrovärde (protein, etc)
-- `milestone_progress` — andel avklarade milestones
-- `custom_text` — manuell text, ingen data
+Ändra från att visa `plan_description` rakt av till att generera en kort uppmuntrande text baserad på behandlingsplanen. Implementera via en liten edge function eller inline-prompt som tar planens beskrivning och returnerar en motiverande mening.
 
-## Nya filer
+### 8. Veckoöversikt → "Loggade dagar"
 
-### Databas
-1. **Migration**: Skapa `block_templates` + `patient_blocks` tabeller med RLS
+Byt namn på alla weekly-overview-block till "Loggade dagar".
 
-### Frontend (~8 filer)
-2. **`src/pages/dietitian/DietitianBlocks.tsx`** — Bibliotekssida med filter, sökning, lista
-3. **`src/components/dietitian/blocks/BlockBuilderSheet.tsx`** — Skapa/redigera block
-4. **`src/components/dietitian/blocks/BlockCard.tsx`** — Kort i biblioteket
-5. **`src/components/dietitian/blocks/BlockDataConfig.tsx`** — Datakopplingsformulär
-6. **`src/components/dietitian/blocks/BlockPreview.tsx`** — Live preview
-7. **`src/components/dietitian/blocks/BlockPickerSheet.tsx`** — Välj block att lägga till patient
-8. **`src/hooks/dietitian/useBlockTemplates.ts`** — CRUD hook
-9. **`src/hooks/usePatientBlocks.ts`** — Hämta + beräkna blockdata för patient
-10. **`src/components/progress/shared/DynamicBlock.tsx`** — Renderar ett block med data
+## Tekniska detaljer
 
-### Ändringar i befintliga filer
-- **`DietitianSidebar.tsx`** — Lägg till "Blockbibliotek" i menyn
-- **`App.tsx`** — Ny route `/dietitian/blocks`
-- **`ConfigureProgressSheet.tsx`** — Lägg till "Lägg till block från biblioteket"-knapp
-- **`ProgressRouter.tsx`** — Rendera `patient_blocks` utöver befintliga sektioner
+**Filer som ändras:**
+- `src/components/dietitian/blocks/BlockBuilderSheet.tsx` — sticky preview-layout
+- `src/lib/systemBlockTemplates.ts` — rensa dubbletter, ta bort tidsperioder ur titlar, byta namn
+- `src/components/dietitian/blocks/BlockPreview.tsx` — uppdatera viktvärden-preview, beteendemål-preview, fokustext, period-selector
+- `src/components/progress/shared/DynamicBlock.tsx` — klickbar vikt-toggle i patientvyn
+- `src/hooks/usePatientBlocks.ts` — uppdatera beteendemål-logik för aktuell fas
+- Eventuellt ny edge function för AI-genererad fokustext
 
-## Logik-formuläret (BlockDataConfig)
-
-Dietisten konfigurerar via dropdowns/toggles:
-1. **Datakälla** — dropdown: Kostlogg, Symptomlogg, Behandlingsmål, etc.
-2. **Vad ska visas** — dropdown per källa (t.ex. "Måltidsrytm", "Antal per dag", "Makrovärde")
-3. **Tidsperiod** — dropdown: Idag, 7 dagar, 30 dagar
-4. **Regler** — max 3 "om X då visa Y"-regler via formulärfält
-5. **Tomlägestext** — vad som visas utan data
-
-## DynamicBlock rendering
-
-`usePatientBlocks` hook:
-- Hämtar `patient_blocks` med JOIN till `block_templates`
-- Per block: kör query baserat på `data_source` + `data_config`
-- Returnerar beräknad data + vilken regel som matchar
-
-`DynamicBlock` komponent:
-- Tar beräknad data + template
-- Renderar kort med ikon, titel, SourceBadge (journal/dietist/ai)
-- Visar data med checkmarks, progress bars, siffror beroende på blocktyp
-- Visar tomläge om data saknas
-
-## Designprinciper
-
-- Samma visuella stil som befintliga ED-block (lugnt, rent, kort)
-- Tydlig SourceBadge per block
-- Alla block valfria och redigerbara av dietist
-- Blockbiblioteket följer samma filter-UI som recept
-- Block Builder är formulärbaserad, ingen kod behövs
-
-## Uppskattad storlek
-
-- 2 nya tabeller + RLS
-- ~10 nya filer
-- ~2000-3000 rader kod
-- Inga nya edge functions (all logik client-side)
+**Databas-migration:** Rensa seedade dubbletter (delete by `system_key`) — befintliga patientkopplingar behöver mappas om.
 
