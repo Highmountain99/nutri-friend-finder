@@ -216,6 +216,14 @@ export default function DietitianPatientDetail() {
 
             {/* Overview tab */}
             <TabsContent value="overview" className="space-y-4 mt-4">
+              {/* Health profile card */}
+              <PatientHealthProfileCard
+                patientId={id!}
+                intakeData={intake}
+                healthTrackingData={healthTracking.data ?? []}
+                nutritionSettings={nutritionSettings.data}
+              />
+
               {/* Intake profile card */}
               <Card>
                 <CardHeader>
@@ -282,15 +290,15 @@ export default function DietitianPatientDetail() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {nutritionSettings ? (
+                  {nutritionGoals ? (
                     <>
                       <div className="grid grid-cols-4 gap-4 text-center">
-                        <div><p className="text-lg font-bold">{nutritionSettings.calories_goal}</p><p className="text-xs text-muted-foreground">kcal</p></div>
-                        <div><p className="text-lg font-bold">{nutritionSettings.protein_goal}g</p><p className="text-xs text-muted-foreground">Protein</p></div>
-                        <div><p className="text-lg font-bold">{nutritionSettings.carbs_goal}g</p><p className="text-xs text-muted-foreground">Kolhydrater</p></div>
-                        <div><p className="text-lg font-bold">{nutritionSettings.fat_goal}g</p><p className="text-xs text-muted-foreground">Fett</p></div>
+                        <div><p className="text-lg font-bold">{nutritionGoals.calories_goal}</p><p className="text-xs text-muted-foreground">kcal</p></div>
+                        <div><p className="text-lg font-bold">{nutritionGoals.protein_goal}g</p><p className="text-xs text-muted-foreground">Protein</p></div>
+                        <div><p className="text-lg font-bold">{nutritionGoals.carbs_goal}g</p><p className="text-xs text-muted-foreground">Kolhydrater</p></div>
+                        <div><p className="text-lg font-bold">{nutritionGoals.fat_goal}g</p><p className="text-xs text-muted-foreground">Fett</p></div>
                       </div>
-                      {nutritionSettings.set_by_dietist && (
+                      {nutritionGoals.set_by_dietist && (
                         <p className="text-xs text-primary mt-2">✓ Satta av dietist</p>
                       )}
                     </>
@@ -319,7 +327,7 @@ export default function DietitianPatientDetail() {
                 open={editGoalsOpen}
                 onOpenChange={setEditGoalsOpen}
                 patientId={id!}
-                currentGoals={nutritionSettings}
+                currentGoals={nutritionGoals}
               />
 
               <ConfigureProgressSheet
