@@ -483,6 +483,10 @@ export function usePatientBlocks(patientId: string | undefined) {
           }
 
           if (config.metric === "metric_cards") {
+            const cd = filtered.map((e: any) => ({
+              date: format(new Date(e.entry_date), "d MMM"),
+              value: Number(e.value),
+            }));
             const latest = filtered.length > 0 ? Number(filtered[filtered.length - 1].value) : null;
             const first = filtered.length > 0 ? Number(filtered[0].value) : null;
             const diff = latest !== null && first !== null ? latest - first : null;
@@ -492,6 +496,7 @@ export function usePatientBlocks(patientId: string | undefined) {
               computedItems: [],
               computedValue: latest,
               computedTotal: null,
+              chartData: cd.length > 0 ? cd : null,
               chartMeta: meta,
               source: "journal" as const,
             };
