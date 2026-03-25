@@ -225,6 +225,12 @@ export default function Profile() {
         onOpenChange={(open) => !open && setOpenSheet(null)}
         goals={data.goals}
       />
+      <EditWaistSheet
+        open={openSheet === "waist"}
+        onOpenChange={(open) => !open && setOpenSheet(null)}
+        currentValue={data.waistCm}
+        onSave={updateWaist}
+      />
     </div>
   );
 }
