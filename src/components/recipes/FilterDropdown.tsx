@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext, createContext } from "react";
 import { ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
+
+// Context to allow FilterDropdown to portal into a parent container (e.g. Sheet)
+export const FilterPortalContext = createContext<HTMLElement | null>(null);
 
 interface FilterDropdownProps {
   label: string;
@@ -21,6 +24,7 @@ export function FilterDropdown({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const portalContainer = useContext(FilterPortalContext);
 
   // Update dropdown position when opened
   useEffect(() => {
@@ -93,7 +97,7 @@ export function FilterDropdown({
             style={{
               top: dropdownPosition.top,
               left: dropdownPosition.left,
-              zIndex: 9999,
+              zIndex: 99999,
             }}
           >
             {options.map((option) => {
@@ -122,7 +126,7 @@ export function FilterDropdown({
               );
             })}
           </div>,
-          document.body
+          portalContainer || document.body
         )}
     </div>
   );
