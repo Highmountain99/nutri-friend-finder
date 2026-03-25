@@ -43,11 +43,8 @@ function RecipesContent() {
 
   const handleRecipeIdSelect = (recipeId: string) => {
     if (selectedRecipeId && selectedRecipeId !== recipeId) {
-      // Close first, then reopen with new recipe to avoid flash
       setSelectedRecipeId(null);
-      requestAnimationFrame(() => {
-        setSelectedRecipeId(recipeId);
-      });
+      setTimeout(() => setSelectedRecipeId(recipeId), 50);
     } else {
       setSelectedRecipeId(recipeId);
     }
