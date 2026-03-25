@@ -42,7 +42,15 @@ function RecipesContent() {
         : "default";
 
   const handleRecipeIdSelect = (recipeId: string) => {
-    setSelectedRecipeId(recipeId);
+    if (selectedRecipeId && selectedRecipeId !== recipeId) {
+      // Close first, then reopen with new recipe to avoid flash
+      setSelectedRecipeId(null);
+      requestAnimationFrame(() => {
+        setSelectedRecipeId(recipeId);
+      });
+    } else {
+      setSelectedRecipeId(recipeId);
+    }
   };
 
   const handleCuisineSelect = (cuisineId: string) => {
