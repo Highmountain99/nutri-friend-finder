@@ -12,9 +12,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { format, startOfWeek, addDays, isSameDay } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
 import { sv } from "date-fns/locale";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
 import { useDragSelect } from "@/hooks/useDragSelect";
@@ -386,6 +386,19 @@ interface WeekViewProps {
 }
 
 function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForDay, getAvailForDay, drag, onRemoveSlot, patients, allAppointments, onOpenPatient, onStartVideo }: WeekViewProps) {
+  const [now, setNow] = useState(new Date());
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const todayIdx = weekDays.findIndex((d) => isToday(d));
+  const ROW_HEIGHT = 28;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const nowTop = (nowMinutes / 30) * ROW_HEIGHT;
+
   return (
     <div className="overflow-x-auto select-none">
       <div className="min-w-[700px]">
@@ -407,6 +420,34 @@ function WeekView({ weekDays, selectedDate, setSelectedDate, getAppointmentsForD
         </div>
 
         {/* Time grid */}
+        <div className="relative" ref={gridRef}>
+          {/* Current time indicator */}
+          {todayIdx >= 0 && (
+            <div
+              className="absolute z-20 pointer-events-none"
+              style={{
+                top: `${nowTop}px`,
+                left: '60px',
+                right: 0,
+              }}
+            >
+              <div
+                className="absolute h-[2px] bg-red-500"
+                style={{
+                  left: `calc(${(todayIdx / 7) * 100}%)`,
+                  width: `calc(${(1 / 7) * 100}%)`,
+                }}
+              />
+              <div
+                className="absolute w-2.5 h-2.5 rounded-full bg-red-500 -translate-y-[4px]"
+                style={{
+                  left: `calc(${(todayIdx / 7) * 100}%)`,
+                  transform: 'translateX(-4px) translateY(-4px)',
+                }}
+              />
+            </div>
+          )}
+
         {HOURS.map((hour) => (
           <div key={hour}>
             {[0, 30].map((minutes) => {
