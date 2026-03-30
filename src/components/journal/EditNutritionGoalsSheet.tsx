@@ -24,10 +24,10 @@ interface EditNutritionGoalsSheetProps {
 
 export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: EditNutritionGoalsSheetProps) {
   const [form, setForm] = useState({
-    caloriesGoal: goals.caloriesGoal,
-    proteinGoal: goals.proteinGoal,
-    carbsGoal: goals.carbsGoal,
-    fatGoal: goals.fatGoal,
+    caloriesGoal: goals.caloriesGoal?.toString() || "",
+    proteinGoal: goals.proteinGoal?.toString() || "",
+    carbsGoal: goals.carbsGoal?.toString() || "",
+    fatGoal: goals.fatGoal?.toString() || "",
   });
   const [showWarning, setShowWarning] = useState(false);
   const [saving, setSaving] = useState(false);
