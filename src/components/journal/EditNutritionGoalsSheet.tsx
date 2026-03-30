@@ -24,10 +24,10 @@ interface EditNutritionGoalsSheetProps {
 
 export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: EditNutritionGoalsSheetProps) {
   const [form, setForm] = useState({
-    caloriesGoal: goals.caloriesGoal,
-    proteinGoal: goals.proteinGoal,
-    carbsGoal: goals.carbsGoal,
-    fatGoal: goals.fatGoal,
+    caloriesGoal: goals.caloriesGoal?.toString() || "",
+    proteinGoal: goals.proteinGoal?.toString() || "",
+    carbsGoal: goals.carbsGoal?.toString() || "",
+    fatGoal: goals.fatGoal?.toString() || "",
   });
   const [showWarning, setShowWarning] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -35,16 +35,15 @@ export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: E
   useEffect(() => {
     if (open) {
       setForm({
-        caloriesGoal: goals.caloriesGoal,
-        proteinGoal: goals.proteinGoal,
-        carbsGoal: goals.carbsGoal,
-        fatGoal: goals.fatGoal,
+        caloriesGoal: goals.caloriesGoal?.toString() || "",
+        proteinGoal: goals.proteinGoal?.toString() || "",
+        carbsGoal: goals.carbsGoal?.toString() || "",
+        fatGoal: goals.fatGoal?.toString() || "",
       });
     }
   }, [open, goals]);
 
   const handleSave = async () => {
-    // If goals were set by dietist, show warning first
     if (goals.setByDietist) {
       setShowWarning(true);
       return;
@@ -54,7 +53,12 @@ export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: E
 
   const doSave = async () => {
     setSaving(true);
-    await onSave(form);
+    await onSave({
+      caloriesGoal: Number(form.caloriesGoal) || 0,
+      proteinGoal: Number(form.proteinGoal) || 0,
+      carbsGoal: Number(form.carbsGoal) || 0,
+      fatGoal: Number(form.fatGoal) || 0,
+    });
     setSaving(false);
     setShowWarning(false);
     onOpenChange(false);
@@ -75,19 +79,19 @@ export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: E
           <div className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label>Kalorier (kcal)</Label>
-              <Input type="number" value={form.caloriesGoal} onChange={(e) => setForm((f) => ({ ...f, caloriesGoal: Number(e.target.value) }))} />
+              <Input type="number" inputMode="numeric" value={form.caloriesGoal} onChange={(e) => setForm((f) => ({ ...f, caloriesGoal: e.target.value }))} placeholder="t.ex. 2000" />
             </div>
             <div className="space-y-2">
               <Label>Protein (g)</Label>
-              <Input type="number" value={form.proteinGoal} onChange={(e) => setForm((f) => ({ ...f, proteinGoal: Number(e.target.value) }))} />
+              <Input type="number" inputMode="numeric" value={form.proteinGoal} onChange={(e) => setForm((f) => ({ ...f, proteinGoal: e.target.value }))} placeholder="t.ex. 50" />
             </div>
             <div className="space-y-2">
               <Label>Kolhydrater (g)</Label>
-              <Input type="number" value={form.carbsGoal} onChange={(e) => setForm((f) => ({ ...f, carbsGoal: Number(e.target.value) }))} />
+              <Input type="number" inputMode="numeric" value={form.carbsGoal} onChange={(e) => setForm((f) => ({ ...f, carbsGoal: e.target.value }))} placeholder="t.ex. 250" />
             </div>
             <div className="space-y-2">
               <Label>Fett (g)</Label>
-              <Input type="number" value={form.fatGoal} onChange={(e) => setForm((f) => ({ ...f, fatGoal: Number(e.target.value) }))} />
+              <Input type="number" inputMode="numeric" value={form.fatGoal} onChange={(e) => setForm((f) => ({ ...f, fatGoal: e.target.value }))} placeholder="t.ex. 65" />
             </div>
             <Button className="w-full" onClick={handleSave} disabled={saving}>
               {saving ? "Sparar..." : "Spara mål"}

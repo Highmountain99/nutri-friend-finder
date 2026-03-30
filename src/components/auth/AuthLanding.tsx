@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BankIdLogo } from "./BankIdLogo";
 import { OnboardingModal } from "./OnboardingModal";
 import { LoginSheet } from "./LoginSheet";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AuthLanding() {
+  const { session, isLoading } = useAuth();
+  const nav = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && session) {
+      nav("/home", { replace: true });
+    }
+  }, [session, isLoading, nav]);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
