@@ -35,7 +35,7 @@ const sheetVariants = cva(
       side: {
         top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
-          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          "inset-x-0 bottom-0 border-t max-h-[90dvh] overflow-y-auto overscroll-contain data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
           "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
@@ -52,18 +52,81 @@ interface SheetContentProps
     VariantProps<typeof sheetVariants> {}
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
-  ({ side = "right", className, children, ...props }, ref) => (
-    <SheetPortal>
-      <SheetOverlay />
-      <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-        {children}
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-full bg-background/80 backdrop-blur-sm p-1.5 opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </SheetPrimitive.Close>
-      </SheetPrimitive.Content>
-    </SheetPortal>
-  ),
+  ({ side = "right", className, children, style, onFocusCapture, ...props }, ref) => {
+    const [keyboardInset, setKeyboardInset] = React.useState(0);
+
+    React.useEffect(() => {
+      if (side !== "bottom") return;
+
+      const viewport = window.visualViewport;
+      if (!viewport) {
+        setKeyboardInset(0);
+        return;
+      }
+
+      const updateInset = () => {
+        const nextInset = Math.max(0, window.innerHeight - (viewport.height + viewport.offsetTop));
+        setKeyboardInset(nextInset);
+      };
+
+      updateInset();
+      viewport.addEventListener("resize", updateInset);
+      viewport.addEventListener("scroll", updateInset);
+
+      return () => {
+        viewport.removeEventListener("resize", updateInset);
+        viewport.removeEventListener("scroll", updateInset);
+      };
+    }, [side]);
+
+    const mergedStyle: React.CSSProperties =
+      side === "bottom"
+        ? {
+            ...style,
+            maxHeight: `calc(100dvh - ${keyboardInset}px)`,
+            paddingBottom: `calc(env(safe-area-inset-bottom) + 1.5rem + ${keyboardInset}px)`,
+          }
+        : (style ?? {});
+
+    const handleFocusCapture: React.FocusEventHandler<HTMLDivElement> = (event) => {
+      onFocusCapture?.(event);
+
+      if (side !== "bottom") return;
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      const isField =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable;
+
+      if (!isField) return;
+
+      window.setTimeout(() => {
+        target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+      }, 120);
+    };
+
+    return (
+      <SheetPortal>
+        <SheetOverlay />
+        <SheetPrimitive.Content
+          ref={ref}
+          className={cn(sheetVariants({ side }), className)}
+          style={mergedStyle}
+          onFocusCapture={handleFocusCapture}
+          {...props}
+        >
+          {children}
+          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-full bg-background/80 backdrop-blur-sm p-1.5 opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </SheetPrimitive.Close>
+        </SheetPrimitive.Content>
+      </SheetPortal>
+    );
+  },
 );
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
