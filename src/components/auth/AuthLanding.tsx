@@ -57,12 +57,14 @@ export function AuthLanding() {
           .
         </p>
 
-        <button
-          onClick={() => navigate("/dietitian/login")}
-          className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-        >
-          Logga in som dietist
-        </button>
+        <div className="flex justify-center">
+          <button
+            onClick={() => navigate("/dietitian/login")}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+          >
+            Logga in som dietist
+          </button>
+        </div>
       </div>
 
       <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
