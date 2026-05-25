@@ -1,0 +1,151 @@
+/* ============================================================
+   Organic loaders — 6 indeterminate loading indicators
+   Each component fits in a 200×200 space, scales by changing
+   the inner element's width/height. Color follows currentColor
+   (set `color:` on a wrapper). Pure CSS unless noted.
+   ============================================================ */
+
+/* ---------- 1. Pulsing droplet (was #2) -------------------- */
+.loader-droplet {
+  display: inline-block;
+  width: 90px;
+  height: 90px;
+  background: currentColor;
+  border-radius: 55% 45% 50% 50% / 55% 60% 40% 45%;
+  animation: loader-droplet-squish 2.4s ease-in-out infinite;
+}
+@keyframes loader-droplet-squish {
+  0%, 100% { border-radius: 55% 45% 50% 50% / 55% 60% 40% 45%; transform: rotate(0deg)   scale(1); }
+  25%      { border-radius: 45% 55% 60% 40% / 45% 50% 50% 55%; transform: rotate(20deg)  scale(1.05, 0.95); }
+  50%      { border-radius: 60% 40% 45% 55% / 50% 55% 45% 50%; transform: rotate(-15deg) scale(0.95, 1.05); }
+  75%      { border-radius: 40% 60% 55% 45% / 60% 40% 60% 40%; transform: rotate(10deg)  scale(1.02); }
+}
+
+/* ---------- 2. Orbiting blobs (was #3) --------------------- */
+.loader-orbit {
+  position: relative;
+  display: inline-block;
+  width: 120px;
+  height: 120px;
+  animation: loader-spin 2.6s linear infinite;
+}
+.loader-orbit > i {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background: currentColor;
+  border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+  animation: loader-orbit-morph 3s ease-in-out infinite;
+}
+.loader-orbit > i:nth-child(1) { top: 0;    left: 50%; transform: translateX(-50%); }
+.loader-orbit > i:nth-child(2) { bottom: 0; left: 50%; transform: translateX(-50%); animation-delay: -1.5s; }
+.loader-orbit > i:nth-child(3) { top: 50%;  left: 0;   transform: translateY(-50%); animation-delay: -0.75s; }
+.loader-orbit > i:nth-child(4) { top: 50%;  right: 0;  transform: translateY(-50%); animation-delay: -2.25s; }
+@keyframes loader-orbit-morph {
+  0%, 100% { border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; }
+  50%      { border-radius: 40% 60% 45% 55% / 60% 40% 60% 40%; }
+}
+@keyframes loader-spin { to { transform: rotate(360deg); } }
+
+/* ---------- 3. Breathing ring (was #6) --------------------- */
+.loader-ring {
+  position: relative;
+  display: inline-block;
+  width: 130px;
+  height: 130px;
+  animation: loader-spin 6s linear infinite;
+}
+.loader-ring > i {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  background: currentColor;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  animation: loader-ring-breath 2s ease-in-out infinite;
+}
+.loader-ring > i:nth-child(1) { --a:   0deg; }
+.loader-ring > i:nth-child(2) { --a:  45deg; }
+.loader-ring > i:nth-child(3) { --a:  90deg; }
+.loader-ring > i:nth-child(4) { --a: 135deg; }
+.loader-ring > i:nth-child(5) { --a: 180deg; }
+.loader-ring > i:nth-child(6) { --a: 225deg; }
+.loader-ring > i:nth-child(7) { --a: 270deg; }
+.loader-ring > i:nth-child(8) { --a: 315deg; }
+@keyframes loader-ring-breath {
+  0%, 100% { transform: rotate(var(--a)) translateX(45px) scale(1); }
+  50%      { transform: rotate(var(--a)) translateX(55px) scale(1.4); }
+}
+
+/* ---------- 4. Breathing blob (was #7) --------------------- */
+.loader-breath {
+  display: inline-block;
+  width: 110px;
+  height: 110px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: loader-breath-anim 3.2s ease-in-out infinite;
+}
+@keyframes loader-breath-anim {
+  0%, 100% { border-radius: 58% 42% 50% 50% / 50% 55% 45% 50%; transform: scale(1)         rotate(0deg); }
+  33%      { border-radius: 42% 58% 60% 40% / 55% 50% 50% 45%; transform: scale(1.05, 0.92) rotate(15deg); }
+  66%      { border-radius: 50% 50% 42% 58% / 45% 60% 40% 55%; transform: scale(0.92, 1.05) rotate(-10deg); }
+}
+
+/* ---------- 5. Squiggly wave (was #9) ---------------------- */
+/* Use with the inline SVG markup in the demo file.            */
+.loader-wave { display: inline-block; width: 150px; height: 80px; color: inherit; }
+.loader-wave path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 12;
+  stroke-linecap: round;
+  stroke-dasharray: 30 200;
+  animation: loader-wave-anim 1.6s linear infinite;
+}
+@keyframes loader-wave-anim { to { stroke-dashoffset: -230; } }
+
+/* ---------- 6. Concentric rings (was #15) ------------------ */
+.loader-concentric {
+  position: relative;
+  display: inline-block;
+  width: 140px;
+  height: 140px;
+}
+.loader-concentric > i {
+  position: absolute;
+  inset: 0;
+  border: 6px solid currentColor;
+  border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%;
+  animation:
+    loader-spin 6s linear infinite,
+    loader-concentric-morph 4s ease-in-out infinite;
+}
+.loader-concentric > i:nth-child(2) {
+  inset: 22px;
+  animation-duration: 4s, 3s;
+  animation-direction: reverse, normal;
+}
+.loader-concentric > i:nth-child(3) {
+  inset: 46px;
+  background: currentColor;
+  animation-duration: 3s, 2s;
+}
+@keyframes loader-concentric-morph {
+  0%, 100% { border-radius: 55% 45% 60% 40% / 50% 60% 40% 50%; }
+  50%      { border-radius: 45% 55% 40% 60% / 60% 40% 60% 40%; }
+}
+
+/* ---------- Respect reduced-motion ------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .loader-droplet,
+  .loader-orbit, .loader-orbit > i,
+  .loader-ring, .loader-ring > i,
+  .loader-breath,
+  .loader-wave path,
+  .loader-concentric > i {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+  }
+}
