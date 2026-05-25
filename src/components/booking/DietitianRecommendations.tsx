@@ -62,7 +62,7 @@ export function DietitianRecommendations({
           </div>
         </div>
         <div className="flex justify-center py-12">
-          <OrganicLoader size={72} />
+          <OrganicLoader size={48} />
         </div>
       </div>
     );
