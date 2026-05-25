@@ -332,7 +332,7 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
                   <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
                 </div>
               )}
-              <OrganicLoader size={64} label="Analyserar måltiden" />
+              <OrganicLoader size={32} label="Analyserar måltiden" />
               <p className="text-muted-foreground">Analyserar måltiden...</p>
               
             </div>
