@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { OrganicLoader } from "@/components/ui/OrganicLoader";
 import {
   Sheet,
   SheetContent,
@@ -331,7 +332,7 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
                   <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
                 </div>
               )}
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <OrganicLoader size={64} label="Analyserar måltiden" />
               <p className="text-muted-foreground">Analyserar måltiden...</p>
               
             </div>

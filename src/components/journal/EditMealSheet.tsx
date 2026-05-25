@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { OrganicLoader } from "@/components/ui/OrganicLoader";
 import {
   Sheet,
   SheetContent,
@@ -390,7 +391,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                   <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
                 </div>
               )}
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <OrganicLoader size={64} label="Analyserar måltiden" />
               <p className="text-muted-foreground">Analyserar...</p>
             </div>
           ) : (
