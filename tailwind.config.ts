@@ -66,6 +66,17 @@ export default {
         // Semantic colors for ratings and badges
         "star-rating": "hsl(var(--star-rating))",
         "trustpilot": "hsl(var(--trustpilot))",
+        // Beige surface scale
+        "beige-2": "hsl(var(--beige-2))",
+        "beige-3": "hsl(var(--beige-3))",
+        // Nutrient accents — Hybrid (jord + mönster)
+        nutrient: {
+          cal: "hsl(var(--nutrient-cal))",
+          pro: "hsl(var(--nutrient-pro))",
+          carb: "hsl(var(--nutrient-carb))",
+          fat: "hsl(var(--nutrient-fat))",
+        },
+
       },
       borderRadius: {
         lg: "var(--radius)",

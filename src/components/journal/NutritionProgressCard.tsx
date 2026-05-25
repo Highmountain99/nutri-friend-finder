@@ -1,7 +1,17 @@
 import { LucideIcon } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+
+export type NutrientKey = "cal" | "pro" | "carb" | "fat";
+
+const NUTRIENT_META: Record<
+  NutrientKey,
+  { badge: string; pattern: "solid" | "ticked" | "hatched" | "dotted"; colorVar: string }
+> = {
+  cal: { badge: "KCAL", pattern: "solid", colorVar: "--nutrient-cal" },
+  pro: { badge: "PRO", pattern: "ticked", colorVar: "--nutrient-pro" },
+  carb: { badge: "CARB", pattern: "hatched", colorVar: "--nutrient-carb" },
+  fat: { badge: "FAT", pattern: "dotted", colorVar: "--nutrient-fat" },
+};
 
 interface NutritionProgressCardProps {
   icon: LucideIcon;
@@ -9,52 +19,77 @@ interface NutritionProgressCardProps {
   remaining: number;
   goal: number;
   unit: string;
-  color: string;
-  bgColor: string;
+  nutrient: NutrientKey;
 }
 
-export function NutritionProgressCard({ 
-  icon: Icon, 
-  label, 
+export function NutritionProgressCard({
+  icon: Icon,
+  label,
   remaining,
-  goal, 
+  goal,
   unit,
-  color,
-  bgColor
+  nutrient,
 }: NutritionProgressCardProps) {
+  const meta = NUTRIENT_META[nutrient];
   const consumed = goal - remaining;
-  const percentage = Math.min((consumed / goal) * 100, 100);
+  const percentage = Math.min(Math.max((consumed / goal) * 100, 0), 100);
   const isOverGoal = remaining < 0;
-  
+
+  const accent = `hsl(var(${meta.colorVar}))`;
+  const fillColor = isOverGoal ? "hsl(var(--destructive))" : accent;
+  const patternClass =
+    meta.pattern === "solid" ? "" : `gf-bar__fill--${meta.pattern}`;
+
   return (
-    <Card className="shadow-soft">
-      <CardContent className="p-2.5 sm:p-3">
-        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-          <div className={cn("w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center", bgColor)}>
-            <Icon className={cn("w-3 h-3 sm:w-3.5 sm:h-3.5", color)} />
-          </div>
-          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">{label} kvar</span>
+    <div className="relative bg-beige-2 border border-border rounded-[10px] p-3 sm:p-3.5 flex flex-col gap-2.5">
+      {/* Top color tab */}
+      <span
+        className="absolute top-0 left-3.5 w-7 h-[3px] rounded-b-[3px]"
+        style={{ background: accent }}
+      />
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className="w-7 h-7 rounded-full grid place-items-center shrink-0"
+            style={{ background: accent }}
+          >
+            <Icon className="w-3.5 h-3.5 text-background" strokeWidth={1.8} />
+          </span>
+          <span className="text-[12px] text-primary truncate">{label} kvar</span>
         </div>
-        <div className="space-y-1">
-          <div className="flex items-baseline gap-1">
-            <span className={cn(
-              "text-xl sm:text-2xl font-bold",
-              isOverGoal ? "text-destructive" : "text-foreground"
-            )}>
-              {isOverGoal ? "+" : ""}{Math.abs(remaining).toLocaleString("sv-SE")}
-            </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground">{unit}</span>
-          </div>
-          <Progress 
-            value={percentage} 
-            className={cn(
-              "h-1.5",
-              isOverGoal && "[&>div]:bg-destructive",
-              color.replace("text-", "[&>div]:bg-")
-            )} 
-          />
-        </div>
-      </CardContent>
-    </Card>
+        <span className="font-mono text-[9px] tracking-[0.1em] uppercase text-primary/65 shrink-0">
+          {meta.badge}
+        </span>
+      </div>
+
+      {/* Value */}
+      <div className="flex items-baseline gap-1.5">
+        <span
+          className={cn(
+            "text-[28px] sm:text-[30px] font-semibold leading-none tracking-tight tabular-nums"
+          )}
+          style={{ color: isOverGoal ? "hsl(var(--destructive))" : "hsl(var(--primary))" }}
+        >
+          {isOverGoal ? "+" : ""}
+          {Math.abs(Math.round(remaining)).toLocaleString("sv-SE")}
+        </span>
+        <span className="text-[11px] text-primary/70">{unit}</span>
+      </div>
+
+      {/* Patterned progress bar */}
+      <div className="gf-bar">
+        <div
+          className={cn("gf-bar__fill", patternClass)}
+          style={
+            {
+              width: `${percentage}%`,
+              ["--gf-bar-color" as any]: fillColor,
+            } as React.CSSProperties
+          }
+        />
+      </div>
+    </div>
   );
 }
