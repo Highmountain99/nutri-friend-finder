@@ -10,6 +10,7 @@ import { format, addDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import useEmblaCarousel from "embla-carousel-react";
 import { cn } from "@/lib/utils";
+import { OrganicLoader } from "@/components/ui/OrganicLoader";
 
 interface DietitianRecommendationsProps {
   selectedDate: Date;
