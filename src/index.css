@@ -45,6 +45,17 @@
     --star-rating: 38 70% 45%;
     --trustpilot: 150 31% 17%;
 
+    /* Surfaces — beige tonal scale */
+    --beige-2: 44 33% 84%;          /* #E4DCC7 cards */
+    --beige-3: 44 30% 80%;          /* #DDD3BC progress track */
+
+    /* Nutrient accents — Hybrid (jord + mönster) */
+    --nutrient-cal:  14 53% 47%;    /* #B85638 terracotta */
+    --nutrient-pro:  95 24% 39%;    /* #5E7A4A mossa */
+    --nutrient-carb: 42 56% 50%;    /* #C49A3A vete */
+    --nutrient-fat:  36 39% 39%;    /* #8C6E3D brons */
+
+
     /* Custom tokens — flatter, more editorial */
     --gradient-hero: linear-gradient(180deg, hsl(44 31% 88%) 0%, hsl(44 33% 84%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(44 31% 89%) 0%, hsl(44 31% 86%) 100%);
