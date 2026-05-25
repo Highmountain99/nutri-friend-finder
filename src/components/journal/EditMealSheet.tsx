@@ -391,7 +391,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                   <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
                 </div>
               )}
-              <OrganicLoader size={64} label="Analyserar måltiden" />
+              <OrganicLoader size={32} label="Analyserar måltiden" />
               <p className="text-muted-foreground">Analyserar...</p>
             </div>
           ) : (
