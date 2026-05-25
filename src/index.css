@@ -232,11 +232,3 @@ select:focus {
   scroll-margin-bottom: 120px;
 }
 
-/* Hide Progressier floating install/notification widget */
-#progressier-widget,
-[id^="progressier"],
-[class*="progressier"] {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
