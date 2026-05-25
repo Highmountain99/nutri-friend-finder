@@ -1,64 +1,75 @@
+# Brand redesign — Gutfeeling
 
+Apply the uploaded brand book as the app's new visual identity. This is a pure design-system swap — no business logic, routes, data, or feature behavior changes.
 
-# Blockbyggare & blockrensning
+## 1. Design tokens (foundation)
 
-## Sammanfattning
+Rewrite `src/index.css` `:root` (and `.dark`) with the brand palette, converted to HSL:
 
-Förbättra blockbyggarens UX med sticky förhandsvisning, rensa upp duplicerade systemblock, och förbättra logiken i flera individuella block.
+```text
+--beige (canvas)      #EBE5D6   → 44 31% 88%
+--beige-2 (surface)   #E4DCC7   → 44 33% 84%
+--ink (text)          #1F2A22   → 140 16% 14%
+--green (primary)     #1F3A2E   → 150 31% 17%
+--green-deep          #142319   → 145 30% 11%
+--green-soft (accent) #2D4F3E   → 150 27% 24%
+--line                rgba(31,42,34,0.18)
+```
 
-## Ändringar
+Semantic mapping:
+- `--background` → beige, `--foreground` → ink
+- `--card` → white-ish beige (`--beige`), `--card-foreground` → green-deep
+- `--primary` → green, `--primary-foreground` → beige
+- `--secondary` → beige-2
+- `--accent` → green-soft (replace coral entirely — brand has no coral)
+- `--muted` → beige-2, `--muted-foreground` → green-soft
+- `--border`, `--input` → line color
+- `--ring` → green
+- Sidebar tokens mirror the same palette
+- Gradients (`--gradient-hero`, `--gradient-card`) flattened or restated as subtle beige→beige-2; remove the sage gradient
 
-### 1. Sticky förhandsvisning i BlockBuilderSheet
+Dark mode: invert to green-deep canvas with beige text (brand supports dark surfaces).
 
-Gör förhandsvisningen fast i toppen av sheeten så den syns medan man scrollar genom inställningarna. Lösning: flytta preview ut ur scroll-containern och ge den en fast position i toppen, medan resten av formuläret scrollar under.
+Keep `--radius: 1rem` (brand uses 8–12px on cards, fine).
 
-### 2. Rensa duplicerade systemblock i `systemBlockTemplates.ts`
+## 2. Typography
 
-Ta bort dubbletter och slå ihop:
+- Load Google Fonts: Instrument Serif (regular + italic), Geist (300/400/500/600), JetBrains Mono (400/500) — add `<link>` in `index.html`.
+- `tailwind.config.ts` fontFamily:
+  - `sans: ['Geist', ...]`
+  - `serif: ['"Instrument Serif"', 'serif']` (new)
+  - `mono: ['"JetBrains Mono"', ...]` (new)
+- Heading defaults in `index.css` `@layer base`: headings use `font-serif`, weight 400, tight tracking, with italic available for emphasis.
+- Add small utility classes: `.eyebrow` (mono, 11px, uppercase, tracked, green) and `.lede` (serif italic) — used in Header, section titles, cards.
 
-| Behåll | Ta bort (duplikat) |
-|--------|-------------------|
-| `behavior_goals` ("Beteendemål") | `ed_behavior_goals` (samma funktion) |
-| `symptom_patterns` ("Symptommönster") | `gh_symptom_count` ("Symptomöversikt"), `ed_symptom_patterns` |
-| `next_appointment` ("Nästa samtal") | `ed_follow_up` |
-| `meal_rhythm_today` ("Måltidsrytm idag") | `ed_meal_rhythm` |
-| `wl_weekly` → byt namn till "Loggade dagar" | `ed_weekly_checkin` ("Veckoöversikt") |
+## 3. Component-level restyling (no behavior changes)
 
-### 3. Ta bort "(14d)", "(7d)", "(30d)" från blocktitlar
+Touch the shared chrome and most visible surfaces. All edits keep existing markup/props; only classNames and small token usages change.
 
-Rensa alla parenteser med tidsperioder ur titlarna i `systemBlockTemplates.ts`. Tidsperioden framgår i själva blocket.
+- **Header** (`src/components/layout/Header.tsx`): greeting in mono eyebrow style, name in serif italic; leaf avatar bg becomes flat green (no gradient).
+- **BottomNav, SideMenu**: beige background, green icons, mono labels.
+- **AppLayout**: beige body (already via token).
+- **Buttons** (`src/components/ui/button.tsx` variants): primary = green/beige, secondary = beige-2/green-deep, ghost stays; pill radius preserved. Remove any coral references.
+- **Cards** (`src/components/ui/card.tsx`): beige surface, hairline `--line` border, soft shadow.
+- **Inputs / Sheet / Dialog / Tabs**: rely on tokens — should adopt automatically once tokens change; quick visual sweep to fix anything hardcoded.
+- **Home page** (`src/pages/Home.tsx`, `AppointmentCard`, `QuickActionCard`): hero greeting in serif italic, section eyebrows in mono.
+- **OrganicLoader CSS** (`src/styles/organic-loaders.css`): swap any hardcoded sage/coral hues to brand green tokens.
+- **DietitianSidebar / DietitianLayout**: same token-driven swap; brand wordmark uses serif italic.
+- **Auth landing** (`src/components/auth/AuthLanding.tsx`): full editorial restyle — big serif wordmark "Gut*feeling*" (italic on second word), beige canvas, mono meta line, single green CTA.
 
-### 4. Vikttrend — justerbar tidsperiod
+## 4. Cleanup
 
-Lägg till `period_days`-inställning i vikttrendsblocket (7, 14, 30, "all") som en enkel segmented-control/select i BlockPreview och i BlockBuilderSheet. Blocket behöver inte dupliceras — en enda instans med valbar period.
+- Search and replace hardcoded color classes that bypass tokens (`text-white`, `bg-emerald-*`, `text-coral*`, gradient utility usages) in components touched above. Anything not visited stays token-driven and will pick up the new palette automatically.
+- Update memory entry "Brand Colors" to reflect the new palette (beige + forest green, no coral).
 
-### 5. Viktvärden — kopplat till vikttrend
+## 5. Out of scope
 
-Visa nuvarande vikt och förändring sedan start. Gör blocket klickbart i patientvyn så det togglar mellan siffror och graf (viktvärden ↔ vikttrendgraf). I preview: visa "Nuvarande" och "Sedan start".
+- No changes to routing, data, edge functions, RLS, or feature behavior.
+- No restructuring of pages or component hierarchy.
+- Per-page deep editorial redesign beyond Header, Home hero, Auth landing is deferred — token swap alone will refresh ~90% of surfaces consistently.
 
-### 6. Beteendemål — visa delmål för aktuell fas
+## Verification
 
-Ändra så blocket hämtar milstolpar (`treatment_milestones`) för det mål som har status "in_progress" (aktuell fas). Översätt delmålen till veckliga, handlingsbara uppgifter. T.ex. "Introducera källor till lösliga fibrer" → "Ät fibrer 3 gånger denna veckan". Koppla till journalens data för progress-check.
-
-Uppdatera BlockPreview med exempeldata som reflekterar detta.
-
-### 7. Dagens fokus — uppmuntrande AI-genererad text
-
-Ändra från att visa `plan_description` rakt av till att generera en kort uppmuntrande text baserad på behandlingsplanen. Implementera via en liten edge function eller inline-prompt som tar planens beskrivning och returnerar en motiverande mening.
-
-### 8. Veckoöversikt → "Loggade dagar"
-
-Byt namn på alla weekly-overview-block till "Loggade dagar".
-
-## Tekniska detaljer
-
-**Filer som ändras:**
-- `src/components/dietitian/blocks/BlockBuilderSheet.tsx` — sticky preview-layout
-- `src/lib/systemBlockTemplates.ts` — rensa dubbletter, ta bort tidsperioder ur titlar, byta namn
-- `src/components/dietitian/blocks/BlockPreview.tsx` — uppdatera viktvärden-preview, beteendemål-preview, fokustext, period-selector
-- `src/components/progress/shared/DynamicBlock.tsx` — klickbar vikt-toggle i patientvyn
-- `src/hooks/usePatientBlocks.ts` — uppdatera beteendemål-logik för aktuell fas
-- Eventuellt ny edge function för AI-genererad fokustext
-
-**Databas-migration:** Rensa seedade dubbletter (delete by `system_key`) — befintliga patientkopplingar behöver mappas om.
-
+- Visit `/auth`, `/home`, `/journal`, `/messages`, `/progress`, `/dietitian` and confirm: beige canvas, green primary, serif headings, mono eyebrows, no leftover sage/coral.
+- Confirm OrganicLoader colors match the new palette.
+- Check dark mode renders with deep-green canvas.
