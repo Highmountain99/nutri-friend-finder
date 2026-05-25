@@ -2,104 +2,104 @@
 @tailwind components;
 @tailwind utilities;
 
-/* EatSuite Design System - Warm, supportive health aesthetic */
+/* Gutfeeling Brand System — Editorial, warm beige + deep forest green */
 
 @layer base {
   :root {
-    /* Core palette - Warm, earthy, calming */
-    --background: 40 30% 98%;
-    --foreground: 160 25% 15%;
+    /* Brand canvas — warm beige */
+    --background: 44 31% 88%;        /* #EBE5D6 */
+    --foreground: 140 16% 14%;       /* #1F2A22 ink */
 
-    --card: 0 0% 100%;
-    --card-foreground: 160 25% 15%;
+    --card: 44 31% 88%;
+    --card-foreground: 145 30% 11%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 160 25% 15%;
+    --popover: 44 33% 90%;
+    --popover-foreground: 145 30% 11%;
 
-    /* Primary - Sage Green (calming, health) */
-    --primary: 150 35% 45%;
-    --primary-foreground: 0 0% 100%;
-    --primary-soft: 150 30% 92%;
+    /* Primary — deep forest green */
+    --primary: 150 31% 17%;          /* #1F3A2E */
+    --primary-foreground: 44 31% 88%;
+    --primary-soft: 44 33% 84%;      /* beige-2 surface */
 
-    /* Secondary - Warm Sand */
-    --secondary: 35 30% 93%;
-    --secondary-foreground: 160 25% 20%;
+    /* Secondary — beige-2 surface */
+    --secondary: 44 33% 84%;         /* #E4DCC7 */
+    --secondary-foreground: 145 30% 11%;
 
-    /* Accent - Soft Coral (action, warmth) */
-    --accent: 15 75% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent — green-soft */
+    --accent: 150 27% 24%;           /* #2D4F3E */
+    --accent-foreground: 44 31% 88%;
 
-    --muted: 40 20% 94%;
-    --muted-foreground: 160 15% 45%;
+    --muted: 44 33% 84%;
+    --muted-foreground: 150 20% 30%;
 
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 4 55% 42%;
+    --destructive-foreground: 44 31% 92%;
 
-    --border: 40 25% 88%;
-    --input: 40 25% 88%;
-    --ring: 150 35% 45%;
+    --border: 140 16% 14% / 0.18;
+    --input: 140 16% 14% / 0.18;
+    --ring: 150 31% 17%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    /* Semantic colors for ratings/badges */
-    --star-rating: 45 93% 58%;
-    --trustpilot: 142 70% 45%;
+    /* Semantic */
+    --star-rating: 38 70% 45%;
+    --trustpilot: 150 31% 17%;
 
-    /* Custom tokens */
-    --gradient-hero: linear-gradient(135deg, hsl(150 35% 45%) 0%, hsl(160 40% 55%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 30% 98%) 100%);
-    --shadow-soft: 0 4px 20px -4px hsl(160 25% 15% / 0.08);
-    --shadow-elevated: 0 8px 30px -6px hsl(160 25% 15% / 0.12);
+    /* Custom tokens — flatter, more editorial */
+    --gradient-hero: linear-gradient(180deg, hsl(44 31% 88%) 0%, hsl(44 33% 84%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(44 31% 89%) 0%, hsl(44 31% 86%) 100%);
+    --shadow-soft: 0 4px 24px -8px hsl(145 30% 11% / 0.12);
+    --shadow-elevated: 0 24px 60px -30px hsl(145 30% 11% / 0.35);
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 160 25% 20%;
-    --sidebar-primary: 150 35% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 30% 95%;
-    --sidebar-accent-foreground: 160 25% 20%;
-    --sidebar-border: 40 25% 90%;
-    --sidebar-ring: 150 35% 45%;
+    /* Sidebar — dark green */
+    --sidebar-background: 150 31% 17%;
+    --sidebar-foreground: 44 31% 88%;
+    --sidebar-primary: 44 31% 88%;
+    --sidebar-primary-foreground: 150 31% 17%;
+    --sidebar-accent: 150 27% 24%;
+    --sidebar-accent-foreground: 44 31% 88%;
+    --sidebar-border: 44 31% 88% / 0.12;
+    --sidebar-ring: 44 31% 88%;
   }
 
   .dark {
-    --background: 160 20% 8%;
-    --foreground: 40 20% 95%;
+    --background: 145 30% 11%;
+    --foreground: 44 31% 88%;
 
-    --card: 160 18% 12%;
-    --card-foreground: 40 20% 95%;
+    --card: 150 31% 14%;
+    --card-foreground: 44 31% 88%;
 
-    --popover: 160 18% 12%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 150 31% 14%;
+    --popover-foreground: 44 31% 88%;
 
-    --primary: 150 40% 50%;
-    --primary-foreground: 160 25% 10%;
-    --primary-soft: 150 25% 18%;
+    --primary: 44 31% 88%;
+    --primary-foreground: 145 30% 11%;
+    --primary-soft: 150 27% 24%;
 
-    --secondary: 160 15% 18%;
-    --secondary-foreground: 40 20% 90%;
+    --secondary: 150 27% 20%;
+    --secondary-foreground: 44 31% 88%;
 
-    --accent: 15 70% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 150 27% 30%;
+    --accent-foreground: 44 31% 88%;
 
-    --muted: 160 15% 18%;
-    --muted-foreground: 40 15% 60%;
+    --muted: 150 27% 18%;
+    --muted-foreground: 44 18% 70%;
 
-    --destructive: 0 60% 45%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 4 55% 50%;
+    --destructive-foreground: 44 31% 92%;
 
-    --border: 160 15% 22%;
-    --input: 160 15% 22%;
-    --ring: 150 40% 50%;
+    --border: 44 31% 88% / 0.14;
+    --input: 44 31% 88% / 0.14;
+    --ring: 44 31% 88%;
 
-    --sidebar-background: 160 18% 10%;
-    --sidebar-foreground: 40 20% 90%;
-    --sidebar-primary: 150 40% 50%;
-    --sidebar-primary-foreground: 160 25% 10%;
-    --sidebar-accent: 160 15% 16%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 160 15% 18%;
-    --sidebar-ring: 150 40% 50%;
+    --sidebar-background: 145 30% 9%;
+    --sidebar-foreground: 44 31% 88%;
+    --sidebar-primary: 44 31% 88%;
+    --sidebar-primary-foreground: 145 30% 11%;
+    --sidebar-accent: 150 27% 18%;
+    --sidebar-accent-foreground: 44 31% 88%;
+    --sidebar-border: 44 31% 88% / 0.10;
+    --sidebar-ring: 44 31% 88%;
   }
 }
 
@@ -110,15 +110,48 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "ss01", "cv02";
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    font-family: 'Instrument Serif', 'Times New Roman', serif;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    color: hsl(var(--primary));
+    line-height: 1.05;
+  }
+
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: hsl(var(--foreground));
   }
 }
 
 @layer utilities {
+  .font-serif {
+    font-family: 'Instrument Serif', 'Times New Roman', serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+    font-weight: 400;
+  }
+
+  .lede {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: hsl(var(--primary));
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
   .gradient-hero {
     background: var(--gradient-hero);
   }
@@ -139,7 +172,6 @@
     @apply bg-card/80 backdrop-blur-lg;
   }
 
-  /* Safe area utilities for iOS/Android */
   .safe-area-inset {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -194,7 +226,6 @@
   position: absolute;
 }
 
-/* Ensure inputs scroll into view when keyboard opens */
 input:focus,
 textarea:focus,
 select:focus {
