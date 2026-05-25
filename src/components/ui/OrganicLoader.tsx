@@ -6,7 +6,7 @@ type Variant = "droplet" | "orbit" | "ring" | "breath" | "wave" | "concentric";
 const VARIANTS: Variant[] = ["droplet", "orbit", "ring", "breath", "wave", "concentric"];
 
 interface OrganicLoaderProps {
-  /** px size of the loader (controls width/height). Default 80. */
+  /** px size of the loader (controls width/height). Default 32 (matches old spinner). */
   size?: number;
   /** Force a specific variant; otherwise picks randomly per mount. */
   variant?: Variant;
@@ -18,7 +18,7 @@ interface OrganicLoaderProps {
  * Organic, indeterminate loader. Replaces traditional spinners.
  * Inherits color from `currentColor` — wrap with `text-primary` etc.
  */
-export function OrganicLoader({ size = 80, variant, className, label = "Laddar" }: OrganicLoaderProps) {
+export function OrganicLoader({ size = 32, variant, className, label = "Laddar" }: OrganicLoaderProps) {
   const picked = useMemo<Variant>(
     () => variant ?? VARIANTS[Math.floor(Math.random() * VARIANTS.length)],
     [variant]
