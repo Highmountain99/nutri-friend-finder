@@ -243,3 +243,40 @@ select:focus {
   scroll-margin-bottom: 120px;
 }
 
+/* ============================================================
+   Macro cards — Hybrid (jord + mönster)
+   ============================================================ */
+.gf-bar {
+  height: 6px;
+  background: hsl(var(--beige-3));
+  border-radius: 6px;
+  overflow: hidden;
+}
+.gf-bar__fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 360ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--gf-bar-color, hsl(var(--primary)));
+}
+.gf-bar__fill--ticked {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--gf-bar-color) 0 6px,
+    hsl(var(--beige-2)) 6px 8px
+  );
+}
+.gf-bar__fill--hatched {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--gf-bar-color) 0 3px,
+    hsl(var(--beige-2)) 3px 6px
+  );
+}
+.gf-bar__fill--dotted {
+  background:
+    radial-gradient(circle at center,
+      var(--gf-bar-color) 1.5px,
+      hsl(var(--beige-2)) 2px) 0 0 / 6px 6px;
+}
+
+
