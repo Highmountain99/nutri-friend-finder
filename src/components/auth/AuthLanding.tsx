@@ -26,32 +26,42 @@ export function AuthLanding() {
   const [showLogin, setShowLogin] = useState(shouldOpenLogin);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col safe-area-inset">
-      <div className="flex-1 flex items-center justify-center px-6">
-        <h1 className="text-3xl md:text-4xl font-semibold text-foreground text-center leading-tight">
-          Lita på din magkänsla
-        </h1>
+    <div className="min-h-screen bg-background flex flex-col safe-area-inset">
+      {/* Top meta strip */}
+      <div className="px-6 pt-6 flex items-center justify-between">
+        <span className="eyebrow">Gutfeeling® / Est. 2025</span>
+        <span className="eyebrow opacity-60">SE</span>
       </div>
 
-      <div className="px-6 pb-8 pt-4 space-y-4 bg-white">
-        <Button onClick={() => setShowLogin(true)} size="xl" className="w-full h-14 text-base font-medium relative">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <p className="eyebrow mb-6">A digital clinic</p>
+        <h1 className="font-serif text-primary text-[clamp(64px,18vw,128px)] leading-[0.86] tracking-[-0.035em]">
+          Gut<span className="italic">feeling</span>
+        </h1>
+        <p className="lede text-xl md:text-2xl mt-8 max-w-[22ch]">
+          Lita på din magkänsla.
+        </p>
+      </div>
+
+      <div className="px-6 pb-8 pt-4 space-y-3 bg-background border-t border-border">
+        <Button onClick={() => setShowLogin(true)} size="xl" className="w-full h-14 text-base font-medium relative rounded-full">
           Logga in
-          <span className="absolute right-4 top-1/2 -translate-y-1/2">
+          <span className="absolute right-5 top-1/2 -translate-y-1/2">
             <BankIdLogo className="h-5 w-auto text-primary-foreground" />
           </span>
         </Button>
 
-        <Button onClick={() => setShowOnboarding(true)} variant="outline" size="xl" className="w-full h-14 text-base font-medium">
+        <Button onClick={() => setShowOnboarding(true)} variant="outline" size="xl" className="w-full h-14 text-base font-medium rounded-full border-primary/30 text-primary hover:bg-secondary">
           Ny användare
         </Button>
 
-        <p className="text-sm text-muted-foreground text-center pt-2 pb-safe">
+        <p className="eyebrow text-[10px] text-center pt-4 pb-safe opacity-70 normal-case tracking-normal" style={{ fontFamily: 'Geist, sans-serif', letterSpacing: 0 }}>
           Genom att fortsätta godkänner du våra{" "}
-          <Link to="/terms" className="font-semibold underline text-foreground">
+          <Link to="/terms" className="underline text-primary">
             användarvillkor
           </Link>{" "}
           och vår{" "}
-          <Link to="/privacy" className="font-semibold underline text-foreground">
+          <Link to="/privacy" className="underline text-primary">
             integritetspolicy
           </Link>
           .
@@ -60,9 +70,9 @@ export function AuthLanding() {
         <div className="flex justify-center">
           <button
             onClick={() => navigate("/dietitian/login")}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+            className="eyebrow opacity-60 hover:opacity-100 transition-opacity"
           >
-            Logga in som dietist
+            Logga in som dietist →
           </button>
         </div>
       </div>
