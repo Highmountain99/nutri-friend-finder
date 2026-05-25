@@ -110,8 +110,7 @@ export default function Journal() {
     remaining: remaining.calories,
     goal: goals.caloriesGoal,
     unit: "kcal",
-    color: "text-foreground",
-    bgColor: "bg-muted",
+    nutrient: "cal" as const,
     visible: settings.showCalories
   }, {
     icon: Drumstick,
@@ -119,8 +118,7 @@ export default function Journal() {
     remaining: Math.round(remaining.protein),
     goal: goals.proteinGoal,
     unit: "g",
-    color: "text-primary",
-    bgColor: "bg-primary/10",
+    nutrient: "pro" as const,
     visible: settings.showProtein
   }, {
     icon: Wheat,
@@ -128,8 +126,7 @@ export default function Journal() {
     remaining: Math.round(remaining.carbs),
     goal: goals.carbsGoal,
     unit: "g",
-    color: "text-accent",
-    bgColor: "bg-accent/10",
+    nutrient: "carb" as const,
     visible: settings.showCarbs
   }, {
     icon: Droplet,
@@ -137,10 +134,10 @@ export default function Journal() {
     remaining: Math.round(remaining.fat),
     goal: goals.fatGoal,
     unit: "g",
-    color: "text-secondary",
-    bgColor: "bg-secondary/10",
+    nutrient: "fat" as const,
     visible: settings.showFat
   }];
+
   
   // Filter to only show visible nutrition cards
   const nutritionCards = allNutritionCards.filter(card => card.visible);
