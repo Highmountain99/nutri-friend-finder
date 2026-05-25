@@ -118,13 +118,17 @@ export default function Home() {
 
       {/* Motivation Section */}
       <section className="pt-2">
-        <div className="rounded-2xl gradient-hero p-5 text-primary-foreground">
-          <p className="text-sm opacity-90 mb-1">Dagens tanke</p>
-          <p className="font-medium leading-relaxed">
+        <div className="relative rounded-2xl bg-primary text-primary-foreground p-5 overflow-hidden">
+          <span className="absolute top-0 left-5 w-8 h-[3px] rounded-b-[3px] bg-nutrient-carb" />
+          <p className="font-mono text-[10px] tracking-[0.14em] uppercase opacity-70 mb-2">
+            Dagens tanke
+          </p>
+          <p className="font-serif italic text-xl leading-snug text-primary-foreground">
             "Små steg varje dag leder till stora förändringar. Du gör ett fantastiskt jobb!"
           </p>
         </div>
       </section>
+
     </div>
   );
 }
