@@ -23,7 +23,7 @@ export function DietitianRoute() {
   if (authLoading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <OrganicLoader size={80} />
+        <OrganicLoader size={32} />
       </div>
     );
   }
