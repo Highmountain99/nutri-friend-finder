@@ -50,7 +50,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Landing / Auth routes - no layout */}
-            <Route path="/" element={<Auth />} />
+            <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dietitian/login" element={<DietitianLogin />} />
             <Route path="/admin/setup" element={<AdminSetup />} />
