@@ -164,8 +164,11 @@ interface UserCache {
   daysWithEntries?: string[];
   streak?: number;
   days: Map<string, DayCache>;
+  prefetchedAt?: number; // timestamp of last bulk prefetch
 }
 const journalCache = new Map<string, UserCache>();
+const PREFETCH_TTL_MS = 60_000; // refresh bulk prefetch at most once per minute
+const PREFETCH_DAYS = 30;
 function getUserCache(userId: string): UserCache {
   let c = journalCache.get(userId);
   if (!c) {
@@ -174,6 +177,44 @@ function getUserCache(userId: string): UserCache {
   }
   return c;
 }
+
+function mapEntry(entry: Record<string, unknown>): NutritionEntry {
+  return {
+    id: entry.id as string,
+    mealName: (entry.meal_name as string) || "Okänd måltid",
+    mealType: (entry.meal_type as string) || getMealTypeFromTime(new Date((entry.created_at as string) || Date.now())),
+    calories: (entry.calories as number) || 0,
+    protein: Number(entry.protein) || 0,
+    carbs: Number(entry.carbs) || 0,
+    fat: Number(entry.fat) || 0,
+    isAiEstimated: (entry.is_ai_estimated as boolean) || false,
+    imageUrl: (entry.image_url as string) || undefined,
+    createdAt: new Date((entry.created_at as string) || Date.now()),
+  };
+}
+
+function mapSymptom(symptom: Record<string, unknown>): SymptomEntry {
+  return {
+    id: symptom.id as string,
+    mealId: (symptom.meal_id as string) || null,
+    description: symptom.description as string,
+    symptomTime: new Date(symptom.symptom_time as string),
+    createdAt: new Date((symptom.created_at as string) || Date.now()),
+  };
+}
+
+function sumTotals(entries: NutritionEntry[]): DailyTotals {
+  return entries.reduce(
+    (acc, e) => ({
+      calories: acc.calories + e.calories,
+      protein: acc.protein + e.protein,
+      carbs: acc.carbs + e.carbs,
+      fat: acc.fat + e.fat,
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
+}
+
 
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
@@ -283,10 +324,62 @@ export function useJournalData(selectedDate: Date) {
       }
 
       loadEntryDates();
-    })();
-  }, [user, loadEntryDates]);
 
-  // DAY-LEVEL data (entries, symptoms, health metrics) — refetched on date change.
+      // Bulk-prefetch last PREFETCH_DAYS days of entries/symptoms/metrics
+      // so date switches within that window are instant (no network).
+      if (!uc.prefetchedAt || Date.now() - uc.prefetchedAt > PREFETCH_TTL_MS) {
+        const today = new Date();
+        const fromDate = format(subDays(today, PREFETCH_DAYS - 1), "yyyy-MM-dd");
+
+        const [entriesBulk, symptomsBulk, metricsBulk] = await Promise.all([
+          supabase.from("nutrition_entries").select("*").eq("user_id", user.id).gte("entry_date", fromDate),
+          supabase.from("symptom_entries").select("*").eq("user_id", user.id).gte("entry_date", fromDate),
+          supabase.from("daily_health_metrics").select("*").eq("user_id", user.id).gte("metric_date", fromDate),
+        ]);
+
+        // Group by date
+        const byDate = new Map<string, { entries: NutritionEntry[]; symptoms: SymptomEntry[]; metrics?: HealthMetrics }>();
+        const ensure = (d: string) => {
+          let b = byDate.get(d);
+          if (!b) { b = { entries: [], symptoms: [] }; byDate.set(d, b); }
+          return b;
+        };
+        (entriesBulk.data ?? []).forEach((row: Record<string, unknown>) => {
+          ensure(row.entry_date as string).entries.push(mapEntry(row));
+        });
+        (symptomsBulk.data ?? []).forEach((row: Record<string, unknown>) => {
+          ensure(row.entry_date as string).symptoms.push(mapSymptom(row));
+        });
+        (metricsBulk.data ?? []).forEach((row: Record<string, unknown>) => {
+          ensure(row.metric_date as string).metrics = {
+            steps: (row.steps as number) || 0,
+            activeEnergy: Number(row.active_energy_kcal) || 0,
+          };
+        });
+
+        byDate.forEach((b, d) => {
+          uc.days.set(d, {
+            entries: b.entries,
+            symptoms: b.symptoms,
+            totals: sumTotals(b.entries),
+            healthMetrics: b.metrics ?? { steps: 0, activeEnergy: 0 },
+          });
+        });
+        uc.prefetchedAt = Date.now();
+
+        // If current selected date got fresh data, push to state
+        const dc = uc.days.get(dateKey);
+        if (dc) {
+          setEntries(dc.entries);
+          setSymptoms(dc.symptoms);
+          setDailyTotals(dc.totals);
+          setHealthMetrics(dc.healthMetrics);
+        }
+      }
+    })();
+  }, [user, loadEntryDates, dateKey]);
+
+  // DAY-LEVEL data — only fetches when the date is NOT already in the cache.
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -294,8 +387,18 @@ export function useJournalData(selectedDate: Date) {
     }
     const uc = getUserCache(user.id);
     const dc = uc.days.get(dateKey);
-    if (!dc) setIsLoading(true);
 
+    // Cache hit → render instantly, no network
+    if (dc) {
+      setEntries(dc.entries);
+      setSymptoms(dc.symptoms);
+      setDailyTotals(dc.totals);
+      setHealthMetrics(dc.healthMetrics);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
     let cancelled = false;
 
     (async () => {
@@ -307,31 +410,12 @@ export function useJournalData(selectedDate: Date) {
         ]);
         if (cancelled) return;
 
-        const nextEntries: NutritionEntry[] = (entriesRes.data ?? []).map((entry) => {
-          const entryRecord = entry as Record<string, unknown>;
-          return {
-            id: entry.id,
-            mealName: entry.meal_name || "Okänd måltid",
-            mealType: (entryRecord.meal_type as string) || getMealTypeFromTime(new Date(entry.created_at || Date.now())),
-            calories: entry.calories || 0,
-            protein: Number(entry.protein) || 0,
-            carbs: Number(entry.carbs) || 0,
-            fat: Number(entry.fat) || 0,
-            isAiEstimated: entry.is_ai_estimated || false,
-            imageUrl: entry.image_url || undefined,
-            createdAt: new Date(entry.created_at || Date.now()),
-          };
-        });
+        const nextEntries = (entriesRes.data ?? []).map((r) => mapEntry(r as Record<string, unknown>));
         setEntries(nextEntries);
-        const nextTotals = calculateTotals(nextEntries);
+        const nextTotals = sumTotals(nextEntries);
+        setDailyTotals(nextTotals);
 
-        const nextSymptoms: SymptomEntry[] = (symptomsRes.data ?? []).map((symptom) => ({
-          id: symptom.id,
-          mealId: symptom.meal_id || null,
-          description: symptom.description,
-          symptomTime: new Date(symptom.symptom_time),
-          createdAt: new Date(symptom.created_at || Date.now()),
-        }));
+        const nextSymptoms = (symptomsRes.data ?? []).map((r) => mapSymptom(r as Record<string, unknown>));
         setSymptoms(nextSymptoms);
 
         const nextMetrics: HealthMetrics = metricsRes.data
@@ -355,7 +439,8 @@ export function useJournalData(selectedDate: Date) {
     return () => {
       cancelled = true;
     };
-  }, [user, dateKey, calculateTotals]);
+  }, [user, dateKey]);
+
 
   // Keep per-day cache in sync with local mutations
   useEffect(() => {
