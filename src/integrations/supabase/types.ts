@@ -270,6 +270,27 @@ export type Database = {
           },
         ]
       }
+      dietitian_calendar_tokens: {
+        Row: {
+          created_at: string
+          dietitian_user_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dietitian_user_id: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dietitian_user_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dietitian_invite_codes: {
         Row: {
           code: string
@@ -414,7 +435,6 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
-          calendar_token: string | null
           created_at: string
           first_name: string
           id: string
@@ -429,7 +449,6 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
-          calendar_token?: string | null
           created_at?: string
           first_name: string
           id?: string
@@ -444,7 +463,6 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
-          calendar_token?: string | null
           created_at?: string
           first_name?: string
           id?: string
@@ -1441,7 +1459,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      generate_calendar_token: { Args: never; Returns: string }
+      get_or_create_my_calendar_token: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1455,6 +1473,7 @@ export type Database = {
         Args: { _message_id: string }
         Returns: boolean
       }
+      rotate_my_calendar_token: { Args: never; Returns: string }
     }
     Enums: {
       activity_level:
