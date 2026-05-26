@@ -45,9 +45,15 @@ export default function Messages() {
   // Check if any message has been escalated
   const hasEscalation = messages.some((msg) => msg.escalated);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom — instant on first paint, smooth on subsequent updates
+  const hasScrolledInitially = useRef(false);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length === 0) return;
+    messagesEndRef.current?.scrollIntoView({
+      behavior: hasScrolledInitially.current ? "smooth" : "auto",
+      block: "end",
+    });
+    hasScrolledInitially.current = true;
   }, [messages]);
 
   // Auto-resize textarea
