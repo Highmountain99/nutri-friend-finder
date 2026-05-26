@@ -149,22 +149,50 @@ function calculateStreak(datesWithEntries: string[]): number {
   return streak;
 }
 
+// Module-level cache so returning to /journal shows previous data instantly
+// while a fresh fetch runs in the background.
+interface DayCache {
+  entries: NutritionEntry[];
+  symptoms: SymptomEntry[];
+  totals: DailyTotals;
+  healthMetrics: HealthMetrics;
+}
+interface UserCache {
+  settings?: NutritionSettings;
+  goals?: NutritionGoals;
+  appleHealth?: AppleHealthSettings;
+  daysWithEntries?: string[];
+  streak?: number;
+  days: Map<string, DayCache>;
+}
+const journalCache = new Map<string, UserCache>();
+function getUserCache(userId: string): UserCache {
+  let c = journalCache.get(userId);
+  if (!c) {
+    c = { days: new Map() };
+    journalCache.set(userId, c);
+  }
+  return c;
+}
+
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [goals, setGoals] = useState<NutritionGoals>(DEFAULT_GOALS);
-  const [dailyTotals, setDailyTotals] = useState<DailyTotals>({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-  const [entries, setEntries] = useState<NutritionEntry[]>([]);
-  const [symptoms, setSymptoms] = useState<SymptomEntry[]>([]);
-  const [settings, setSettings] = useState<NutritionSettings>(DEFAULT_SETTINGS);
-  const [healthMetrics, setHealthMetrics] = useState<HealthMetrics>({ steps: 0, activeEnergy: 0 });
-  const [appleHealthSettings, setAppleHealthSettings] = useState<AppleHealthSettings>({ connected: false });
-  
-  // Streak and days with entries
-  const [streak, setStreak] = useState(0);
-  const [daysWithEntries, setDaysWithEntries] = useState<string[]>([]);
-
   const dateKey = format(selectedDate, "yyyy-MM-dd");
+
+  // Hydrate initial state from cache to avoid empty-flash on remount
+  const cached = user ? getUserCache(user.id) : undefined;
+  const cachedDay = cached?.days.get(dateKey);
+
+  const [isLoading, setIsLoading] = useState(!cachedDay);
+  const [goals, setGoals] = useState<NutritionGoals>(cached?.goals ?? DEFAULT_GOALS);
+  const [dailyTotals, setDailyTotals] = useState<DailyTotals>(cachedDay?.totals ?? { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  const [entries, setEntries] = useState<NutritionEntry[]>(cachedDay?.entries ?? []);
+  const [symptoms, setSymptoms] = useState<SymptomEntry[]>(cachedDay?.symptoms ?? []);
+  const [settings, setSettings] = useState<NutritionSettings>(cached?.settings ?? DEFAULT_SETTINGS);
+  const [healthMetrics, setHealthMetrics] = useState<HealthMetrics>(cachedDay?.healthMetrics ?? { steps: 0, activeEnergy: 0 });
+  const [appleHealthSettings, setAppleHealthSettings] = useState<AppleHealthSettings>(cached?.appleHealth ?? { connected: false });
+  const [streak, setStreak] = useState(cached?.streak ?? 0);
+  const [daysWithEntries, setDaysWithEntries] = useState<string[]>(cached?.daysWithEntries ?? []);
 
   const calculateTotals = useCallback((entries: NutritionEntry[]) => {
     const totals = entries.reduce(
@@ -177,6 +205,7 @@ export function useJournalData(selectedDate: Date) {
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
     setDailyTotals(totals);
+    return totals;
   }, []);
 
   // Load all entry dates for streak calculation and calendar markers
@@ -192,8 +221,12 @@ export function useJournalData(selectedDate: Date) {
     if (data) {
       // Get unique dates
       const uniqueDates = [...new Set(data.map(d => d.entry_date))];
+      const s = calculateStreak(uniqueDates);
       setDaysWithEntries(uniqueDates);
-      setStreak(calculateStreak(uniqueDates));
+      setStreak(s);
+      const uc = getUserCache(user.id);
+      uc.daysWithEntries = uniqueDates;
+      uc.streak = s;
     }
   }, [user]);
 
@@ -203,11 +236,19 @@ export function useJournalData(selectedDate: Date) {
       setIsLoading(false);
       return;
     }
+    const uc = getUserCache(user.id);
+    const dc = uc.days.get(dateKey);
+    // Only show spinner if we have nothing cached for this date
+    if (!dc) setIsLoading(true);
+
 
     const loadData = async () => {
-      setIsLoading(true);
-
       try {
+        let nextEntries: NutritionEntry[] = [];
+        let nextSymptoms: SymptomEntry[] = [];
+        let nextTotals: DailyTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+        let nextMetrics: HealthMetrics = { steps: 0, activeEnergy: 0 };
+
         // Load nutrition entries for the selected date
         const { data: entriesData } = await supabase
           .from("nutrition_entries")
@@ -216,7 +257,7 @@ export function useJournalData(selectedDate: Date) {
           .eq("entry_date", dateKey);
 
         if (entriesData) {
-          const mappedEntries: NutritionEntry[] = entriesData.map((entry) => {
+          nextEntries = entriesData.map((entry) => {
             const entryRecord = entry as Record<string, unknown>;
             return {
               id: entry.id,
@@ -231,11 +272,11 @@ export function useJournalData(selectedDate: Date) {
               createdAt: new Date(entry.created_at || Date.now()),
             };
           });
-          setEntries(mappedEntries);
-          calculateTotals(mappedEntries);
+          setEntries(nextEntries);
+          nextTotals = calculateTotals(nextEntries);
         } else {
           setEntries([]);
-          setDailyTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+          setDailyTotals(nextTotals);
         }
 
         // Load symptoms for the selected date
@@ -246,14 +287,14 @@ export function useJournalData(selectedDate: Date) {
           .eq("entry_date", dateKey);
 
         if (symptomsData) {
-          const mappedSymptoms: SymptomEntry[] = symptomsData.map((symptom) => ({
+          nextSymptoms = symptomsData.map((symptom) => ({
             id: symptom.id,
             mealId: symptom.meal_id || null,
             description: symptom.description,
             symptomTime: new Date(symptom.symptom_time),
             createdAt: new Date(symptom.created_at || Date.now()),
           }));
-          setSymptoms(mappedSymptoms);
+          setSymptoms(nextSymptoms);
         } else {
           setSymptoms([]);
         }
@@ -266,7 +307,7 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (settingsData) {
-          setSettings({
+          const next: NutritionSettings = {
             aiTrackingEnabled: settingsData.ai_tracking_enabled || false,
             aiTrackingOnboardingCompleted: settingsData.ai_tracking_onboarding_completed || false,
             showCalories: settingsData.show_calories ?? true,
@@ -277,7 +318,9 @@ export function useJournalData(selectedDate: Date) {
             heightCm: settingsData.height_cm ? Number(settingsData.height_cm) : undefined,
             weightKg: settingsData.weight_kg ? Number(settingsData.weight_kg) : undefined,
             activityLevel: settingsData.activity_level || undefined,
-          });
+          };
+          setSettings(next);
+          uc.settings = next;
         }
 
         // Load nutrition goals
@@ -288,13 +331,15 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (goalsData) {
-          setGoals({
+          const nextGoals: NutritionGoals = {
             caloriesGoal: goalsData.calories_goal || 2000,
             proteinGoal: goalsData.protein_goal || 50,
             carbsGoal: goalsData.carbs_goal || 250,
             fatGoal: goalsData.fat_goal || 65,
             setByDietist: goalsData.set_by_dietist || false,
-          });
+          };
+          setGoals(nextGoals);
+          uc.goals = nextGoals;
         }
 
         // Load health metrics for the selected date
@@ -306,12 +351,13 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (metricsData) {
-          setHealthMetrics({
+          nextMetrics = {
             steps: metricsData.steps || 0,
             activeEnergy: Number(metricsData.active_energy_kcal) || 0,
-          });
+          };
+          setHealthMetrics(nextMetrics);
         } else {
-          setHealthMetrics({ steps: 0, activeEnergy: 0 });
+          setHealthMetrics(nextMetrics);
         }
 
         // Load Apple Health settings
@@ -322,11 +368,21 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (appleHealthData) {
-          setAppleHealthSettings({
+          const ah: AppleHealthSettings = {
             connected: appleHealthData.connected || false,
             lastSyncAt: appleHealthData.last_sync_at ? new Date(appleHealthData.last_sync_at) : undefined,
-          });
+          };
+          setAppleHealthSettings(ah);
+          uc.appleHealth = ah;
         }
+
+        // Persist per-day snapshot
+        uc.days.set(dateKey, {
+          entries: nextEntries,
+          symptoms: nextSymptoms,
+          totals: nextTotals,
+          healthMetrics: nextMetrics,
+        });
 
         // Load entry dates for streak
         await loadEntryDates();
@@ -339,6 +395,16 @@ export function useJournalData(selectedDate: Date) {
 
     loadData();
   }, [user, dateKey, calculateTotals, loadEntryDates]);
+
+  // Keep per-day cache in sync with local mutations
+  useEffect(() => {
+    if (!user) return;
+    const uc = getUserCache(user.id);
+    uc.days.set(dateKey, { entries, symptoms, totals: dailyTotals, healthMetrics });
+  }, [user, dateKey, entries, symptoms, dailyTotals, healthMetrics]);
+
+
+
 
   const addEntry = useCallback(
     async (entry: Omit<NutritionEntry, "id" | "createdAt">) => {
