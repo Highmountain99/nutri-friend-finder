@@ -164,8 +164,11 @@ interface UserCache {
   daysWithEntries?: string[];
   streak?: number;
   days: Map<string, DayCache>;
+  prefetchedAt?: number; // timestamp of last bulk prefetch
 }
 const journalCache = new Map<string, UserCache>();
+const PREFETCH_TTL_MS = 60_000; // refresh bulk prefetch at most once per minute
+const PREFETCH_DAYS = 30;
 function getUserCache(userId: string): UserCache {
   let c = journalCache.get(userId);
   if (!c) {
@@ -174,6 +177,44 @@ function getUserCache(userId: string): UserCache {
   }
   return c;
 }
+
+function mapEntry(entry: Record<string, unknown>): NutritionEntry {
+  return {
+    id: entry.id as string,
+    mealName: (entry.meal_name as string) || "Okänd måltid",
+    mealType: (entry.meal_type as string) || getMealTypeFromTime(new Date((entry.created_at as string) || Date.now())),
+    calories: (entry.calories as number) || 0,
+    protein: Number(entry.protein) || 0,
+    carbs: Number(entry.carbs) || 0,
+    fat: Number(entry.fat) || 0,
+    isAiEstimated: (entry.is_ai_estimated as boolean) || false,
+    imageUrl: (entry.image_url as string) || undefined,
+    createdAt: new Date((entry.created_at as string) || Date.now()),
+  };
+}
+
+function mapSymptom(symptom: Record<string, unknown>): SymptomEntry {
+  return {
+    id: symptom.id as string,
+    mealId: (symptom.meal_id as string) || null,
+    description: symptom.description as string,
+    symptomTime: new Date(symptom.symptom_time as string),
+    createdAt: new Date((symptom.created_at as string) || Date.now()),
+  };
+}
+
+function sumTotals(entries: NutritionEntry[]): DailyTotals {
+  return entries.reduce(
+    (acc, e) => ({
+      calories: acc.calories + e.calories,
+      protein: acc.protein + e.protein,
+      carbs: acc.carbs + e.carbs,
+      fat: acc.fat + e.fat,
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
+}
+
 
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
