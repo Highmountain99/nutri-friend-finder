@@ -174,7 +174,10 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory, mode } = await req.json();
+    const { message, mode } = await req.json();
+    // Conversation history is intentionally NOT read from the client to prevent
+    // prompt-injection via forged AI turns. It is rebuilt server-side below
+    // from chat_messages.
     // mode: "ai" = send AI response directly to patient
     //        "wait" = save AI response as draft for dietitian to review
 
@@ -332,19 +335,26 @@ serve(async (req) => {
       { role: "system", content: systemPrompt }
     ];
 
-    // Add conversation history if provided (limit to last 10 messages)
-    if (conversationHistory && Array.isArray(conversationHistory)) {
-      const recentHistory = conversationHistory.slice(-10);
-      for (const msg of recentHistory) {
-        if (msg.sender === "user") {
-          messages.push({ role: "user", content: msg.content });
-        } else if (msg.sender === "ai") {
-          messages.push({ role: "assistant", content: msg.content });
-        }
+    // Rebuild last 10 conversation turns from the database, not from the client.
+    const { data: historyRows } = await supabaseService
+      .from("chat_messages")
+      .select("sender, content")
+      .eq("user_id", userId)
+      .eq("conversation_type", "ai")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (historyRows) {
+      for (const msg of [...historyRows].reverse()) {
+        const role = msg.sender === "user" ? "user" : msg.sender === "ai" ? "assistant" : null;
+        if (!role) continue;
+        const content = typeof msg.content === "string" ? msg.content.slice(0, 2000) : "";
+        if (content) messages.push({ role, content });
       }
     }
 
     messages.push({ role: "user", content: sanitizedMessage });
+
 
     // Call Lovable AI Gateway with streaming
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
