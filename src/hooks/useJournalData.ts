@@ -149,22 +149,50 @@ function calculateStreak(datesWithEntries: string[]): number {
   return streak;
 }
 
+// Module-level cache so returning to /journal shows previous data instantly
+// while a fresh fetch runs in the background.
+interface DayCache {
+  entries: NutritionEntry[];
+  symptoms: SymptomEntry[];
+  totals: DailyTotals;
+  healthMetrics: HealthMetrics;
+}
+interface UserCache {
+  settings?: NutritionSettings;
+  goals?: NutritionGoals;
+  appleHealth?: AppleHealthSettings;
+  daysWithEntries?: string[];
+  streak?: number;
+  days: Map<string, DayCache>;
+}
+const journalCache = new Map<string, UserCache>();
+function getUserCache(userId: string): UserCache {
+  let c = journalCache.get(userId);
+  if (!c) {
+    c = { days: new Map() };
+    journalCache.set(userId, c);
+  }
+  return c;
+}
+
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [goals, setGoals] = useState<NutritionGoals>(DEFAULT_GOALS);
-  const [dailyTotals, setDailyTotals] = useState<DailyTotals>({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-  const [entries, setEntries] = useState<NutritionEntry[]>([]);
-  const [symptoms, setSymptoms] = useState<SymptomEntry[]>([]);
-  const [settings, setSettings] = useState<NutritionSettings>(DEFAULT_SETTINGS);
-  const [healthMetrics, setHealthMetrics] = useState<HealthMetrics>({ steps: 0, activeEnergy: 0 });
-  const [appleHealthSettings, setAppleHealthSettings] = useState<AppleHealthSettings>({ connected: false });
-  
-  // Streak and days with entries
-  const [streak, setStreak] = useState(0);
-  const [daysWithEntries, setDaysWithEntries] = useState<string[]>([]);
-
   const dateKey = format(selectedDate, "yyyy-MM-dd");
+
+  // Hydrate initial state from cache to avoid empty-flash on remount
+  const cached = user ? getUserCache(user.id) : undefined;
+  const cachedDay = cached?.days.get(dateKey);
+
+  const [isLoading, setIsLoading] = useState(!cachedDay);
+  const [goals, setGoals] = useState<NutritionGoals>(cached?.goals ?? DEFAULT_GOALS);
+  const [dailyTotals, setDailyTotals] = useState<DailyTotals>(cachedDay?.totals ?? { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  const [entries, setEntries] = useState<NutritionEntry[]>(cachedDay?.entries ?? []);
+  const [symptoms, setSymptoms] = useState<SymptomEntry[]>(cachedDay?.symptoms ?? []);
+  const [settings, setSettings] = useState<NutritionSettings>(cached?.settings ?? DEFAULT_SETTINGS);
+  const [healthMetrics, setHealthMetrics] = useState<HealthMetrics>(cachedDay?.healthMetrics ?? { steps: 0, activeEnergy: 0 });
+  const [appleHealthSettings, setAppleHealthSettings] = useState<AppleHealthSettings>(cached?.appleHealth ?? { connected: false });
+  const [streak, setStreak] = useState(cached?.streak ?? 0);
+  const [daysWithEntries, setDaysWithEntries] = useState<string[]>(cached?.daysWithEntries ?? []);
 
   const calculateTotals = useCallback((entries: NutritionEntry[]) => {
     const totals = entries.reduce(
@@ -177,6 +205,7 @@ export function useJournalData(selectedDate: Date) {
       { calories: 0, protein: 0, carbs: 0, fat: 0 }
     );
     setDailyTotals(totals);
+    return totals;
   }, []);
 
   // Load all entry dates for streak calculation and calendar markers
@@ -192,8 +221,12 @@ export function useJournalData(selectedDate: Date) {
     if (data) {
       // Get unique dates
       const uniqueDates = [...new Set(data.map(d => d.entry_date))];
+      const s = calculateStreak(uniqueDates);
       setDaysWithEntries(uniqueDates);
-      setStreak(calculateStreak(uniqueDates));
+      setStreak(s);
+      const uc = getUserCache(user.id);
+      uc.daysWithEntries = uniqueDates;
+      uc.streak = s;
     }
   }, [user]);
 
@@ -203,6 +236,11 @@ export function useJournalData(selectedDate: Date) {
       setIsLoading(false);
       return;
     }
+    const uc = getUserCache(user.id);
+    const dc = uc.days.get(dateKey);
+    // Only show spinner if we have nothing cached for this date
+    if (!dc) setIsLoading(true);
+
 
     const loadData = async () => {
       setIsLoading(true);
