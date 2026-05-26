@@ -456,7 +456,25 @@ export function useJournalData(selectedDate: Date) {
     async (entry: Omit<NutritionEntry, "id" | "createdAt">) => {
       if (!user) return;
 
-      // Use type assertion to include meal_type which was added via migration
+      // Optimistic update — render the meal immediately with a temp id
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const optimisticEntry: NutritionEntry = {
+        id: tempId,
+        mealName: entry.mealName,
+        mealType: entry.mealType,
+        calories: entry.calories,
+        protein: entry.protein,
+        carbs: entry.carbs,
+        fat: entry.fat,
+        isAiEstimated: entry.isAiEstimated,
+        imageUrl: entry.imageUrl,
+        ingredients: entry.ingredients,
+        createdAt: new Date(),
+      };
+      const optimisticEntries = [...entries, optimisticEntry];
+      setEntries(optimisticEntries);
+      calculateTotals(optimisticEntries);
+
       const insertData = {
         user_id: user.id,
         entry_date: dateKey,
@@ -477,25 +495,25 @@ export function useJournalData(selectedDate: Date) {
         .single();
 
       if (data && !error) {
-        const newEntry: NutritionEntry = {
-          id: data.id,
-          mealName: data.meal_name || "Okänd måltid",
-          mealType: entry.mealType,
-          calories: data.calories || 0,
-          protein: Number(data.protein) || 0,
-          carbs: Number(data.carbs) || 0,
-          fat: Number(data.fat) || 0,
-          isAiEstimated: data.is_ai_estimated || false,
-          imageUrl: data.image_url || undefined,
-          ingredients: entry.ingredients,
-          createdAt: new Date(data.created_at || Date.now()),
-        };
-        const updatedEntries = [...entries, newEntry];
-        setEntries(updatedEntries);
-        calculateTotals(updatedEntries);
-        
-        // Reload entry dates to update streak
-        await loadEntryDates();
+        // Reconcile temp id with real server id
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.id === tempId
+              ? {
+                  ...e,
+                  id: data.id,
+                  createdAt: new Date(data.created_at || Date.now()),
+                }
+              : e
+          )
+        );
+        // Fire-and-forget: refresh streak markers without blocking UI
+        loadEntryDates();
+      } else if (error) {
+        // Roll back optimistic update
+        const rolledBack = entries;
+        setEntries(rolledBack);
+        calculateTotals(rolledBack);
       }
     },
     [user, entries, dateKey, calculateTotals, loadEntryDates]
