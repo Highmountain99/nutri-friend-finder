@@ -28,7 +28,8 @@ const DAYS_AFTER = 0;
 export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }: JournalCalendarProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const hasScrolledToSelected = useRef(false);
+  
+
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
