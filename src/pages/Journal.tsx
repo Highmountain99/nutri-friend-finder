@@ -270,17 +270,6 @@ export default function Journal() {
           </div>
         </div>
 
-        {/* Swipe Navigation Buttons */}
-        <div className="absolute inset-y-0 left-0 flex items-center">
-          {swipeView === "health" && <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-background/80 shadow-sm" onClick={() => setSwipeView("nutrition")}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>}
-        </div>
-        <div className="absolute inset-y-0 right-0 flex items-center">
-          {swipeView === "nutrition" && !showOnboarding && <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-background/80 shadow-sm" onClick={() => setSwipeView("health")}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>}
-        </div>
       </div>
 
       {/* Add Meal & Symptom Buttons */}
