@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { format, addDays, subDays, isSameDay, isBefore, isAfter, parseISO, differenceInDays } from "date-fns";
 import { sv } from "date-fns/locale";
 import { CalendarDays } from "lucide-react";
@@ -44,24 +44,16 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
     return daysWithEntries.includes(dateStr);
   };
 
-  // Scroll to selected date on mount and when selectedDate changes
-  useEffect(() => {
-    if (scrollRef.current && !hasScrolledToSelected.current) {
-      const selectedIndex = allDates.findIndex(d => isSameDay(d, selectedDate));
-      if (selectedIndex >= 0) {
-        const itemWidth = 52; // w-12 = 48px + gap
-        const containerWidth = scrollRef.current.clientWidth;
-        const scrollPosition = (selectedIndex * itemWidth) - (containerWidth / 2) + (itemWidth / 2);
-        scrollRef.current.scrollLeft = Math.max(0, scrollPosition);
-        hasScrolledToSelected.current = true;
-      }
-    }
-  }, [selectedDate, allDates]);
-
-  // Reset scroll flag when selectedDate changes significantly
-  useEffect(() => {
-    hasScrolledToSelected.current = false;
-  }, [Math.floor(selectedDate.getTime() / (1000 * 60 * 60 * 24))]);
+  // Position scroll on selected day synchronously before paint — no animation
+  useLayoutEffect(() => {
+    if (!scrollRef.current) return;
+    const selectedIndex = allDates.findIndex(d => isSameDay(d, selectedDate));
+    if (selectedIndex < 0) return;
+    const itemWidth = 52;
+    const containerWidth = scrollRef.current.clientWidth;
+    const scrollPosition = (selectedIndex * itemWidth) - (containerWidth / 2) + (itemWidth / 2);
+    scrollRef.current.scrollLeft = Math.max(0, scrollPosition);
+  }, [selectedDate, allDates.length]);
 
   const handleDateSelect = (date: Date) => {
     if (isAfter(date, today)) return;
@@ -82,7 +74,7 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries }:
       {/* Horizontally scrollable days */}
       <div 
         ref={scrollRef}
-        className="flex gap-1 overflow-x-auto scrollbar-hide scroll-smooth pb-1 -mx-3 px-3 sm:-mx-4 sm:px-4"
+        className="flex gap-1 overflow-x-auto scrollbar-hide pb-1 -mx-3 px-3 sm:-mx-4 sm:px-4"
         style={{ 
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch'
