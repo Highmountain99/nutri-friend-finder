@@ -219,7 +219,6 @@ export function useJournalData(selectedDate: Date) {
       .order("entry_date", { ascending: false });
 
     if (data) {
-      // Get unique dates
       const uniqueDates = [...new Set(data.map(d => d.entry_date))];
       const s = calculateStreak(uniqueDates);
       setDaysWithEntries(uniqueDates);
@@ -230,7 +229,64 @@ export function useJournalData(selectedDate: Date) {
     }
   }, [user]);
 
-  // Load data from Supabase
+  // USER-LEVEL data (settings, goals, apple health, entry-dates).
+  // These don't change with selectedDate — load once per user.
+  useEffect(() => {
+    if (!user) return;
+    const uc = getUserCache(user.id);
+
+    (async () => {
+      const [settingsRes, goalsRes, appleHealthRes] = await Promise.all([
+        supabase.from("user_nutrition_settings").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("user_nutrition_goals").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("apple_health_settings").select("*").eq("user_id", user.id).maybeSingle(),
+      ]);
+
+      if (settingsRes.data) {
+        const s = settingsRes.data;
+        const next: NutritionSettings = {
+          aiTrackingEnabled: s.ai_tracking_enabled || false,
+          aiTrackingOnboardingCompleted: s.ai_tracking_onboarding_completed || false,
+          showCalories: s.show_calories ?? true,
+          showProtein: s.show_protein ?? true,
+          showCarbs: s.show_carbs ?? true,
+          showFat: s.show_fat ?? true,
+          gender: s.gender || undefined,
+          heightCm: s.height_cm ? Number(s.height_cm) : undefined,
+          weightKg: s.weight_kg ? Number(s.weight_kg) : undefined,
+          activityLevel: s.activity_level || undefined,
+        };
+        setSettings(next);
+        uc.settings = next;
+      }
+
+      if (goalsRes.data) {
+        const g = goalsRes.data;
+        const nextGoals: NutritionGoals = {
+          caloriesGoal: g.calories_goal || 2000,
+          proteinGoal: g.protein_goal || 50,
+          carbsGoal: g.carbs_goal || 250,
+          fatGoal: g.fat_goal || 65,
+          setByDietist: g.set_by_dietist || false,
+        };
+        setGoals(nextGoals);
+        uc.goals = nextGoals;
+      }
+
+      if (appleHealthRes.data) {
+        const ah: AppleHealthSettings = {
+          connected: appleHealthRes.data.connected || false,
+          lastSyncAt: appleHealthRes.data.last_sync_at ? new Date(appleHealthRes.data.last_sync_at) : undefined,
+        };
+        setAppleHealthSettings(ah);
+        uc.appleHealth = ah;
+      }
+
+      loadEntryDates();
+    })();
+  }, [user, loadEntryDates]);
+
+  // DAY-LEVEL data (entries, symptoms, health metrics) — refetched on date change.
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -238,163 +294,68 @@ export function useJournalData(selectedDate: Date) {
     }
     const uc = getUserCache(user.id);
     const dc = uc.days.get(dateKey);
-    // Only show spinner if we have nothing cached for this date
     if (!dc) setIsLoading(true);
 
+    let cancelled = false;
 
-    const loadData = async () => {
+    (async () => {
       try {
-        let nextEntries: NutritionEntry[] = [];
-        let nextSymptoms: SymptomEntry[] = [];
-        let nextTotals: DailyTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-        let nextMetrics: HealthMetrics = { steps: 0, activeEnergy: 0 };
+        const [entriesRes, symptomsRes, metricsRes] = await Promise.all([
+          supabase.from("nutrition_entries").select("*").eq("user_id", user.id).eq("entry_date", dateKey),
+          supabase.from("symptom_entries").select("*").eq("user_id", user.id).eq("entry_date", dateKey),
+          supabase.from("daily_health_metrics").select("*").eq("user_id", user.id).eq("metric_date", dateKey).maybeSingle(),
+        ]);
+        if (cancelled) return;
 
-        // Load nutrition entries for the selected date
-        const { data: entriesData } = await supabase
-          .from("nutrition_entries")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("entry_date", dateKey);
-
-        if (entriesData) {
-          nextEntries = entriesData.map((entry) => {
-            const entryRecord = entry as Record<string, unknown>;
-            return {
-              id: entry.id,
-              mealName: entry.meal_name || "Okänd måltid",
-              mealType: (entryRecord.meal_type as string) || getMealTypeFromTime(new Date(entry.created_at || Date.now())),
-              calories: entry.calories || 0,
-              protein: Number(entry.protein) || 0,
-              carbs: Number(entry.carbs) || 0,
-              fat: Number(entry.fat) || 0,
-              isAiEstimated: entry.is_ai_estimated || false,
-              imageUrl: entry.image_url || undefined,
-              createdAt: new Date(entry.created_at || Date.now()),
-            };
-          });
-          setEntries(nextEntries);
-          nextTotals = calculateTotals(nextEntries);
-        } else {
-          setEntries([]);
-          setDailyTotals(nextTotals);
-        }
-
-        // Load symptoms for the selected date
-        const { data: symptomsData } = await supabase
-          .from("symptom_entries")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("entry_date", dateKey);
-
-        if (symptomsData) {
-          nextSymptoms = symptomsData.map((symptom) => ({
-            id: symptom.id,
-            mealId: symptom.meal_id || null,
-            description: symptom.description,
-            symptomTime: new Date(symptom.symptom_time),
-            createdAt: new Date(symptom.created_at || Date.now()),
-          }));
-          setSymptoms(nextSymptoms);
-        } else {
-          setSymptoms([]);
-        }
-
-        // Load nutrition settings
-        const { data: settingsData } = await supabase
-          .from("user_nutrition_settings")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (settingsData) {
-          const next: NutritionSettings = {
-            aiTrackingEnabled: settingsData.ai_tracking_enabled || false,
-            aiTrackingOnboardingCompleted: settingsData.ai_tracking_onboarding_completed || false,
-            showCalories: settingsData.show_calories ?? true,
-            showProtein: settingsData.show_protein ?? true,
-            showCarbs: settingsData.show_carbs ?? true,
-            showFat: settingsData.show_fat ?? true,
-            gender: settingsData.gender || undefined,
-            heightCm: settingsData.height_cm ? Number(settingsData.height_cm) : undefined,
-            weightKg: settingsData.weight_kg ? Number(settingsData.weight_kg) : undefined,
-            activityLevel: settingsData.activity_level || undefined,
+        const nextEntries: NutritionEntry[] = (entriesRes.data ?? []).map((entry) => {
+          const entryRecord = entry as Record<string, unknown>;
+          return {
+            id: entry.id,
+            mealName: entry.meal_name || "Okänd måltid",
+            mealType: (entryRecord.meal_type as string) || getMealTypeFromTime(new Date(entry.created_at || Date.now())),
+            calories: entry.calories || 0,
+            protein: Number(entry.protein) || 0,
+            carbs: Number(entry.carbs) || 0,
+            fat: Number(entry.fat) || 0,
+            isAiEstimated: entry.is_ai_estimated || false,
+            imageUrl: entry.image_url || undefined,
+            createdAt: new Date(entry.created_at || Date.now()),
           };
-          setSettings(next);
-          uc.settings = next;
-        }
+        });
+        setEntries(nextEntries);
+        const nextTotals = calculateTotals(nextEntries);
 
-        // Load nutrition goals
-        const { data: goalsData } = await supabase
-          .from("user_nutrition_goals")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        const nextSymptoms: SymptomEntry[] = (symptomsRes.data ?? []).map((symptom) => ({
+          id: symptom.id,
+          mealId: symptom.meal_id || null,
+          description: symptom.description,
+          symptomTime: new Date(symptom.symptom_time),
+          createdAt: new Date(symptom.created_at || Date.now()),
+        }));
+        setSymptoms(nextSymptoms);
 
-        if (goalsData) {
-          const nextGoals: NutritionGoals = {
-            caloriesGoal: goalsData.calories_goal || 2000,
-            proteinGoal: goalsData.protein_goal || 50,
-            carbsGoal: goalsData.carbs_goal || 250,
-            fatGoal: goalsData.fat_goal || 65,
-            setByDietist: goalsData.set_by_dietist || false,
-          };
-          setGoals(nextGoals);
-          uc.goals = nextGoals;
-        }
+        const nextMetrics: HealthMetrics = metricsRes.data
+          ? { steps: metricsRes.data.steps || 0, activeEnergy: Number(metricsRes.data.active_energy_kcal) || 0 }
+          : { steps: 0, activeEnergy: 0 };
+        setHealthMetrics(nextMetrics);
 
-        // Load health metrics for the selected date
-        const { data: metricsData } = await supabase
-          .from("daily_health_metrics")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("metric_date", dateKey)
-          .maybeSingle();
-
-        if (metricsData) {
-          nextMetrics = {
-            steps: metricsData.steps || 0,
-            activeEnergy: Number(metricsData.active_energy_kcal) || 0,
-          };
-          setHealthMetrics(nextMetrics);
-        } else {
-          setHealthMetrics(nextMetrics);
-        }
-
-        // Load Apple Health settings
-        const { data: appleHealthData } = await supabase
-          .from("apple_health_settings")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (appleHealthData) {
-          const ah: AppleHealthSettings = {
-            connected: appleHealthData.connected || false,
-            lastSyncAt: appleHealthData.last_sync_at ? new Date(appleHealthData.last_sync_at) : undefined,
-          };
-          setAppleHealthSettings(ah);
-          uc.appleHealth = ah;
-        }
-
-        // Persist per-day snapshot
         uc.days.set(dateKey, {
           entries: nextEntries,
           symptoms: nextSymptoms,
           totals: nextTotals,
           healthMetrics: nextMetrics,
         });
-
-        // Load entry dates for streak
-        await loadEntryDates();
       } catch (error) {
         console.error("Failed to load journal data:", error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
-    };
+    })();
 
-    loadData();
-  }, [user, dateKey, calculateTotals, loadEntryDates]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, dateKey, calculateTotals]);
 
   // Keep per-day cache in sync with local mutations
   useEffect(() => {
