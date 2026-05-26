@@ -320,17 +320,10 @@ serve(async (req) => {
       } : null
     };
 
-    // Save user message to database
-    await supabaseService.from("chat_messages").insert({
-      user_id: userId,
-      sender: "user",
-      content: sanitizedMessage,
-      conversation_type: "ai"
-    });
-
-    // Build messages array for AI
+    // Build messages array for AI BEFORE inserting the new user message so we
+    // don't double-count it.
     const systemPrompt = buildSystemPrompt(intakeProfile, dietitianName, patientContext);
-    
+
     const messages: Array<{ role: string; content: string }> = [
       { role: "system", content: systemPrompt }
     ];
@@ -354,6 +347,15 @@ serve(async (req) => {
     }
 
     messages.push({ role: "user", content: sanitizedMessage });
+
+    // Persist the new user message after the prompt is assembled
+    await supabaseService.from("chat_messages").insert({
+      user_id: userId,
+      sender: "user",
+      content: sanitizedMessage,
+      conversation_type: "ai"
+    });
+
 
 
     // Call Lovable AI Gateway with streaming
