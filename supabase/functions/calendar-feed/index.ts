@@ -39,16 +39,27 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Look up dietitian by their secure calendar token
+    // Look up dietitian by their secure calendar token (stored in a private table)
+    const { data: tokenRow, error: tokenError } = await supabase
+      .from("dietitian_calendar_tokens")
+      .select("dietitian_user_id")
+      .eq("token", token)
+      .maybeSingle();
+
+    if (tokenError || !tokenRow) {
+      return new Response("Invalid token", { status: 403 });
+    }
+
     const { data: profile, error: profileError } = await supabase
       .from("dietitian_profiles")
       .select("id, first_name, last_name, user_id")
-      .eq("calendar_token", token)
+      .eq("user_id", tokenRow.dietitian_user_id)
       .single();
 
     if (profileError || !profile) {
       return new Response("Invalid token", { status: 403 });
     }
+
 
     // Fetch appointments
     const { data: appointments } = await supabase

@@ -23,38 +23,17 @@ export function CalendarSyncSheet() {
 
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 
-  // Fetch or generate calendar token
+  // Fetch or generate calendar token via secure RPC (token never exposed on profiles table)
   const { data: calendarToken } = useQuery({
     queryKey: ["calendar-token", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("dietitian_profiles")
-        .select("calendar_token")
-        .eq("user_id", user!.id)
-        .single();
-
+      const { data, error } = await supabase.rpc("get_or_create_my_calendar_token");
       if (error) throw error;
-
-      if (data.calendar_token) return data.calendar_token;
-
-      // Generate a new token
-      const { data: tokenData, error: tokenError } = await supabase
-        .rpc("generate_calendar_token");
-
-      if (tokenError) throw tokenError;
-
-      const newToken = tokenData as string;
-
-      // Save to profile
-      await supabase
-        .from("dietitian_profiles")
-        .update({ calendar_token: newToken })
-        .eq("user_id", user!.id);
-
-      return newToken;
+      return data as string;
     },
     enabled: !!user,
   });
+
 
   const feedUrl = calendarToken
     ? `https://${projectId}.supabase.co/functions/v1/calendar-feed?token=${calendarToken}`
