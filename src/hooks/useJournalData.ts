@@ -396,6 +396,15 @@ export function useJournalData(selectedDate: Date) {
     loadData();
   }, [user, dateKey, calculateTotals, loadEntryDates]);
 
+  // Keep per-day cache in sync with local mutations
+  useEffect(() => {
+    if (!user) return;
+    const uc = getUserCache(user.id);
+    uc.days.set(dateKey, { entries, symptoms, totals: dailyTotals, healthMetrics });
+  }, [user, dateKey, entries, symptoms, dailyTotals, healthMetrics]);
+
+
+
 
   const addEntry = useCallback(
     async (entry: Omit<NutritionEntry, "id" | "createdAt">) => {
