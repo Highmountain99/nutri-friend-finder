@@ -243,9 +243,12 @@ export function useJournalData(selectedDate: Date) {
 
 
     const loadData = async () => {
-      setIsLoading(true);
-
       try {
+        let nextEntries: NutritionEntry[] = [];
+        let nextSymptoms: SymptomEntry[] = [];
+        let nextTotals: DailyTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+        let nextMetrics: HealthMetrics = { steps: 0, activeEnergy: 0 };
+
         // Load nutrition entries for the selected date
         const { data: entriesData } = await supabase
           .from("nutrition_entries")
@@ -254,7 +257,7 @@ export function useJournalData(selectedDate: Date) {
           .eq("entry_date", dateKey);
 
         if (entriesData) {
-          const mappedEntries: NutritionEntry[] = entriesData.map((entry) => {
+          nextEntries = entriesData.map((entry) => {
             const entryRecord = entry as Record<string, unknown>;
             return {
               id: entry.id,
@@ -269,11 +272,11 @@ export function useJournalData(selectedDate: Date) {
               createdAt: new Date(entry.created_at || Date.now()),
             };
           });
-          setEntries(mappedEntries);
-          calculateTotals(mappedEntries);
+          setEntries(nextEntries);
+          nextTotals = calculateTotals(nextEntries);
         } else {
           setEntries([]);
-          setDailyTotals({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+          setDailyTotals(nextTotals);
         }
 
         // Load symptoms for the selected date
@@ -284,14 +287,14 @@ export function useJournalData(selectedDate: Date) {
           .eq("entry_date", dateKey);
 
         if (symptomsData) {
-          const mappedSymptoms: SymptomEntry[] = symptomsData.map((symptom) => ({
+          nextSymptoms = symptomsData.map((symptom) => ({
             id: symptom.id,
             mealId: symptom.meal_id || null,
             description: symptom.description,
             symptomTime: new Date(symptom.symptom_time),
             createdAt: new Date(symptom.created_at || Date.now()),
           }));
-          setSymptoms(mappedSymptoms);
+          setSymptoms(nextSymptoms);
         } else {
           setSymptoms([]);
         }
@@ -304,7 +307,7 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (settingsData) {
-          setSettings({
+          const next: NutritionSettings = {
             aiTrackingEnabled: settingsData.ai_tracking_enabled || false,
             aiTrackingOnboardingCompleted: settingsData.ai_tracking_onboarding_completed || false,
             showCalories: settingsData.show_calories ?? true,
@@ -315,7 +318,9 @@ export function useJournalData(selectedDate: Date) {
             heightCm: settingsData.height_cm ? Number(settingsData.height_cm) : undefined,
             weightKg: settingsData.weight_kg ? Number(settingsData.weight_kg) : undefined,
             activityLevel: settingsData.activity_level || undefined,
-          });
+          };
+          setSettings(next);
+          uc.settings = next;
         }
 
         // Load nutrition goals
@@ -326,13 +331,15 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (goalsData) {
-          setGoals({
+          const nextGoals: NutritionGoals = {
             caloriesGoal: goalsData.calories_goal || 2000,
             proteinGoal: goalsData.protein_goal || 50,
             carbsGoal: goalsData.carbs_goal || 250,
             fatGoal: goalsData.fat_goal || 65,
             setByDietist: goalsData.set_by_dietist || false,
-          });
+          };
+          setGoals(nextGoals);
+          uc.goals = nextGoals;
         }
 
         // Load health metrics for the selected date
@@ -344,12 +351,13 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (metricsData) {
-          setHealthMetrics({
+          nextMetrics = {
             steps: metricsData.steps || 0,
             activeEnergy: Number(metricsData.active_energy_kcal) || 0,
-          });
+          };
+          setHealthMetrics(nextMetrics);
         } else {
-          setHealthMetrics({ steps: 0, activeEnergy: 0 });
+          setHealthMetrics(nextMetrics);
         }
 
         // Load Apple Health settings
@@ -360,11 +368,21 @@ export function useJournalData(selectedDate: Date) {
           .maybeSingle();
 
         if (appleHealthData) {
-          setAppleHealthSettings({
+          const ah: AppleHealthSettings = {
             connected: appleHealthData.connected || false,
             lastSyncAt: appleHealthData.last_sync_at ? new Date(appleHealthData.last_sync_at) : undefined,
-          });
+          };
+          setAppleHealthSettings(ah);
+          uc.appleHealth = ah;
         }
+
+        // Persist per-day snapshot
+        uc.days.set(dateKey, {
+          entries: nextEntries,
+          symptoms: nextSymptoms,
+          totals: nextTotals,
+          healthMetrics: nextMetrics,
+        });
 
         // Load entry dates for streak
         await loadEntryDates();
@@ -377,6 +395,7 @@ export function useJournalData(selectedDate: Date) {
 
     loadData();
   }, [user, dateKey, calculateTotals, loadEntryDates]);
+
 
   const addEntry = useCallback(
     async (entry: Omit<NutritionEntry, "id" | "createdAt">) => {
