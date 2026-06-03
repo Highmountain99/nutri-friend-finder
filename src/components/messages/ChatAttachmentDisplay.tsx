@@ -72,6 +72,28 @@ export function ChatAttachmentDisplay({ attachments }: ChatAttachmentDisplayProp
           );
         }
 
+        if (att.type === "recipe_suggestions_link") {
+          const count = att.count ?? 1;
+          return (
+            <Link
+              key={idx}
+              to="/recipes?tab=suggested"
+              className="flex items-center gap-3 bg-primary/10 hover:bg-primary/15 transition-colors rounded-xl p-3 border border-primary/20 max-w-[260px] group"
+            >
+              <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground">Föreslagna recept</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {count} {count === 1 ? "nytt recept" : "nya recept"} att utforska
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+            </Link>
+          );
+        }
+
         if (att.type === "recipe_link" && att.recipeId) {
           return <RecipeCard key={idx} recipeId={att.recipeId} />;
         }
