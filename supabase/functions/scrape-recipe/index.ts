@@ -122,12 +122,23 @@ function isAllowedUrl(urlStr: string): boolean {
   try {
     const parsed = new URL(urlStr);
     if (parsed.protocol !== 'https:') return false;
-    const hostname = parsed.hostname.toLowerCase();
-    // Block private/internal hostnames
+    let hostname = parsed.hostname.toLowerCase();
+    // Strip IPv6 brackets
+    if (hostname.startsWith('[') && hostname.endsWith(']')) {
+      hostname = hostname.slice(1, -1);
+    }
+    // Block IPv4 private/internal hostnames
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0' ||
         hostname.endsWith('.local') || hostname.endsWith('.internal') ||
         hostname.startsWith('10.') || hostname.startsWith('192.168.') ||
         hostname.startsWith('169.254.') || hostname.match(/^172\.(1[6-9]|2\d|3[01])\./)) {
+      return false;
+    }
+    // Block IPv6 loopback, unique-local (fc00::/7 -> fc/fd prefix), link-local (fe80::/10), unspecified
+    if (hostname === '::1' || hostname === '::' ||
+        hostname.startsWith('fc') || hostname.startsWith('fd') ||
+        hostname.startsWith('fe8') || hostname.startsWith('fe9') ||
+        hostname.startsWith('fea') || hostname.startsWith('feb')) {
       return false;
     }
     return true;
