@@ -76,15 +76,20 @@ export function SuggestRecipeModal({
       const { error } = await supabase.from("recipe_suggestions").insert(inserts);
       if (error) throw error;
 
-      // Send chat messages
-      const recipeNames = recipesToSuggest.map((r) => `"${r.title}"`).join(", ");
-      const chatContent = recipesToSuggest.length === 1
-        ? (message.trim()
-          ? `Jag har föreslagit receptet ${recipeNames}: ${message.trim()}`
-          : `Jag har föreslagit receptet ${recipeNames} till dig.`)
-        : (message.trim()
-          ? `Jag har föreslagit ${recipesToSuggest.length} recept till dig: ${recipeNames}. ${message.trim()}`
-          : `Jag har föreslagit ${recipesToSuggest.length} recept till dig: ${recipeNames}.`);
+      // Send chat messages with a compact attachment link instead of summary text
+      const count = recipesToSuggest.length;
+      const chatContent = message.trim()
+        ? message.trim()
+        : count === 1
+          ? "Jag har föreslagit ett nytt recept till dig."
+          : `Jag har föreslagit ${count} nya recept till dig.`;
+
+      const attachment = {
+        type: "recipe_suggestions_link",
+        url: "/recipes?tab=suggested",
+        name: "Föreslagna recept",
+        count,
+      };
 
       for (const pid of selectedIds) {
         await supabase.from("chat_messages").insert({
@@ -92,6 +97,7 @@ export function SuggestRecipeModal({
           sender: "dietitian",
           content: chatContent,
           conversation_type: "dietitian",
+          attachments: [attachment],
         });
       }
 
