@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScanLine } from "lucide-react";
+import { ScanLine, BookOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecipeSearchBar } from "@/components/recipes/RecipeSearchBar";
 import { RecipeSearchView } from "@/components/recipes/RecipeSearchView";
