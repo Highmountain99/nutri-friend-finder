@@ -578,6 +578,7 @@ export function CookingModeSheet({
           await addEntry(entry);
           setAddMealOpen(false);
           onOpenChange(false);
+          navigate("/journal");
         }}
       />
     </Sheet>
