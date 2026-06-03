@@ -385,17 +385,7 @@ export function CookingModeSheet({
           <span className="font-serif text-xl text-primary tracking-tight text-center truncate">
             {recipe.title}
           </span>
-          <button
-            onClick={toggleAwake}
-            title="Håll skärmen vaken"
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] border ${
-              awake
-                ? "bg-primary border-primary text-primary-foreground"
-                : "border-border text-accent"
-            }`}
-          >
-            <Eye className="w-3 h-3" />
-          </button>
+          <span className="w-7" aria-hidden="true" />
         </div>
 
         {!finished && (
