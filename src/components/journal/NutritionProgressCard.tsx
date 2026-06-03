@@ -49,19 +49,14 @@ export function NutritionProgressCard({
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="w-7 h-7 rounded-full grid place-items-center shrink-0"
-            style={{ background: accent }}
-          >
-            <Icon className="w-3.5 h-3.5 text-background" strokeWidth={1.8} />
-          </span>
-          <span className="text-[12px] text-primary truncate">{label} kvar</span>
-        </div>
-        <span className="font-mono text-[9px] tracking-[0.1em] uppercase text-primary/65 shrink-0">
-          {meta.badge}
+      <div className="flex items-center gap-2 min-w-0">
+        <span
+          className="w-7 h-7 rounded-full grid place-items-center shrink-0"
+          style={{ background: accent }}
+        >
+          <Icon className="w-3.5 h-3.5 text-background" strokeWidth={1.8} />
         </span>
+        <span className="text-[12px] text-primary truncate">{label} kvar</span>
       </div>
 
       {/* Value */}

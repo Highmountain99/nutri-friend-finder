@@ -79,11 +79,6 @@ export function MealEntryCard({
               <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-primary/65">
                 {entry.mealType} • {timeStr}
               </span>
-              {entry.isAiEstimated && (
-                <span className="font-mono text-[9px] tracking-[0.1em] uppercase bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                  AI
-                </span>
-              )}
             </div>
 
             <p className="font-medium text-primary text-sm truncate mb-1.5">
