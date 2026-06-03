@@ -125,8 +125,8 @@ function RecipesContent() {
 
       {viewMode === "search-results" && (
         <>
-          <div className="flex items-center justify-between gap-2">
-            <RecipeFiltersBar filters={filters} onFiltersChange={setFilters} />
+          <RecipeFiltersBar filters={filters} onFiltersChange={setFilters} />
+          <div className="flex items-center justify-end">
             <Select value={sort} onValueChange={(v) => setSort(v as RecipeSortKey)}>
               <SelectTrigger className="h-9 w-auto min-w-[140px] rounded-full text-sm shrink-0">
                 <SelectValue />
