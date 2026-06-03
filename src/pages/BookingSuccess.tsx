@@ -74,8 +74,8 @@ export default function BookingSuccess() {
           .eq('status', 'booked')
           .gte('appointment_date', nowIso);
 
-        // Create the appointment with Stripe session info
-        const { error: appointmentError } = await supabase
+        // Create the appointment
+        const { data: newAppointment, error: appointmentError } = await supabase
           .from('appointments')
           .insert({
             user_id: user.id,
@@ -83,11 +83,23 @@ export default function BookingSuccess() {
             appointment_date: parsedDate.toISOString(),
             appointment_type: appointmentType,
             status: 'booked',
+          })
+          .select('id')
+          .single();
+
+        if (appointmentError) throw appointmentError;
+
+        // Store Stripe payment identifiers in a separate, patient-only table
+        const { error: paymentError } = await supabase
+          .from('appointment_payments')
+          .insert({
+            user_id: user.id,
+            appointment_id: newAppointment?.id ?? null,
             stripe_setup_intent_id: sessionId,
             payment_method_saved: true,
           });
 
-        if (appointmentError) throw appointmentError;
+        if (paymentError) throw paymentError;
 
         setStatus('success');
       } catch (error) {
