@@ -77,7 +77,7 @@ export function ChatAttachmentDisplay({ attachments }: ChatAttachmentDisplayProp
           return (
             <Link
               key={idx}
-              to="/recipes?tab=suggested"
+              to="/recipes"
               className="flex items-center gap-3 bg-primary/10 hover:bg-primary/15 transition-colors rounded-xl p-3 border border-primary/20 max-w-[260px] group"
             >
               <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
