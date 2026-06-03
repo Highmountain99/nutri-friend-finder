@@ -471,11 +471,39 @@ VIKTIGT: Svara ENDAST med ett JSON-objekt med samma format som tidigare:
   "confidence": "high" | "medium" | "low"
 }`;
 
+      // Sanitize client-supplied originalEstimation to prevent prompt injection
+      const safeOriginal: Record<string, unknown> = {};
+      if (originalEstimation && typeof originalEstimation === "object") {
+        const src = originalEstimation as Record<string, unknown>;
+        const allowedStr = ["mealName", "mealType", "confidence"];
+        const allowedNum = ["calories", "protein", "carbs", "fat"];
+        for (const k of allowedStr) {
+          if (typeof src[k] === "string") safeOriginal[k] = sanitizeInput(src[k] as string, 200);
+        }
+        for (const k of allowedNum) {
+          if (typeof src[k] === "number" && Number.isFinite(src[k])) safeOriginal[k] = src[k];
+        }
+        if (Array.isArray(src.ingredients)) {
+          safeOriginal.ingredients = (src.ingredients as unknown[]).slice(0, 30).map((ing) => {
+            if (!ing || typeof ing !== "object") return null;
+            const i = ing as Record<string, unknown>;
+            const out: Record<string, unknown> = {};
+            for (const k of ["name", "amount"]) {
+              if (typeof i[k] === "string") out[k] = sanitizeInput(i[k] as string, 100);
+            }
+            for (const k of ["calories", "protein", "carbs", "fat"]) {
+              if (typeof i[k] === "number" && Number.isFinite(i[k])) out[k] = i[k];
+            }
+            return out;
+          }).filter(Boolean);
+        }
+      }
+
       messages = [
         { role: "system", content: adjustSystemPrompt },
         {
           role: "user",
-          content: `Ursprunglig uppskattning:\n${JSON.stringify(originalEstimation, null, 2)}\n\nAnvändarens justering: ${sanitizedAdjustment}\n\nGe en uppdaterad uppskattning.`,
+          content: `Ursprunglig uppskattning:\n${JSON.stringify(safeOriginal, null, 2)}\n\nAnvändarens justering: ${sanitizedAdjustment}\n\nGe en uppdaterad uppskattning.`,
         },
       ];
     } else {
