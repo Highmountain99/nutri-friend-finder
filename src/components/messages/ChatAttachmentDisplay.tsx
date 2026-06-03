@@ -1,4 +1,4 @@
-import { FileText, BookOpen, ExternalLink, Sparkles, ChevronRight } from "lucide-react";
+import { FileText, BookOpen, ExternalLink, UtensilsCrossed, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,8 +80,8 @@ export function ChatAttachmentDisplay({ attachments }: ChatAttachmentDisplayProp
               to="/recipes"
               className="flex items-center gap-3 bg-primary/10 hover:bg-primary/15 transition-colors rounded-xl p-3 border border-primary/20 max-w-[260px] group"
             >
-              <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                <UtensilsCrossed className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground">Föreslagna recept</p>
