@@ -1,5 +1,6 @@
-import { Image, FileText, Video, BookOpen, ExternalLink } from "lucide-react";
+import { FileText, BookOpen, ExternalLink, Sparkles, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { ChatAttachment } from "./ChatAttachmentPicker";
 
