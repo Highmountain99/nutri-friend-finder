@@ -33,11 +33,18 @@ export function hasActiveFilters(filters: RecipeFilters): boolean {
   );
 }
 
-export function useRecipeSearch(searchQuery: string, filters: RecipeFilters, browseAll = false) {
+export type RecipeSortKey = "rating" | "time" | "newest";
+
+export function useRecipeSearch(
+  searchQuery: string,
+  filters: RecipeFilters,
+  browseAll = false,
+  sort: RecipeSortKey = "rating"
+) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["recipe-search", searchQuery, filters, browseAll, user?.id],
+    queryKey: ["recipe-search", searchQuery, filters, browseAll, sort, user?.id],
     queryFn: async () => {
       let query = supabase.from("recipes").select("*");
 
@@ -63,7 +70,14 @@ export function useRecipeSearch(searchQuery: string, filters: RecipeFilters, bro
         query = query.contains("allergen_free", filters.allergenFree);
       }
 
-      query = query.order("rating", { ascending: false, nullsFirst: false }).limit(50);
+      if (sort === "time") {
+        query = query.order("time_minutes", { ascending: true, nullsFirst: false });
+      } else if (sort === "newest") {
+        query = query.order("created_at", { ascending: false, nullsFirst: false });
+      } else {
+        query = query.order("rating", { ascending: false, nullsFirst: false });
+      }
+      query = query.limit(50);
 
       const { data: recipes, error } = await query;
 
