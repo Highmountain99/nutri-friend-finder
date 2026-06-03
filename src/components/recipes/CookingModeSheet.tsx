@@ -274,19 +274,19 @@ function IngredientSheet({
                   )}
                 </span>
                 <span
-                  className={`flex-1 text-[15px] ${
+                  className={`flex-1 text-[15px] leading-snug ${
                     on ? "text-accent line-through" : "text-foreground"
                   }`}
                 >
+                  {(scaledAmt || ing.unit) && (
+                    <span className="font-mono text-[13px] text-accent font-medium mr-1.5">
+                      {scaledAmt}
+                      {scaledAmt && ing.unit ? " " : ""}
+                      {ing.unit || ""}
+                    </span>
+                  )}
                   {name}
                 </span>
-                {(scaledAmt || ing.unit) && (
-                  <span className="font-mono text-[13px] text-accent font-medium">
-                    {scaledAmt}
-                    {scaledAmt && ing.unit ? " " : ""}
-                    {ing.unit || ""}
-                  </span>
-                )}
               </button>
             );
           })}
