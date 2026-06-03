@@ -86,7 +86,7 @@ export function SuggestRecipeModal({
 
       const attachment = {
         type: "recipe_suggestions_link",
-        url: "/recipes?tab=suggested",
+        url: "/recipes",
         name: "Föreslagna recept",
         count,
       };
