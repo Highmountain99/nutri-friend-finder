@@ -301,51 +301,18 @@ export function CookingModeSheet({
   open,
   onOpenChange,
   recipe,
-  onLogMeal,
 }: CookingModeSheetProps) {
   const total = recipe.instructions.length;
   const basePortions = recipe.servings || 4;
+  const { addEntry } = useJournalData(new Date());
 
   const [active, setActive] = useState(0);
   const [doneSet, setDoneSet] = useState<Set<number>>(new Set());
   const [portions, setPortions] = useState(basePortions);
   const [finished, setFinished] = useState(false);
   const [sheet, setSheet] = useState(false);
-  const [awake, setAwake] = useState(false);
-  const wakeRef = useRef<WakeLockSentinel | null>(null);
+  const [addMealOpen, setAddMealOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-
-  // Reset state when opening with a new recipe
-  useEffect(() => {
-    if (open) {
-      setActive(0);
-      setDoneSet(new Set());
-      setFinished(false);
-      setSheet(false);
-      setPortions(basePortions);
-    }
-  }, [open, recipe.id, basePortions]);
-
-  const toggleAwake = useCallback(async () => {
-    if (!awake) {
-      try {
-        wakeRef.current = await (
-          navigator as Navigator & { wakeLock?: WakeLock }
-        ).wakeLock?.request("screen") ?? null;
-      } catch {
-        /* noop */
-      }
-      setAwake(true);
-    } else {
-      try {
-        wakeRef.current?.release();
-      } catch {
-        /* noop */
-      }
-      wakeRef.current = null;
-      setAwake(false);
-    }
-  }, [awake]);
 
   const completeStep = useCallback(() => {
     setDoneSet((prev) => {
