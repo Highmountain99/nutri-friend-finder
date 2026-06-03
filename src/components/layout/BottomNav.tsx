@@ -2,6 +2,7 @@ import { Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp } from "luci
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useUnreadPatientMessages } from "@/hooks/useUnreadPatientMessages";
+import { useSuggestedRecipes } from "@/hooks/useSuggestedRecipes";
 
 const navItems = [
   { path: "/home", icon: Home, label: "Hem" },
@@ -13,6 +14,8 @@ const navItems = [
 
 export function BottomNav() {
   const unreadCount = useUnreadPatientMessages();
+  const { active: suggestedRecipes } = useSuggestedRecipes();
+  const suggestedCount = suggestedRecipes.length;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border pb-[env(safe-area-inset-bottom)]">
