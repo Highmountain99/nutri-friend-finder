@@ -32,13 +32,14 @@ function RecipesContent() {
   const [filters, setFilters] = useState<RecipeFilters>(emptyFilters);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [myRecipesOpen, setMyRecipesOpen] = useState(false);
+  const [browseAll, setBrowseAll] = useState(false);
 
   // Determine view mode
-  const viewMode: ViewMode = 
-    isSearchFocused && !searchQuery.trim() && !hasActiveFilters(filters)
-      ? "search-browse"
-      : searchQuery.trim().length > 0 || hasActiveFilters(filters)
-        ? "search-results"
+  const viewMode: ViewMode =
+    browseAll || searchQuery.trim().length > 0 || hasActiveFilters(filters)
+      ? "search-results"
+      : isSearchFocused
+        ? "search-browse"
         : "default";
 
   const handleRecipeIdSelect = (recipeId: string) => {
@@ -62,11 +63,13 @@ function RecipesContent() {
     setSearchQuery("");
     setFilters(emptyFilters);
     setIsSearchFocused(false);
+    setBrowseAll(false);
   };
 
   const clearFilters = () => {
     setFilters(emptyFilters);
     setSearchQuery("");
+    setBrowseAll(false);
   };
 
   return (
