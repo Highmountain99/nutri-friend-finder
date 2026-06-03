@@ -87,6 +87,6 @@ export function useRecipeSearch(searchQuery: string, filters: RecipeFilters, bro
 
       return recipesWithFavorites;
     },
-    enabled: searchQuery.trim().length > 0 || hasActiveFilters(filters),
+    enabled: browseAll || searchQuery.trim().length > 0 || hasActiveFilters(filters),
   });
 }
