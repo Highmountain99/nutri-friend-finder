@@ -6,7 +6,6 @@ import {
   ChevronUp,
   ChevronRight,
   Check,
-  Eye,
   Timer,
   Play,
   Pause,
@@ -16,12 +15,13 @@ import {
   X,
 } from "lucide-react";
 import { RecipeDetail, Ingredient } from "@/hooks/useRecipeDetail";
+import { AddMealSheet } from "@/components/journal/AddMealSheet";
+import { useJournalData } from "@/hooks/useJournalData";
 
 interface CookingModeSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipe: RecipeDetail;
-  onLogMeal?: () => void;
 }
 
 /* ---------- quantity scaling ---------- */
