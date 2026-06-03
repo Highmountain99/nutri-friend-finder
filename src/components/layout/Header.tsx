@@ -33,9 +33,7 @@ export function Header({ userName = "där", onMenuClick }: HeaderProps) {
           </h1>
         </div>
 
-        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-          <span className="font-serif italic text-primary-foreground text-lg leading-none">g</span>
-        </div>
+        <div className="w-10 h-10" aria-hidden="true" />
       </div>
     </header>
   );
