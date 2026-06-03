@@ -6,7 +6,6 @@ import {
   ChevronUp,
   ChevronRight,
   Check,
-  Eye,
   Timer,
   Play,
   Pause,
@@ -16,12 +15,13 @@ import {
   X,
 } from "lucide-react";
 import { RecipeDetail, Ingredient } from "@/hooks/useRecipeDetail";
+import { AddMealSheet } from "@/components/journal/AddMealSheet";
+import { useJournalData } from "@/hooks/useJournalData";
 
 interface CookingModeSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipe: RecipeDetail;
-  onLogMeal?: () => void;
 }
 
 /* ---------- quantity scaling ---------- */
@@ -274,19 +274,19 @@ function IngredientSheet({
                   )}
                 </span>
                 <span
-                  className={`flex-1 text-[15px] ${
+                  className={`flex-1 text-[15px] leading-snug ${
                     on ? "text-accent line-through" : "text-foreground"
                   }`}
                 >
+                  {(scaledAmt || ing.unit) && (
+                    <span className="font-mono text-[13px] text-accent font-medium mr-1.5">
+                      {scaledAmt}
+                      {scaledAmt && ing.unit ? " " : ""}
+                      {ing.unit || ""}
+                    </span>
+                  )}
                   {name}
                 </span>
-                {(scaledAmt || ing.unit) && (
-                  <span className="font-mono text-[13px] text-accent font-medium">
-                    {scaledAmt}
-                    {scaledAmt && ing.unit ? " " : ""}
-                    {ing.unit || ""}
-                  </span>
-                )}
               </button>
             );
           })}
@@ -301,18 +301,17 @@ export function CookingModeSheet({
   open,
   onOpenChange,
   recipe,
-  onLogMeal,
 }: CookingModeSheetProps) {
   const total = recipe.instructions.length;
   const basePortions = recipe.servings || 4;
+  const { addEntry } = useJournalData(new Date());
 
   const [active, setActive] = useState(0);
   const [doneSet, setDoneSet] = useState<Set<number>>(new Set());
   const [portions, setPortions] = useState(basePortions);
   const [finished, setFinished] = useState(false);
   const [sheet, setSheet] = useState(false);
-  const [awake, setAwake] = useState(false);
-  const wakeRef = useRef<WakeLockSentinel | null>(null);
+  const [addMealOpen, setAddMealOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   // Reset state when opening with a new recipe
@@ -322,30 +321,12 @@ export function CookingModeSheet({
       setDoneSet(new Set());
       setFinished(false);
       setSheet(false);
+      setAddMealOpen(false);
       setPortions(basePortions);
     }
   }, [open, recipe.id, basePortions]);
 
-  const toggleAwake = useCallback(async () => {
-    if (!awake) {
-      try {
-        wakeRef.current = await (
-          navigator as Navigator & { wakeLock?: WakeLock }
-        ).wakeLock?.request("screen") ?? null;
-      } catch {
-        /* noop */
-      }
-      setAwake(true);
-    } else {
-      try {
-        wakeRef.current?.release();
-      } catch {
-        /* noop */
-      }
-      wakeRef.current = null;
-      setAwake(false);
-    }
-  }, [awake]);
+
 
   const completeStep = useCallback(() => {
     setDoneSet((prev) => {
@@ -404,17 +385,7 @@ export function CookingModeSheet({
           <span className="font-serif text-xl text-primary tracking-tight text-center truncate">
             {recipe.title}
           </span>
-          <button
-            onClick={toggleAwake}
-            title="Håll skärmen vaken"
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] border ${
-              awake
-                ? "bg-primary border-primary text-primary-foreground"
-                : "border-border text-accent"
-            }`}
-          >
-            <Eye className="w-3 h-3" />
-          </button>
+          <span className="w-7" aria-hidden="true" />
         </div>
 
         {!finished && (
@@ -482,10 +453,7 @@ export function CookingModeSheet({
               din näringsdagbok.
             </p>
             <button
-              onClick={() => {
-                if (onLogMeal) onLogMeal();
-                else restart();
-              }}
+              onClick={() => setAddMealOpen(true)}
               className="mt-3 px-6 py-3.5 rounded-xl bg-primary text-primary-foreground font-medium"
             >
               Logga måltid
@@ -600,6 +568,16 @@ export function CookingModeSheet({
           setPortions={setPortions}
         />
       </SheetContent>
+
+      <AddMealSheet
+        isOpen={addMealOpen}
+        onClose={() => setAddMealOpen(false)}
+        onAddEntry={async (entry) => {
+          await addEntry(entry);
+          setAddMealOpen(false);
+          onOpenChange(false);
+        }}
+      />
     </Sheet>
   );
 }
