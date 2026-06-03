@@ -4,7 +4,7 @@ interface MealTypeCategoryGridProps {
 
 const mealTypeCategories = [
   {
-    id: "frukost",
+    id: "breakfast",
     label: "Frukost",
     emoji: "🥞",
     gradient: "from-yellow-400 to-orange-400",
@@ -16,25 +16,25 @@ const mealTypeCategories = [
     gradient: "from-green-400 to-emerald-500",
   },
   {
-    id: "middag",
+    id: "dinner",
     label: "Middag",
     emoji: "🍽️",
     gradient: "from-indigo-500 to-purple-600",
   },
   {
-    id: "soppa",
+    id: "soup",
     label: "Soppa",
     emoji: "🥣",
     gradient: "from-orange-400 to-red-400",
   },
   {
-    id: "sallad",
+    id: "salad",
     label: "Sallad",
     emoji: "🥬",
     gradient: "from-lime-400 to-green-500",
   },
   {
-    id: "förrätt",
+    id: "appetizer",
     label: "Förrätt",
     emoji: "🍤",
     gradient: "from-pink-400 to-rose-500",
