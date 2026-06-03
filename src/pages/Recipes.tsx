@@ -11,8 +11,9 @@ import { RecipeDetailSheet } from "@/components/recipes/RecipeDetailSheet";
 import { ScannerSheet } from "@/components/scanner/ScannerSheet";
 import { MyRecipesSheet } from "@/components/recipes/MyRecipesSheet";
 import { ScannerHistoryProvider } from "@/contexts/ScannerHistoryContext";
-import { emptyFilters, hasActiveFilters, type RecipeFilters } from "@/hooks/useRecipeSearch";
+import { emptyFilters, hasActiveFilters, type RecipeFilters, type RecipeSortKey } from "@/hooks/useRecipeSearch";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ViewMode = "default" | "search-browse" | "search-results";
 
@@ -33,6 +34,7 @@ function RecipesContent() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [myRecipesOpen, setMyRecipesOpen] = useState(false);
   const [browseAll, setBrowseAll] = useState(false);
+  const [sort, setSort] = useState<RecipeSortKey>("rating");
 
   // Determine view mode
   const viewMode: ViewMode =
@@ -123,11 +125,24 @@ function RecipesContent() {
 
       {viewMode === "search-results" && (
         <>
-          <RecipeFiltersBar filters={filters} onFiltersChange={setFilters} />
+          <div className="flex items-center justify-between gap-2">
+            <RecipeFiltersBar filters={filters} onFiltersChange={setFilters} />
+            <Select value={sort} onValueChange={(v) => setSort(v as RecipeSortKey)}>
+              <SelectTrigger className="h-9 w-auto min-w-[140px] rounded-full text-sm shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Bäst betyg</SelectItem>
+                <SelectItem value="time">Snabbast</SelectItem>
+                <SelectItem value="newest">Senaste</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <RecipeSearchResultsList
             searchQuery={searchQuery}
             filters={filters}
             browseAll={browseAll}
+            sort={sort}
             onRecipeSelect={handleRecipeIdSelect}
             onClearFilters={clearFilters}
           />
