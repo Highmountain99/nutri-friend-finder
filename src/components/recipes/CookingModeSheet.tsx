@@ -568,6 +568,16 @@ export function CookingModeSheet({
           setPortions={setPortions}
         />
       </SheetContent>
+
+      <AddMealSheet
+        isOpen={addMealOpen}
+        onClose={() => setAddMealOpen(false)}
+        onAddEntry={async (entry) => {
+          await addEntry(entry);
+          setAddMealOpen(false);
+          onOpenChange(false);
+        }}
+      />
     </Sheet>
   );
 }
