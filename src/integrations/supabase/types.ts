@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_payments: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          id: string
+          payment_method_saved: boolean
+          stripe_customer_id: string | null
+          stripe_setup_intent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          payment_method_saved?: boolean
+          stripe_customer_id?: string | null
+          stripe_setup_intent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          payment_method_saved?: boolean
+          stripe_customer_id?: string | null
+          stripe_setup_intent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -49,10 +82,7 @@ export type Database = {
           dietitian_id: string | null
           id: string
           notes: string | null
-          payment_method_saved: boolean | null
           status: string
-          stripe_customer_id: string | null
-          stripe_setup_intent_id: string | null
           updated_at: string
           user_id: string
         }
@@ -63,10 +93,7 @@ export type Database = {
           dietitian_id?: string | null
           id?: string
           notes?: string | null
-          payment_method_saved?: boolean | null
           status?: string
-          stripe_customer_id?: string | null
-          stripe_setup_intent_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -77,10 +104,7 @@ export type Database = {
           dietitian_id?: string | null
           id?: string
           notes?: string | null
-          payment_method_saved?: boolean | null
           status?: string
-          stripe_customer_id?: string | null
-          stripe_setup_intent_id?: string | null
           updated_at?: string
           user_id?: string
         }
