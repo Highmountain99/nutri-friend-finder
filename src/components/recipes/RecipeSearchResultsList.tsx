@@ -12,6 +12,7 @@ interface RecipeSearchResultsListProps {
   filters: RecipeFilters;
   onRecipeSelect: (recipeId: string) => void;
   onClearFilters: () => void;
+  browseAll?: boolean;
 }
 
 function formatTime(minutes: number | null): string {
