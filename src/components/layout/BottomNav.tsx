@@ -47,6 +47,11 @@ export function BottomNav() {
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
+                  {item.path === "/recipes" && suggestedCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">
+                      {suggestedCount > 9 ? "9+" : suggestedCount}
+                    </span>
+                  )}
                 </div>
                 <span className="text-[10px] font-medium">{item.label}</span>
               </>
