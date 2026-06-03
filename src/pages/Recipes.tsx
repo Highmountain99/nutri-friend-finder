@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScanLine } from "lucide-react";
+import { ScanLine, BookOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecipeSearchBar } from "@/components/recipes/RecipeSearchBar";
 import { RecipeSearchView } from "@/components/recipes/RecipeSearchView";
@@ -32,13 +32,14 @@ function RecipesContent() {
   const [filters, setFilters] = useState<RecipeFilters>(emptyFilters);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [myRecipesOpen, setMyRecipesOpen] = useState(false);
+  const [browseAll, setBrowseAll] = useState(false);
 
   // Determine view mode
-  const viewMode: ViewMode = 
-    isSearchFocused && !searchQuery.trim() && !hasActiveFilters(filters)
-      ? "search-browse"
-      : searchQuery.trim().length > 0 || hasActiveFilters(filters)
-        ? "search-results"
+  const viewMode: ViewMode =
+    browseAll || searchQuery.trim().length > 0 || hasActiveFilters(filters)
+      ? "search-results"
+      : isSearchFocused
+        ? "search-browse"
         : "default";
 
   const handleRecipeIdSelect = (recipeId: string) => {
@@ -62,11 +63,13 @@ function RecipesContent() {
     setSearchQuery("");
     setFilters(emptyFilters);
     setIsSearchFocused(false);
+    setBrowseAll(false);
   };
 
   const clearFilters = () => {
     setFilters(emptyFilters);
     setSearchQuery("");
+    setBrowseAll(false);
   };
 
   return (
@@ -86,14 +89,29 @@ function RecipesContent() {
         </div>
       )}
 
-      {/* Search Bar */}
-      <RecipeSearchBar
-        value={searchQuery}
-        onChange={setSearchQuery}
-        isFocused={isSearchFocused}
-        onFocus={() => setIsSearchFocused(true)}
-        onCancel={handleCancel}
-      />
+      {/* Search Bar + Browse all */}
+      <div className="flex gap-2 items-center">
+        <div className="flex-1">
+          <RecipeSearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            isFocused={isSearchFocused}
+            onFocus={() => setIsSearchFocused(true)}
+            onCancel={handleCancel}
+          />
+        </div>
+        {viewMode !== "search-results" && !isSearchFocused && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full shrink-0"
+            onClick={() => setBrowseAll(true)}
+            aria-label="Bläddra alla recept"
+          >
+            <BookOpen className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
 
       {/* View content based on mode */}
       {viewMode === "search-browse" && (
@@ -109,6 +127,7 @@ function RecipesContent() {
           <RecipeSearchResultsList
             searchQuery={searchQuery}
             filters={filters}
+            browseAll={browseAll}
             onRecipeSelect={handleRecipeIdSelect}
             onClearFilters={clearFilters}
           />

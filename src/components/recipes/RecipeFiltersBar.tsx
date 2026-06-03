@@ -7,22 +7,22 @@ interface RecipeFiltersBarProps {
 }
 
 const cuisineOptions = [
-  { id: "medelhav", label: "Medelhav" },
-  { id: "asiatiskt", label: "Asiatiskt" },
-  { id: "svenskt", label: "Svenskt" },
-  { id: "mexikanskt", label: "Mexikanskt" },
-  { id: "italienskt", label: "Italienskt" },
-  { id: "indiskt", label: "Indiskt" },
+  { id: "mediterranean", label: "Medelhav" },
+  { id: "asian", label: "Asiatiskt" },
+  { id: "swedish", label: "Svenskt" },
+  { id: "mexican", label: "Mexikanskt" },
+  { id: "italian", label: "Italienskt" },
+  { id: "indian", label: "Indiskt" },
 ];
 
 const mealTypeOptions = [
-  { id: "frukost", label: "Frukost" },
+  { id: "breakfast", label: "Frukost" },
   { id: "lunch", label: "Lunch" },
-  { id: "middag", label: "Middag" },
-  { id: "sallad", label: "Sallad" },
-  { id: "soppa", label: "Soppa" },
-  { id: "huvudrätt", label: "Huvudrätt" },
-  { id: "förrätt", label: "Förrätt" },
+  { id: "dinner", label: "Middag" },
+  { id: "salad", label: "Sallad" },
+  { id: "soup", label: "Soppa" },
+  { id: "main_course", label: "Huvudrätt" },
+  { id: "appetizer", label: "Förrätt" },
 ];
 
 const healthPlanOptions = [
@@ -30,7 +30,7 @@ const healthPlanOptions = [
   { id: "high_fiber", label: "Högt fiber" },
   { id: "high_protein", label: "Högt protein" },
   { id: "mediterranean", label: "Medelhavs" },
-  { id: "heart_healthy", label: "Bra för hjärta" },
+  { id: "heart_friendly", label: "Bra för hjärta" },
   { id: "low_sodium", label: "Lågt sodium" },
   { id: "kidney_friendly", label: "Bra för njurar" },
   { id: "diabetic_friendly", label: "Bra för diabetes" },
@@ -39,23 +39,23 @@ const healthPlanOptions = [
 const dietaryNeedsOptions = [
   { id: "vegetarian", label: "Vegetarian" },
   { id: "vegan", label: "Vegan" },
-  { id: "pescatarian", label: "Pescitarian" },
+  { id: "pescitarian", label: "Pescitarian" },
   { id: "keto", label: "Keto" },
   { id: "paleo", label: "Paleo" },
   { id: "kosher", label: "Kosher" },
 ];
 
 const allergenFreeOptions = [
-  { id: "laktosfri", label: "Laktosfri" },
-  { id: "glutenfri", label: "Glutenfri" },
-  { id: "sojafri", label: "Sojafri" },
-  { id: "äggfri", label: "Äggfri" },
-  { id: "skaldjursfri", label: "Skaldjursfri" },
-  { id: "jordnötsfri", label: "Jordnötsfri" },
-  { id: "nötfri", label: "Nötfri" },
-  { id: "sesamfri", label: "Sesamfri" },
-  { id: "sulfitfri", label: "Sulfitfri" },
-  { id: "fodmapfri", label: "FODMAPfri" },
+  { id: "lactose_free", label: "Laktosfri" },
+  { id: "gluten_free", label: "Glutenfri" },
+  { id: "soy_free", label: "Sojafri" },
+  { id: "egg_free", label: "Äggfri" },
+  { id: "shellfish_free", label: "Skaldjursfri" },
+  { id: "peanut_free", label: "Jordnötsfri" },
+  { id: "nut_free", label: "Nötfri" },
+  { id: "sesame_free", label: "Sesamfri" },
+  { id: "sulfite_free", label: "Sulfitfri" },
+  { id: "fodmap_free", label: "FODMAPfri" },
 ];
 
 export function RecipeFiltersBar({ filters, onFiltersChange }: RecipeFiltersBarProps) {

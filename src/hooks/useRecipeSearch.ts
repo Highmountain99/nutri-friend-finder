@@ -33,11 +33,11 @@ export function hasActiveFilters(filters: RecipeFilters): boolean {
   );
 }
 
-export function useRecipeSearch(searchQuery: string, filters: RecipeFilters) {
+export function useRecipeSearch(searchQuery: string, filters: RecipeFilters, browseAll = false) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["recipe-search", searchQuery, filters, user?.id],
+    queryKey: ["recipe-search", searchQuery, filters, browseAll, user?.id],
     queryFn: async () => {
       let query = supabase.from("recipes").select("*");
 
@@ -87,6 +87,6 @@ export function useRecipeSearch(searchQuery: string, filters: RecipeFilters) {
 
       return recipesWithFavorites;
     },
-    enabled: searchQuery.trim().length > 0 || hasActiveFilters(filters),
+    enabled: browseAll || searchQuery.trim().length > 0 || hasActiveFilters(filters),
   });
 }

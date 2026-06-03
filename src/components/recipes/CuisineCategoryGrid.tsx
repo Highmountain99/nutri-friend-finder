@@ -4,37 +4,37 @@ interface CuisineCategoryGridProps {
 
 const cuisineCategories = [
   {
-    id: "medelhav",
+    id: "mediterranean",
     label: "Medelhav",
     emoji: "🫒",
     gradient: "from-amber-500 to-orange-600",
   },
   {
-    id: "asiatiskt",
+    id: "asian",
     label: "Asiatiskt",
     emoji: "🍜",
     gradient: "from-red-500 to-pink-600",
   },
   {
-    id: "svenskt",
+    id: "swedish",
     label: "Svenskt",
     emoji: "🇸🇪",
     gradient: "from-blue-500 to-yellow-400",
   },
   {
-    id: "mexikanskt",
+    id: "mexican",
     label: "Mexikanskt",
     emoji: "🌮",
     gradient: "from-green-500 to-red-500",
   },
   {
-    id: "italienskt",
+    id: "italian",
     label: "Italienskt",
     emoji: "🍝",
     gradient: "from-green-600 to-red-600",
   },
   {
-    id: "indiskt",
+    id: "indian",
     label: "Indiskt",
     emoji: "🍛",
     gradient: "from-orange-500 to-yellow-500",
