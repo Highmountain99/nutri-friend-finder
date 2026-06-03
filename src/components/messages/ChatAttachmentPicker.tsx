@@ -7,11 +7,12 @@ import { RecipeLinkPicker } from "./RecipeLinkPicker";
 import { toast } from "@/hooks/use-toast";
 
 export interface ChatAttachment {
-  type: "image" | "video" | "document" | "recipe_link";
+  type: "image" | "video" | "document" | "recipe_link" | "recipe_suggestions_link";
   url: string;
   name: string;
   mimeType?: string;
   recipeId?: string;
+  count?: number;
 }
 
 interface ChatAttachmentPickerProps {
