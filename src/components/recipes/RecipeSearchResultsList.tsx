@@ -2,7 +2,7 @@ import { Clock, Users, Heart, Leaf, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRecipeSearch, type RecipeFilters, type RecipeWithFavorite } from "@/hooks/useRecipeSearch";
+import { useRecipeSearch, type RecipeFilters, type RecipeSortKey, type RecipeWithFavorite } from "@/hooks/useRecipeSearch";
 import { useToggleFavorite } from "@/hooks/useRecipes";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ interface RecipeSearchResultsListProps {
   onRecipeSelect: (recipeId: string) => void;
   onClearFilters: () => void;
   browseAll?: boolean;
+  sort?: RecipeSortKey;
 }
 
 function formatTime(minutes: number | null): string {
@@ -100,9 +101,10 @@ export function RecipeSearchResultsList({
   onRecipeSelect,
   onClearFilters,
   browseAll = false,
+  sort = "rating",
 }: RecipeSearchResultsListProps) {
   const { user } = useAuth();
-  const { data: recipes, isLoading, error } = useRecipeSearch(searchQuery, filters, browseAll);
+  const { data: recipes, isLoading, error } = useRecipeSearch(searchQuery, filters, browseAll, sort);
   const toggleFavorite = useToggleFavorite();
 
   const handleFavoriteClick = (

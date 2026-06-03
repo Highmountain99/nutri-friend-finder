@@ -4,7 +4,7 @@ import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
 import { useAppointments } from "@/hooks/useAppointments";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, Eye, FlagTriangleRight, Sparkles } from "lucide-react";
+import { CalendarPlus, Eye, Route, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -69,11 +69,12 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
 
   const journeyButton = (
     <button
-      className="absolute top-2 right-4 z-10 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md active:scale-95 transition-transform"
+      className="absolute top-2 right-4 z-10 h-10 px-4 rounded-full bg-primary text-primary-foreground flex items-center gap-2 shadow-md active:scale-95 transition-transform"
       onClick={onOpenJourney}
       aria-label="Visa programöversikt"
     >
-      <FlagTriangleRight className="w-5 h-5 text-primary-foreground" />
+      <Route className="w-4 h-4" />
+      <span className="text-sm font-medium">Min resa</span>
     </button>
   );
 

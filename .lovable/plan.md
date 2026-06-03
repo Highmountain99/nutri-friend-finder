@@ -1,75 +1,38 @@
-# Brand redesign — Gutfeeling
+## Ändringar
 
-Apply the uploaded brand book as the app's new visual identity. This is a pure design-system swap — no business logic, routes, data, or feature behavior changes.
+### 1. Receptdetaljvy (`RecipeDetailSheet.tsx`)
+- **Ingredienser**: rendera tydligt format med belopp+enhet i fet stil och ingrediens i normal vikt, t.ex. **100 g** smör eller margarin. Liknande look som "Cooking mode" (uppdatera punktlistan så `qty` + `unit` är bold och namnet regular).
+- **Näring per portion**: lägg etiketterna ("kcal", "Protein", "Kolhydrater", "Fett") ovanför värdet för alla fyra kolumner. Ta bort Flame-ikonen. Importen av `Flame` tas bort.
 
-## 1. Design tokens (foundation)
+### 2. Cooking mode (`CookingModeSheet.tsx`)
+- **Instruktioner – design-uppfräschning**:
+  - Lägg ett stort stegnummer (1, 2, 3…) ovanför instruktionstexten i kortet (serif font, primary färg).
+  - Snyggare kort (border, lite padding, mjuk skugga) istället för bara `bg-muted/50`.
+- **Swipe mellan steg**: använd projektets `useSwipeGesture`-hook på instruktionspanelen så att swipe vänster/höger triggar `goToNext`/`goToPrevious`. Pilknapparna ligger kvar.
 
-Rewrite `src/index.css` `:root` (and `.dark`) with the brand palette, converted to HSL:
+### 3. Receptbank – sortering (`Recipes.tsx`, `RecipeSearchResultsList.tsx`, `useRecipeSearch.ts`)
+- Lägg till `sort`-state (`"rating" | "time" | "newest"`, default `"rating"`) i `Recipes.tsx` och skicka till `RecipeSearchResultsList` → `useRecipeSearch`.
+- I `useRecipeSearch` byts `.order("rating", …)` till att välja kolumn baserat på sort:
+  - `rating` → `rating desc`
+  - `time` → `time_minutes asc`
+  - `newest` → `created_at desc`
+- UI: liten sorterings-`Select`/dropdown ovanför listan i `search-results`-vyn (bredvid filter-bar). Alternativ: "Bäst betyg", "Snabbast", "Senaste".
 
-```text
---beige (canvas)      #EBE5D6   → 44 31% 88%
---beige-2 (surface)   #E4DCC7   → 44 33% 84%
---ink (text)          #1F2A22   → 140 16% 14%
---green (primary)     #1F3A2E   → 150 31% 17%
---green-deep          #142319   → 145 30% 11%
---green-soft (accent) #2D4F3E   → 150 27% 24%
---line                rgba(31,42,34,0.18)
-```
+### 4. Progress-sidan – "Min resa"-knapp (`ProgressRouter.tsx`)
+- Byt den runda flagg-knappen i toppen mot en pill-knapp med text **"Min resa"** + en snyggare flagg-ikon (`Map` eller `Route` från lucide; väljer `Route` för "resa"-känsla).
+- Behåll `onOpenJourney`. Knapp: `rounded-full bg-primary text-primary-foreground px-4 h-10 gap-2 shadow-md`, ikon `w-4 h-4`. Behåll position top-right.
 
-Semantic mapping:
-- `--background` → beige, `--foreground` → ink
-- `--card` → white-ish beige (`--beige`), `--card-foreground` → green-deep
-- `--primary` → green, `--primary-foreground` → beige
-- `--secondary` → beige-2
-- `--accent` → green-soft (replace coral entirely — brand has no coral)
-- `--muted` → beige-2, `--muted-foreground` → green-soft
-- `--border`, `--input` → line color
-- `--ring` → green
-- Sidebar tokens mirror the same palette
-- Gradients (`--gradient-hero`, `--gradient-card`) flattened or restated as subtle beige→beige-2; remove the sage gradient
+### 5. Header – ta bort "g"-bubblan (`Header.tsx`)
+- Ta bort den runda primary-bubblan med "g" i högra hörnet.
+- För att behålla centrerad layout läggs en osynlig `w-10` spacer in på höger sida (matchar menyknappens bredd till vänster).
 
-Dark mode: invert to green-deep canvas with beige text (brand supports dark surfaces).
+## Filer som ändras
+- `src/components/recipes/RecipeDetailSheet.tsx`
+- `src/components/recipes/CookingModeSheet.tsx`
+- `src/pages/Recipes.tsx`
+- `src/components/recipes/RecipeSearchResultsList.tsx`
+- `src/hooks/useRecipeSearch.ts`
+- `src/components/progress/ProgressRouter.tsx`
+- `src/components/layout/Header.tsx`
 
-Keep `--radius: 1rem` (brand uses 8–12px on cards, fine).
-
-## 2. Typography
-
-- Load Google Fonts: Instrument Serif (regular + italic), Geist (300/400/500/600), JetBrains Mono (400/500) — add `<link>` in `index.html`.
-- `tailwind.config.ts` fontFamily:
-  - `sans: ['Geist', ...]`
-  - `serif: ['"Instrument Serif"', 'serif']` (new)
-  - `mono: ['"JetBrains Mono"', ...]` (new)
-- Heading defaults in `index.css` `@layer base`: headings use `font-serif`, weight 400, tight tracking, with italic available for emphasis.
-- Add small utility classes: `.eyebrow` (mono, 11px, uppercase, tracked, green) and `.lede` (serif italic) — used in Header, section titles, cards.
-
-## 3. Component-level restyling (no behavior changes)
-
-Touch the shared chrome and most visible surfaces. All edits keep existing markup/props; only classNames and small token usages change.
-
-- **Header** (`src/components/layout/Header.tsx`): greeting in mono eyebrow style, name in serif italic; leaf avatar bg becomes flat green (no gradient).
-- **BottomNav, SideMenu**: beige background, green icons, mono labels.
-- **AppLayout**: beige body (already via token).
-- **Buttons** (`src/components/ui/button.tsx` variants): primary = green/beige, secondary = beige-2/green-deep, ghost stays; pill radius preserved. Remove any coral references.
-- **Cards** (`src/components/ui/card.tsx`): beige surface, hairline `--line` border, soft shadow.
-- **Inputs / Sheet / Dialog / Tabs**: rely on tokens — should adopt automatically once tokens change; quick visual sweep to fix anything hardcoded.
-- **Home page** (`src/pages/Home.tsx`, `AppointmentCard`, `QuickActionCard`): hero greeting in serif italic, section eyebrows in mono.
-- **OrganicLoader CSS** (`src/styles/organic-loaders.css`): swap any hardcoded sage/coral hues to brand green tokens.
-- **DietitianSidebar / DietitianLayout**: same token-driven swap; brand wordmark uses serif italic.
-- **Auth landing** (`src/components/auth/AuthLanding.tsx`): full editorial restyle — big serif wordmark "Gut*feeling*" (italic on second word), beige canvas, mono meta line, single green CTA.
-
-## 4. Cleanup
-
-- Search and replace hardcoded color classes that bypass tokens (`text-white`, `bg-emerald-*`, `text-coral*`, gradient utility usages) in components touched above. Anything not visited stays token-driven and will pick up the new palette automatically.
-- Update memory entry "Brand Colors" to reflect the new palette (beige + forest green, no coral).
-
-## 5. Out of scope
-
-- No changes to routing, data, edge functions, RLS, or feature behavior.
-- No restructuring of pages or component hierarchy.
-- Per-page deep editorial redesign beyond Header, Home hero, Auth landing is deferred — token swap alone will refresh ~90% of surfaces consistently.
-
-## Verification
-
-- Visit `/auth`, `/home`, `/journal`, `/messages`, `/progress`, `/dietitian` and confirm: beige canvas, green primary, serif headings, mono eyebrows, no leftover sage/coral.
-- Confirm OrganicLoader colors match the new palette.
-- Check dark mode renders with deep-green canvas.
+Inga DB- eller backend-ändringar behövs.
