@@ -15,7 +15,6 @@ import {
   ChefHat,
   Heart,
   Leaf,
-  Flame,
   ChevronRight,
   Star,
 } from "lucide-react";
@@ -212,13 +211,10 @@ export function RecipeDetailSheet({
                   </div>
                   <div className="grid grid-cols-4 gap-2 text-center">
                     <div>
-                      <div className="flex items-center justify-center gap-1 text-accent">
-                        <Flame className="w-4 h-4" />
-                      </div>
+                      <div className="text-xs text-muted-foreground mb-1">kcal</div>
                       <div className="font-semibold text-foreground">
                         {recipe.calories_per_serving || "—"}
                       </div>
-                      <div className="text-xs text-muted-foreground">kcal</div>
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground mb-1">Protein</div>
@@ -255,11 +251,11 @@ export function RecipeDetailSheet({
                       const unit = ingredient.unit || "";
                       return (
                         <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="text-primary">•</span>
+                          <span className="text-primary mt-0.5">•</span>
                           <span className="text-foreground">
-                            {qty ? `${qty} ` : ""}
-                            {unit ? `${unit} ` : ""}
-                            {name}
+                            {qty && <span className="font-semibold">{qty}{unit ? ` ${unit}` : ""} </span>}
+                            {!qty && unit && <span className="font-semibold">{unit} </span>}
+                            <span>{name}</span>
                           </span>
                         </li>
                       );
