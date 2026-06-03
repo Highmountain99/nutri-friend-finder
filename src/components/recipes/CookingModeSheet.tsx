@@ -44,7 +44,7 @@ export function CookingModeSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[100vh] flex flex-col">
+      <SheetContent side="bottom" className="h-[90dvh] flex flex-col">
         <SheetHeader className="flex-shrink-0">
           <SheetTitle className="text-lg pr-8">{recipe.title}</SheetTitle>
         </SheetHeader>
