@@ -314,6 +314,20 @@ export function CookingModeSheet({
   const [addMealOpen, setAddMealOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
+  // Reset state when opening with a new recipe
+  useEffect(() => {
+    if (open) {
+      setActive(0);
+      setDoneSet(new Set());
+      setFinished(false);
+      setSheet(false);
+      setAddMealOpen(false);
+      setPortions(basePortions);
+    }
+  }, [open, recipe.id, basePortions]);
+
+
+
   const completeStep = useCallback(() => {
     setDoneSet((prev) => {
       const n = new Set(prev);
