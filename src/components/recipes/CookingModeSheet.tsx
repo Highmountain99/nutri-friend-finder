@@ -453,10 +453,7 @@ export function CookingModeSheet({
               din näringsdagbok.
             </p>
             <button
-              onClick={() => {
-                if (onLogMeal) onLogMeal();
-                else restart();
-              }}
+              onClick={() => setAddMealOpen(true)}
               className="mt-3 px-6 py-3.5 rounded-xl bg-primary text-primary-foreground font-medium"
             >
               Logga måltid
