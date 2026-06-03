@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   ChevronLeft,
@@ -304,6 +305,7 @@ export function CookingModeSheet({
 }: CookingModeSheetProps) {
   const total = recipe.instructions.length;
   const basePortions = recipe.servings || 4;
+  const navigate = useNavigate();
   const { addEntry } = useJournalData(new Date());
 
   const [active, setActive] = useState(0);
@@ -576,6 +578,7 @@ export function CookingModeSheet({
           await addEntry(entry);
           setAddMealOpen(false);
           onOpenChange(false);
+          navigate("/journal");
         }}
       />
     </Sheet>
