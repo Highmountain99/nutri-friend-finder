@@ -305,6 +305,7 @@ export function CookingModeSheet({
 }: CookingModeSheetProps) {
   const total = recipe.instructions.length;
   const basePortions = recipe.servings || 4;
+  const navigate = useNavigate();
   const { addEntry } = useJournalData(new Date());
 
   const [active, setActive] = useState(0);
