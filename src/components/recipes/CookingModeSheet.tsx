@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { RecipeDetail } from "@/hooks/useRecipeDetail";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 
 interface CookingModeSheetProps {
   open: boolean;
@@ -36,6 +37,11 @@ export function CookingModeSheet({
 
   const currentInstruction = recipe.instructions[currentStep];
 
+  const swipeHandlers = useSwipeGesture({
+    onSwipeLeft: goToNext,
+    onSwipeRight: goToPrevious,
+  });
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[100vh] flex flex-col">
@@ -56,14 +62,22 @@ export function CookingModeSheet({
           <TabsContent value="instructions" className="flex-1 flex flex-col mt-6">
             {/* Step indicator */}
             <div className="text-center mb-4">
-              <span className="text-sm text-muted-foreground">
+              <span className="eyebrow text-xs text-muted-foreground">
                 STEG {currentStep + 1} AV {totalSteps}
               </span>
             </div>
 
-            {/* Instruction content */}
-            <div className="flex-1 flex items-center justify-center px-4">
-              <div className="bg-muted/50 rounded-xl p-8 max-w-md">
+            {/* Instruction content (swipeable) */}
+            <div
+              className="flex-1 flex items-center justify-center px-4 touch-pan-y select-none"
+              {...swipeHandlers}
+            >
+              <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full shadow-sm">
+                <div className="text-center mb-5">
+                  <span className="font-serif italic text-5xl text-primary leading-none">
+                    {currentStep + 1}
+                  </span>
+                </div>
                 <p className="text-xl text-center text-foreground leading-relaxed">
                   {currentInstruction?.text || "Inga instruktioner"}
                 </p>
