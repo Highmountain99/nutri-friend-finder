@@ -643,6 +643,12 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
                       placeholder="Skriv justering..."
                       value={adjustmentText}
                       onChange={(e) => setAdjustmentText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && adjustmentText.trim() && !isRecalculating) {
+                          e.preventDefault();
+                          handleRecalculate(adjustmentText);
+                        }
+                      }}
                       className="flex-1"
                     />
                     <Button
