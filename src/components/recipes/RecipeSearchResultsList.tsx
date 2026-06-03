@@ -99,9 +99,10 @@ export function RecipeSearchResultsList({
   filters,
   onRecipeSelect,
   onClearFilters,
+  browseAll = false,
 }: RecipeSearchResultsListProps) {
   const { user } = useAuth();
-  const { data: recipes, isLoading, error } = useRecipeSearch(searchQuery, filters);
+  const { data: recipes, isLoading, error } = useRecipeSearch(searchQuery, filters, browseAll);
   const toggleFavorite = useToggleFavorite();
 
   const handleFavoriteClick = (
