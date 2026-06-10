@@ -29,12 +29,12 @@ export function AuthLanding() {
     <div className="min-h-screen bg-background flex flex-col safe-area-inset">
       {/* Top meta strip */}
       <div className="px-6 pt-6 flex items-center justify-between">
-        <span className="eyebrow">Gutfeeling® / Est. 2025</span>
-        <span className="eyebrow opacity-60">SE</span>
+        <span className="eyebrow">{"\n"}</span>
+        <span className="eyebrow opacity-60">{"\n"}</span>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        <p className="eyebrow mb-6">A digital clinic</p>
+        <p className="eyebrow mb-6">{"\n"}</p>
         <h1 className="font-serif text-primary text-[clamp(64px,18vw,128px)] leading-[0.86] tracking-[-0.035em]">
           Gut<span className="italic">feeling</span>
         </h1>
