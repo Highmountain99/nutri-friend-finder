@@ -362,19 +362,31 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
                           {dataSourceInfo.label}
                         </Badge>
                       )}
-                      <Input
+                      <Textarea
                         value={estimation.mealName}
-                        onChange={(e) => setEstimation({ ...estimation, mealName: e.target.value })}
+                        onChange={(e) => {
+                          setEstimation({ ...estimation, mealName: e.target.value });
+                          e.target.style.height = "auto";
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !isRecalculating) {
                             e.preventDefault();
-                            (e.target as HTMLInputElement).blur();
+                            (e.target as HTMLTextAreaElement).blur();
                             handleRecalculate(`Rätten är faktiskt: ${estimation.mealName}. Räkna om näringsvärden utifrån detta.`);
                           }
                         }}
-                        className="font-semibold text-foreground border-0 bg-transparent rounded-none px-0 h-auto py-0 shadow-none focus-visible:ring-0 focus-visible:outline-none hover:bg-muted/30 transition-colors -mx-1 px-1 rounded"
+                        rows={1}
+                        ref={(el) => {
+                          if (el) {
+                            el.style.height = "auto";
+                            el.style.height = `${el.scrollHeight}px`;
+                          }
+                        }}
+                        className="font-semibold text-foreground border-0 bg-transparent rounded px-1 -mx-1 py-0 shadow-none focus-visible:ring-0 focus-visible:outline-none hover:bg-muted/30 transition-colors resize-none overflow-hidden min-h-0 leading-tight w-full break-words"
                         placeholder="Måltidens namn"
                       />
+
                       {!imagePreview && (
                         <p className="text-sm text-muted-foreground mt-1">{estimation.mealType}</p>
                       )}
