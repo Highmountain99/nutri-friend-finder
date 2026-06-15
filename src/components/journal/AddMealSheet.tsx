@@ -372,13 +372,12 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
                             handleRecalculate(`Rätten är faktiskt: ${estimation.mealName}. Räkna om näringsvärden utifrån detta.`);
                           }
                         }}
-                        className="font-semibold text-foreground border-0 border-b border-dashed rounded-none px-0 h-auto py-1 focus-visible:ring-0 focus-visible:border-primary"
+                        className="font-semibold text-foreground border-0 bg-transparent rounded-none px-0 h-auto py-0 shadow-none focus-visible:ring-0 focus-visible:outline-none hover:bg-muted/30 transition-colors -mx-1 px-1 rounded"
                         placeholder="Måltidens namn"
                       />
                       {!imagePreview && (
                         <p className="text-sm text-muted-foreground mt-1">{estimation.mealType}</p>
                       )}
-                      <p className="text-[11px] text-muted-foreground mt-1">Tryck Enter för att räkna om vid namnändring</p>
                     </div>
                     <span className={cn(
                       "text-xs px-2 py-1 rounded flex-shrink-0",
