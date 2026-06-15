@@ -44,11 +44,8 @@ export function AuthLanding() {
       </div>
 
       <div className="px-6 pb-8 pt-4 space-y-3 bg-background border-t border-border">
-        <Button onClick={() => setShowLogin(true)} size="xl" className="w-full h-14 text-base font-medium relative rounded-full">
+        <Button onClick={() => setShowLogin(true)} size="xl" className="w-full h-14 text-base font-medium rounded-full">
           Logga in
-          <span className="absolute right-5 top-1/2 -translate-y-1/2">
-            <BankIdLogo className="h-5 w-auto text-primary-foreground" />
-          </span>
         </Button>
 
         <Button onClick={() => setShowOnboarding(true)} variant="outline" size="xl" className="w-full h-14 text-base font-medium rounded-full border-primary/30 text-primary hover:bg-secondary">
