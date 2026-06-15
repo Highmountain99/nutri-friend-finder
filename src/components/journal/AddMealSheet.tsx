@@ -362,10 +362,23 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
                           {dataSourceInfo.label}
                         </Badge>
                       )}
-                      <p className="font-semibold text-foreground">{estimation.mealName}</p>
+                      <Input
+                        value={estimation.mealName}
+                        onChange={(e) => setEstimation({ ...estimation, mealName: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !isRecalculating) {
+                            e.preventDefault();
+                            (e.target as HTMLInputElement).blur();
+                            handleRecalculate(`Rätten är faktiskt: ${estimation.mealName}. Räkna om näringsvärden utifrån detta.`);
+                          }
+                        }}
+                        className="font-semibold text-foreground border-0 border-b border-dashed rounded-none px-0 h-auto py-1 focus-visible:ring-0 focus-visible:border-primary"
+                        placeholder="Måltidens namn"
+                      />
                       {!imagePreview && (
-                        <p className="text-sm text-muted-foreground">{estimation.mealType}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{estimation.mealType}</p>
                       )}
+                      <p className="text-[11px] text-muted-foreground mt-1">Tryck Enter för att räkna om vid namnändring</p>
                     </div>
                     <span className={cn(
                       "text-xs px-2 py-1 rounded flex-shrink-0",
