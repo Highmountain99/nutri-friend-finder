@@ -64,7 +64,7 @@ export function OnboardingModal({
       }
       toast.success("Konto skapat! Du är nu inloggad.");
       onClose();
-      navigate("/home");
+      navigate("/qualifying");
     } catch (error) {
       console.error("Signup failed:", error);
       toast.error("Ett fel uppstod vid registrering");
