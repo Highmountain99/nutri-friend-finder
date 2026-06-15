@@ -472,8 +472,15 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
                       placeholder="Skriv justering..."
                       value={adjustmentText}
                       onChange={(e) => setAdjustmentText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && adjustmentText.trim() && !isRecalculating) {
+                          e.preventDefault();
+                          handleRecalculate(adjustmentText);
+                        }
+                      }}
                       className="flex-1"
                     />
+
                     <Button
                       variant="secondary"
                       size="icon"
