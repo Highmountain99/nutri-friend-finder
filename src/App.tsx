@@ -40,6 +40,8 @@ import DietitianStatistics from "./pages/dietitian/DietitianStatistics";
 import DietitianBlocks from "./pages/dietitian/DietitianBlocks";
 import Invite from "./pages/Invite";
 import DevTools from "./pages/DevTools";
+import { InstallPrompt } from "./components/pwa/InstallPrompt";
+
 
 const queryClient = new QueryClient();
 
@@ -48,7 +50,9 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
+          <InstallPrompt />
           <Routes>
+
             {/* Landing / Auth routes - no layout */}
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
