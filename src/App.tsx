@@ -40,6 +40,8 @@ import DietitianStatistics from "./pages/dietitian/DietitianStatistics";
 import DietitianBlocks from "./pages/dietitian/DietitianBlocks";
 import Invite from "./pages/Invite";
 import DevTools from "./pages/DevTools";
+import { InstallPrompt } from "./components/pwa/InstallPrompt";
+
 
 const queryClient = new QueryClient();
 
