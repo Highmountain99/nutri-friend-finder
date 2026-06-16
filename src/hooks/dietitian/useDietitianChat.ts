@@ -9,8 +9,8 @@ async function sendPushToPatient(patientId: string) {
     await supabase.functions.invoke("send-push-notification", {
       body: {
         user_id: patientId,
-        title: "Nytt meddelande",
-        message: "Din dietist har skickat ett meddelande",
+        title: "Gut Feeling",
+        message: "Du har fått ett nytt meddelande",
         url: "/messages",
       },
     });
