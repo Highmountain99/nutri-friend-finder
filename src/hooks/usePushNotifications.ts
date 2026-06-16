@@ -35,22 +35,46 @@ export function usePushNotifications() {
     if (!user || hasSubscribed.current) return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
+    // iOS only allows web push when the PWA is installed to the home screen
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+    if (isIOS && !isStandalone) return;
+
     const subscribe = async () => {
       try {
-        // Wait for service worker to be ready
-        const registration = await navigator.serviceWorker.ready;
+        // Register dedicated push service worker (push-only, no app-shell cache)
+        const registration =
+          (await navigator.serviceWorker.getRegistration("/push-sw.js")) ||
+          (await navigator.serviceWorker.register("/push-sw.js", { scope: "/" }));
+
+        // Wait until it's active
+        if (!registration.active) {
+          await new Promise<void>((resolve) => {
+            const sw = registration.installing || registration.waiting;
+            if (!sw) return resolve();
+            sw.addEventListener("statechange", () => {
+              if (sw.state === "activated") resolve();
+            });
+          });
+        }
 
         // Check existing subscription
         const existing = await registration.pushManager.getSubscription();
         if (existing) {
           hasSubscribed.current = true;
-          // Upsert to DB in case it's missing
           await saveSubscription(existing, user.id);
           return;
         }
 
         // Request permission
-        const permission = await Notification.requestPermission();
+        if (Notification.permission === "denied") return;
+        const permission =
+          Notification.permission === "granted"
+            ? "granted"
+            : await Notification.requestPermission();
         if (permission !== "granted") return;
 
         const vapidKey = await getVapidPublicKey();
@@ -74,6 +98,7 @@ export function usePushNotifications() {
     return () => clearTimeout(timeout);
   }, [user]);
 }
+
 
 async function saveSubscription(subscription: PushSubscription, userId: string) {
   const json = subscription.toJSON();
