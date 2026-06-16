@@ -48,7 +48,9 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
+          <InstallPrompt />
           <Routes>
+
             {/* Landing / Auth routes - no layout */}
             <Route path="/" element={<Navigate to="/auth" replace />} />
             <Route path="/auth" element={<Auth />} />
