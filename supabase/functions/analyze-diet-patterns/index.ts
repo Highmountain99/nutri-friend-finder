@@ -56,12 +56,25 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const compact = meals.slice(0, 200).map((m: any) => ({
-      n: m.meal_name,
-      t: m.meal_type,
-      d: m.entry_date,
-      kcal: m.calories,
-    }));
+    // Aggregate by meal name + type to drastically reduce payload size
+    const counts = new Map<string, { n: string; t: string; c: number; kcal: number }>();
+    for (const m of meals as any[]) {
+      const n = (m.meal_name ?? "").toString().slice(0, 60);
+      const t = (m.meal_type ?? "").toString().slice(0, 20);
+      const key = `${t}|${n.toLowerCase()}`;
+      const existing = counts.get(key);
+      if (existing) {
+        existing.c += 1;
+        existing.kcal += m.calories ?? 0;
+      } else {
+        counts.set(key, { n, t, c: 1, kcal: m.calories ?? 0 });
+      }
+    }
+    const compact = Array.from(counts.values())
+      .sort((a, b) => b.c - a.c)
+      .slice(0, 120)
+      .map((x) => ({ n: x.n, t: x.t, c: x.c, kcal: Math.round(x.kcal / x.c) }));
+    const totalMeals = meals.length;
 
     const systemPrompt = `Du är en klinisk dietist som analyserar en patients kostdagbok.
 Gruppera måltiderna i 4-7 tematiska kategorier (t.ex. "Snabba kolhydrater", "Mejeri & proteinrika frukostar", "Sötsaker & snacks", "Hemlagat varmt", "Ultraprocessat", "Frukt & grönt").
