@@ -94,7 +94,7 @@ Var konkret och icke-dömande. Skriv på svenska.`;
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Måltider (${compact.length} st):\n${JSON.stringify(compact)}` },
+          { role: "user", content: `Unika rätter (${compact.length} av totalt ${totalMeals} loggade måltider). Format: n=namn, t=måltidstyp, c=antal gånger loggad, kcal=snitt:\n${JSON.stringify(compact)}` },
         ],
         tools: [
           {
