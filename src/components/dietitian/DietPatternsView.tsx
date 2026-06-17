@@ -104,8 +104,14 @@ export function DietPatternsView({ meals, symptoms }: Props) {
     setAiLoading(true);
     setAiScope(scope);
     try {
+      // Send only minimal fields to avoid OOM in edge function
+      const slim = dataset.slice(0, 500).map((m) => ({
+        meal_name: m.meal_name,
+        meal_type: m.meal_type,
+        calories: m.calories,
+      }));
       const { data, error } = await supabase.functions.invoke("analyze-diet-patterns", {
-        body: { meals: dataset },
+        body: { meals: slim },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
