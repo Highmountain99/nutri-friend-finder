@@ -24,6 +24,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
 import { TreatmentPlanTab } from "@/components/dietitian/TreatmentPlanTab";
 import { FoodLogTab } from "@/components/dietitian/FoodLogTab";
+import { DietPatternsView } from "@/components/dietitian/DietPatternsView";
 import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
 import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
 import { PatientHealthProfileCard } from "@/components/dietitian/PatientHealthProfileCard";
