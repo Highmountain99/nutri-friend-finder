@@ -43,3 +43,7 @@ verify_jwt = false
 [functions.clinical-note-ai]
 enabled = true
 verify_jwt = false
+
+[functions.analyze-diet-patterns]
+enabled = true
+verify_jwt = false
