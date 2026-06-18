@@ -368,29 +368,29 @@ const STATS = [
 ];
 function ValueScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "40px 26px 60px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
       <TopBar onClose={onClose} />
-      <div style={{ marginTop: 6 }}>
+      <div style={{ marginTop: 4 }}>
         <IllustrationSlot src={onboardingSofa} alt="Person i soffa med mobil" />
       </div>
-      <div className="flex-1 min-h-0 overflow-auto" style={{ paddingTop: 26 }}>
-        <Heading size={33} style={{ marginBottom: 28, maxWidth: "15ch" }}>
+      <div className="flex-1 min-h-0" style={{ paddingTop: 20 }}>
+        <Heading size={26} style={{ marginBottom: 20, maxWidth: "15ch" }}>
           Dietist eller kostrådgivning i mobilen
         </Heading>
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {STATS.map((s, k) => (
             <div key={k}>
-              <div style={{ fontFamily: FS, fontSize: 40, lineHeight: 0.92, color: GREEN, letterSpacing: "-0.01em" }}>
+              <div style={{ fontFamily: FS, fontSize: 28, lineHeight: 0.95, color: GREEN, letterSpacing: "-0.01em" }}>
                 {s.big}
               </div>
-              <div style={{ fontFamily: FN, fontSize: 15, color: GREEN_SOFT, marginTop: 6, maxWidth: "30ch" }}>
+              <div style={{ fontFamily: FN, fontSize: 13, color: GREEN_SOFT, marginTop: 4, maxWidth: "30ch" }}>
                 {s.small}
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="flex justify-center" style={{ paddingTop: 16 }}>
+      <div className="flex justify-center" style={{ paddingTop: 14 }}>
         <PrimaryBtn onClick={onNext}>Nästa</PrimaryBtn>
       </div>
     </div>
