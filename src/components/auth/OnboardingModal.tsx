@@ -406,41 +406,41 @@ const STEPS = [
 ];
 function HowScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "40px 26px 60px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
       <TopBar onClose={onClose} />
-      <div style={{ marginTop: 6 }}>
+      <div style={{ marginTop: 4 }}>
         <IllustrationSlot src={onboardingHealth} alt="Mat och hälsa" />
       </div>
-      <div className="flex-1 min-h-0 overflow-auto" style={{ paddingTop: 24 }}>
-        <Heading size={33} style={{ marginBottom: 22 }}>
+      <div className="flex-1 min-h-0" style={{ paddingTop: 18 }}>
+        <Heading size={26} style={{ marginBottom: 16 }}>
           Så här fungerar det
         </Heading>
-        <div className="flex flex-col gap-[18px]">
+        <div className="flex flex-col gap-[12px]">
           {STEPS.map((t, k) => (
-            <div key={k} className="flex gap-[14px] items-start">
+            <div key={k} className="flex gap-[12px] items-start">
               <span
                 className="flex-shrink-0 grid place-items-center"
                 style={{
-                  width: 30,
-                  height: 30,
+                  width: 24,
+                  height: 24,
                   borderRadius: "50%",
                   background: GREEN,
                   color: BEIGE,
                   fontFamily: FS,
-                  fontSize: 17,
+                  fontSize: 14,
                   marginTop: 1,
                 }}
               >
                 {k + 1}
               </span>
-              <p className="m-0" style={{ fontFamily: FN, fontSize: 15.5, lineHeight: 1.5, color: INK }}>
+              <p className="m-0" style={{ fontFamily: FN, fontSize: 13.5, lineHeight: 1.45, color: INK }}>
                 {t}
               </p>
             </div>
           ))}
         </div>
       </div>
-      <div className="flex justify-center" style={{ paddingTop: 16 }}>
+      <div className="flex justify-center" style={{ paddingTop: 14 }}>
         <PrimaryBtn onClick={onNext}>Skapa konto</PrimaryBtn>
       </div>
     </div>
