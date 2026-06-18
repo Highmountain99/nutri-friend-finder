@@ -370,9 +370,6 @@ function ValueScreen({ onNext, onClose }: { onNext: () => void; onClose: () => v
   return (
     <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 72px" }}>
       <TopBar onClose={onClose} />
-      <div style={{ marginTop: 4 }}>
-        <IllustrationSlot src={onboardingSofa} alt="Person i soffa med mobil" />
-      </div>
       <div className="flex-1 min-h-0" style={{ paddingTop: 20 }}>
         <Heading size={26} style={{ marginBottom: 20, maxWidth: "15ch" }}>
           Dietist eller kostrådgivning i mobilen
@@ -408,9 +405,6 @@ function HowScreen({ onNext, onClose }: { onNext: () => void; onClose: () => voi
   return (
     <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 72px" }}>
       <TopBar onClose={onClose} />
-      <div style={{ marginTop: 4 }}>
-        <IllustrationSlot src={onboardingHealth} alt="Mat och hälsa" />
-      </div>
       <div className="flex-1 min-h-0" style={{ paddingTop: 18 }}>
         <Heading size={26} style={{ marginBottom: 16 }}>
           Så här fungerar det
