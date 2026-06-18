@@ -558,13 +558,13 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
   };
 
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "40px 26px 60px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
       <TopBar onClose={onClose} />
-      <div className="flex-1 min-h-0 overflow-auto" style={{ paddingTop: 8 }}>
-        <Heading size={34} style={{ marginBottom: 8 }}>
+      <div className="flex-1 min-h-0" style={{ paddingTop: 4 }}>
+        <Heading size={26} style={{ marginBottom: 6 }}>
           Skapa ditt konto
         </Heading>
-        <p className="m-0" style={{ marginBottom: 24, fontFamily: FN, fontSize: 15.5, color: GREEN_SOFT }}>
+        <p className="m-0" style={{ marginBottom: 18, fontFamily: FN, fontSize: 13.5, color: GREEN_SOFT }}>
           Fyll i dina uppgifter för att komma igång.
         </p>
 
@@ -573,7 +573,7 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
             e.preventDefault();
             submit();
           }}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3"
         >
           <div className="flex gap-3">
             <div className="flex-1">
