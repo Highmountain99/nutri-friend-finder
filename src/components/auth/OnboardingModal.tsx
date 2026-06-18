@@ -260,8 +260,8 @@ function IllustrationSlot({ src, alt }: { src: string; alt: string }) {
     <div
       className="w-full overflow-hidden flex-shrink-0 grid place-items-center"
       style={{
-        height: 188,
-        borderRadius: 20,
+        height: 140,
+        borderRadius: 18,
         background: "#ECE6D7",
         border: `1px solid ${LINE}`,
       }}
