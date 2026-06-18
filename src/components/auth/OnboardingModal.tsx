@@ -181,11 +181,11 @@ function PrimaryBtn({
       disabled={disabled}
       className="w-full rounded-full flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
       style={{
-        padding: "17px 20px",
+        padding: "13px 18px",
         background: GREEN_DEEP,
         color: BEIGE,
         fontFamily: FN,
-        fontSize: 16.5,
+        fontSize: 15,
         fontWeight: 600,
         opacity: disabled ? 0.42 : 1,
         boxShadow: disabled ? "none" : "0 10px 26px -14px rgba(20,35,25,0.7)",
@@ -202,12 +202,12 @@ function GhostBtn({ children, onClick }: { children: React.ReactNode; onClick?: 
       onClick={onClick}
       className="w-full rounded-full transition-transform active:scale-[0.98]"
       style={{
-        padding: "17px 20px",
+        padding: "13px 18px",
         background: "transparent",
         border: "1.5px solid rgba(31,42,34,0.34)",
         color: GREEN_DEEP,
         fontFamily: FN,
-        fontSize: 16.5,
+        fontSize: 15,
         fontWeight: 600,
       }}
     >
