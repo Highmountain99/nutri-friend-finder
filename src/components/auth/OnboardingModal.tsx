@@ -472,8 +472,8 @@ function Field({
   const [focus, setFocus] = useState(false);
   const border = error ? CORAL : focus ? GREEN : FIELD_BORDER;
   return (
-    <label className="flex flex-col gap-2">
-      <span style={{ fontFamily: FN, fontSize: 14, fontWeight: 600, color: GREEN_DEEP }}>{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span style={{ fontFamily: FN, fontSize: 13, fontWeight: 600, color: GREEN_DEEP }}>{label}</span>
       <span className="relative flex items-center">
         <input
           type={type}
@@ -485,13 +485,13 @@ function Field({
           onBlur={() => setFocus(false)}
           className="w-full box-border outline-none"
           style={{
-            padding: "15px 16px",
-            paddingRight: trailing || valid ? 44 : 16,
+            padding: "11px 14px",
+            paddingRight: trailing || valid ? 40 : 14,
             border: `1.5px solid ${border}`,
-            borderRadius: 14,
+            borderRadius: 12,
             background: FIELD,
             fontFamily: FN,
-            fontSize: 16,
+            fontSize: 14,
             color: INK,
             boxShadow: focus
               ? `0 0 0 4px ${error ? "rgba(196,86,78,0.14)" : "rgba(31,58,46,0.12)"}`
@@ -506,7 +506,7 @@ function Field({
         )}
         {!trailing && valid && (
           <span className="absolute right-3 flex" style={{ color: OK }}>
-            <Check className="w-[18px] h-[18px]" />
+            <Check className="w-[16px] h-[16px]" />
           </span>
         )}
       </span>
