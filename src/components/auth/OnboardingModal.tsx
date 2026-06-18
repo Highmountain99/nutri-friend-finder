@@ -39,7 +39,16 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   useEffect(() => {
     if (open) {
       setMounted(true);
-      requestAnimationFrame(() => setVisible(true));
+      setVisible(false);
+      // Double RAF so the initial translateY(100%) paints before transitioning.
+      const r1 = requestAnimationFrame(() => {
+        const r2 = requestAnimationFrame(() => setVisible(true));
+        (window as any).__onb_raf2 = r2;
+      });
+      return () => {
+        cancelAnimationFrame(r1);
+        if ((window as any).__onb_raf2) cancelAnimationFrame((window as any).__onb_raf2);
+      };
     } else {
       setVisible(false);
       const t = setTimeout(() => {
