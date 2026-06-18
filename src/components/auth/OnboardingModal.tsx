@@ -368,7 +368,7 @@ const STATS = [
 ];
 function ValueScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 72px" }}>
       <TopBar onClose={onClose} />
       <div style={{ marginTop: 4 }}>
         <IllustrationSlot src={onboardingSofa} alt="Person i soffa med mobil" />
@@ -406,7 +406,7 @@ const STEPS = [
 ];
 function HowScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 72px" }}>
       <TopBar onClose={onClose} />
       <div style={{ marginTop: 4 }}>
         <IllustrationSlot src={onboardingHealth} alt="Mat och hälsa" />
@@ -558,7 +558,7 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
   };
 
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 72px" }}>
       <TopBar onClose={onClose} />
       <div className="flex-1 min-h-0" style={{ paddingTop: 4 }}>
         <Heading size={26} style={{ marginBottom: 6 }}>
