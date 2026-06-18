@@ -690,7 +690,7 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
           <button type="submit" hidden />
         </form>
       </div>
-      <div className="flex justify-center" style={{ paddingTop: 18 }}>
+      <div className="flex justify-center" style={{ paddingTop: 14 }}>
         <PrimaryBtn onClick={submit} disabled={loading || (touched && !allOk)}>
           {loading ? "Skapar konto…" : "Kom igång"}
         </PrimaryBtn>
