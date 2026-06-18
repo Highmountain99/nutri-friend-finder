@@ -39,7 +39,16 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   useEffect(() => {
     if (open) {
       setMounted(true);
-      requestAnimationFrame(() => setVisible(true));
+      setVisible(false);
+      // Double RAF so the initial translateY(100%) paints before transitioning.
+      const r1 = requestAnimationFrame(() => {
+        const r2 = requestAnimationFrame(() => setVisible(true));
+        (window as any).__onb_raf2 = r2;
+      });
+      return () => {
+        cancelAnimationFrame(r1);
+        if ((window as any).__onb_raf2) cancelAnimationFrame((window as any).__onb_raf2);
+      };
     } else {
       setVisible(false);
       const t = setTimeout(() => {
@@ -172,11 +181,11 @@ function PrimaryBtn({
       disabled={disabled}
       className="w-full rounded-full flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
       style={{
-        padding: "17px 20px",
+        padding: "13px 18px",
         background: GREEN_DEEP,
         color: BEIGE,
         fontFamily: FN,
-        fontSize: 16.5,
+        fontSize: 15,
         fontWeight: 600,
         opacity: disabled ? 0.42 : 1,
         boxShadow: disabled ? "none" : "0 10px 26px -14px rgba(20,35,25,0.7)",
@@ -193,12 +202,12 @@ function GhostBtn({ children, onClick }: { children: React.ReactNode; onClick?: 
       onClick={onClick}
       className="w-full rounded-full transition-transform active:scale-[0.98]"
       style={{
-        padding: "17px 20px",
+        padding: "13px 18px",
         background: "transparent",
         border: "1.5px solid rgba(31,42,34,0.34)",
         color: GREEN_DEEP,
         fontFamily: FN,
-        fontSize: 16.5,
+        fontSize: 15,
         fontWeight: 600,
       }}
     >
@@ -251,8 +260,8 @@ function IllustrationSlot({ src, alt }: { src: string; alt: string }) {
     <div
       className="w-full overflow-hidden flex-shrink-0 grid place-items-center"
       style={{
-        height: 188,
-        borderRadius: 20,
+        height: 140,
+        borderRadius: 18,
         background: "#ECE6D7",
         border: `1px solid ${LINE}`,
       }}
@@ -359,29 +368,29 @@ const STATS = [
 ];
 function ValueScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "40px 26px 60px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
       <TopBar onClose={onClose} />
-      <div style={{ marginTop: 6 }}>
+      <div style={{ marginTop: 4 }}>
         <IllustrationSlot src={onboardingSofa} alt="Person i soffa med mobil" />
       </div>
-      <div className="flex-1 min-h-0 overflow-auto" style={{ paddingTop: 26 }}>
-        <Heading size={33} style={{ marginBottom: 28, maxWidth: "15ch" }}>
+      <div className="flex-1 min-h-0" style={{ paddingTop: 20 }}>
+        <Heading size={26} style={{ marginBottom: 20, maxWidth: "15ch" }}>
           Dietist eller kostrådgivning i mobilen
         </Heading>
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {STATS.map((s, k) => (
             <div key={k}>
-              <div style={{ fontFamily: FS, fontSize: 40, lineHeight: 0.92, color: GREEN, letterSpacing: "-0.01em" }}>
+              <div style={{ fontFamily: FS, fontSize: 28, lineHeight: 0.95, color: GREEN, letterSpacing: "-0.01em" }}>
                 {s.big}
               </div>
-              <div style={{ fontFamily: FN, fontSize: 15, color: GREEN_SOFT, marginTop: 6, maxWidth: "30ch" }}>
+              <div style={{ fontFamily: FN, fontSize: 13, color: GREEN_SOFT, marginTop: 4, maxWidth: "30ch" }}>
                 {s.small}
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="flex justify-center" style={{ paddingTop: 16 }}>
+      <div className="flex justify-center" style={{ paddingTop: 14 }}>
         <PrimaryBtn onClick={onNext}>Nästa</PrimaryBtn>
       </div>
     </div>
@@ -397,41 +406,41 @@ const STEPS = [
 ];
 function HowScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "40px 26px 60px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
       <TopBar onClose={onClose} />
-      <div style={{ marginTop: 6 }}>
+      <div style={{ marginTop: 4 }}>
         <IllustrationSlot src={onboardingHealth} alt="Mat och hälsa" />
       </div>
-      <div className="flex-1 min-h-0 overflow-auto" style={{ paddingTop: 24 }}>
-        <Heading size={33} style={{ marginBottom: 22 }}>
+      <div className="flex-1 min-h-0" style={{ paddingTop: 18 }}>
+        <Heading size={26} style={{ marginBottom: 16 }}>
           Så här fungerar det
         </Heading>
-        <div className="flex flex-col gap-[18px]">
+        <div className="flex flex-col gap-[12px]">
           {STEPS.map((t, k) => (
-            <div key={k} className="flex gap-[14px] items-start">
+            <div key={k} className="flex gap-[12px] items-start">
               <span
                 className="flex-shrink-0 grid place-items-center"
                 style={{
-                  width: 30,
-                  height: 30,
+                  width: 24,
+                  height: 24,
                   borderRadius: "50%",
                   background: GREEN,
                   color: BEIGE,
                   fontFamily: FS,
-                  fontSize: 17,
+                  fontSize: 14,
                   marginTop: 1,
                 }}
               >
                 {k + 1}
               </span>
-              <p className="m-0" style={{ fontFamily: FN, fontSize: 15.5, lineHeight: 1.5, color: INK }}>
+              <p className="m-0" style={{ fontFamily: FN, fontSize: 13.5, lineHeight: 1.45, color: INK }}>
                 {t}
               </p>
             </div>
           ))}
         </div>
       </div>
-      <div className="flex justify-center" style={{ paddingTop: 16 }}>
+      <div className="flex justify-center" style={{ paddingTop: 14 }}>
         <PrimaryBtn onClick={onNext}>Skapa konto</PrimaryBtn>
       </div>
     </div>
@@ -463,8 +472,8 @@ function Field({
   const [focus, setFocus] = useState(false);
   const border = error ? CORAL : focus ? GREEN : FIELD_BORDER;
   return (
-    <label className="flex flex-col gap-2">
-      <span style={{ fontFamily: FN, fontSize: 14, fontWeight: 600, color: GREEN_DEEP }}>{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span style={{ fontFamily: FN, fontSize: 13, fontWeight: 600, color: GREEN_DEEP }}>{label}</span>
       <span className="relative flex items-center">
         <input
           type={type}
@@ -476,13 +485,13 @@ function Field({
           onBlur={() => setFocus(false)}
           className="w-full box-border outline-none"
           style={{
-            padding: "15px 16px",
-            paddingRight: trailing || valid ? 44 : 16,
+            padding: "11px 14px",
+            paddingRight: trailing || valid ? 40 : 14,
             border: `1.5px solid ${border}`,
-            borderRadius: 14,
+            borderRadius: 12,
             background: FIELD,
             fontFamily: FN,
-            fontSize: 16,
+            fontSize: 14,
             color: INK,
             boxShadow: focus
               ? `0 0 0 4px ${error ? "rgba(196,86,78,0.14)" : "rgba(31,58,46,0.12)"}`
@@ -497,7 +506,7 @@ function Field({
         )}
         {!trailing && valid && (
           <span className="absolute right-3 flex" style={{ color: OK }}>
-            <Check className="w-[18px] h-[18px]" />
+            <Check className="w-[16px] h-[16px]" />
           </span>
         )}
       </span>
@@ -549,13 +558,13 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
   };
 
   return (
-    <div className="h-full box-border flex flex-col" style={{ padding: "40px 26px 60px" }}>
+    <div className="h-full box-border flex flex-col" style={{ padding: "28px 22px 32px" }}>
       <TopBar onClose={onClose} />
-      <div className="flex-1 min-h-0 overflow-auto" style={{ paddingTop: 8 }}>
-        <Heading size={34} style={{ marginBottom: 8 }}>
+      <div className="flex-1 min-h-0" style={{ paddingTop: 4 }}>
+        <Heading size={26} style={{ marginBottom: 6 }}>
           Skapa ditt konto
         </Heading>
-        <p className="m-0" style={{ marginBottom: 24, fontFamily: FN, fontSize: 15.5, color: GREEN_SOFT }}>
+        <p className="m-0" style={{ marginBottom: 18, fontFamily: FN, fontSize: 13.5, color: GREEN_SOFT }}>
           Fyll i dina uppgifter för att komma igång.
         </p>
 
@@ -564,7 +573,7 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
             e.preventDefault();
             submit();
           }}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3"
         >
           <div className="flex gap-3">
             <div className="flex-1">
@@ -681,7 +690,7 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
           <button type="submit" hidden />
         </form>
       </div>
-      <div className="flex justify-center" style={{ paddingTop: 18 }}>
+      <div className="flex justify-center" style={{ paddingTop: 14 }}>
         <PrimaryBtn onClick={submit} disabled={loading || (touched && !allOk)}>
           {loading ? "Skapar konto…" : "Kom igång"}
         </PrimaryBtn>
