@@ -24,18 +24,20 @@ function isStandalone(): boolean {
   );
 }
 
-export function InstallPrompt() {
+export function InstallPrompt({ force = false }: { force?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const [platform, setPlatform] = useState<Platform>("other");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     const p = detectPlatform();
-    setPlatform(p);
+    // For forced contexts (e.g. landing page for guests), default to iOS
+    // instructions on unknown platforms so desktop visitors still see guidance.
+    setPlatform(force && p === "other" ? "ios" : p);
 
     if (isStandalone()) return;
-    if (localStorage.getItem(STORAGE_KEY)) return;
-    if (p === "other") return;
+    if (!force && localStorage.getItem(STORAGE_KEY)) return;
+    if (!force && p === "other") return;
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -50,7 +52,7 @@ export function InstallPrompt() {
       window.removeEventListener("beforeinstallprompt", handler);
       clearTimeout(t);
     };
-  }, []);
+  }, [force]);
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, "1");
