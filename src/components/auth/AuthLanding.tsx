@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { OnboardingModal } from "./OnboardingModal";
 import { LoginSheet } from "./LoginSheet";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function AuthLanding() {
@@ -149,6 +150,7 @@ export function AuthLanding() {
 
       <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
       <LoginSheet open={showLogin} onClose={() => setShowLogin(false)} redirectTo={redirectTo} />
+      {!session && !showOnboarding && !showLogin && <InstallPrompt force />}
     </div>
   );
 }
