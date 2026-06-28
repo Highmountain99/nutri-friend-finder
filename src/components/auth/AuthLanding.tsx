@@ -150,6 +150,7 @@ export function AuthLanding() {
 
       <OnboardingModal open={showOnboarding} onClose={() => setShowOnboarding(false)} />
       <LoginSheet open={showLogin} onClose={() => setShowLogin(false)} redirectTo={redirectTo} />
+      {!session && !showOnboarding && !showLogin && <InstallPrompt force />}
     </div>
   );
 }
