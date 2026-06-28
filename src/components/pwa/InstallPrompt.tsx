@@ -36,6 +36,7 @@ export function InstallPrompt({ force = false }: { force?: boolean } = {}) {
     setPlatform(force && p === "other" ? "ios" : p);
 
     if (isStandalone()) return;
+    if (!force && typeof window !== "undefined" && window.location.pathname.startsWith("/auth")) return;
     if (!force && localStorage.getItem(STORAGE_KEY)) return;
     if (!force && p === "other") return;
 
