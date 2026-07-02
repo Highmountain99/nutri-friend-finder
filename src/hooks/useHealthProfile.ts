@@ -218,9 +218,28 @@ export function useHealthProfile() {
         );
       
       if (error) throw error;
+
+      // Logga även en trend-post så vikttrenden i Utveckling uppdateras
+      const today = new Date().toLocaleDateString("sv-SE");
+      const { error: trendError } = await supabase
+        .from("health_tracking_entries")
+        .upsert(
+          {
+            user_id: user.id,
+            metric_type: "weight",
+            value: weightKg,
+            unit: "kg",
+            entry_date: today,
+          },
+          { onConflict: "user_id,metric_type,entry_date", ignoreDuplicates: false }
+        );
+
+      if (trendError) throw trendError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["health-profile", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["progress-data"] });
+      queryClient.invalidateQueries({ queryKey: ["health-tracking"] });
       toast.success("Vikt uppdaterad");
     },
     onError: () => {
