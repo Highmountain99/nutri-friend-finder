@@ -28,9 +28,9 @@ function JourneyPill({ onClick }: { onClick: () => void }) {
   );
 }
 
-function HeaderB({ onOpenJourney }: { onOpenJourney: () => void }) {
+function HeaderB() {
   return (
-    <div className="flex items-end justify-between pt-1">
+    <div className="pt-1">
       <div>
         <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-muted-foreground">
           Din utveckling
@@ -39,7 +39,6 @@ function HeaderB({ onOpenJourney }: { onOpenJourney: () => void }) {
           Följ dina framsteg
         </h1>
       </div>
-      <JourneyPill onClick={onOpenJourney} />
     </div>
   );
 }
