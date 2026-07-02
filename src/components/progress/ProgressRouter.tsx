@@ -3,8 +3,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
 import { useAppointments } from "@/hooks/useAppointments";
+import { usePatientTreatmentPlan } from "@/hooks/usePatientTreatmentPlan";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, Eye, Route, Sparkles } from "lucide-react";
+import { CalendarPlus, Eye, Route, Sparkles, ArrowRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,105 +13,310 @@ interface ProgressRouterProps {
   onOpenJourney: () => void;
 }
 
+/* ---------- Layered & Tactile subcomponents (scoped to Utveckling) ---------- */
+
+function JourneyPill({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Öppna min resa"
+      className="flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 py-2 text-xs font-semibold shadow-[0_6px_26px_-12px_hsl(145_30%_11%/0.35)] active:scale-95 transition-transform"
+    >
+      <Route className="w-3.5 h-3.5" />
+      Min resa
+    </button>
+  );
+}
+
+function HeaderB({ onOpenJourney }: { onOpenJourney: () => void }) {
+  return (
+    <div className="flex items-end justify-between pt-1">
+      <div>
+        <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-muted-foreground">
+          Din utveckling
+        </div>
+        <h1 className="font-serif text-[30px] leading-none tracking-tight text-primary mt-1.5">
+          Följ dina framsteg
+        </h1>
+      </div>
+      <JourneyPill onClick={onOpenJourney} />
+    </div>
+  );
+}
+
+function Arc({
+  value,
+  total,
+  size = 88,
+  sw = 7,
+  children,
+}: {
+  value: number;
+  total: number;
+  size?: number;
+  sw?: number;
+  children?: React.ReactNode;
+}) {
+  const r = (size - sw) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = total > 0 ? Math.max(0, Math.min(1, value / total)) : 0;
+  return (
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="hsl(var(--primary-foreground) / 0.18)"
+          strokeWidth={sw}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="hsl(var(--primary-foreground))"
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - pct)}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">{children}</div>
+    </div>
+  );
+}
+
+function HeroB({
+  planTitle,
+  phaseName,
+  activeIdx,
+  totalPhases,
+  weekLabel,
+  onOpen,
+}: {
+  planTitle: string;
+  phaseName: string;
+  activeIdx: number;
+  totalPhases: number;
+  weekLabel?: string;
+  onOpen: () => void;
+}) {
+  return (
+    <div className="relative">
+      {/* layered peek */}
+      <div
+        className="absolute left-2.5 right-2.5 top-2.5 -bottom-2 rounded-[22px] bg-accent/35"
+        aria-hidden
+      />
+      <button
+        onClick={onOpen}
+        className="relative w-full text-left bg-primary text-primary-foreground rounded-[22px] p-5 overflow-hidden shadow-[0_18px_44px_-22px_hsl(145_30%_11%/0.7)] active:scale-[0.99] transition-transform"
+      >
+        <div
+          className="absolute -right-12 -top-12 w-[150px] h-[150px] rounded-full bg-primary-foreground/5"
+          aria-hidden
+        />
+        <div className="relative flex items-center justify-between mb-4">
+          <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-primary-foreground/70">
+            Min resa · {planTitle}
+          </span>
+          <Route className="w-3.5 h-3.5 text-primary-foreground/70" />
+        </div>
+        <div className="relative flex items-center gap-4">
+          <Arc value={activeIdx + 1} total={Math.max(totalPhases, 1)}>
+            <span className="font-serif text-[26px] leading-none text-primary-foreground">
+              {activeIdx + 1}
+            </span>
+            <span className="font-mono text-[8px] tracking-[0.1em] text-primary-foreground/70 mt-0.5">
+              AV {Math.max(totalPhases, 1)}
+            </span>
+          </Arc>
+          <div className="flex-1 min-w-0">
+            <div className="font-serif text-[26px] leading-tight tracking-tight truncate">
+              {phaseName}
+            </div>
+            {weekLabel && (
+              <div className="font-mono text-[9.5px] tracking-[0.1em] text-primary-foreground/70 mt-1.5 uppercase">
+                {weekLabel}
+              </div>
+            )}
+            <div className="flex gap-1.5 mt-2.5">
+              {Array.from({ length: Math.max(totalPhases, 1) }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1 flex-1 rounded-full ${
+                    i <= activeIdx ? "bg-primary-foreground" : "bg-primary-foreground/18"
+                  }`}
+                  style={{ backgroundColor: i <= activeIdx ? undefined : "hsl(var(--primary-foreground) / 0.18)" }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="relative flex items-center justify-between mt-4 pt-3.5 border-t border-primary-foreground/18">
+          <span className="text-[12.5px] text-primary-foreground/70">
+            Öppna hela din resa
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-primary-foreground/12 rounded-full px-3 py-1.5">
+            Öppna <ArrowRight className="w-3 h-3" />
+          </span>
+        </div>
+      </button>
+    </div>
+  );
+}
+
+function FocusB({ quote, author }: { quote: string; author: string }) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-[20px] p-[18px] border shadow-[0_6px_26px_-12px_hsl(145_30%_11%/0.30)]"
+      style={{
+        backgroundColor: "hsl(var(--nutrient-cal) / 0.08)",
+        borderColor: "hsl(var(--nutrient-cal) / 0.18)",
+      }}
+    >
+      <div
+        className="absolute -right-8 -bottom-8 w-[110px] h-[110px] rounded-full"
+        style={{ backgroundColor: "hsl(var(--nutrient-cal) / 0.08)" }}
+        aria-hidden
+      />
+      <div className="relative">
+        <div
+          className="font-mono text-[9.5px] tracking-[0.16em] uppercase mb-2.5"
+          style={{ color: "hsl(var(--nutrient-cal))" }}
+        >
+          Dagens fokus
+        </div>
+        <p className="font-serif italic text-[22px] leading-[1.25] text-primary m-0">{quote}</p>
+        <span className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/70 mt-2.5 block">
+          — {author}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------- Main --------------------------------- */
+
 export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
   const [previewMode, setPreviewMode] = useState(false);
   const { data: patientBlocks, isLoading: blocksLoading } = usePatientBlocks(user?.id);
   const { appointments, loading: appointmentsLoading } = useAppointments();
+  const { data: plan } = usePatientTreatmentPlan();
   const navigate = useNavigate();
 
   const hasCompletedAppointment = appointments.some(
-    (apt) => apt.status === "completed" || 
-    (apt.status === "booked" && apt.appointmentDate < new Date())
+    (apt) =>
+      apt.status === "completed" ||
+      (apt.status === "booked" && apt.appointmentDate < new Date())
   );
 
   if (blocksLoading || appointmentsLoading) {
     return (
       <div className="px-4 py-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-24" />
-        <Skeleton className="h-40" />
+        <Skeleton className="h-10 w-56" />
+        <Skeleton className="h-40 rounded-[22px]" />
+        <Skeleton className="h-24 rounded-[20px]" />
+        <Skeleton className="h-40 rounded-[20px]" />
       </div>
     );
   }
 
   const hasBlocks = patientBlocks && patientBlocks.length > 0;
 
-  const dynamicBlocks = hasBlocks ? (
-    <div className="px-4 py-6 space-y-3 pb-24">
-      <div className="mb-2">
-        <h1 className="text-xl font-bold text-foreground">Din utveckling</h1>
-        <p className="text-sm text-muted-foreground">Följ dina framsteg</p>
-      </div>
-      {patientBlocks.map((bd) => (
-        <DynamicBlock key={bd.block.id} data={bd} />
-      ))}
-    </div>
-  ) : (
-    <div className="px-4 py-6 pb-24">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-foreground">Din utveckling</h1>
-        <p className="text-sm text-muted-foreground">Följ dina framsteg</p>
-      </div>
-      <div className="text-center py-12">
-        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <Sparkles className="w-7 h-7 text-primary" />
+  // Derive phase info from plan goals (active = first non-completed)
+  const goals = plan?.goals ?? [];
+  const totalPhases = goals.length || 3;
+  const activeIdx = Math.max(
+    0,
+    goals.findIndex((g) => g.status !== "completed")
+  );
+  const activeGoal = goals[activeIdx];
+  const phaseName = activeGoal?.title || plan?.title || "Din behandling";
+  const planTitle = plan?.title || "Behandlingsplan";
+  const focusQuote =
+    activeGoal?.description ||
+    "Varje måltid är ett steg framåt — lita på processen.";
+
+  const shell = (
+    <div className="px-4 pt-4 pb-24 space-y-3.5">
+      <HeaderB onOpenJourney={onOpenJourney} />
+      {plan && (
+        <HeroB
+          planTitle={planTitle}
+          phaseName={phaseName}
+          activeIdx={activeIdx}
+          totalPhases={totalPhases}
+          onOpen={onOpenJourney}
+        />
+      )}
+      <FocusB quote={focusQuote} author="Din dietist" />
+
+      {hasBlocks ? (
+        <div className="space-y-3">
+          {patientBlocks!.map((bd) => (
+            <DynamicBlock key={bd.block.id} data={bd} />
+          ))}
         </div>
-        <h2 className="text-lg font-semibold text-foreground mb-2">
-          Inga block ännu
-        </h2>
-        <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
-          Din dietist kommer att anpassa din utvecklingsvy med block som passar just din behandling.
-        </p>
-      </div>
+      ) : (
+        <div className="text-center py-10">
+          <div className="w-16 h-16 rounded-[20px] bg-secondary border border-border shadow-[0_6px_26px_-12px_hsl(145_30%_11%/0.30)] flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="w-6 h-6 text-accent" />
+          </div>
+          <h2 className="font-serif text-[25px] text-primary mb-2">Inga block ännu</h2>
+          <p className="text-sm text-muted-foreground max-w-[28ch] mx-auto leading-relaxed">
+            Din dietist anpassar din utvecklingsvy med block som passar just din behandling.
+          </p>
+        </div>
+      )}
     </div>
   );
 
-  const journeyButton = (
-    <button
-      className="absolute top-2 right-4 z-10 h-10 px-4 rounded-full bg-primary text-primary-foreground flex items-center gap-2 shadow-md active:scale-95 transition-transform"
-      onClick={onOpenJourney}
-      aria-label="Visa programöversikt"
-    >
-      <Route className="w-4 h-4" />
-      <span className="text-sm font-medium">Min resa</span>
-    </button>
-  );
-
-  // If no completed appointment yet, show locked state
+  // Locked state
   if (!hasCompletedAppointment && !previewMode) {
     return (
-      <div className="relative h-[calc(100vh-8rem)] overflow-hidden">
-        <div className="pointer-events-none select-none blur-md opacity-50" aria-hidden="true">
-          <div className="relative">
-            {journeyButton}
+      <div className="relative min-h-[calc(100vh-8rem)] overflow-hidden">
+        <div className="pointer-events-none select-none blur-[7px] opacity-50" aria-hidden="true">
+          <div className="px-4 pt-4 space-y-3.5">
+            <HeaderB onOpenJourney={() => {}} />
+            <HeroB
+              planTitle="FODMAP"
+              phaseName="Återintroduktion"
+              activeIdx={1}
+              totalPhases={3}
+              onOpen={() => {}}
+            />
+            <FocusB quote={focusQuote} author="Din dietist" />
           </div>
-          {dynamicBlocks}
         </div>
 
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-2xl shadow-lg p-8 mx-6 text-center max-w-sm">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <CalendarPlus className="w-7 h-7 text-primary" />
+        <div className="absolute inset-0 flex items-center justify-center z-10 px-6">
+          <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-[22px] shadow-[0_24px_60px_-28px_hsl(145_30%_11%/0.4)] p-7 text-center max-w-sm w-full">
+            <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-5 h-5 text-primary" />
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-2">
+            <div
+              className="font-mono text-[10px] tracking-[0.16em] uppercase"
+              style={{ color: "hsl(var(--nutrient-cal))" }}
+            >
+              Lås upp
+            </div>
+            <h2 className="font-serif text-[26px] leading-tight text-primary mt-2 mb-2.5">
               Din utvecklingsplan väntar
             </h2>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              Din utvecklingsplan aktiveras när du haft ett möte med din personliga dietist.
+            <p className="text-[13px] leading-[1.5] text-muted-foreground mb-5 max-w-[30ch] mx-auto">
+              Planen aktiveras när du haft ditt första möte med din personliga dietist.
             </p>
-            <Button
-              className="w-full rounded-xl"
-              size="lg"
-              onClick={() => navigate("/booking")}
-            >
+            <Button className="w-full rounded-2xl" size="lg" onClick={() => navigate("/booking")}>
               <CalendarPlus className="w-4 h-4 mr-2" />
               Boka tid med dietist
             </Button>
             <Button
               variant="ghost"
-              className="w-full rounded-xl mt-2 text-muted-foreground"
+              className="w-full rounded-2xl mt-1 text-muted-foreground"
               onClick={() => setPreviewMode(true)}
             >
               <Eye className="w-4 h-4 mr-2" />
@@ -125,31 +331,32 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   // Preview mode banner
   if (!hasCompletedAppointment && previewMode) {
     return (
-      <div>
-        <div className="mx-4 mb-2 mt-2 bg-primary/5 border border-primary/20 rounded-2xl p-4">
+      <>
+        <div className="mx-4 mb-1 mt-3 bg-primary/5 border border-primary/20 rounded-2xl p-3.5">
           <div className="flex items-center gap-3">
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground">Förhandsvisning</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Det här är ett exempel på hur din plan kan se ut</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Det här är ett exempel på hur din plan kan se ut
+              </p>
             </div>
-            <Button size="sm" className="rounded-xl text-xs h-8 shrink-0" onClick={() => { setPreviewMode(false); navigate("/booking"); }}>
+            <Button
+              size="sm"
+              className="rounded-xl text-xs h-8 shrink-0"
+              onClick={() => {
+                setPreviewMode(false);
+                navigate("/booking");
+              }}
+            >
               <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
               Boka tid
             </Button>
           </div>
         </div>
-        <div className="relative">
-          {journeyButton}
-          {dynamicBlocks}
-        </div>
-      </div>
+        {shell}
+      </>
     );
   }
 
-  return (
-    <div className="relative">
-      {journeyButton}
-      {dynamicBlocks}
-    </div>
-  );
+  return shell;
 }
