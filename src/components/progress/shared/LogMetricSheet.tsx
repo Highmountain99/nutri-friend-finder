@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { MetricType, METRIC_LABELS } from "@/types/progress";
 
 interface LogMetricSheetProps {
@@ -18,6 +19,7 @@ interface LogMetricSheetProps {
 
 export function LogMetricSheet({ metricType, onSuccess, trigger }: LogMetricSheetProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
@@ -47,6 +49,9 @@ export function LogMetricSheet({ metricType, onSuccess, trigger }: LogMetricShee
       setOpen(false);
       setValue("");
       setNotes("");
+      queryClient.invalidateQueries({ queryKey: ["health-profile", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["progress-data"] });
+      queryClient.invalidateQueries({ queryKey: ["health-tracking"] });
       onSuccess?.();
     } catch (error) {
       console.error('Error saving metric:', error);
