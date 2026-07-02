@@ -19,6 +19,7 @@ interface LogMetricSheetProps {
 
 export function LogMetricSheet({ metricType, onSuccess, trigger }: LogMetricSheetProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
