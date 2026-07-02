@@ -400,7 +400,7 @@ function MapView({
           {/* Finish */}
           <div
             className="absolute flex flex-col items-center"
-            style={{ left: centerX - 30, top: finishY - 30, width: 60 }}
+            style={{ left: centerX - 110, top: finishY - 30, width: 220 }}
           >
             <div
               className="w-[60px] h-[60px] rounded-full flex items-center justify-center"
