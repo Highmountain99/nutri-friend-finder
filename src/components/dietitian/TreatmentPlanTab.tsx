@@ -31,15 +31,19 @@ interface Props {
 }
 
 export function TreatmentPlanTab({ patientId }: Props) {
-  const { activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan } = useTreatmentPlan(patientId);
+  const { activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan, updatePlan, updateGoal, deleteGoal, addGoal: addGoalMut, addMilestone: addMilestoneMut, updateMilestone: updateMilestoneMut, deleteMilestone } = useTreatmentPlan(patientId);
   const [showCreate, setShowCreate] = useState(false);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
   const [showArchived, setShowArchived] = useState(false);
   const [showConfigureProgress, setShowConfigureProgress] = useState(false);
+  const [showEditPlan, setShowEditPlan] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: "",
     description: "",
+    end_goal: "",
+    end_goal_target_date: "",
     goals: [{ title: "", description: "", planned_start: "", planned_end: "", milestones: [""] }],
   });
 
