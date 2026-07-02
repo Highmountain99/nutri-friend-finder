@@ -36,6 +36,8 @@ export interface TreatmentPlan {
   created_at: string;
   updated_at: string;
   archived_at: string | null;
+  end_goal: string | null;
+  end_goal_target_date: string | null;
   goals?: TreatmentGoal[];
 }
 
