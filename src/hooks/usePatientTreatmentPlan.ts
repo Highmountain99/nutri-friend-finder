@@ -28,6 +28,8 @@ export interface PatientTreatmentPlan {
   description: string | null;
   status: string;
   created_at: string;
+  end_goal: string | null;
+  end_goal_target_date: string | null;
   goals: PatientGoal[];
 }
 

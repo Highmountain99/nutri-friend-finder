@@ -1253,6 +1253,8 @@ export type Database = {
           created_at: string
           description: string | null
           dietitian_id: string
+          end_goal: string | null
+          end_goal_target_date: string | null
           id: string
           patient_id: string
           status: string
@@ -1264,6 +1266,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           dietitian_id: string
+          end_goal?: string | null
+          end_goal_target_date?: string | null
           id?: string
           patient_id: string
           status?: string
@@ -1275,6 +1279,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           dietitian_id?: string
+          end_goal?: string | null
+          end_goal_target_date?: string | null
           id?: string
           patient_id?: string
           status?: string

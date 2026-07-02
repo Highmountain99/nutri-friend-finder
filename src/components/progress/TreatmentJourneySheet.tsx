@@ -136,6 +136,8 @@ export function TreatmentJourneySheet({ open, onOpenChange }: Props) {
               phases={phases}
               doneCount={doneCount}
               planTitle={plan?.title || "Din behandling"}
+              endGoal={plan?.end_goal || null}
+              endGoalDate={plan?.end_goal_target_date || null}
               onClose={() => onOpenChange(false)}
               onSelect={(i) => setOpenPhaseIdx(i)}
             />
@@ -154,12 +156,16 @@ function MapView({
   phases,
   doneCount,
   planTitle,
+  endGoal,
+  endGoalDate,
   onClose,
   onSelect,
 }: {
   phases: Phase[];
   doneCount: number;
   planTitle: string;
+  endGoal: string | null;
+  endGoalDate: string | null;
   onClose: () => void;
   onSelect: (i: number) => void;
 }) {
@@ -394,7 +400,7 @@ function MapView({
           {/* Finish */}
           <div
             className="absolute flex flex-col items-center"
-            style={{ left: centerX - 30, top: finishY - 30, width: 60 }}
+            style={{ left: centerX - 110, top: finishY - 30, width: 220 }}
           >
             <div
               className="w-[60px] h-[60px] rounded-full flex items-center justify-center"
@@ -412,11 +418,19 @@ function MapView({
               Målet
             </div>
             <div
-              className="font-serif italic mt-0.5"
-              style={{ fontSize: 15, color: T.green }}
+              className="font-serif italic mt-0.5 text-center px-2"
+              style={{ fontSize: 15, color: T.green, maxWidth: 200 }}
             >
-              Långsiktig magbalans
+              {endGoal || "Slutmål ej satt"}
             </div>
+            {endGoalDate && (
+              <div
+                className="font-mono uppercase tracking-[0.14em] mt-1"
+                style={{ fontSize: 8.5, color: T.mut }}
+              >
+                Mål: {format(parseISO(endGoalDate), "d MMM yyyy", { locale: sv })}
+              </div>
+            )}
           </div>
         </div>
       </div>
