@@ -279,6 +279,52 @@ export function TreatmentPlanTab({ patientId }: Props) {
         </Collapsible>
       )}
 
+      {activePlan && (
+        <EditPlanDialog
+          open={showEditPlan}
+          onOpenChange={setShowEditPlan}
+          plan={activePlan}
+          onSave={(patch) => updatePlan.mutate(
+            { planId: activePlan.id, ...patch },
+            {
+              onSuccess: () => { toast.success("Plan uppdaterad"); setShowEditPlan(false); },
+              onError: () => toast.error("Kunde inte uppdatera plan"),
+            }
+          )}
+          isPending={updatePlan.isPending}
+        />
+      )}
+
+      {editingGoalId && activePlan && (
+        <EditGoalDialog
+          goal={activePlan.goals?.find((g) => g.id === editingGoalId)!}
+          onClose={() => setEditingGoalId(null)}
+          onSave={(patch) => updateGoalMut.mutate(
+            { goalId: editingGoalId, ...patch },
+            {
+              onSuccess: () => { toast.success("Mål uppdaterat"); setEditingGoalId(null); },
+              onError: () => toast.error("Kunde inte uppdatera mål"),
+            }
+          )}
+          onDelete={() => {
+            if (confirm("Ta bort mål och alla delmål?")) {
+              deleteGoal.mutate(editingGoalId, {
+                onSuccess: () => { toast.success("Mål borttaget"); setEditingGoalId(null); },
+                onError: () => toast.error("Kunde inte ta bort mål"),
+              });
+            }
+          }}
+          onAddMilestone={(title) => addMilestoneMut.mutate({
+            goalId: editingGoalId,
+            title,
+            sort_order: activePlan.goals?.find((g) => g.id === editingGoalId)?.milestones?.length ?? 0,
+          })}
+          onUpdateMilestone={(id, title) => updateMilestoneMut.mutate({ milestoneId: id, title })}
+          onDeleteMilestone={(id) => deleteMilestone.mutate(id)}
+          isPending={updateGoalMut.isPending}
+        />
+      )}
+
       <ConfigureProgressSheet
         open={showConfigureProgress}
         onOpenChange={setShowConfigureProgress}
