@@ -303,6 +303,8 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
       setForm({
         title: plan.title || "",
         description: plan.description || "",
+        end_goal: plan.end_goal || "",
+        end_goal_target_date: plan.end_goal_target_date || "",
         goals: (plan.goals || []).map((g: any) => ({
           title: g.title || "",
           description: g.description || "",
