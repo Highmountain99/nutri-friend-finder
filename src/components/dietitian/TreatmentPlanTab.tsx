@@ -70,7 +70,7 @@ export function TreatmentPlanTab({ patientId }: Props) {
     createPlan.mutate(cleaned, {
       onSuccess: () => {
         setShowCreate(false);
-        setForm({ title: "", description: "", goals: [{ title: "", description: "", planned_start: "", planned_end: "", milestones: [""] }] });
+        setForm({ title: "", description: "", end_goal: "", end_goal_target_date: "", goals: [{ title: "", description: "", planned_start: "", planned_end: "", milestones: [""] }] });
         toast.success("Behandlingsplan skapad!");
         // Open the progress configuration sheet
         setShowConfigureProgress(true);
