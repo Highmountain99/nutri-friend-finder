@@ -93,10 +93,17 @@ export function useTreatmentPlan(patientId: string | undefined) {
   const archivedPlans = plans.data?.filter((p) => p.status === "archived") ?? [];
 
   const createPlan = useMutation({
-    mutationFn: async (data: { title: string; description?: string; goals: { title: string; description?: string; planned_start?: string; planned_end?: string; milestones: string[] }[] }) => {
+    mutationFn: async (data: { title: string; description?: string; end_goal?: string; end_goal_target_date?: string; goals: { title: string; description?: string; planned_start?: string; planned_end?: string; milestones: string[] }[] }) => {
       const { data: plan, error } = await supabase
         .from("treatment_plans")
-        .insert({ patient_id: patientId!, dietitian_id: user!.id, title: data.title, description: data.description ?? null } as any)
+        .insert({
+          patient_id: patientId!,
+          dietitian_id: user!.id,
+          title: data.title,
+          description: data.description ?? null,
+          end_goal: data.end_goal?.trim() || null,
+          end_goal_target_date: data.end_goal_target_date || null,
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -120,6 +127,83 @@ export function useTreatmentPlan(patientId: string | undefined) {
           if (mErr) throw mErr;
         }
       }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+  });
+
+  const updatePlan = useMutation({
+    mutationFn: async (data: { planId: string; title?: string; description?: string | null; end_goal?: string | null; end_goal_target_date?: string | null }) => {
+      const patch: any = {};
+      if (data.title !== undefined) patch.title = data.title;
+      if (data.description !== undefined) patch.description = data.description;
+      if (data.end_goal !== undefined) patch.end_goal = data.end_goal;
+      if (data.end_goal_target_date !== undefined) patch.end_goal_target_date = data.end_goal_target_date;
+      const { error } = await supabase.from("treatment_plans").update(patch).eq("id", data.planId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+  });
+
+  const updateGoal = useMutation({
+    mutationFn: async (data: { goalId: string; title?: string; description?: string | null; planned_start?: string | null; planned_end?: string | null; notes?: string | null }) => {
+      const patch: any = {};
+      for (const k of ["title", "description", "planned_start", "planned_end", "notes"] as const) {
+        if ((data as any)[k] !== undefined) patch[k] = (data as any)[k];
+      }
+      const { error } = await supabase.from("treatment_goals").update(patch).eq("id", data.goalId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+  });
+
+  const deleteGoal = useMutation({
+    mutationFn: async (goalId: string) => {
+      await supabase.from("treatment_milestones").delete().eq("goal_id", goalId);
+      const { error } = await supabase.from("treatment_goals").delete().eq("id", goalId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+  });
+
+  const addGoal = useMutation({
+    mutationFn: async (data: { planId: string; title: string; description?: string; planned_start?: string; planned_end?: string; sort_order: number }) => {
+      const { error } = await supabase.from("treatment_goals").insert({
+        plan_id: data.planId,
+        title: data.title,
+        description: data.description ?? null,
+        planned_start: data.planned_start ?? null,
+        planned_end: data.planned_end ?? null,
+        sort_order: data.sort_order,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+  });
+
+  const addMilestone = useMutation({
+    mutationFn: async (data: { goalId: string; title: string; sort_order: number }) => {
+      const { error } = await supabase.from("treatment_milestones").insert({
+        goal_id: data.goalId,
+        title: data.title,
+        sort_order: data.sort_order,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+  });
+
+  const updateMilestone = useMutation({
+    mutationFn: async (data: { milestoneId: string; title: string }) => {
+      const { error } = await supabase.from("treatment_milestones").update({ title: data.title } as any).eq("id", data.milestoneId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+  });
+
+  const deleteMilestone = useMutation({
+    mutationFn: async (milestoneId: string) => {
+      const { error } = await supabase.from("treatment_milestones").delete().eq("id", milestoneId);
+      if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
   });
