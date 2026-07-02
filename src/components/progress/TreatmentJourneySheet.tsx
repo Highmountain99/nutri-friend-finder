@@ -156,12 +156,16 @@ function MapView({
   phases,
   doneCount,
   planTitle,
+  endGoal,
+  endGoalDate,
   onClose,
   onSelect,
 }: {
   phases: Phase[];
   doneCount: number;
   planTitle: string;
+  endGoal: string | null;
+  endGoalDate: string | null;
   onClose: () => void;
   onSelect: (i: number) => void;
 }) {
