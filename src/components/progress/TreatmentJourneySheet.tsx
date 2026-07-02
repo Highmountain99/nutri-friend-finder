@@ -136,6 +136,8 @@ export function TreatmentJourneySheet({ open, onOpenChange }: Props) {
               phases={phases}
               doneCount={doneCount}
               planTitle={plan?.title || "Din behandling"}
+              endGoal={plan?.end_goal || null}
+              endGoalDate={plan?.end_goal_target_date || null}
               onClose={() => onOpenChange(false)}
               onSelect={(i) => setOpenPhaseIdx(i)}
             />
