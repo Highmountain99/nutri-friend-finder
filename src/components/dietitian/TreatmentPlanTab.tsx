@@ -103,11 +103,14 @@ export function TreatmentPlanTab({ patientId }: Props) {
           <Card>
             <CardContent className="py-4">
               <div className="flex items-center justify-between mb-3">
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-semibold">{activePlan.title}</h3>
                   {activePlan.description && <p className="text-sm text-muted-foreground mt-1">{activePlan.description}</p>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => setShowEditPlan(true)}>
+                    <Pencil className="h-3 w-3 mr-1" /> Redigera
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => setShowConfigureProgress(true)}>
                     <Palette className="h-3 w-3 mr-1" /> Designa vy
                   </Button>
@@ -116,6 +119,18 @@ export function TreatmentPlanTab({ patientId }: Props) {
                   </Button>
                 </div>
               </div>
+              {(activePlan.end_goal || activePlan.end_goal_target_date) && (
+                <div className="mb-3 rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
+                  <Target className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Slutmål</p>
+                    <p className="text-sm font-medium">{activePlan.end_goal || "—"}</p>
+                    {activePlan.end_goal_target_date && (
+                      <p className="text-xs text-muted-foreground mt-0.5">Måldatum: {activePlan.end_goal_target_date}</p>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <Progress value={progressPercent} className="h-2 flex-1" />
                 <span className="text-sm text-muted-foreground whitespace-nowrap">{completedGoals} av {totalGoals} mål</span>
