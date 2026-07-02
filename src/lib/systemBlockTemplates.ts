@@ -112,17 +112,6 @@ export const SYSTEM_BLOCK_TEMPLATES: SystemBlockDef[] = [
 
   // ── Weight ──
   {
-    key: "weight_values",
-    title: "Viktvärden",
-    description: "Nuvarande vikt och förändring sedan start",
-    icon: "Scale",
-    block_type: "progress",
-    category: "weight_loss",
-    data_source: "health_tracking",
-    data_config: { system_key: "weight_values", health_metric: "weight", metric: "metric_cards" },
-    display_config: { render_as: "weight_metrics_card" },
-  },
-  {
     key: "weight_trend",
     title: "Viktutveckling",
     description: "Viktkurva med trendindikator",
@@ -136,17 +125,6 @@ export const SYSTEM_BLOCK_TEMPLATES: SystemBlockDef[] = [
 
   // ── Diabetes ──
   {
-    key: "db_blood_sugar",
-    title: "Blodsockervärden",
-    description: "Fastesocker & efter-mat med målstatus",
-    icon: "Activity",
-    block_type: "progress",
-    category: "diabetes",
-    data_source: "health_tracking",
-    data_config: { system_key: "db_blood_sugar", health_metric: "blood_sugar_fasting", metric: "metric_cards" },
-    display_config: { render_as: "blood_sugar_metrics_card" },
-  },
-  {
     key: "db_trend",
     title: "Blodsockertrendgraf",
     description: "Blodsocker senaste 30 dagarna",
@@ -157,6 +135,7 @@ export const SYSTEM_BLOCK_TEMPLATES: SystemBlockDef[] = [
     data_config: { system_key: "db_trend", health_metric: "blood_sugar_fasting", metric: "trend_chart" },
     display_config: { render_as: "trend_chart" },
   },
+
 
   // ── Gut Health / IBS ──
   {
