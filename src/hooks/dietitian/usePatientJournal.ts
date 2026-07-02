@@ -7,7 +7,7 @@ export function usePatientJournal(patientId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("nutrition_entries")
-        .select("*")
+        .select("id, user_id, meal_id, meal_name, meal_type, entry_date, entry_time, calories, protein, carbs, fat, is_ai_estimated, created_at, updated_at")
         .eq("user_id", patientId!)
         .order("entry_date", { ascending: false })
         .limit(50);
