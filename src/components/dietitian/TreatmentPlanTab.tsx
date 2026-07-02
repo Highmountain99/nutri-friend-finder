@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTreatmentPlan, type TreatmentGoal } from "@/hooks/dietitian/useTreatmentPlan";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
