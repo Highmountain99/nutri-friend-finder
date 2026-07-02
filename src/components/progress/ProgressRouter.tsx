@@ -15,18 +15,6 @@ interface ProgressRouterProps {
 
 /* ---------- Layered & Tactile subcomponents (scoped to Utveckling) ---------- */
 
-function JourneyPill({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label="Öppna min resa"
-      className="flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 py-2 text-xs font-semibold shadow-[0_6px_26px_-12px_hsl(145_30%_11%/0.35)] active:scale-95 transition-transform"
-    >
-      <Route className="w-3.5 h-3.5" />
-      Min resa
-    </button>
-  );
-}
 
 function HeaderB() {
   return (
