@@ -1,7 +1,16 @@
-import { Card } from "@/components/ui/card";
-import { Check, Circle, Flame, TrendingUp, TrendingDown, Minus, Calendar, Clock, Video, Heart } from "lucide-react";
+import {
+  Check,
+  Circle,
+  Flame,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Video,
+  Heart,
+  Calendar,
+} from "lucide-react";
 import * as Icons from "lucide-react";
-import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
+import { ResponsiveContainer, AreaChart, Area } from "recharts";
 
 interface BlockPreviewProps {
   title: string;
@@ -14,7 +23,7 @@ interface BlockPreviewProps {
   compact?: boolean;
 }
 
-function getIcon(iconName: string, className = "h-4 w-4") {
+function getIcon(iconName: string, className = "h-3.5 w-3.5") {
   const Icon = (Icons as any)[iconName];
   return Icon ? <Icon className={className} /> : <Icons.Square className={className} />;
 }
@@ -52,106 +61,160 @@ const METRIC_UNITS: Record<string, string> = {
   blood_pressure_diastolic: "mmHg", bmi: "", blood_sugar_fasting: "mmol/L",
 };
 
-// ─── Reusable mini-components ───
+/* ---------- shared primitives (matched to DynamicBlock) ---------- */
 
-function TrendBadge({ first, last, unit }: { first: number; last: number; unit: string }) {
-  const diff = last - first;
+const cardShadow = "shadow-[0_6px_26px_-12px_hsl(145_30%_11%/0.30)]";
+
+function DeltaPill({ diff, unit }: { diff: number; unit: string }) {
   const isDown = diff < 0;
-  const isStable = Math.abs(diff) < 0.3;
+  const isFlat = Math.abs(diff) < 0.1;
+  if (isFlat) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+        <Minus className="w-3 h-3" /> Stabil
+      </span>
+    );
+  }
   return (
-    <div className={`flex items-center gap-1 text-xs font-semibold tabular-nums ${
-      isStable ? "text-muted-foreground" : isDown ? "text-emerald-600" : "text-amber-600"
-    }`}>
-      {isStable ? <Minus className="h-3 w-3" /> : isDown ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-      {diff > 0 ? "+" : ""}{diff.toFixed(1)} {unit}
-    </div>
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
+      style={{
+        backgroundColor: isDown
+          ? "hsl(var(--nutrient-pro) / 0.12)"
+          : "hsl(var(--nutrient-carb) / 0.16)",
+        color: isDown ? "hsl(var(--nutrient-pro))" : "hsl(var(--nutrient-carb))",
+      }}
+    >
+      {isDown ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+      {diff > 0 ? "+" : ""}
+      {diff.toFixed(1)} {unit}
+    </span>
   );
 }
 
 function MiniAreaChart({ data, id }: { data: { date: string; value: number }[]; id: string }) {
   return (
-    <div className="h-[72px] w-full -mx-1">
+    <div className="h-[64px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
           <defs>
             <linearGradient id={`prev-grad-${id}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.22} />
               <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <XAxis dataKey="date" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-          <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(var(--border))", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }} />
-          <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fill={`url(#prev-grad-${id})`} dot={false} activeDot={{ r: 3, fill: "hsl(var(--primary))" }} />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="hsl(var(--primary))"
+            strokeWidth={2.4}
+            fill={`url(#prev-grad-${id})`}
+            dot={false}
+          />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-function HeatmapGrid({ filled, total }: { filled: number; total: number }) {
+function MonoLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="flex flex-wrap gap-[3px]">
-      {Array.from({ length: total }).map((_, i) => (
-        <div key={i} className={`w-[10px] h-[10px] rounded-[2px] ${i < filled ? "bg-primary/70" : "bg-muted"}`} />
-      ))}
-    </div>
+    <span
+      className={`font-mono text-[9px] tracking-[0.14em] uppercase text-muted-foreground/70 ${className}`}
+    >
+      {children}
+    </span>
   );
 }
 
-// ─── Main Preview ───
+/* ---------- Main preview ---------- */
 
-export function BlockPreview({ title, description, icon, dataSource, dataConfig, displayConfig = {}, blockType = "action", compact = false }: BlockPreviewProps) {
+export function BlockPreview({
+  title,
+  icon,
+  dataConfig,
+  blockType = "action",
+  compact = false,
+}: BlockPreviewProps) {
   const metric = dataConfig.metric || "";
   const progression = dataConfig.progression || "none";
   const progressionTarget = dataConfig.progression_target || 7;
 
+  /* ---------- source badge (small, always journal-ish in preview) ---------- */
+  const sourceBadge = (
+    <span
+      className="font-mono text-[8.5px] tracking-[0.16em] uppercase px-1.5 py-0.5 rounded-full"
+      style={{
+        backgroundColor: "hsl(var(--primary) / 0.09)",
+        color: "hsl(var(--accent))",
+      }}
+    >
+      Preview
+    </span>
+  );
+
   const renderContent = () => {
-    // ── Trend chart (health_tracking) ──
+    /* ── Trend chart (health_tracking) ── */
     if (metric === "trend_chart") {
       const hm = dataConfig.health_metric || "weight";
       const periodDays = dataConfig.period_days || 30;
       const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
-      // Slice data based on period
-      const sliced = periodDays === "all" || periodDays >= 30
-        ? chartData
-        : chartData.slice(-Math.ceil(chartData.length * (periodDays / 30)));
+      const sliced =
+        periodDays === "all" || periodDays >= 30
+          ? chartData
+          : chartData.slice(-Math.ceil(chartData.length * (periodDays / 30)));
       const unit = METRIC_UNITS[hm] || "kg";
       const first = sliced[0]?.value || 0;
       const last = sliced[sliced.length - 1]?.value || 0;
-      const periodLabel = periodDays === "all" ? "Sedan start" : `Senaste ${periodDays} dagarna`;
+      const periodLabel =
+        periodDays === "all" ? "Sedan start" : `Senaste ${periodDays} dagarna`;
 
       return (
-        <div className="mt-2 space-y-1">
-          <div className="flex items-end justify-between">
-            <span className="text-2xl font-bold tabular-nums text-foreground">{last}<span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span></span>
-            <TrendBadge first={first} last={last} unit={unit} />
+        <div className="mt-2 -mx-[18px]">
+          <div className="px-[18px] flex items-end justify-between mb-1">
+            <div className="flex items-baseline gap-1">
+              <span
+                className="font-serif tabular-nums leading-none"
+                style={{ fontSize: 36, color: "hsl(var(--primary))" }}
+              >
+                {last}
+              </span>
+              <MonoLabel>{unit}</MonoLabel>
+            </div>
+            <DeltaPill diff={last - first} unit={unit} />
           </div>
           <MiniAreaChart data={sliced} id={`preview-${hm}`} />
-          <p className="text-[10px] text-muted-foreground text-center">{periodLabel}</p>
+          <div className="px-[18px] pt-1">
+            <MonoLabel>{periodLabel}</MonoLabel>
+          </div>
         </div>
       );
     }
 
-    // ── Latest value ──
+    /* ── Latest value ── */
     if (metric === "latest_value") {
       const hm = dataConfig.health_metric || "weight";
       const chartData = SAMPLE_CHART_DATA[hm] || SAMPLE_CHART_DATA.weight;
       const unit = METRIC_UNITS[hm] || "kg";
       const first = chartData[0]?.value || 0;
       const last = chartData[chartData.length - 1]?.value || 0;
-
       return (
-        <div className="flex items-end justify-between mt-2">
-          <span className="text-3xl font-bold tabular-nums text-foreground">{last}</span>
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="text-xs text-muted-foreground">{unit}</span>
-            <TrendBadge first={first} last={last} unit={unit} />
+        <div className="mt-2 flex items-end justify-between">
+          <div className="flex items-baseline gap-1">
+            <span
+              className="font-serif tabular-nums leading-none"
+              style={{ fontSize: 36, color: "hsl(var(--primary))" }}
+            >
+              {last}
+            </span>
+            <MonoLabel>{unit}</MonoLabel>
           </div>
+          <DeltaPill diff={last - first} unit={unit} />
         </div>
       );
     }
 
-    // ── Metric cards (weight metrics, blood sugar metrics) ──
+    /* ── Metric cards (current + change) ── */
     if (metric === "metric_cards") {
       const hm = dataConfig.health_metric || "weight";
       const unit = METRIC_UNITS[hm] || "kg";
@@ -161,91 +224,163 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       const change = current - start;
 
       return (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="p-2 rounded-lg bg-muted/50 text-center">
-            <p className="text-[10px] text-muted-foreground">Nuvarande</p>
-            <p className="text-lg font-bold tabular-nums text-foreground">{current}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{unit}</span></p>
+        <div className="mt-2 flex items-end justify-between">
+          <div>
+            <div className="flex items-baseline gap-1">
+              <span
+                className="font-serif tabular-nums leading-none"
+                style={{ fontSize: 36, color: "hsl(var(--primary))" }}
+              >
+                {current}
+              </span>
+              <MonoLabel>{unit}</MonoLabel>
+            </div>
+            <MonoLabel className="mt-1 block">Nuvarande</MonoLabel>
           </div>
-          <div className="p-2 rounded-lg bg-muted/50 text-center">
-            <p className="text-[10px] text-muted-foreground">Förändring</p>
-            <p className={`text-lg font-bold tabular-nums ${change < 0 ? "text-emerald-600" : "text-amber-600"}`}>
-              {change > 0 ? "+" : ""}{change.toFixed(1)}<span className="text-[10px] font-normal text-muted-foreground ml-0.5">{unit}</span>
-            </p>
-          </div>
+          <DeltaPill diff={change} unit={unit} />
         </div>
       );
     }
 
-    // ── Meal rhythm checklist ──
+    /* ── Meal rhythm checklist ── */
     if (metric === "meal_rhythm") {
       const meals = [
-        { label: "Frukost", time: "07:45", done: true },
-        { label: "Lunch", time: "12:15", done: true },
-        { label: "Middag", time: "—", done: false },
-        { label: "Mellanmål", time: "—", done: false },
+        { label: "Frukost", done: true },
+        { label: "Lunch", done: true },
+        { label: "Middag", done: false },
+        { label: "Mellanmål", done: false },
       ];
       return (
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-2 space-y-1.5">
           {meals.map((m) => (
-            <div key={m.label} className={`flex items-center gap-2 p-2 rounded-lg ${m.done ? "bg-emerald-50 dark:bg-emerald-950/20" : "bg-muted/50"}`}>
-              {m.done ? <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> : <Circle className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />}
-              <div className="min-w-0">
-                <p className={`text-xs font-medium ${m.done ? "text-foreground" : "text-muted-foreground"}`}>{m.label}</p>
-                {m.done && <p className="text-[10px] text-muted-foreground">{m.time}</p>}
+            <div key={m.label} className="flex items-center gap-2">
+              <div
+                className="w-[20px] h-[20px] rounded-md flex items-center justify-center flex-shrink-0"
+                style={
+                  m.done
+                    ? { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }
+                    : { backgroundColor: "hsl(var(--beige-3))", color: "hsl(var(--foreground) / 0.4)" }
+                }
+              >
+                {m.done ? <Check className="w-3 h-3" strokeWidth={2.5} /> : <Circle className="w-2.5 h-2.5" />}
               </div>
+              <span
+                className="text-[12px] font-medium"
+                style={{
+                  color: m.done
+                    ? "hsl(var(--foreground))"
+                    : "hsl(var(--foreground) / 0.4)",
+                }}
+              >
+                {m.label}
+              </span>
             </div>
           ))}
         </div>
       );
     }
 
-    // ── Meals per day ──
+    /* ── Meals per day ── */
     if (metric === "meals_per_day") {
       return (
-        <div className="mt-3 flex items-end justify-between">
-          <div>
-            <span className="text-3xl font-bold tabular-nums text-foreground">3</span>
-            <span className="text-sm text-muted-foreground ml-1.5">måltider</span>
+        <div className="mt-2 flex items-end justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span
+              className="font-serif tabular-nums leading-none"
+              style={{ fontSize: 36, color: "hsl(var(--primary))" }}
+            >
+              3
+            </span>
+            <MonoLabel>måltider</MonoLabel>
           </div>
           <div className="flex gap-1">
             {[true, true, true, false, false].map((filled, i) => (
-              <div key={i} className={`w-3 h-8 rounded-full ${filled ? "bg-primary/70" : "bg-muted"}`} />
+              <div
+                key={i}
+                className="w-2 h-7 rounded-full"
+                style={{
+                  backgroundColor: filled
+                    ? "hsl(var(--primary))"
+                    : "hsl(var(--beige-3))",
+                }}
+              />
             ))}
           </div>
         </div>
       );
     }
 
-    // ── Regularity 30d ──
+    /* ── Regularity 30d — 15-col heatmap ── */
     if (metric === "regularity_30d") {
+      const pattern = [
+        1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
+      ];
+      const filled = pattern.filter(Boolean).length;
       return (
-        <div className="mt-3 space-y-2">
+        <div className="mt-2 space-y-2">
           <div className="flex items-end justify-between">
-            <span className="text-3xl font-bold tabular-nums text-foreground">22<span className="text-sm font-normal text-muted-foreground ml-0.5">/30</span></span>
-            <span className="text-xs text-emerald-600 font-medium">73%</span>
+            <div className="flex items-baseline gap-1">
+              <span
+                className="font-serif tabular-nums leading-none"
+                style={{ fontSize: 30, color: "hsl(var(--primary))" }}
+              >
+                {filled}
+              </span>
+              <span className="text-[12px] text-muted-foreground">/30</span>
+            </div>
+            <MonoLabel>{Math.round((filled / 30) * 100)}%</MonoLabel>
           </div>
-          <HeatmapGrid filled={22} total={30} />
-          <p className="text-[10px] text-muted-foreground">Dagar med {dataConfig.threshold || 3}+ måltider</p>
+          <div
+            className="grid gap-1"
+            style={{ gridTemplateColumns: "repeat(15, minmax(0, 1fr))" }}
+          >
+            {pattern.map((v, i) => (
+              <div
+                key={i}
+                className="w-full aspect-square rounded-[3px]"
+                style={{
+                  backgroundColor: v
+                    ? "hsl(var(--primary) / 0.82)"
+                    : "hsl(var(--beige-3))",
+                }}
+              />
+            ))}
+          </div>
+          <MonoLabel>Dagar med {dataConfig.threshold || 3}+ måltider</MonoLabel>
         </div>
       );
     }
 
-    // ── Meal structure 7d ──
+    /* ── Meal structure 7d ── */
     if (metric === "structure_7d") {
       const days = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
       const mealCounts = [3, 4, 3, 2, 3, 4, 3];
       return (
-        <div className="mt-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold tabular-nums text-foreground">3.1</span>
-            <span className="text-xs text-muted-foreground">mål/dag i snitt</span>
+        <div className="mt-2 space-y-2">
+          <div className="flex items-baseline gap-1.5">
+            <span
+              className="font-serif tabular-nums leading-none"
+              style={{ fontSize: 30, color: "hsl(var(--primary))" }}
+            >
+              3.1
+            </span>
+            <MonoLabel>snitt/dag</MonoLabel>
           </div>
-          <div className="flex gap-1 items-end h-[40px]">
+          <div className="flex gap-1 items-end h-[36px]">
             {days.map((d, i) => (
               <div key={d} className="flex-1 flex flex-col items-center justify-end h-full gap-0.5">
-                <div className={`w-full rounded-t ${mealCounts[i] >= 3 ? "bg-primary/60" : "bg-amber-400/60"}`}
-                     style={{ height: `${(mealCounts[i] / 5) * 100}%` }} />
-                <span className="text-[8px] text-muted-foreground">{d}</span>
+                <div
+                  className="w-full rounded-t"
+                  style={{
+                    height: `${(mealCounts[i] / 5) * 100}%`,
+                    backgroundColor:
+                      mealCounts[i] >= 3
+                        ? "hsl(var(--primary) / 0.75)"
+                        : "hsl(var(--nutrient-carb) / 0.6)",
+                  }}
+                />
+                <MonoLabel>{d}</MonoLabel>
               </div>
             ))}
           </div>
@@ -253,246 +388,454 @@ export function BlockPreview({ title, description, icon, dataSource, dataConfig,
       );
     }
 
-    // ── Weekly checkin ──
+    /* ── Weekly checkin ── */
     if (metric === "weekly_checkin") {
-      const days = ["M", "T", "O", "T", "F", "L", "S"];
       const logged = [true, true, true, true, false, true, false];
       const loggedCount = logged.filter(Boolean).length;
       return (
-        <div className="mt-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold tabular-nums text-foreground">{loggedCount}<span className="text-sm font-normal text-muted-foreground ml-0.5">/7 dagar</span></span>
-            <span className="text-xs text-emerald-600 font-medium">Stabil</span>
+        <div className="mt-2 space-y-3">
+          <div className="flex items-end justify-between">
+            <div className="flex items-baseline gap-1">
+              <span
+                className="font-serif tabular-nums leading-none"
+                style={{ fontSize: 30, color: "hsl(var(--primary))" }}
+              >
+                {loggedCount}
+              </span>
+              <span className="text-[12px] text-muted-foreground">/7 dagar</span>
+            </div>
+            <span
+              className="font-serif italic text-[15px]"
+              style={{ color: "hsl(var(--accent))" }}
+            >
+              Stabil vecka
+            </span>
           </div>
-          <div className="flex gap-1.5">
-            {days.map((d, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium ${
-                  logged[i] ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-                }`}>{d}</div>
-                {logged[i] && <div className="w-1 h-1 rounded-full bg-emerald-500" />}
-              </div>
-            ))}
+          <div
+            className="w-full h-1.5 rounded-full overflow-hidden"
+            style={{ backgroundColor: "hsl(var(--primary) / 0.10)" }}
+          >
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${(loggedCount / 7) * 100}%`,
+                backgroundColor: "hsl(var(--primary))",
+              }}
+            />
           </div>
         </div>
       );
     }
 
-    // ── Weekly overview ──
+    /* ── Weekly overview ── */
     if (metric === "weekly_overview") {
       const days = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
       const active = [true, true, false, true, true, false, true];
       const activeCount = active.filter(Boolean).length;
       return (
-        <div className="mt-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold tabular-nums text-foreground">{activeCount}<span className="text-sm font-normal text-muted-foreground ml-0.5">/7</span></span>
-            <span className="text-xs text-muted-foreground">aktiva dagar</span>
+        <div className="mt-2 space-y-2">
+          <div className="flex items-baseline gap-1.5">
+            <span
+              className="font-serif tabular-nums leading-none"
+              style={{ fontSize: 30, color: "hsl(var(--primary))" }}
+            >
+              {activeCount}
+            </span>
+            <span className="text-[12px] text-muted-foreground">/7 aktiva</span>
           </div>
           <div className="flex gap-1">
             {days.map((d, i) => (
-              <div key={i} className={`flex-1 py-1.5 rounded-md text-center text-[9px] font-medium ${
-                active[i] ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-              }`}>{d}</div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // ── Symptom count / by time / after meal / pattern_by_time ──
-    if (metric === "symptom_count" || metric === "symptom_by_time" || metric === "symptom_after_meal" || metric === "pattern_by_time") {
-      const bars = [
-        { label: "Mån", h: 0 }, { label: "Tis", h: 1 }, { label: "Ons", h: 0 },
-        { label: "Tor", h: 2 }, { label: "Fre", h: 0 }, { label: "Lör", h: 1 }, { label: "Sön", h: 0 },
-      ];
-      const maxH = 3;
-      return (
-        <div className="mt-3 space-y-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-2xl font-bold tabular-nums text-foreground">4</span>
-            <span className="text-xs text-muted-foreground">symptom / 7d</span>
-          </div>
-          <div className="flex items-end gap-1 h-[40px]">
-            {bars.map((b, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                <div className={`w-full rounded-t ${b.h > 0 ? "bg-amber-400/70" : "bg-muted"}`} style={{ height: `${Math.max((b.h / maxH) * 100, 8)}%` }} />
+              <div
+                key={i}
+                className="flex-1 py-1 rounded-md text-center font-mono text-[8.5px] tracking-[0.12em] uppercase"
+                style={{
+                  backgroundColor: active[i]
+                    ? "hsl(var(--primary) / 0.14)"
+                    : "hsl(var(--beige-3))",
+                  color: active[i]
+                    ? "hsl(var(--primary))"
+                    : "hsl(var(--foreground) / 0.4)",
+                }}
+              >
+                {d}
               </div>
             ))}
           </div>
-          <div className="flex gap-1">
+        </div>
+      );
+    }
+
+    /* ── Symptom count / pattern (terra bars) ── */
+    if (
+      metric === "symptom_count" ||
+      metric === "symptom_by_time" ||
+      metric === "symptom_after_meal" ||
+      metric === "pattern_by_time"
+    ) {
+      const bars = [
+        { label: "Mån", h: 0 },
+        { label: "Tis", h: 1 },
+        { label: "Ons", h: 0 },
+        { label: "Tor", h: 2 },
+        { label: "Fre", h: 0 },
+        { label: "Lör", h: 1 },
+        { label: "Sön", h: 0 },
+      ];
+      const maxH = 3;
+      const total = bars.reduce((s, b) => s + b.h, 0);
+      return (
+        <div className="mt-2 space-y-2">
+          <div className="flex items-end justify-between">
+            <div className="flex items-baseline gap-1.5">
+              <span
+                className="font-serif tabular-nums leading-none"
+                style={{ fontSize: 30, color: "hsl(var(--nutrient-cal))" }}
+              >
+                {total}
+              </span>
+              <MonoLabel>symptom / 7d</MonoLabel>
+            </div>
+          </div>
+          <div className="flex items-end gap-1 h-[36px]">
             {bars.map((b, i) => (
-              <span key={i} className="flex-1 text-center text-[9px] text-muted-foreground">{b.label}</span>
+              <div key={i} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
+                <div
+                  className="w-full rounded-t"
+                  style={{
+                    height: `${Math.max((b.h / maxH) * 100, 6)}%`,
+                    backgroundColor:
+                      b.h > 0 ? "hsl(var(--nutrient-cal) / 0.75)" : "hsl(var(--beige-3))",
+                  }}
+                />
+                <MonoLabel>{b.label}</MonoLabel>
+              </div>
             ))}
           </div>
         </div>
       );
     }
 
-    // ── Symptom free days ──
+    /* ── Symptom free days (moss tinted feel) ── */
     if (metric === "symptom_free_days") {
       const period = dataConfig.period_days || 7;
       const freeDays = 5;
       return (
-        <div className="mt-3 space-y-2">
+        <div className="mt-2 space-y-2">
           <div className="flex items-end justify-between">
-            <span className="text-3xl font-bold tabular-nums text-foreground">{freeDays}<span className="text-sm font-normal text-muted-foreground ml-0.5">/{period}</span></span>
-            <span className="text-xs text-emerald-600 font-medium">{Math.round((freeDays / period) * 100)}%</span>
+            <div className="flex items-baseline gap-1">
+              <span
+                className="font-serif tabular-nums leading-none"
+                style={{ fontSize: 34, color: "hsl(var(--primary))" }}
+              >
+                {freeDays}
+              </span>
+              <span className="text-[12px] text-muted-foreground">/{period}</span>
+            </div>
+            <MonoLabel>{Math.round((freeDays / period) * 100)}%</MonoLabel>
           </div>
-          <div className="w-full bg-muted rounded-full h-2">
-            <div className="bg-emerald-500 rounded-full h-2 transition-all" style={{ width: `${(freeDays / period) * 100}%` }} />
+          <div className="flex gap-1">
+            {Array.from({ length: period }).map((_, i) => (
+              <span
+                key={i}
+                className="h-1.5 flex-1 rounded-full"
+                style={{
+                  backgroundColor:
+                    i < freeDays
+                      ? "hsl(var(--nutrient-pro))"
+                      : "hsl(var(--beige-3))",
+                }}
+              />
+            ))}
           </div>
-          <p className="text-[10px] text-muted-foreground">symptomfria dagar</p>
+          <MonoLabel>Symptomfria dagar</MonoLabel>
         </div>
       );
     }
 
-    // ── Milestone progress / milestones (behavior goals — current phase) ──
+    /* ── Milestones / behavior goals ── */
     if (metric === "milestone_progress" || metric === "milestones") {
       const milestones = [
         { label: "Ät fibrer 3 gånger denna veckan", done: true },
         { label: "Logga alla måltider i 5 dagar", done: true },
         { label: "Prova ett nytt mellanmål", done: false },
       ];
-      const doneCount = milestones.filter(m => m.done).length;
+      const doneCount = milestones.filter((m) => m.done).length;
       return (
-        <div className="mt-3 space-y-2">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Aktuell fas</p>
-          {milestones.map((m, i) => (
-            <div key={i} className="flex items-center gap-2">
-              {m.done
-                ? <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><Check className="h-3 w-3 text-emerald-600" /></div>
-                : <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/20" />
-              }
-              <span className={`text-xs ${m.done ? "text-muted-foreground line-through" : "text-foreground font-medium"}`}>{m.label}</span>
+        <div className="mt-2 space-y-2">
+          <MonoLabel>Aktuell fas</MonoLabel>
+          <div className="space-y-1.5">
+            {milestones.map((m, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <div
+                  className="w-[20px] h-[20px] rounded-md flex items-center justify-center flex-shrink-0 mt-[1px]"
+                  style={
+                    m.done
+                      ? {
+                          backgroundColor: "hsl(var(--primary))",
+                          color: "hsl(var(--primary-foreground))",
+                        }
+                      : {
+                          backgroundColor: "transparent",
+                          border: "1.5px solid hsl(var(--foreground) / 0.22)",
+                        }
+                  }
+                >
+                  {m.done && <Check className="w-3 h-3" strokeWidth={2.5} />}
+                </div>
+                <span
+                  className="text-[12px] leading-snug"
+                  style={{
+                    color: m.done
+                      ? "hsl(var(--foreground) / 0.4)"
+                      : "hsl(var(--foreground))",
+                    textDecoration: m.done ? "line-through" : undefined,
+                  }}
+                >
+                  {m.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 pt-1">
+            <div
+              className="flex-1 h-1.5 rounded-full overflow-hidden"
+              style={{ backgroundColor: "hsl(var(--beige-3))" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${(doneCount / milestones.length) * 100}%`,
+                  backgroundColor: "hsl(var(--primary))",
+                }}
+              />
             </div>
-          ))}
-          <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-            <div className="bg-primary rounded-full h-1.5" style={{ width: `${(doneCount / milestones.length) * 100}%` }} />
+            <MonoLabel>
+              {doneCount}/{milestones.length}
+            </MonoLabel>
           </div>
         </div>
       );
     }
 
-    // ── Macro value ──
+    /* ── Macro value ── */
     if (metric === "macro_value") {
       return (
-        <div className="mt-3 flex items-end justify-between">
-          <div>
-            <span className="text-3xl font-bold tabular-nums text-foreground">68</span>
-            <span className="text-sm text-muted-foreground ml-1">g protein</span>
+        <div className="mt-2 flex items-end justify-between">
+          <div className="flex items-baseline gap-1">
+            <span
+              className="font-serif tabular-nums leading-none"
+              style={{ fontSize: 36, color: "hsl(var(--primary))" }}
+            >
+              68
+            </span>
+            <MonoLabel>g protein</MonoLabel>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Mål: 80g</p>
-            <div className="w-16 bg-muted rounded-full h-1.5 mt-1">
-              <div className="bg-primary rounded-full h-1.5" style={{ width: "85%" }} />
+            <MonoLabel>Mål 80g</MonoLabel>
+            <div
+              className="w-16 h-1.5 rounded-full overflow-hidden mt-1"
+              style={{ backgroundColor: "hsl(var(--beige-3))" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{ width: "85%", backgroundColor: "hsl(var(--primary))" }}
+              />
             </div>
           </div>
         </div>
       );
     }
 
-    // ── Plan description (focus card) — AI-generated motivational text ──
+    /* ── Plan description (focus card, tinted terra) ── */
     if (metric === "plan_description") {
       return (
-        <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
-          <p className="text-xs text-foreground leading-relaxed italic text-center">
-            "Du gör framsteg varje dag — fortsätt lyssna på din kropp och ta det ett steg i taget"
+        <div
+          className="mt-2 rounded-[14px] p-3 border relative overflow-hidden"
+          style={{
+            backgroundColor: "hsl(var(--nutrient-cal) / 0.08)",
+            borderColor: "hsl(var(--nutrient-cal) / 0.18)",
+          }}
+        >
+          <div
+            className="flex items-center gap-1.5 font-mono text-[8.5px] tracking-[0.16em] uppercase mb-1.5"
+            style={{ color: "hsl(var(--nutrient-cal))" }}
+          >
+            <Heart className="w-2.5 h-2.5" strokeWidth={1.8} />
+            Dagens fokus
+          </div>
+          <p
+            className="font-serif italic leading-snug"
+            style={{ fontSize: 15, color: "hsl(var(--primary))" }}
+          >
+            "Du gör framsteg varje dag — lyssna på din kropp."
           </p>
-          <p className="text-[9px] text-muted-foreground text-center mt-1.5">Genereras från behandlingsplanen</p>
+          <MonoLabel className="mt-1.5 block">Från behandlingsplanen</MonoLabel>
         </div>
       );
     }
-    // ── Next appointment ──
+
+    /* ── Next appointment (filled green) ── */
     if (metric === "next_appointment") {
       return (
-        <div className="mt-3 flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Video className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">Tis 25 mar, 10:00</p>
-            <p className="text-[10px] text-muted-foreground">Videosamtal · 30 min</p>
+        <div
+          className="mt-2 rounded-[14px] p-3"
+          style={{
+            backgroundColor: "hsl(var(--primary))",
+            color: "hsl(var(--primary-foreground))",
+          }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "hsl(var(--primary-foreground) / 0.16)" }}
+            >
+              <Video className="w-4 h-4" style={{ color: "hsl(var(--primary-foreground))" }} />
+            </div>
+            <div className="min-w-0">
+              <div
+                className="font-serif leading-tight"
+                style={{ fontSize: 16, color: "hsl(var(--primary-foreground))" }}
+              >
+                Tis 25 mar
+              </div>
+              <div
+                className="font-mono text-[9px] tracking-[0.14em] uppercase mt-0.5"
+                style={{ color: "hsl(var(--primary-foreground) / 0.7)" }}
+              >
+                kl 10:00 · videosamtal
+              </div>
+            </div>
           </div>
         </div>
       );
     }
 
-    // ── Custom text / manual / fallback ──
-    if (metric === "custom_text" || !metric) {
-      return (
-        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-          {description || "Innehåll sätts per patient av dietisten"}
-        </p>
-      );
-    }
-
-    // Catch-all fallback
+    /* ── Fallback ── */
     return (
-      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-        {description || "Innehåll sätts per patient av dietisten"}
+      <p className="text-[12px] text-muted-foreground mt-2 line-clamp-2">
+        Innehåll sätts per patient av dietisten
       </p>
     );
   };
 
   return (
-    <div className={compact ? "overflow-hidden" : ""}>
-      <Card className={`bg-card overflow-hidden ${compact ? "p-3 border-0 shadow-none" : "p-4 border border-border shadow-sm"}`}>
-        {/* Header: icon + title */}
+    <div
+      className={`rounded-[18px] border ${cardShadow} ${
+        compact ? "p-[14px]" : "p-[18px]"
+      }`}
+      style={{
+        backgroundColor: "hsl(var(--secondary))",
+        borderColor: "hsl(var(--foreground) / 0.08)",
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className={`rounded-lg bg-primary/8 text-primary shrink-0 ${compact ? "p-1" : "p-1.5"}`}>
-            {getIcon(icon, compact ? "h-3 w-3" : "h-4 w-4")}
+          <div
+            className="w-[28px] h-[28px] rounded-full flex items-center justify-center flex-shrink-0"
+            style={{
+              backgroundColor: "hsl(var(--primary) / 0.10)",
+              color: "hsl(var(--primary))",
+            }}
+          >
+            {getIcon(icon, "h-3.5 w-3.5")}
           </div>
-          <h4 className={`font-semibold truncate ${compact ? "text-xs" : "text-sm"}`}>{title || "Namnlöst block"}</h4>
+          <h4
+            className="font-semibold truncate"
+            style={{ fontSize: 13, color: "hsl(var(--foreground))" }}
+          >
+            {title || "Namnlöst block"}
+          </h4>
         </div>
+        {sourceBadge}
+      </div>
 
-      {/* Visual content */}
       {renderContent()}
 
       {/* Progression footer */}
       {progression !== "none" && (
-        <div className="mt-3 pt-2.5 border-t border-border/50">
+        <div
+          className="mt-3 pt-2.5 border-t"
+          style={{ borderColor: "hsl(var(--foreground) / 0.08)" }}
+        >
           {progression === "streak" && (
             <div className="flex items-center gap-2">
-              <Flame className="h-3.5 w-3.5 text-orange-500" />
-              <span className="text-xs font-medium tabular-nums">4 dagar i rad</span>
+              <Flame className="h-3.5 w-3.5" style={{ color: "hsl(var(--nutrient-cal))" }} />
+              <span className="text-[11px] font-medium tabular-nums text-foreground">
+                4 dagar i rad
+              </span>
               <div className="flex gap-0.5 ml-auto">
                 {Array.from({ length: Math.min(progressionTarget, 10) }).map((_, i) => (
-                  <div key={i} className={`w-2 h-2 rounded-full ${i < 4 ? "bg-orange-400" : "bg-muted"}`} />
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{
+                      backgroundColor:
+                        i < 4
+                          ? "hsl(var(--nutrient-cal))"
+                          : "hsl(var(--beige-3))",
+                    }}
+                  />
                 ))}
               </div>
             </div>
           )}
           {progression === "weekly_goal" && (
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium tabular-nums">3/{progressionTarget} dagar</span>
+              <span className="text-[11px] font-medium tabular-nums text-foreground">
+                3/{progressionTarget} dagar
+              </span>
               <div className="flex gap-0.5 ml-auto">
                 {Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className={`w-2 h-2 rounded-full ${i < 3 ? "bg-primary" : "bg-muted"}`} />
+                  <div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{
+                      backgroundColor:
+                        i < 3 ? "hsl(var(--primary))" : "hsl(var(--beige-3))",
+                    }}
+                  />
                 ))}
               </div>
             </div>
           )}
           {progression === "daily_check" && (
             <div className="flex items-center gap-1.5">
-              <Check className="h-3.5 w-3.5 text-emerald-500" />
-              <span className="text-xs font-medium text-emerald-700">Avklarat idag</span>
+              <Check className="h-3.5 w-3.5" style={{ color: "hsl(var(--nutrient-pro))" }} />
+              <span
+                className="text-[11px] font-medium"
+                style={{ color: "hsl(var(--nutrient-pro))" }}
+              >
+                Avklarat idag
+              </span>
             </div>
           )}
           {progression === "time_limited" && (
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium tabular-nums">Dag 2 av {progressionTarget}</span>
-                <span className="text-[10px] text-muted-foreground">{Math.round((2 / progressionTarget) * 100)}%</span>
+                <MonoLabel>
+                  Dag 2 av {progressionTarget}
+                </MonoLabel>
+                <MonoLabel>
+                  {Math.round((2 / progressionTarget) * 100)}%
+                </MonoLabel>
               </div>
-              <div className="w-full bg-muted rounded-full h-1.5">
-                <div className="bg-primary rounded-full h-1.5" style={{ width: `${(2 / progressionTarget) * 100}%` }} />
+              <div
+                className="w-full h-1.5 rounded-full overflow-hidden"
+                style={{ backgroundColor: "hsl(var(--beige-3))" }}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${(2 / progressionTarget) * 100}%`,
+                    backgroundColor: "hsl(var(--primary))",
+                  }}
+                />
               </div>
             </div>
           )}
         </div>
       )}
-      </Card>
     </div>
   );
 }
