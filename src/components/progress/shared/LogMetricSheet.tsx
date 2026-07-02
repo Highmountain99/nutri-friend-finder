@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { MetricType, METRIC_LABELS } from "@/types/progress";
 
 interface LogMetricSheetProps {
