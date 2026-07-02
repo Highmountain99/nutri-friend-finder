@@ -130,7 +130,12 @@ interface DynamicBlockProps {
 export function DynamicBlock({ data }: DynamicBlockProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { dietitian } = useMyDietitian();
+  const { data: dietitianProfile } = useMyDietitian();
+  const dietitian = dietitianProfile
+    ? {
+        name: [dietitianProfile.first_name, dietitianProfile.last_name].filter(Boolean).join(" "),
+      }
+    : null;
   const {
     block,
     computedItems,
