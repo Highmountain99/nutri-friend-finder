@@ -418,11 +418,19 @@ function MapView({
               Målet
             </div>
             <div
-              className="font-serif italic mt-0.5"
-              style={{ fontSize: 15, color: T.green }}
+              className="font-serif italic mt-0.5 text-center px-2"
+              style={{ fontSize: 15, color: T.green, maxWidth: 200 }}
             >
-              Långsiktig magbalans
+              {endGoal || "Slutmål ej satt"}
             </div>
+            {endGoalDate && (
+              <div
+                className="font-mono uppercase tracking-[0.14em] mt-1"
+                style={{ fontSize: 8.5, color: T.mut }}
+              >
+                Mål: {format(parseISO(endGoalDate), "d MMM yyyy", { locale: sv })}
+              </div>
+            )}
           </div>
         </div>
       </div>
