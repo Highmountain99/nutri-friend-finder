@@ -15,22 +15,10 @@ interface ProgressRouterProps {
 
 /* ---------- Layered & Tactile subcomponents (scoped to Utveckling) ---------- */
 
-function JourneyPill({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label="Öppna min resa"
-      className="flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 py-2 text-xs font-semibold shadow-[0_6px_26px_-12px_hsl(145_30%_11%/0.35)] active:scale-95 transition-transform"
-    >
-      <Route className="w-3.5 h-3.5" />
-      Min resa
-    </button>
-  );
-}
 
-function HeaderB({ onOpenJourney }: { onOpenJourney: () => void }) {
+function HeaderB() {
   return (
-    <div className="flex items-end justify-between pt-1">
+    <div className="pt-1">
       <div>
         <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-muted-foreground">
           Din utveckling
@@ -39,7 +27,6 @@ function HeaderB({ onOpenJourney }: { onOpenJourney: () => void }) {
           Följ dina framsteg
         </h1>
       </div>
-      <JourneyPill onClick={onOpenJourney} />
     </div>
   );
 }
@@ -157,10 +144,10 @@ function HeroB({
         </div>
         <div className="relative flex items-center justify-between mt-4 pt-3.5 border-t border-primary-foreground/18">
           <span className="text-[12.5px] text-primary-foreground/70">
-            Öppna hela din resa
+            Öppna din behandlingsplan
           </span>
           <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-primary-foreground/12 rounded-full px-3 py-1.5">
-            Öppna <ArrowRight className="w-3 h-3" />
+            Min resa <ArrowRight className="w-3 h-3" />
           </span>
         </div>
       </button>
@@ -243,7 +230,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
 
   const shell = (
     <div className="px-4 pt-4 pb-24 space-y-3.5">
-      <HeaderB onOpenJourney={onOpenJourney} />
+      <HeaderB />
       {plan && (
         <HeroB
           planTitle={planTitle}
@@ -281,7 +268,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
       <div className="relative min-h-[calc(100vh-8rem)] overflow-hidden">
         <div className="pointer-events-none select-none blur-[7px] opacity-50" aria-hidden="true">
           <div className="px-4 pt-4 space-y-3.5">
-            <HeaderB onOpenJourney={() => {}} />
+            <HeaderB />
             <HeroB
               planTitle="FODMAP"
               phaseName="Återintroduktion"
