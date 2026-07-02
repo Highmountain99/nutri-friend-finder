@@ -49,6 +49,9 @@ export function LogMetricSheet({ metricType, onSuccess, trigger }: LogMetricShee
       setOpen(false);
       setValue("");
       setNotes("");
+      queryClient.invalidateQueries({ queryKey: ["health-profile", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["progress-data"] });
+      queryClient.invalidateQueries({ queryKey: ["health-tracking"] });
       onSuccess?.();
     } catch (error) {
       console.error('Error saving metric:', error);
