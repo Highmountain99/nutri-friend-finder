@@ -157,10 +157,10 @@ function HeroB({
         </div>
         <div className="relative flex items-center justify-between mt-4 pt-3.5 border-t border-primary-foreground/18">
           <span className="text-[12.5px] text-primary-foreground/70">
-            Öppna hela din resa
+            Öppna din behandlingsplan
           </span>
           <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-primary-foreground/12 rounded-full px-3 py-1.5">
-            Öppna <ArrowRight className="w-3 h-3" />
+            Min resa <ArrowRight className="w-3 h-3" />
           </span>
         </div>
       </button>
