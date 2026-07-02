@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, ChevronDown, ChevronRight, Circle, CircleDot, CheckCircle2, Archive, Loader2, Trash2, Sparkles, Palette } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, Circle, CircleDot, CheckCircle2, Archive, Loader2, Trash2, Sparkles, Palette, Pencil, Target, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ConfigureProgressSheet } from "./ConfigureProgressSheet";
