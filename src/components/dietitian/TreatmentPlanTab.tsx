@@ -31,7 +31,7 @@ interface Props {
 }
 
 export function TreatmentPlanTab({ patientId }: Props) {
-  const { activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan, updatePlan, updateGoal, deleteGoal, addGoal: addGoalMut, addMilestone: addMilestoneMut, updateMilestone: updateMilestoneMut, deleteMilestone } = useTreatmentPlan(patientId);
+  const { activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan, updatePlan, updateGoal: updateGoalMut, deleteGoal, addGoal: addGoalMut, addMilestone: addMilestoneMut, updateMilestone: updateMilestoneMut, deleteMilestone } = useTreatmentPlan(patientId);
   const [showCreate, setShowCreate] = useState(false);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
   const [showArchived, setShowArchived] = useState(false);
