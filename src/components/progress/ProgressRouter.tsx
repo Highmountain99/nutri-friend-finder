@@ -242,7 +242,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
 
   const shell = (
     <div className="px-4 pt-4 pb-24 space-y-3.5">
-      <HeaderB onOpenJourney={onOpenJourney} />
+      <HeaderB />
       {plan && (
         <HeroB
           planTitle={planTitle}
@@ -280,7 +280,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
       <div className="relative min-h-[calc(100vh-8rem)] overflow-hidden">
         <div className="pointer-events-none select-none blur-[7px] opacity-50" aria-hidden="true">
           <div className="px-4 pt-4 space-y-3.5">
-            <HeaderB onOpenJourney={() => {}} />
+            <HeaderB />
             <HeroB
               planTitle="FODMAP"
               phaseName="Återintroduktion"
