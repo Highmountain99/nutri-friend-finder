@@ -340,6 +340,24 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
       <Input placeholder="Plantitel" value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} />
       <Textarea placeholder="Beskrivning (valfritt)" value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} rows={2} />
 
+      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <Target className="h-4 w-4 text-primary" />
+          <p className="text-sm font-medium">Slutmål (visas i patientens resa)</p>
+        </div>
+        <Textarea
+          placeholder="T.ex. Långsiktig magbalans utan symtom"
+          value={form.end_goal}
+          onChange={(e: any) => setForm({ ...form, end_goal: e.target.value })}
+          rows={2}
+        />
+        <Input
+          type="date"
+          value={form.end_goal_target_date}
+          onChange={(e: any) => setForm({ ...form, end_goal_target_date: e.target.value })}
+        />
+      </div>
+
       <div className="space-y-4">
         <p className="text-sm font-medium">Mål</p>
         {form.goals.map((g: any, i: number) => (
