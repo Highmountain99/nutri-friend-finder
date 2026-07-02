@@ -106,8 +106,7 @@ export function TreatmentJourneySheet({ open, onOpenChange }: Props) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        hideClose
-        className="h-[92vh] rounded-t-[28px] border-none p-0 overflow-hidden"
+        className="h-[92vh] rounded-t-[28px] border-none p-0 overflow-hidden [&>button.absolute]:hidden"
         style={{ backgroundColor: T.bg, color: T.ink }}
       >
         {/* Grabber */}
