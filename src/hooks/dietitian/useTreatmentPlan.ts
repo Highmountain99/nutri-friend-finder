@@ -241,5 +241,5 @@ export function useTreatmentPlan(patientId: string | undefined) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
   });
 
-  return { plans, activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan };
+  return { plans, activePlan, archivedPlans, createPlan, updateGoalStatus, toggleMilestone, archivePlan, updatePlan, updateGoal, deleteGoal, addGoal, addMilestone, updateMilestone, deleteMilestone };
 }
