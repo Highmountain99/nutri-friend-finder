@@ -439,3 +439,214 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
     </div>
   );
 }
+
+function EditPlanDialog({
+  open,
+  onOpenChange,
+  plan,
+  onSave,
+  isPending,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  plan: any;
+  onSave: (patch: { title: string; description: string | null; end_goal: string | null; end_goal_target_date: string | null }) => void;
+  isPending: boolean;
+}) {
+  const [title, setTitle] = useState(plan.title || "");
+  const [description, setDescription] = useState(plan.description || "");
+  const [endGoal, setEndGoal] = useState(plan.end_goal || "");
+  const [endGoalDate, setEndGoalDate] = useState(plan.end_goal_target_date || "");
+
+  // Reset when plan changes / dialog reopens
+  useEffect(() => {
+    if (open) {
+      setTitle(plan.title || "");
+      setDescription(plan.description || "");
+      setEndGoal(plan.end_goal || "");
+      setEndGoalDate(plan.end_goal_target_date || "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, plan.id]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
+        <DialogHeader><DialogTitle>Redigera behandlingsplan</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Plantitel</p>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Beskrivning</p>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          </div>
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              <p className="text-sm font-medium">Slutmål (visas i patientens resa)</p>
+            </div>
+            <Textarea
+              placeholder="T.ex. Långsiktig magbalans utan symtom"
+              value={endGoal}
+              onChange={(e) => setEndGoal(e.target.value)}
+              rows={2}
+            />
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Måldatum (valfritt)</p>
+              <Input type="date" value={endGoalDate} onChange={(e) => setEndGoalDate(e.target.value)} />
+            </div>
+          </div>
+          <Button
+            className="w-full"
+            disabled={!title.trim() || isPending}
+            onClick={() => onSave({
+              title: title.trim(),
+              description: description.trim() || null,
+              end_goal: endGoal.trim() || null,
+              end_goal_target_date: endGoalDate || null,
+            })}
+          >
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Spara ändringar"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditGoalDialog({
+  goal,
+  onClose,
+  onSave,
+  onDelete,
+  onAddMilestone,
+  onUpdateMilestone,
+  onDeleteMilestone,
+  isPending,
+}: {
+  goal: TreatmentGoal;
+  onClose: () => void;
+  onSave: (patch: { title: string; description: string | null; planned_start: string | null; planned_end: string | null; notes: string | null }) => void;
+  onDelete: () => void;
+  onAddMilestone: (title: string) => void;
+  onUpdateMilestone: (id: string, title: string) => void;
+  onDeleteMilestone: (id: string) => void;
+  isPending: boolean;
+}) {
+  const [title, setTitle] = useState(goal.title || "");
+  const [description, setDescription] = useState(goal.description || "");
+  const [start, setStart] = useState(goal.planned_start || "");
+  const [end, setEnd] = useState(goal.planned_end || "");
+  const [notes, setNotes] = useState(goal.notes || "");
+  const [newMilestone, setNewMilestone] = useState("");
+
+  useEffect(() => {
+    setTitle(goal.title || "");
+    setDescription(goal.description || "");
+    setStart(goal.planned_start || "");
+    setEnd(goal.planned_end || "");
+    setNotes(goal.notes || "");
+  }, [goal.id]);
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-auto">
+        <DialogHeader><DialogTitle>Redigera mål</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <Input placeholder="Titel" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Textarea placeholder="Beskrivning" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Start</p>
+              <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Slut</p>
+              <Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+            </div>
+          </div>
+          <Textarea placeholder="Anteckning" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+
+          <div className="space-y-2 pt-2 border-t">
+            <p className="text-sm font-medium">Delmål</p>
+            {goal.milestones?.map((m) => (
+              <MilestoneRow
+                key={m.id}
+                milestone={m}
+                onUpdate={(t) => onUpdateMilestone(m.id, t)}
+                onDelete={() => onDeleteMilestone(m.id)}
+              />
+            ))}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Nytt delmål"
+                value={newMilestone}
+                onChange={(e) => setNewMilestone(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newMilestone.trim()) {
+                    onAddMilestone(newMilestone.trim());
+                    setNewMilestone("");
+                  }
+                }}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (newMilestone.trim()) {
+                    onAddMilestone(newMilestone.trim());
+                    setNewMilestone("");
+                  }
+                }}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-3 w-3 mr-1" /> Ta bort mål
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={!title.trim() || isPending}
+              onClick={() => onSave({
+                title: title.trim(),
+                description: description.trim() || null,
+                planned_start: start || null,
+                planned_end: end || null,
+                notes: notes.trim() || null,
+              })}
+            >
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Spara"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MilestoneRow({ milestone, onUpdate, onDelete }: { milestone: any; onUpdate: (t: string) => void; onDelete: () => void }) {
+  const [value, setValue] = useState(milestone.title);
+  return (
+    <div className="flex gap-2 items-center">
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => { if (value.trim() && value !== milestone.title) onUpdate(value.trim()); }}
+        className="text-sm"
+      />
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDelete}>
+        <Trash2 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
