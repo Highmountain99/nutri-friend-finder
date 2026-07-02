@@ -146,17 +146,22 @@ export function TreatmentPlanTab({ patientId }: Props) {
             return (
               <Card key={goal.id}>
                 <CardContent className="py-3">
-                  <button className="flex items-center gap-3 w-full text-left" onClick={() => toggleGoal(goal.id)}>
-                    {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                    <button onClick={(e) => { e.stopPropagation(); cycleStatus(goal); }} className="shrink-0">
+                  <div className="flex items-center gap-3 w-full">
+                    <button onClick={() => toggleGoal(goal.id)} className="shrink-0">
+                      {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                    </button>
+                    <button onClick={() => cycleStatus(goal)} className="shrink-0">
                       {statusIcon(goal.status)}
                     </button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{goal.title}</p>
+                    <button className="flex-1 min-w-0 text-left" onClick={() => toggleGoal(goal.id)}>
+                      <p className="text-sm font-medium truncate">{goal.title}</p>
                       {milestoneTotal > 0 && <p className="text-xs text-muted-foreground">{milestoneDone}/{milestoneTotal} delmål</p>}
-                    </div>
+                    </button>
                     <Badge variant="outline" className="text-xs shrink-0">{statusLabel[goal.status]}</Badge>
-                  </button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setEditingGoalId(goal.id)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
 
                   {expanded && (
                     <div className="mt-3 ml-11 space-y-3">
@@ -169,17 +174,25 @@ export function TreatmentPlanTab({ patientId }: Props) {
                       {goal.milestones && goal.milestones.length > 0 && (
                         <div className="space-y-2">
                           {goal.milestones.map((m) => (
-                            <label key={m.id} className="flex items-center gap-2 cursor-pointer">
+                            <label key={m.id} className="flex items-center gap-2 cursor-pointer group">
                               <Checkbox
                                 checked={m.is_completed}
                                 onCheckedChange={(checked) => toggleMilestone.mutate({ milestoneId: m.id, completed: !!checked })}
                               />
-                              <span className={`text-sm ${m.is_completed ? "line-through text-muted-foreground" : ""}`}>{m.title}</span>
+                              <span className={`text-sm flex-1 ${m.is_completed ? "line-through text-muted-foreground" : ""}`}>{m.title}</span>
                               {m.is_completed && m.completed_at && (
-                                <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
+                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                                   Klar {new Date(m.completed_at).toLocaleDateString("sv-SE", { day: "numeric", month: "short" })}
                                 </span>
                               )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                onClick={(e) => { e.preventDefault(); if (confirm("Ta bort delmål?")) deleteMilestone.mutate(m.id); }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
                             </label>
                           ))}
                         </div>
@@ -196,6 +209,24 @@ export function TreatmentPlanTab({ patientId }: Props) {
               </Card>
             );
           })}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const title = prompt("Titel på nytt mål?");
+              if (!title?.trim()) return;
+              addGoalMut.mutate({
+                planId: activePlan.id,
+                title: title.trim(),
+                sort_order: activePlan.goals?.length ?? 0,
+              }, {
+                onSuccess: () => toast.success("Mål tillagt"),
+                onError: () => toast.error("Kunde inte lägga till mål"),
+              });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Lägg till mål
+          </Button>
         </>
       ) : (
         <Card>
