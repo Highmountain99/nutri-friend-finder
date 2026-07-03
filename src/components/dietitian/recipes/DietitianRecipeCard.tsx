@@ -97,7 +97,7 @@ export function DietitianRecipeCard({
       </div>
 
       {/* 3-dot menu */}
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
