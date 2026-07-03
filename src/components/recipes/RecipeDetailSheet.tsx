@@ -120,7 +120,10 @@ export function RecipeDetailSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-2xl">
+        <SheetContent
+          side="bottom"
+          className="!max-h-[90dvh] sm:!max-h-[80vh] sm:max-w-[768px] sm:mx-auto sm:bottom-6 sm:rounded-t-[2rem] rounded-t-2xl overflow-y-auto overscroll-contain"
+        >
           {showLoading ? (
             <div className="space-y-4 p-4">
               <Skeleton className="h-48 w-full rounded-lg" />
