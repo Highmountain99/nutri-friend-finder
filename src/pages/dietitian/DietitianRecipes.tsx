@@ -15,6 +15,7 @@ import { CreateRecipeSheet, type RecipeFormData } from "@/components/dietitian/r
 import { ImportRecipeModal } from "@/components/dietitian/recipes/ImportRecipeModal";
 import { FetchRecipeFromUrlModal } from "@/components/dietitian/recipes/FetchRecipeFromUrlModal";
 import { SuggestRecipeModal } from "@/components/dietitian/recipes/SuggestRecipeModal";
+import { RecipeDetailSheet } from "@/components/recipes/RecipeDetailSheet";
 
 type Recipe = Tables<"recipes">;
 
@@ -30,6 +31,7 @@ export default function DietitianRecipes() {
   const [showFetch, setShowFetch] = useState(false);
   const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
   const [suggestRecipe, setSuggestRecipe] = useState<{ id: string; title: string; image?: string | null } | null>(null);
+  const [detailRecipeId, setDetailRecipeId] = useState<string | null>(null);
 
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -322,6 +324,7 @@ export default function DietitianRecipes() {
                 } : undefined}
                 onSaveToMine={!isOwn && !isSaved ? (id) => saveToMyRecipes.mutate(id) : undefined}
                 onRemoveFromMine={isSaved && !isOwn ? (id) => removeFromMyRecipes.mutate(id) : undefined}
+                onOpen={(id) => setDetailRecipeId(id)}
               />
             );
           })}
@@ -365,6 +368,13 @@ export default function DietitianRecipes() {
           recipes={batchRecipes}
         />
       )}
+
+      {/* Recipe detail */}
+      <RecipeDetailSheet
+        recipeId={detailRecipeId}
+        open={!!detailRecipeId}
+        onOpenChange={(o) => { if (!o) setDetailRecipeId(null); }}
+      />
     </div>
   );
 }

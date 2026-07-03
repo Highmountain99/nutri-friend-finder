@@ -25,6 +25,7 @@ interface DietitianRecipeCardProps {
   onDelete?: (id: string) => void;
   onSaveToMine?: (id: string) => void;
   onRemoveFromMine?: (id: string) => void;
+  onOpen?: (id: string) => void;
 }
 
 export function DietitianRecipeCard({
@@ -39,6 +40,7 @@ export function DietitianRecipeCard({
   onDelete,
   onSaveToMine,
   onRemoveFromMine,
+  onOpen,
 }: DietitianRecipeCardProps) {
   const allTags = [
     ...(recipe.cuisine_types || []),
@@ -53,7 +55,13 @@ export function DietitianRecipeCard({
   const isPublished = (recipe as any).is_published !== false;
 
   return (
-    <div className={`group relative rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md ${isSelected ? "ring-2 ring-primary border-primary" : ""}`}>
+    <div
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={onOpen ? () => onOpen(recipe.id) : undefined}
+      onKeyDown={onOpen ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(recipe.id); } } : undefined}
+      className={`group relative rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md ${onOpen ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary border-primary" : ""}`}
+    >
       {/* Select checkbox */}
       {onToggleSelect && (
         <button
@@ -89,7 +97,7 @@ export function DietitianRecipeCard({
       </div>
 
       {/* 3-dot menu */}
-      <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
