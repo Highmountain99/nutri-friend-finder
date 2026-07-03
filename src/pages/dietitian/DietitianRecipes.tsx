@@ -31,6 +31,7 @@ export default function DietitianRecipes() {
   const [showFetch, setShowFetch] = useState(false);
   const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
   const [suggestRecipe, setSuggestRecipe] = useState<{ id: string; title: string; image?: string | null } | null>(null);
+  const [detailRecipeId, setDetailRecipeId] = useState<string | null>(null);
 
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
