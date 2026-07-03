@@ -25,6 +25,7 @@ interface DietitianRecipeCardProps {
   onDelete?: (id: string) => void;
   onSaveToMine?: (id: string) => void;
   onRemoveFromMine?: (id: string) => void;
+  onOpen?: (id: string) => void;
 }
 
 export function DietitianRecipeCard({
