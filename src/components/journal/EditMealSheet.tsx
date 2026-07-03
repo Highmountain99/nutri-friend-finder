@@ -121,6 +121,25 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
     }
   }, [entry, isOpen]);
 
+  // Lazy-load the full image_url for this entry — list queries skip image_url
+  // (base64 blobs can be several MB and would block loading historical logs).
+  useEffect(() => {
+    if (!entry?.id || !isOpen) return;
+    if (entry.imageUrl) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("nutrition_entries")
+        .select("image_url")
+        .eq("id", entry.id)
+        .maybeSingle();
+      if (!cancelled && data?.image_url) {
+        setImagePreview(data.image_url);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [entry?.id, entry?.imageUrl, isOpen]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
