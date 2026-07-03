@@ -40,6 +40,7 @@ export function DietitianRecipeCard({
   onDelete,
   onSaveToMine,
   onRemoveFromMine,
+  onOpen,
 }: DietitianRecipeCardProps) {
   const allTags = [
     ...(recipe.cuisine_types || []),
@@ -54,7 +55,13 @@ export function DietitianRecipeCard({
   const isPublished = (recipe as any).is_published !== false;
 
   return (
-    <div className={`group relative rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md ${isSelected ? "ring-2 ring-primary border-primary" : ""}`}>
+    <div
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={onOpen ? () => onOpen(recipe.id) : undefined}
+      onKeyDown={onOpen ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(recipe.id); } } : undefined}
+      className={`group relative rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md ${onOpen ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary border-primary" : ""}`}
+    >
       {/* Select checkbox */}
       {onToggleSelect && (
         <button
