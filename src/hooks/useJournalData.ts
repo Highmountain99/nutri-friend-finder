@@ -215,6 +215,13 @@ function sumTotals(entries: NutritionEntry[]): DailyTotals {
   );
 }
 
+// Columns to select for list views — exclude `image_url` because meal photos
+// are often stored as huge base64 blobs that would hang bulk/day queries and
+// prevent historical logging from ever loading.
+const ENTRY_LIST_COLUMNS =
+  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, created_at";
+
+
 
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
