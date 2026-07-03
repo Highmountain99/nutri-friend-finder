@@ -15,6 +15,7 @@ import { CreateRecipeSheet, type RecipeFormData } from "@/components/dietitian/r
 import { ImportRecipeModal } from "@/components/dietitian/recipes/ImportRecipeModal";
 import { FetchRecipeFromUrlModal } from "@/components/dietitian/recipes/FetchRecipeFromUrlModal";
 import { SuggestRecipeModal } from "@/components/dietitian/recipes/SuggestRecipeModal";
+import { RecipeDetailSheet } from "@/components/recipes/RecipeDetailSheet";
 
 type Recipe = Tables<"recipes">;
 
