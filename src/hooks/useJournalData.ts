@@ -411,7 +411,7 @@ export function useJournalData(selectedDate: Date) {
     (async () => {
       try {
         const [entriesRes, symptomsRes, metricsRes] = await Promise.all([
-          supabase.from("nutrition_entries").select("*").eq("user_id", user.id).eq("entry_date", dateKey),
+          supabase.from("nutrition_entries").select(ENTRY_LIST_COLUMNS).eq("user_id", user.id).eq("entry_date", dateKey),
           supabase.from("symptom_entries").select("*").eq("user_id", user.id).eq("entry_date", dateKey),
           supabase.from("daily_health_metrics").select("*").eq("user_id", user.id).eq("metric_date", dateKey).maybeSingle(),
         ]);
