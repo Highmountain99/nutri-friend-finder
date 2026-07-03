@@ -215,6 +215,13 @@ function sumTotals(entries: NutritionEntry[]): DailyTotals {
   );
 }
 
+// Columns to select for list views — exclude `image_url` because meal photos
+// are often stored as huge base64 blobs that would hang bulk/day queries and
+// prevent historical logging from ever loading.
+const ENTRY_LIST_COLUMNS =
+  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, created_at";
+
+
 
 export function useJournalData(selectedDate: Date) {
   const { user } = useAuth();
@@ -332,7 +339,7 @@ export function useJournalData(selectedDate: Date) {
         const fromDate = format(subDays(today, PREFETCH_DAYS - 1), "yyyy-MM-dd");
 
         const [entriesBulk, symptomsBulk, metricsBulk] = await Promise.all([
-          supabase.from("nutrition_entries").select("*").eq("user_id", user.id).gte("entry_date", fromDate),
+          supabase.from("nutrition_entries").select(ENTRY_LIST_COLUMNS).eq("user_id", user.id).gte("entry_date", fromDate),
           supabase.from("symptom_entries").select("*").eq("user_id", user.id).gte("entry_date", fromDate),
           supabase.from("daily_health_metrics").select("*").eq("user_id", user.id).gte("metric_date", fromDate),
         ]);
@@ -404,7 +411,7 @@ export function useJournalData(selectedDate: Date) {
     (async () => {
       try {
         const [entriesRes, symptomsRes, metricsRes] = await Promise.all([
-          supabase.from("nutrition_entries").select("*").eq("user_id", user.id).eq("entry_date", dateKey),
+          supabase.from("nutrition_entries").select(ENTRY_LIST_COLUMNS).eq("user_id", user.id).eq("entry_date", dateKey),
           supabase.from("symptom_entries").select("*").eq("user_id", user.id).eq("entry_date", dateKey),
           supabase.from("daily_health_metrics").select("*").eq("user_id", user.id).eq("metric_date", dateKey).maybeSingle(),
         ]);
