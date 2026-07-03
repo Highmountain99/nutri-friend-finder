@@ -368,6 +368,13 @@ export default function DietitianRecipes() {
           recipes={batchRecipes}
         />
       )}
+
+      {/* Recipe detail */}
+      <RecipeDetailSheet
+        recipeId={detailRecipeId}
+        open={!!detailRecipeId}
+        onOpenChange={(o) => { if (!o) setDetailRecipeId(null); }}
+      />
     </div>
   );
 }
