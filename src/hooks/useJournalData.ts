@@ -339,7 +339,7 @@ export function useJournalData(selectedDate: Date) {
         const fromDate = format(subDays(today, PREFETCH_DAYS - 1), "yyyy-MM-dd");
 
         const [entriesBulk, symptomsBulk, metricsBulk] = await Promise.all([
-          supabase.from("nutrition_entries").select("*").eq("user_id", user.id).gte("entry_date", fromDate),
+          supabase.from("nutrition_entries").select(ENTRY_LIST_COLUMNS).eq("user_id", user.id).gte("entry_date", fromDate),
           supabase.from("symptom_entries").select("*").eq("user_id", user.id).gte("entry_date", fromDate),
           supabase.from("daily_health_metrics").select("*").eq("user_id", user.id).gte("metric_date", fromDate),
         ]);
