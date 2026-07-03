@@ -324,6 +324,7 @@ export default function DietitianRecipes() {
                 } : undefined}
                 onSaveToMine={!isOwn && !isSaved ? (id) => saveToMyRecipes.mutate(id) : undefined}
                 onRemoveFromMine={isSaved && !isOwn ? (id) => removeFromMyRecipes.mutate(id) : undefined}
+                onOpen={(id) => setDetailRecipeId(id)}
               />
             );
           })}
