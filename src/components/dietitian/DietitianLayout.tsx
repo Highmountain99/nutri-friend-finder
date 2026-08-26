@@ -8,7 +8,7 @@ export function DietitianLayout() {
       <div className="min-h-dvh flex w-full bg-background">
         <DietitianSidebar />
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-          <header className="h-12 flex items-center border-b border-border px-4 shrink-0">
+          <header className="h-12 flex items-center border-b border-border px-4 shrink-0 pt-[env(safe-area-inset-top)] box-content">
             <SidebarTrigger />
           </header>
           <main className="flex-1 overflow-auto p-6 min-h-0">

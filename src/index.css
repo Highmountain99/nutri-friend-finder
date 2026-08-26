@@ -134,11 +134,14 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Prevent iOS from zooming the viewport when a field gets focus. */
-  input,
-  textarea,
-  select {
-    font-size: max(16px, 1em);
+  /* Prevent iOS from zooming the viewport when a field gets focus.
+     Touch devices only, so the desktop dashboard keeps its type scale. */
+  @media (pointer: coarse) {
+    input,
+    textarea,
+    select {
+      font-size: max(16px, 1em);
+    }
   }
 
 
