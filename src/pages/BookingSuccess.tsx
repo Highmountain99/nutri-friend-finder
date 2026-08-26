@@ -118,7 +118,7 @@ export default function BookingSuccess() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center space-y-4">
             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
@@ -132,7 +132,7 @@ export default function BookingSuccess() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
@@ -150,7 +150,7 @@ export default function BookingSuccess() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardContent className="pt-6 text-center space-y-6">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">

@@ -182,7 +182,7 @@ export default function Invite() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -190,7 +190,7 @@ export default function Invite() {
 
   if (!invitation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
           <CardContent className="py-12 text-center space-y-4">
             <p className="text-lg font-medium">Inbjudan hittades inte</p>
@@ -205,7 +205,7 @@ export default function Invite() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 to-background p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-b from-primary/5 to-background p-4">
       <Card className="max-w-md w-full shadow-elevated">
         <CardContent className="p-6 space-y-6">
           {mode === "info" ? (

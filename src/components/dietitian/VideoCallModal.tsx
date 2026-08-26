@@ -1,3 +1,4 @@
+import { openExternal } from "@/lib/openExternal";
 import {
   Dialog,
   DialogContent,
@@ -90,7 +91,7 @@ export function VideoCallModal({ open, onOpenChange, appointmentId, isHost = fal
                   size="sm"
                   variant="secondary"
                   className="gap-1.5 text-xs opacity-70 hover:opacity-100"
-                  onClick={() => window.open(roomUrl, "_blank")}
+                  onClick={() => openExternal(roomUrl)}
                 >
                   <ExternalLink className="h-3 w-3" />
                   Öppna i nytt fönster

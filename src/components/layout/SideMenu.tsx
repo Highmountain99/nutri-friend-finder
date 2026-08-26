@@ -1,3 +1,4 @@
+import { openExternal } from "@/lib/openExternal";
 import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, ExternalLink, CreditCard, KeyRound, Shield, CalendarDays } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
             {/* 1177 External Link */}
             <button
               onClick={() => {
-                window.open("https://m07-mg-local.idp.funktionstjanster.se/samlv2/idp/sign_in/781", "_blank");
+                openExternal("https://m07-mg-local.idp.funktionstjanster.se/samlv2/idp/sign_in/781");
                 onClose();
               }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-foreground hover:bg-muted w-full text-left"

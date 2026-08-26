@@ -7,7 +7,7 @@ export function ProtectedRoute() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <OrganicLoader size={32} />
       </div>
     );
