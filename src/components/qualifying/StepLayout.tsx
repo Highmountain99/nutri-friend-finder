@@ -37,7 +37,7 @@ export function StepLayout({
   skipLabel = 'Hoppa över',
 }: StepLayoutProps) {
   return (
-    <div className="min-h-screen bg-background flex flex-col safe-area-inset">
+    <div className="min-h-dvh bg-background flex flex-col safe-area-inset">
       {/* Header with progress */}
       <div className="flex-shrink-0 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2 mb-4">

@@ -40,11 +40,11 @@ export function AppLayout() {
                    "Användare";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <Header userName={userName} onMenuClick={() => setIsMenuOpen(true)} />
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       
-      <main className="pb-20 max-w-lg mx-auto">
+      <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] max-w-lg mx-auto">
         <Outlet />
       </main>
       

@@ -21,7 +21,7 @@ export default function DevTools() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6 max-w-2xl mx-auto">
+    <div className="min-h-dvh bg-background p-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-5 h-5" />

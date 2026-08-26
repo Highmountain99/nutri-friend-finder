@@ -119,11 +119,31 @@
     @apply border-border;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
     font-feature-settings: "ss01", "cv02";
+    /* iOS WebView: avoid rubber-band scroll of the whole shell and the grey
+       tap flash on buttons/links. */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
   }
+
+  /* Prevent iOS from zooming the viewport when a field gets focus.
+     Touch devices only, so the desktop dashboard keeps its type scale. */
+  @media (pointer: coarse) {
+    input,
+    textarea,
+    select {
+      font-size: max(16px, 1em);
+    }
+  }
+
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Instrument Serif', 'Times New Roman', serif;

@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { openExternal } from "@/lib/openExternal";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ export default function Koder() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="p-4">
@@ -53,7 +54,7 @@ export default function Koder() {
         <Card className="bg-muted/50">
           <CardContent className="p-4">
             <button
-              onClick={() => window.open("https://eatsuite.se/privat", "_blank")}
+              onClick={() => openExternal("https://eatsuite.se/privat")}
               className="flex items-center justify-between w-full text-left"
             >
               <div>

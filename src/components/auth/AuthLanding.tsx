@@ -30,7 +30,7 @@ export function AuthLanding() {
 
   return (
     <div
-      className="min-h-screen flex flex-col safe-area-inset overflow-hidden relative"
+      className="min-h-dvh flex flex-col safe-area-inset overflow-hidden relative"
       style={{ background: "#EBE5D6" }}
     >
       <div

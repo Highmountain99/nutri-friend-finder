@@ -10,7 +10,7 @@ import {
 
 export default function Frikort() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="p-4">

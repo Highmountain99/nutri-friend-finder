@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-dvh bg-white flex flex-col">
       {/* Header */}
       <header className="sticky top-0 bg-white border-b border-border px-4 py-3 flex items-center gap-3 z-10">
         <Button variant="ghost" size="icon" asChild>

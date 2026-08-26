@@ -1,3 +1,4 @@
+import { openExternal } from "@/lib/openExternal";
 import { useState, useEffect } from "react";
 import { Copy, Check, Calendar, ExternalLink, RefreshCw } from "lucide-react";
 import {
@@ -107,7 +108,7 @@ export function CalendarSyncSheet() {
                 variant="outline"
                 className="w-full gap-2"
                 disabled={!calendarToken}
-                onClick={() => window.open(googleCalUrl, "_blank")}
+                onClick={() => openExternal(googleCalUrl)}
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
                   <path d="M18.316 5.684H24V24H0V5.684h5.684" fill="#4285F4"/>

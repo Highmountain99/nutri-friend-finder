@@ -41,6 +41,8 @@ import DietitianBlocks from "./pages/dietitian/DietitianBlocks";
 import Invite from "./pages/Invite";
 import DevTools from "./pages/DevTools";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
+import { OfflineBanner } from "./components/layout/OfflineBanner";
+
 
 
 const queryClient = new QueryClient();
@@ -50,7 +52,9 @@ const App = () => (
     <TooltipProvider>
       <BrowserRouter>
         <AuthProvider>
+          <OfflineBanner />
           <InstallPrompt />
+
           <Routes>
 
             {/* Landing / Auth routes - no layout */}

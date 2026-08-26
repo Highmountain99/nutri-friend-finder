@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { openExternal } from "@/lib/openExternal";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { TimeSlot } from '@/types/dietitian';
@@ -36,7 +37,7 @@ export function useBookingCheckout() {
 
       if (data?.url) {
         // Open Stripe checkout in new tab
-        window.open(data.url, '_blank');
+        await openExternal(data.url);
         return true;
       } else {
         throw new Error('Ingen checkout-URL mottogs');
