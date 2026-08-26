@@ -15,8 +15,9 @@ export function Header({ userName = "där", onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md border-b border-border">
+    <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
       <div className="flex items-center justify-between px-4 h-16 max-w-lg mx-auto">
+
         <Button
           variant="ghost"
           size="icon"
