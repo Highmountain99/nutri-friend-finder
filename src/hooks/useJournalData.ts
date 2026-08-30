@@ -392,12 +392,8 @@ export function useJournalData(selectedDate: Date) {
   useEffect(() => {
     if (!user) return;
     if (entries.length === 0) return;
-    // Skip if every entry that has an image already carries it
-    if (entries.every((e) => e.imageUrl !== undefined || e.id.startsWith("temp-"))) {
-      // We can't know which entries have images without asking, so only skip
-      // when ALL entries already have a resolved imageUrl field.
-      if (entries.every((e) => e.imageUrl)) return;
-    }
+    // Skip when every entry already has a resolved image
+    if (entries.every((e) => e.imageUrl)) return;
 
     let cancelled = false;
     (async () => {
