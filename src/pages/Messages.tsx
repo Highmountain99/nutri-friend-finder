@@ -155,7 +155,7 @@ export default function Messages() {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <div className="flex flex-col h-[calc(100dvh-8rem-env(safe-area-inset-bottom))]">
         {/* Chat Header */}
         <ChatHeader
           loading={loading}
