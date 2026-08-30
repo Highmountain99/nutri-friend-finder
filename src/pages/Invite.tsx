@@ -6,34 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Heart, ArrowRight, Check } from "lucide-react";
+import { Loader2, Heart, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-
-const CONCERN_OPTIONS = [
-  { value: "weight_loss", label: "Viktnedgång" },
-  { value: "gut_health", label: "Maghälsa" },
-  { value: "diabetes", label: "Diabetes" },
-  { value: "heart_health", label: "Hjärthälsa" },
-  { value: "womens_health", label: "Kvinnohälsa" },
-  { value: "eating_disorder", label: "Ätstörning" },
-  { value: "emotional_eating", label: "Emotionellt ätande" },
-  { value: "general_health", label: "Allmän hälsa" },
-];
 
 export default function Invite() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { user, session } = useAuth();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState<any>(null);
   const [dietitianName, setDietitianName] = useState("");
-  const [mode, setMode] = useState<"info" | "signup" | "concern">("info");
+  const [mode, setMode] = useState<"info" | "signup">("info");
   const [form, setForm] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [selectedConcern, setSelectedConcern] = useState<string | null>(null);
-  const [freeText, setFreeText] = useState("");
 
   const inviteCode = useMemo(() => {
     if (!code) return null;
@@ -71,6 +57,41 @@ export default function Invite() {
       setLoading(false);
     })();
   }, [inviteCode]);
+
+  /** Accepts the invite, links the dietitian and sends the patient straight into the app. */
+  const completeInvite = async () => {
+    if (!inviteCode) {
+      toast.error("Ogiltig inbjudningskod");
+      return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      navigate(loginRedirectUrl);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc("accept_invitation_and_assign" as any, {
+        _invite_code: inviteCode,
+        _primary_concern: "general_health",
+        _free_text: null,
+      } as any);
+
+      if (error) throw error;
+      if (!data) {
+        toast.error("Inbjudan kunde inte accepteras. Kontrollera att du använder rätt konto.");
+        return;
+      }
+
+      navigate("/home", { replace: true });
+    } catch (err: any) {
+      toast.error(err.message || "Något gick fel");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSignup = async () => {
     if (!form.email || !form.password || !form.firstName) {
@@ -121,55 +142,12 @@ export default function Invite() {
         console.error("Error upserting profile during invite signup:", profileError);
       }
 
-      setMode("concern");
+      await completeInvite();
     } catch (err: any) {
       toast.error(err.message || "Något gick fel");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const completeInvite = async (concern: string, text?: string) => {
-    if (!inviteCode) {
-      toast.error("Ogiltig inbjudningskod");
-      return;
-    }
-
-    if (!session) {
-      toast.error("Logga in för att slutföra inbjudan");
-      navigate(loginRedirectUrl);
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const { data, error } = await supabase.rpc("accept_invitation_and_assign" as any, {
-        _invite_code: inviteCode,
-        _primary_concern: concern,
-        _free_text: text?.trim() ? text.trim() : null,
-      } as any);
-
-      if (error) throw error;
-      if (!data) {
-        toast.error("Inbjudan kunde inte accepteras. Kontrollera att du använder rätt konto.");
-        return;
-      }
-
-      toast.success("Inbjudan accepterad! Fortsätt med onboarding.");
-      navigate("/qualifying");
-    } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const finishWithConcern = async () => {
-    await completeInvite(selectedConcern || "general_health", freeText);
-  };
-
-  const skipConcern = async () => {
-    await completeInvite("general_health");
   };
 
   if (loading) {
@@ -209,13 +187,14 @@ export default function Invite() {
                 <h1 className="text-xl font-bold">Välkommen till Gut Feeling</h1>
                 {dietitianName && (
                   <p className="text-muted-foreground">
-                    Du har blivit inbjuden av <span className="font-medium text-foreground">{dietitianName}</span>
+                    Du har blivit inbjuden av{" "}
+                    <span className="font-medium text-foreground">{dietitianName}</span>
                   </p>
                 )}
               </div>
 
               <div className="space-y-3 text-sm text-muted-foreground">
-                <p>Med Gut Feeling får du:</p>
+                <p>Skapa ditt konto så är du igång direkt:</p>
                 <ul className="space-y-2 list-disc list-inside">
                   <li>Direktkontakt med din dietist via chatt och videosamtal</li>
                   <li>Personlig kostplan och receptförslag</li>
@@ -226,10 +205,12 @@ export default function Invite() {
               <Button
                 className="w-full"
                 size="lg"
-                onClick={() => setMode(user ? "concern" : "signup")}
+                disabled={submitting}
+                onClick={() => (user ? completeInvite() : setMode("signup"))}
               >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 {user ? "Fortsätt" : "Skapa konto"}
-                <ArrowRight className="h-4 w-4 ml-2" />
+                {!submitting && <ArrowRight className="h-4 w-4 ml-2" />}
               </Button>
 
               {!user ? (
@@ -241,14 +222,12 @@ export default function Invite() {
                 </p>
               ) : null}
             </>
-          ) : mode === "signup" ? (
+          ) : (
             <>
               <div className="text-center space-y-2">
                 <h1 className="text-xl font-bold">Skapa ditt konto</h1>
                 {dietitianName && (
-                  <p className="text-sm text-muted-foreground">
-                    {dietitianName} blir din dietist
-                  </p>
+                  <p className="text-sm text-muted-foreground">{dietitianName} blir din dietist</p>
                 )}
               </div>
 
@@ -288,13 +267,16 @@ export default function Invite() {
                     value={form.password}
                     onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                     placeholder="Minst 6 tecken"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSignup();
+                    }}
                   />
                 </div>
               </div>
 
               <Button className="w-full" size="lg" onClick={handleSignup} disabled={submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Fortsätt
+                Skapa konto och kom igång
               </Button>
 
               <button
@@ -303,70 +285,6 @@ export default function Invite() {
               >
                 Tillbaka
               </button>
-            </>
-          ) : (
-            <>
-              <div className="text-center space-y-2">
-                <h1 className="text-xl font-bold">Vad vill du ha hjälp med?</h1>
-                <p className="text-sm text-muted-foreground">
-                  Välj det som bäst beskriver dig, eller skriv fritt nedan
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {CONCERN_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setSelectedConcern(selectedConcern === opt.value ? null : opt.value)}
-                    className={`rounded-xl border px-3 py-2.5 text-sm font-medium text-left transition-colors ${
-                      selectedConcern === opt.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card text-foreground hover:bg-muted/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {selectedConcern === opt.value && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
-                      <span>{opt.label}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Eller beskriv med egna ord</Label>
-                <Textarea
-                  value={freeText}
-                  onChange={(e) => setFreeText(e.target.value)}
-                  placeholder="T.ex. jag vill äta bättre för att orka mer i vardagen..."
-                  rows={2}
-                  className="text-sm"
-                />
-              </div>
-
-              {!session ? (
-                <p className="text-xs text-center text-muted-foreground">
-                  Du behöver vara inloggad för att fortsätta.
-                </p>
-              ) : null}
-
-              <div className="space-y-2">
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={finishWithConcern}
-                  disabled={submitting || !session || (!selectedConcern && !freeText.trim())}
-                >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Fortsätt
-                </Button>
-                <button
-                  className="w-full text-xs text-muted-foreground underline"
-                  onClick={skipConcern}
-                  disabled={submitting || !session}
-                >
-                  Hoppa över
-                </button>
-              </div>
             </>
           )}
         </CardContent>
