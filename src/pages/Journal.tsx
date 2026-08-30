@@ -313,7 +313,7 @@ export default function Journal() {
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCameraCapture} />
 
       {/* Fixed Camera FAB - Always visible */}
-      <div className="fixed bottom-24 right-4 z-50">
+      <div className="fixed right-4 z-50 bottom-[calc(6rem+env(safe-area-inset-bottom))]">
         <Button size="icon" className="h-14 w-14 rounded-full shadow-elevated bg-primary hover:bg-primary/90 relative" onClick={() => cameraInputRef.current?.click()}>
           <Camera className="w-6 h-6 text-accent-foreground" />
         </Button>
