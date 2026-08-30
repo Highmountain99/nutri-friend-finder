@@ -50,6 +50,7 @@ export function AppLayout() {
       </main>
       
       <BottomNav />
+      <AppTutorial />
     </div>
   );
 }
