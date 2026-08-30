@@ -115,8 +115,31 @@ export default function Booking() {
     }
   };
 
+  // Wait for the assignment check so we never flash the "choose dietitian" step.
+  if (!preselected && myDietitianLoading) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-background">
+        <OrganicLoader size={32} />
+      </div>
+    );
+  }
+
   // Render based on current phase
   switch (phase) {
+    case 'locked':
+      return (
+        <DietitianDetailSheet
+          dietitian={selectedDietitian}
+          open={sheetOpen}
+          onOpenChange={(open) => {
+            setSheetOpen(open);
+            if (!open) navigate(-1);
+          }}
+          onBook={handleBook}
+          initialDate={selectedDate}
+        />
+      );
+
     case 'selection':
       return (
         <DietitianSelectionStep
