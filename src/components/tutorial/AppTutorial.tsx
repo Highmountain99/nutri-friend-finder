@@ -156,7 +156,6 @@ export function AppTutorial() {
     : null;
 
   const anchorIsBottom = step.target !== "profile";
-  const arrowLeft = highlight ? highlight.left + highlight.width / 2 : window.innerWidth / 2;
 
   return createPortal(
     <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Introduktion">
