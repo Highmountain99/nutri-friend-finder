@@ -196,24 +196,6 @@ export function AppTutorial() {
         </>
       )}
 
-      {/* Arrow */}
-      {highlight && (
-        <div
-          className="absolute pointer-events-none transition-all duration-300"
-          style={{
-            left: Math.min(Math.max(arrowLeft - 12, 16), window.innerWidth - 40),
-            top: anchorIsBottom ? highlight.top - 30 : highlight.top + highlight.height + 6,
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" className="text-background drop-shadow">
-            {anchorIsBottom ? (
-              <path d="M12 22 L3 8 h18 Z" fill="currentColor" />
-            ) : (
-              <path d="M12 2 L21 16 H3 Z" fill="currentColor" />
-            )}
-          </svg>
-        </div>
-      )}
 
       {/* Card */}
       <div
