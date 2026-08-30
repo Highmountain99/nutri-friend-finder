@@ -107,7 +107,7 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
     : "";
 
   const inviteUrl = generalInvite
-    ? `${window.location.origin}/invite/${nameSlug ? nameSlug + "-" : ""}${(generalInvite as any).invite_code}`
+    ? `${APP_BASE_URL}/invite/${nameSlug ? nameSlug + "-" : ""}${(generalInvite as any).invite_code}`
     : "";
 
   const copyLink = async () => {
