@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIntakeProfile } from "@/hooks/useIntakeProfile";
+import { useIsDietist } from "@/hooks/useIsDietist";
 import { OrganicLoader } from "@/components/ui/OrganicLoader";
 
 interface QualifyingRouteProps {
@@ -10,8 +11,9 @@ interface QualifyingRouteProps {
 export function QualifyingRoute({ requireQualifying = false }: QualifyingRouteProps) {
   const { session, isLoading: authLoading } = useAuth();
   const { isCompleted, loading: profileLoading } = useIntakeProfile();
+  const { isDietist, isUnknown: roleUnknown } = useIsDietist();
 
-  const isLoading = authLoading || profileLoading;
+  const isLoading = authLoading || profileLoading || roleUnknown;
 
   if (isLoading) {
     return (
@@ -23,6 +25,11 @@ export function QualifyingRoute({ requireQualifying = false }: QualifyingRoutePr
 
   if (!session) {
     return <Navigate to="/" replace />;
+  }
+
+  // Dietitians never belong in the patient onboarding flow.
+  if (isDietist) {
+    return <Navigate to="/dietitian" replace />;
   }
 
   // If we need to check qualifying status
@@ -41,3 +48,4 @@ export function QualifyingRoute({ requireQualifying = false }: QualifyingRoutePr
 
   return <Outlet />;
 }
+
