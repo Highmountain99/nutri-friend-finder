@@ -11,6 +11,7 @@ import { Copy, Check, Send, Link2, Mail, Loader2, UserPlus } from "lucide-react"
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
+import { APP_BASE_URL } from "@/lib/appUrl";
 
 interface InvitePatientSheetProps {
   open: boolean;
