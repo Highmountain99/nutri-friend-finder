@@ -24,6 +24,7 @@ export function BottomNav() {
           <NavLink
             key={item.path}
             to={item.path}
+            data-tour={item.tour}
             className={({ isActive }) =>
               cn(
                 "flex flex-col items-center justify-center gap-0.5 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px]",
