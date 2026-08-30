@@ -143,6 +143,8 @@ export function AppTutorial() {
 
   if (!open || !step) return null;
 
+  const advance = () => (index === STEPS.length - 1 ? finish() : setIndex((i) => i + 1));
+
   const pad = 8;
   const highlight = rect
     ? {
@@ -158,20 +160,40 @@ export function AppTutorial() {
 
   return createPortal(
     <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Introduktion">
-      {/* Backdrop with cut-out */}
-      <div className="absolute inset-0 bg-foreground/70 backdrop-blur-[2px]" onClick={finish} />
+      {/* Backdrop — darkness comes from the spotlight's box-shadow so the target stays crisp */}
+      <div className="absolute inset-0" onClick={finish} />
 
       {highlight && (
-        <div
-          className="absolute rounded-2xl ring-2 ring-background/90 pointer-events-none transition-all duration-300"
-          style={{
-            top: highlight.top,
-            left: highlight.left,
-            width: highlight.width,
-            height: highlight.height,
-            boxShadow: "0 0 0 9999px hsl(var(--foreground) / 0.7)",
-          }}
-        />
+        <>
+          {/* Spotlight cut-out — tappable to advance */}
+          <div
+            className="absolute rounded-2xl transition-all duration-300 cursor-pointer"
+            role="button"
+            aria-label="Gå vidare"
+            onClick={advance}
+            style={{
+              top: highlight.top,
+              left: highlight.left,
+              width: highlight.width,
+              height: highlight.height,
+              boxShadow: "0 0 0 9999px hsl(var(--foreground) / 0.7)",
+            }}
+          >
+            {/* Solid ring */}
+            <div className="absolute inset-0 rounded-2xl ring-2 ring-background pointer-events-none" />
+            {/* Pulsing ring to draw attention */}
+            <div className="absolute -inset-1 rounded-[20px] ring-2 ring-background/80 animate-ping pointer-events-none" />
+            {/* "Tryck här" label */}
+            <div
+              className={cn(
+                "absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-background px-3 py-1 text-[11px] font-semibold text-primary shadow-elevated pointer-events-none",
+                anchorIsBottom ? "-top-9" : "-bottom-9"
+              )}
+            >
+              Tryck här
+            </div>
+          </div>
+        </>
       )}
 
       {/* Arrow */}
