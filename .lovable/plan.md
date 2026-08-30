@@ -1,38 +1,27 @@
-## Ändringar
+# Introduktionsguide för nya användare
 
-### 1. Receptdetaljvy (`RecipeDetailSheet.tsx`)
-- **Ingredienser**: rendera tydligt format med belopp+enhet i fet stil och ingrediens i normal vikt, t.ex. **100 g** smör eller margarin. Liknande look som "Cooking mode" (uppdatera punktlistan så `qty` + `unit` är bold och namnet regular).
-- **Näring per portion**: lägg etiketterna ("kcal", "Protein", "Kolhydrater", "Fett") ovanför värdet för alla fyra kolumner. Ta bort Flame-ikonen. Importen av `Flame` tas bort.
+En kort, klickbar guide i 5 steg som visas första gången en användare kommer in i appen. Varje steg mörklägger skärmen, lyfter fram rätt del av gränssnittet och visar en pil som pekar mot den, tillsammans med en kort förklarande text.
 
-### 2. Cooking mode (`CookingModeSheet.tsx`)
-- **Instruktioner – design-uppfräschning**:
-  - Lägg ett stort stegnummer (1, 2, 3…) ovanför instruktionstexten i kortet (serif font, primary färg).
-  - Snyggare kort (border, lite padding, mjuk skugga) istället för bara `bg-muted/50`.
-- **Swipe mellan steg**: använd projektets `useSwipeGesture`-hook på instruktionspanelen så att swipe vänster/höger triggar `goToNext`/`goToPrevious`. Pilknapparna ligger kvar.
+## Stegen
 
-### 3. Receptbank – sortering (`Recipes.tsx`, `RecipeSearchResultsList.tsx`, `useRecipeSearch.ts`)
-- Lägg till `sort`-state (`"rating" | "time" | "newest"`, default `"rating"`) i `Recipes.tsx` och skicka till `RecipeSearchResultsList` → `useRecipeSearch`.
-- I `useRecipeSearch` byts `.order("rating", …)` till att välja kolumn baserat på sort:
-  - `rating` → `rating desc`
-  - `time` → `time_minutes asc`
-  - `newest` → `created_at desc`
-- UI: liten sorterings-`Select`/dropdown ovanför listan i `search-results`-vyn (bredvid filter-bar). Alternativ: "Bäst betyg", "Snabbast", "Senaste".
+1. **Hälsoprofil** – pekar mot profil-/menyikonen i toppen. "Fyll i vikt, längd, blodtryck och midjemått. Då kan din dietist sätta mål utifrån dina värden."
+2. **Journal** – pekar mot Journal i bottenmenyn. "Här loggar du vad du äter. Enklast är att ta kort på maten — annars kan du skriva exakt vad du ätit."
+3. **Dagliga näringsmål** – fortsatt fokus på Journal. "Du och din dietist sätter dagliga mål för näringsämnen. De uppdateras allt eftersom du loggar."
+4. **Recept** – pekar mot Recept i bottenmenyn. "Här finns recepten din dietist rekommenderar. Spara de du gillar — de dyker upp här. Du kan också bläddra bland recept från hela dietistcommunityn."
+5. **Utveckling** – pekar mot Utveckling i bottenmenyn. "Här ser du planen din dietist sätter för dig, din resa och målen längs vägen. Kostrelaterade mål bockas av allt eftersom du loggar."
 
-### 4. Progress-sidan – "Min resa"-knapp (`ProgressRouter.tsx`)
-- Byt den runda flagg-knappen i toppen mot en pill-knapp med text **"Min resa"** + en snyggare flagg-ikon (`Map` eller `Route` från lucide; väljer `Route` för "resa"-känsla).
-- Behåll `onOpenJourney`. Knapp: `rounded-full bg-primary text-primary-foreground px-4 h-10 gap-2 shadow-md`, ikon `w-4 h-4`. Behåll position top-right.
+Navigering: "Nästa"/"Tillbaka", punktindikator, samt "Hoppa över" som stänger guiden. Sista steget avslutas med "Kom igång".
 
-### 5. Header – ta bort "g"-bubblan (`Header.tsx`)
-- Ta bort den runda primary-bubblan med "g" i högra hörnet.
-- För att behålla centrerad layout läggs en osynlig `w-10` spacer in på höger sida (matchar menyknappens bredd till vänster).
+## Beteende
 
-## Filer som ändras
-- `src/components/recipes/RecipeDetailSheet.tsx`
-- `src/components/recipes/CookingModeSheet.tsx`
-- `src/pages/Recipes.tsx`
-- `src/components/recipes/RecipeSearchResultsList.tsx`
-- `src/hooks/useRecipeSearch.ts`
-- `src/components/progress/ProgressRouter.tsx`
-- `src/components/layout/Header.tsx`
+- Visas automatiskt en gång, efter att onboarding/kvalificering är klar och användaren landar på /home.
+- Markeras som avklarad när guiden slutförs eller hoppas över — visas då aldrig igen.
+- Kan startas om manuellt via sidomenyn ("Visa introduktion igen").
 
-Inga DB- eller backend-ändringar behövs.
+## Teknisk beskrivning
+
+- Ny komponent `src/components/tutorial/AppTutorial.tsx`: overlay renderad via React Portal till `document.body`, med backdrop, hål/ring runt målelementet (mätt med `getBoundingClientRect`) och en pil mot målet.
+- Målelement identifieras med `data-tour="profile" | "journal" | "recipes" | "progress"` — attribut läggs på befintliga knappar i `Header.tsx` och `BottomNav.tsx` (endast attribut, ingen ändrad logik).
+- Monteras i `AppLayout.tsx` så den ligger över hela patientvyn; respekterar safe areas.
+- Status sparas i `localStorage` per användar-id (`gf_tutorial_v1_<userId>`), så ingen databasändring behövs.
+- Formspråk enligt befintlig design: beige kort, Instrument Serif-rubrik, Geist brödtext, mjuka rundade hörn, inga toasts.
