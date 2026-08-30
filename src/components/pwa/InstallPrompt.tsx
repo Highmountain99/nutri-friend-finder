@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Share, Plus, MoreVertical } from "lucide-react";
+import { X, Share, Plus, MoreVertical, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "pwa-install-prompt-dismissed";
@@ -100,13 +100,22 @@ export function InstallPrompt({ force = false }: { force?: boolean } = {}) {
                 1
               </span>
               <span className="flex-1">
+                Tryck på <span className="font-medium">menyikonen</span> i Safaris adressfält
+              </span>
+              <Menu className="h-5 w-5 text-primary" />
+            </li>
+            <li className="flex items-center gap-3 text-sm">
+              <span className="flex-none w-7 h-7 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center text-xs">
+                2
+              </span>
+              <span className="flex-1">
                 Tryck på <span className="font-medium">Dela</span>-ikonen
               </span>
               <Share className="h-5 w-5 text-primary" />
             </li>
             <li className="flex items-center gap-3 text-sm">
               <span className="flex-none w-7 h-7 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center text-xs">
-                2
+                3
               </span>
               <span className="flex-1">
                 Välj <span className="font-medium">Lägg till på hemskärmen</span>
@@ -115,7 +124,7 @@ export function InstallPrompt({ force = false }: { force?: boolean } = {}) {
             </li>
             <li className="flex items-center gap-3 text-sm">
               <span className="flex-none w-7 h-7 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center text-xs">
-                3
+                4
               </span>
               <span className="flex-1">
                 Tryck <span className="font-medium">Lägg till</span> – klart!
