@@ -48,33 +48,25 @@ export default function Invite() {
     if (!inviteCode) return;
 
     (async () => {
-      const { data, error } = await supabase
-        .from("patient_invitations" as any)
-        .select("*")
-        .eq("invite_code", inviteCode)
-        .eq("status", "pending")
-        .limit(1);
+      const { data, error } = await supabase.rpc("get_invitation_preview" as any, {
+        _invite_code: inviteCode,
+      } as any);
 
-      if (error || !data || data.length === 0) {
+      const inv = Array.isArray(data) ? (data[0] as any) : null;
+
+      if (error || !inv?.is_valid) {
         setLoading(false);
         return;
       }
 
-      const inv = data[0] as any;
       setInvitation(inv);
 
       if (inv.patient_email) {
         setForm((f) => ({ ...f, email: inv.patient_email }));
       }
 
-      const { data: profile } = await supabase
-        .from("dietitian_profiles")
-        .select("first_name, last_name, title")
-        .eq("user_id", inv.dietitian_id)
-        .single();
-
-      if (profile) {
-        setDietitianName(`${profile.first_name} ${profile.last_name}`);
+      if (inv.dietitian_first_name) {
+        setDietitianName(`${inv.dietitian_first_name} ${inv.dietitian_last_name ?? ""}`.trim());
       }
       setLoading(false);
     })();

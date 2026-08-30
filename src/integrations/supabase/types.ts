@@ -1489,6 +1489,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_invitation_preview: {
+        Args: { _invite_code: string }
+        Returns: {
+          dietitian_first_name: string
+          dietitian_last_name: string
+          dietitian_title: string
+          is_valid: boolean
+          patient_email: string
+        }[]
+      }
       get_or_create_my_calendar_token: { Args: never; Returns: string }
       has_role: {
         Args: {
