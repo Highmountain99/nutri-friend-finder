@@ -5,11 +5,11 @@ import { useUnreadPatientMessages } from "@/hooks/useUnreadPatientMessages";
 import { useSuggestedRecipes } from "@/hooks/useSuggestedRecipes";
 
 const navItems = [
-  { path: "/home", icon: Home, label: "Hem" },
-  { path: "/journal", icon: BookOpen, label: "Journal" },
-  { path: "/messages", icon: MessageCircle, label: "Meddelanden" },
-  { path: "/recipes", icon: UtensilsCrossed, label: "Recept" },
-  { path: "/progress", icon: TrendingUp, label: "Utveckling" },
+  { path: "/home", icon: Home, label: "Hem", tour: undefined as string | undefined },
+  { path: "/journal", icon: BookOpen, label: "Journal", tour: "journal" },
+  { path: "/messages", icon: MessageCircle, label: "Meddelanden", tour: undefined },
+  { path: "/recipes", icon: UtensilsCrossed, label: "Recept", tour: "recipes" },
+  { path: "/progress", icon: TrendingUp, label: "Utveckling", tour: "progress" },
 ];
 
 export function BottomNav() {
@@ -24,6 +24,7 @@ export function BottomNav() {
           <NavLink
             key={item.path}
             to={item.path}
+            data-tour={item.tour}
             className={({ isActive }) =>
               cn(
                 "flex flex-col items-center justify-center gap-0.5 px-3 py-2 rounded-xl transition-all duration-200 min-w-[60px]",

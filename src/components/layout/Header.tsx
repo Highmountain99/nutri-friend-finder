@@ -22,6 +22,7 @@ export function Header({ userName = "där", onMenuClick }: HeaderProps) {
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
+          data-tour="profile"
           className="text-primary hover:bg-secondary"
         >
           <Menu className="w-5 h-5" />

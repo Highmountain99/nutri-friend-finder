@@ -1,5 +1,6 @@
 import { openExternal } from "@/lib/openExternal";
-import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, ExternalLink, CreditCard, KeyRound, Shield, CalendarDays } from "lucide-react";
+import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, ExternalLink, CreditCard, KeyRound, Shield, CalendarDays, Compass } from "lucide-react";
+import { restartTutorial } from "@/components/tutorial/AppTutorial";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -153,6 +154,18 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
               <CalendarDays className="w-5 h-5" />
               <span>Möteshistorik</span>
             </NavLink>
+
+            <button
+              onClick={() => {
+                onClose();
+                setTimeout(() => restartTutorial(), 300);
+              }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-foreground hover:bg-muted w-full text-left"
+            >
+              <Compass className="w-5 h-5" />
+              <span>Visa introduktion igen</span>
+            </button>
+
 
             <div className="h-px bg-border my-4" />
 
