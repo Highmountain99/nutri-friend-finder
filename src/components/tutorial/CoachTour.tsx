@@ -69,6 +69,13 @@ export function CoachTour({ onFinish }: { onFinish: () => void }) {
   const step = STEPS[index];
   const isLast = index === STEPS.length - 1;
 
+  // Mark the tour as active so locked views (e.g. Progress) can show their open state
+  useEffect(() => {
+    document.body.setAttribute("data-coach-tour", "active");
+    return () => document.body.removeAttribute("data-coach-tour");
+  }, []);
+
+
   // Navigate to the step's route
   useEffect(() => {
     if (location.pathname !== step.route) {
