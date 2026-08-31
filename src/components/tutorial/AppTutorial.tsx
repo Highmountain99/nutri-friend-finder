@@ -85,7 +85,11 @@ function measure(target?: string): Rect | null {
   if (!target) return null;
   const el = document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
   if (!el) return null;
-  const r = el.getBoundingClientRect();
+  let r = el.getBoundingClientRect();
+  if (r.height > 0 && (r.top < 72 || r.bottom > window.innerHeight - 140)) {
+    el.scrollIntoView({ block: "center", behavior: "auto" });
+    r = el.getBoundingClientRect();
+  }
   if (r.width === 0 && r.height === 0) return null;
   return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
@@ -164,6 +168,7 @@ export function AppTutorial() {
 
   const finish = useCallback(() => {
     setOpen(false);
+    navigate("/home");
     if (user) {
       try {
         localStorage.setItem(storageKey(user.id), "done");
@@ -171,7 +176,7 @@ export function AppTutorial() {
         /* ignore */
       }
     }
-  }, [user]);
+  }, [user, navigate]);
 
   if (!open || !step) return null;
 
