@@ -111,12 +111,12 @@ export default function DietitianMessages() {
   }
 
   return (
-    <div className="flex flex-col max-w-6xl h-[calc(100vh-theme(spacing.12)-3rem)]">
+    <div className="flex flex-col max-w-6xl h-full min-h-0">
       <h1 className="text-2xl font-bold text-foreground shrink-0 pb-4">Meddelanden</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-0 flex-1 min-h-0 border rounded-xl overflow-hidden">
         {/* Left: conversation list */}
-        <div className="border-r bg-background flex flex-col">
+        <div className="border-r bg-background flex flex-col min-h-0">
           <div className="p-3 border-b">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
