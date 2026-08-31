@@ -3,9 +3,10 @@ import { usePatientJournal } from "@/hooks/dietitian/usePatientJournal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Utensils, Moon, Apple } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sun, Utensils, Moon, Apple, Eye } from "lucide-react";
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
 import { sv } from "date-fns/locale";
+import { MealImagePreviewDialog } from "@/components/dietitian/MealImagePreviewDialog";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from "recharts";
 
 const MACRO_COLORS = {
@@ -44,6 +45,7 @@ export function FoodLogTab({ patientId }: Props) {
   const { meals, symptoms } = usePatientJournal(patientId);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
+  const [previewMeal, setPreviewMeal] = useState<{ id: string; name: string } | null>(null);
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
 
@@ -90,6 +92,12 @@ export function FoodLogTab({ patientId }: Props) {
 
   return (
     <div className="space-y-4">
+      <MealImagePreviewDialog
+        open={!!previewMeal}
+        onOpenChange={(o) => !o && setPreviewMeal(null)}
+        mealId={previewMeal?.id ?? null}
+        mealName={previewMeal?.name}
+      />
       {/* Date picker + view toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
