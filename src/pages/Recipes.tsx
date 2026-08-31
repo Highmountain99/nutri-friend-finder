@@ -106,6 +106,7 @@ function RecipesContent() {
           <Button
             variant="outline"
             size="icon"
+            data-tour="recipes-browse"
             className="rounded-full shrink-0"
             onClick={() => setBrowseAll(true)}
             aria-label="Bläddra alla recept"
@@ -152,7 +153,11 @@ function RecipesContent() {
       {viewMode === "default" && (
         <div className="space-y-8">
           {/* Suggested by dietitian - primary view */}
-          {user && <SuggestedRecipesSection onRecipeSelect={handleRecipeIdSelect} />}
+          {user && (
+            <div data-tour="recipes-suggested">
+              <SuggestedRecipesSection onRecipeSelect={handleRecipeIdSelect} />
+            </div>
+          )}
 
           {/* My saved recipes */}
           {user && (
