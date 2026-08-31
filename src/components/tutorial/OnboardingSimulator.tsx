@@ -63,6 +63,51 @@ function WelcomeScene() {
   );
 }
 
+/* ------------------------- Mini bottom-nav mock --------------------------- */
+
+type TabKey = "hem" | "journal" | "recept" | "utveckling";
+
+const TABS: { key: TabKey; icon: typeof Home; label: string }[] = [
+  { key: "hem", icon: Home, label: "Hem" },
+  { key: "journal", icon: BookOpen, label: "Journal" },
+  { key: "recept", icon: UtensilsCrossed, label: "Recept" },
+  { key: "utveckling", icon: TrendingUp, label: "Utveckling" },
+];
+
+function MiniNav({ active, hint }: { active: TabKey; hint?: string }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="rounded-2xl border border-border bg-card shadow-soft px-2 py-2 flex items-center justify-around">
+        {TABS.map((t) => {
+          const on = t.key === active;
+          return (
+            <div key={t.key} className="relative flex flex-col items-center gap-0.5 px-3 py-1">
+              {on && (
+                <>
+                  <span className="absolute -inset-1 rounded-xl border-2 border-primary animate-ping opacity-60" aria-hidden />
+                  <span className="absolute inset-0 rounded-xl bg-primary/10" aria-hidden />
+                </>
+              )}
+              <t.icon
+                className={cn("relative w-5 h-5", on ? "text-primary" : "text-muted-foreground/60")}
+                strokeWidth={on ? 2 : 1.6}
+              />
+              <span className={cn("relative text-[10px]", on ? "font-semibold text-primary" : "text-muted-foreground/60")}>
+                {t.label}
+              </span>
+              {on && hint && (
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-primary">
+                  {hint}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------ 2. Find the health profile ---------------------- */
 
 function FindProfileScene({ onDone }: { onDone: () => void }) {
@@ -70,9 +115,9 @@ function FindProfileScene({ onDone }: { onDone: () => void }) {
     <div className="space-y-4">
       <SceneHeader
         title="Hitta din hälsoprofil"
-        body="Din hälsoprofil ligger bakom menyknappen uppe till höger i appen. Tryck på den markerade knappen här för att testa."
+        body="På startsidan trycker du på menyknappen uppe till höger — där ligger din hälsoprofil. Tryck på den markerade knappen här för att testa."
       />
-      {/* Mini-mock of the app header with a highlighted menu button */}
+      {/* Mini-mock of the home screen with a highlighted menu button */}
       <Card className="shadow-soft overflow-hidden">
         <CardContent className="p-0">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
@@ -99,10 +144,13 @@ function FindProfileScene({ onDone }: { onDone: () => void }) {
             <div className="h-3 w-1/2 rounded bg-muted" />
             <div className="h-16 rounded-xl bg-muted/70" />
           </div>
+          <div className="px-3 pb-3">
+            <MiniNav active="hem" />
+          </div>
         </CardContent>
       </Card>
       <p className="text-xs text-muted-foreground text-center">
-        I appen hittar du den uppe till höger på varje sida.
+        Det här är startsidan (Hem) — menyknappen sitter uppe till höger.
       </p>
     </div>
   );
