@@ -311,7 +311,7 @@ export default function DietitianMessages() {
               </div>
 
               {/* Input */}
-              <div className="p-3 border-t space-y-2">
+              <div className="p-3 border-t space-y-2 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
                 {pendingAttachments.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {pendingAttachments.map((att, i) => (
