@@ -62,7 +62,52 @@ function WelcomeScene() {
   );
 }
 
-/* ---------------------------- 2. Health profile --------------------------- */
+/* ------------------------ 2. Find the health profile ---------------------- */
+
+function FindProfileScene({ onDone }: { onDone: () => void }) {
+  return (
+    <div className="space-y-4">
+      <SceneHeader
+        title="Hitta din hälsoprofil"
+        body="Din hälsoprofil ligger bakom menyknappen uppe till höger i appen. Tryck på den markerade knappen här för att testa."
+      />
+      {/* Mini-mock of the app header with a highlighted menu button */}
+      <Card className="shadow-soft overflow-hidden">
+        <CardContent className="p-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+            <div>
+              <p className="text-[10px] eyebrow text-muted-foreground">Gut Feeling</p>
+              <p className="font-serif text-lg text-primary leading-tight">Hej, Anna</p>
+            </div>
+            <div className="relative">
+              <span className="absolute -inset-1.5 rounded-full border-2 border-primary animate-ping opacity-60" aria-hidden />
+              <button
+                onClick={onDone}
+                aria-label="Öppna hälsoprofil (övning)"
+                className="relative h-11 w-11 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-soft"
+              >
+                <Menu className="w-5 h-5" strokeWidth={1.8} />
+              </button>
+              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-primary">
+                Tryck här
+              </span>
+            </div>
+          </div>
+          <div className="p-4 space-y-2 opacity-60 pointer-events-none" aria-hidden>
+            <div className="h-3 w-2/3 rounded bg-muted" />
+            <div className="h-3 w-1/2 rounded bg-muted" />
+            <div className="h-16 rounded-xl bg-muted/70" />
+          </div>
+        </CardContent>
+      </Card>
+      <p className="text-xs text-muted-foreground text-center">
+        I appen hittar du den uppe till höger på varje sida.
+      </p>
+    </div>
+  );
+}
+
+/* ---------------------------- 3. Health profile --------------------------- */
 
 function HealthScene({ onReady }: SceneProps) {
   const [weight, setWeight] = useState("");
