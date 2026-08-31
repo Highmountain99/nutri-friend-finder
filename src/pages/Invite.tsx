@@ -82,7 +82,7 @@ export default function Invite() {
 
       if (error) throw error;
       if (!data) {
-        toast.error("Inbjudan kunde inte accepteras. Kontrollera att du använder rätt konto.");
+        setFormError("Inbjudan kunde inte kopplas till det här kontot. Kontrollera att du använder samma e-postadress som inbjudan skickades till, eller logga in med rätt konto.");
         return;
       }
 
