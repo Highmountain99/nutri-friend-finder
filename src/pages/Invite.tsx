@@ -292,10 +292,23 @@ export default function Invite() {
                 </div>
               </div>
 
+              {formError && (
+                <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+                  {formError}
+                </p>
+              )}
+
               <Button className="w-full" size="lg" onClick={handleSignup} disabled={submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Skapa konto och kom igång
               </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Har du redan ett konto?{" "}
+                <button className="text-primary underline" onClick={() => navigate(loginRedirectUrl)}>
+                  Logga in
+                </button>
+              </p>
 
               <button
                 className="w-full text-xs text-muted-foreground underline"
