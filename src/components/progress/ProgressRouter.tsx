@@ -190,7 +190,9 @@ function FocusB({ quote, author }: { quote: string; author: string }) {
 
 export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
-  const [previewMode, setPreviewMode] = useState(false);
+  const [previewMode, setPreviewMode] = useState(
+    () => typeof document !== "undefined" && document.body.hasAttribute("data-coach-tour")
+  );
   const { data: patientBlocks, isLoading: blocksLoading } = usePatientBlocks(user?.id);
   const { appointments, loading: appointmentsLoading } = useAppointments();
   const { data: plan } = usePatientTreatmentPlan();
