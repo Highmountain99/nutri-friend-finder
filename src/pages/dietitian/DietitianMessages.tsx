@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, User, Search, Paperclip, Check, Pencil, X, Bot } from "lucide-react";
+import { Loader2, Send, User, Search, Paperclip, Check, Pencil, X, Bot, ArrowLeft } from "lucide-react";
 import { ChatAttachmentPicker, AttachmentPreview } from "@/components/messages/ChatAttachmentPicker";
 import { ChatAttachmentDisplay } from "@/components/messages/ChatAttachmentDisplay";
 import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
@@ -115,8 +115,8 @@ export default function DietitianMessages() {
       <h1 className="text-2xl font-bold text-foreground shrink-0 pb-4">Meddelanden</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-0 flex-1 min-h-0 border rounded-xl overflow-hidden">
-        {/* Left: conversation list */}
-        <div className="border-r bg-background flex flex-col min-h-0">
+        {/* Left: conversation list — hidden on mobile when a chat is open */}
+        <div className={`border-r bg-background flex-col min-h-0 ${selectedPatient ? "hidden lg:flex" : "flex"}`}>
           <div className="p-3 border-b">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -167,8 +167,8 @@ export default function DietitianMessages() {
           </div>
         </div>
 
-        {/* Right: active conversation */}
-        <div className="flex flex-col bg-background min-h-0">
+        {/* Right: active conversation — hidden on mobile until a chat is open */}
+        <div className={`flex-col bg-background min-h-0 ${selectedPatient ? "flex" : "hidden lg:flex"}`}>
           {!selectedPatient ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
               Välj en patient för att öppna chatten.
@@ -176,8 +176,16 @@ export default function DietitianMessages() {
           ) : (
             <>
               {/* Chat header */}
-              <div className="px-4 py-3 border-b flex items-center justify-between">
+              <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="lg:hidden -ml-2 h-8 w-8"
+                    onClick={() => setSelectedPatient(null)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
                   <span className="font-medium text-sm">{selectedPatientData ? getPatientDisplayName(selectedPatientData) : `Patient ${selectedPatient.slice(0, 8)}`}</span>
                   {selectedConcern && (
                     <Badge variant="secondary" className="text-xs">{concernLabels[selectedConcern] ?? selectedConcern}</Badge>
@@ -303,7 +311,7 @@ export default function DietitianMessages() {
               </div>
 
               {/* Input */}
-              <div className="p-3 border-t space-y-2">
+              <div className="p-3 border-t space-y-2 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
                 {pendingAttachments.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {pendingAttachments.map((att, i) => (
