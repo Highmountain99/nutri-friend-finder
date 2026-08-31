@@ -278,11 +278,14 @@ function MealScene({ onReady, onLogged }: SceneProps & { onLogged: (v: boolean) 
       />
 
       {phase === "choose" && (
-        <div className="grid gap-2.5">
-          <ChoiceRow icon={Camera} label="Ta foto" onClick={() => cameraRef.current?.click()} />
-          <ChoiceRow icon={ImageIcon} label="Välj bild" onClick={() => galleryRef.current?.click()} />
-          <ChoiceRow icon={PencilLine} label="Beskriv i text" onClick={() => setPhase("text")} />
-        </div>
+        <>
+          <MiniNav active="journal" hint="Här loggar du" />
+          <div className="grid gap-2.5">
+            <ChoiceRow icon={Camera} label="Ta foto" onClick={() => cameraRef.current?.click()} />
+            <ChoiceRow icon={ImageIcon} label="Välj bild" onClick={() => galleryRef.current?.click()} />
+            <ChoiceRow icon={PencilLine} label="Beskriv i text" onClick={() => setPhase("text")} />
+          </div>
+        </>
       )}
 
       {phase === "text" && (
@@ -480,8 +483,9 @@ function RecipeScene({ onReady }: SceneProps) {
     <div className="space-y-4">
       <SceneHeader
         title="Recept"
-        body="Din dietist föreslår recept här. Svep höger för att spara, vänster för att hoppa över. Prova på övningsrecepten."
+        body="Din dietist föreslår recept i Recept-fliken. Svep höger för att spara, vänster för att hoppa över. Prova på övningsrecepten."
       />
+      <MiniNav active="recept" hint="Här hittar du recept" />
 
       <div className="relative">
         {current ? (
