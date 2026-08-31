@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  BookOpen,
   Camera,
+  Home,
+  TrendingUp,
+  UtensilsCrossed,
   Check,
   Clock,
   Droplets,
