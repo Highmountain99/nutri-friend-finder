@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// MiniNav mocks the app's bottom bar; scenes highlight where each feature lives.
+// Hotspot percentages below are relative to the cropped tour-*.png screenshots.
 import { createPortal } from "react-dom";
 import {
-  BookOpen,
   Camera,
-  Home,
-  TrendingUp,
-  UtensilsCrossed,
   Check,
   Clock,
   Droplets,
@@ -15,7 +11,6 @@ import {
   Flame,
   Heart,
   Image as ImageIcon,
-  Menu,
   PencilLine,
   Ruler,
   Scale,
@@ -35,6 +30,10 @@ import { NutritionProgressCard } from "@/components/journal/NutritionProgressCar
 import salmonImg from "@/assets/recipe-salmon.jpg";
 import chickenImg from "@/assets/recipe-chicken.jpg";
 import soupImg from "@/assets/recipe-soup.jpg";
+import tourHomeImg from "@/assets/tour-home.png";
+import tourJournalImg from "@/assets/tour-journal.png";
+import tourRecipesImg from "@/assets/tour-recipes.png";
+import tourProgressImg from "@/assets/tour-progress.png";
 
 /* -------------------------------------------------------------------------- */
 /*  A fully self-contained onboarding simulation, styled exactly like the app. */
@@ -68,47 +67,60 @@ function WelcomeScene() {
   );
 }
 
-/* ------------------------- Mini bottom-nav mock --------------------------- */
+/* ---------------------- Real screenshot with hotspot ---------------------- */
 
-type TabKey = "hem" | "journal" | "recept" | "utveckling";
+interface Hotspot {
+  top: string;
+  left: string;
+  width: string;
+  height: string;
+  label: string;
+  labelAbove?: boolean;
+}
 
-const TABS: { key: TabKey; icon: typeof Home; label: string }[] = [
-  { key: "hem", icon: Home, label: "Hem" },
-  { key: "journal", icon: BookOpen, label: "Journal" },
-  { key: "recept", icon: UtensilsCrossed, label: "Recept" },
-  { key: "utveckling", icon: TrendingUp, label: "Utveckling" },
-];
-
-function MiniNav({ active, hint }: { active: TabKey; hint?: string }) {
+function ScreenSpot({
+  img,
+  alt,
+  spot,
+  onTap,
+}: {
+  img: string;
+  alt: string;
+  spot: Hotspot;
+  onTap?: () => void;
+}) {
   return (
-    <div className="space-y-1.5">
-      <div className="rounded-2xl border border-border bg-card shadow-soft px-2 py-2 flex items-center justify-around">
-        {TABS.map((t) => {
-          const on = t.key === active;
-          return (
-            <div key={t.key} className="relative flex flex-col items-center gap-0.5 px-3 py-1">
-              {on && (
-                <>
-                  <span className="absolute -inset-1 rounded-xl border-2 border-primary animate-ping opacity-60" aria-hidden />
-                  <span className="absolute inset-0 rounded-xl bg-primary/10" aria-hidden />
-                </>
-              )}
-              <t.icon
-                className={cn("relative w-5 h-5", on ? "text-primary" : "text-muted-foreground/60")}
-                strokeWidth={on ? 2 : 1.6}
-              />
-              <span className={cn("relative text-[10px]", on ? "font-semibold text-primary" : "text-muted-foreground/60")}>
-                {t.label}
-              </span>
-              {on && hint && (
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-primary">
-                  {hint}
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
+    <div className="relative rounded-2xl border border-border shadow-soft overflow-hidden select-none">
+      <img src={img} alt={alt} className="w-full block pointer-events-none" draggable={false} />
+      {/* dim everything except the hotspot */}
+      <div
+        className="absolute rounded-xl"
+        style={{
+          top: spot.top,
+          left: spot.left,
+          width: spot.width,
+          height: spot.height,
+          boxShadow: "0 0 0 9999px hsl(var(--background) / 0.55)",
+        }}
+      />
+      <button
+        type="button"
+        aria-label={spot.label}
+        onClick={onTap}
+        className="absolute rounded-xl cursor-pointer"
+        style={{ top: spot.top, left: spot.left, width: spot.width, height: spot.height }}
+      >
+        <span className="absolute -inset-1 rounded-xl border-2 border-primary animate-ping opacity-70" aria-hidden />
+        <span className="absolute inset-0 rounded-xl border-2 border-primary bg-primary/10" aria-hidden />
+        <span
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 shadow-soft",
+            spot.labelAbove ? "-top-7" : "-bottom-7"
+          )}
+        >
+          {spot.label}
+        </span>
+      </button>
     </div>
   );
 }
@@ -120,42 +132,16 @@ function FindProfileScene({ onDone }: { onDone: () => void }) {
     <div className="space-y-4">
       <SceneHeader
         title="Hitta din hälsoprofil"
-        body="På startsidan trycker du på menyknappen uppe till höger — där ligger din hälsoprofil. Tryck på den markerade knappen här för att testa."
+        body="Så här ser din startsida ut. Din hälsoprofil ligger under snabbåtgärderna — tryck på det markerade området för att testa."
       />
-      {/* Mini-mock of the home screen with a highlighted menu button */}
-      <Card className="shadow-soft overflow-hidden">
-        <CardContent className="p-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-            <div>
-              <p className="text-[10px] eyebrow text-muted-foreground">Gut Feeling</p>
-              <p className="font-serif text-lg text-primary leading-tight">Hej, Anna</p>
-            </div>
-            <div className="relative">
-              <span className="absolute -inset-1.5 rounded-full border-2 border-primary animate-ping opacity-60" aria-hidden />
-              <button
-                onClick={onDone}
-                aria-label="Öppna hälsoprofil (övning)"
-                className="relative h-11 w-11 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-soft"
-              >
-                <Menu className="w-5 h-5" strokeWidth={1.8} />
-              </button>
-              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-primary">
-                Tryck här
-              </span>
-            </div>
-          </div>
-          <div className="p-4 space-y-2 opacity-60 pointer-events-none" aria-hidden>
-            <div className="h-3 w-2/3 rounded bg-muted" />
-            <div className="h-3 w-1/2 rounded bg-muted" />
-            <div className="h-16 rounded-xl bg-muted/70" />
-          </div>
-          <div className="px-3 pb-3">
-            <MiniNav active="hem" />
-          </div>
-        </CardContent>
-      </Card>
+      <ScreenSpot
+        img={tourHomeImg}
+        alt="Startsidan i appen"
+        onTap={onDone}
+        spot={{ top: "59.5%", left: "4%", width: "92%", height: "7.5%", label: "Min hälsoprofil — tryck här", labelAbove: true }}
+      />
       <p className="text-xs text-muted-foreground text-center">
-        Det här är startsidan (Hem) — menyknappen sitter uppe till höger.
+        Du når den även via menyn uppe till vänster.
       </p>
     </div>
   );
@@ -280,7 +266,15 @@ function MealScene({ onReady, onLogged }: SceneProps & { onLogged: (v: boolean) 
 
       {phase === "choose" && (
         <>
-          <MiniNav active="journal" hint="Här loggar du" />
+          <ScreenSpot
+            img={tourJournalImg}
+            alt="Journalen i appen"
+            onTap={() => cameraRef.current?.click()}
+            spot={{ top: "59%", left: "78%", width: "14%", height: "15%", label: "Kameraknappen — tryck här", labelAbove: true }}
+          />
+          <p className="text-xs text-muted-foreground text-center">
+            I appen loggar du via kameraknappen i Journalen. Testa själv här:
+          </p>
           <div className="grid gap-2.5">
             <ChoiceRow icon={Camera} label="Ta foto" onClick={() => cameraRef.current?.click()} />
             <ChoiceRow icon={ImageIcon} label="Välj bild" onClick={() => galleryRef.current?.click()} />
@@ -486,7 +480,11 @@ function RecipeScene({ onReady }: SceneProps) {
         title="Recept"
         body="Din dietist föreslår recept i Recept-fliken. Svep höger för att spara, vänster för att hoppa över. Prova på övningsrecepten."
       />
-      <MiniNav active="recept" hint="Här hittar du recept" />
+      <ScreenSpot
+        img={tourRecipesImg}
+        alt="Receptsidan i appen"
+        spot={{ top: "19%", left: "4%", width: "80%", height: "4.5%", label: "Sök eller bläddra här", labelAbove: true }}
+      />
 
       <div className="relative">
         {current ? (
@@ -629,7 +627,11 @@ function JourneyScene() {
         title="Din utveckling"
         body="Din plan ligger i Utveckling-fliken. Din dietist bygger den i faser med mål och delmål — kostrelaterade mål bockas av automatiskt när du loggar."
       />
-      <MiniNav active="utveckling" hint="Här ligger din plan" />
+      <ScreenSpot
+        img={tourProgressImg}
+        alt="Utvecklingssidan i appen"
+        spot={{ top: "86%", left: "79%", width: "19%", height: "13%", label: "Utveckling-fliken", labelAbove: true }}
+      />
       <Card className="shadow-soft rounded-[20px]">
         <CardContent className="p-5 space-y-5">
           <div className="space-y-1">
