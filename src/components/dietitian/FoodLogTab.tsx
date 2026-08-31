@@ -122,11 +122,22 @@ export function FoodLogTab({ patientId }: Props) {
               const mealSymptoms = getSymptomForMeal(meal.id);
 
               return (
-                <Card key={meal.id}>
+                <Card key={meal.id} className="group">
                   <CardContent className="py-3">
                     <div className="flex items-start gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Icon className="h-4 w-4 text-primary" />
+                      <div className="relative h-9 w-9 shrink-0 mt-0.5">
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewMeal({ id: meal.id, name: meal.meal_name ?? "" })}
+                          title="Förhandsgranska bild"
+                          aria-label="Förhandsgranska bild"
+                          className="absolute inset-0 rounded-lg bg-foreground/70 text-background flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
