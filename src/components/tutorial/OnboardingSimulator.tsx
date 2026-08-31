@@ -10,6 +10,7 @@ import {
   Flame,
   Heart,
   Image as ImageIcon,
+  Menu,
   PencilLine,
   Ruler,
   Scale,
@@ -179,8 +180,9 @@ function MealScene({ onReady, onLogged }: SceneProps & { onLogged: (v: boolean) 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
 
-  const analyze = useCallback((label?: string) => {
+  const analyze = useCallback((label?: string, fromImage = false) => {
     if (label) setName(label);
+    else if (fromImage) setName(""); // user names their own dish so it matches the photo
     setPhase("analyzing");
     window.setTimeout(() => setPhase("result"), 1400);
   }, []);
