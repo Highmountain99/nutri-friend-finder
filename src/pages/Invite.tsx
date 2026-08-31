@@ -94,13 +94,30 @@ export default function Invite() {
     }
   };
 
+  /** Translates common auth errors into clear Swedish messages. */
+  const friendlySignupError = (err: any): string => {
+    const code = err?.code || "";
+    const msg = (err?.message || "").toLowerCase();
+    if (code === "weak_password" || msg.includes("weak") || msg.includes("password")) {
+      return "Lösenordet är för svagt eller har läckt i tidigare intrång. Välj ett längre lösenord med blandade tecken, siffror och symboler.";
+    }
+    if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("already been registered")) {
+      return "Det finns redan ett konto med den här e-postadressen. Logga in istället via knappen nedan.";
+    }
+    if (msg.includes("invalid") && msg.includes("email")) {
+      return "E-postadressen verkar inte vara giltig. Kontrollera stavningen.";
+    }
+    return "Något gick fel vid skapandet av kontot. Försök igen om en liten stund.";
+  };
+
   const handleSignup = async () => {
+    setFormError(null);
     if (!form.email || !form.password || !form.firstName) {
-      toast.error("Fyll i alla obligatoriska fält");
+      setFormError("Fyll i alla obligatoriska fält");
       return;
     }
     if (form.password.length < 6) {
-      toast.error("Lösenordet måste vara minst 6 tecken");
+      setFormError("Lösenordet måste vara minst 6 tecken");
       return;
     }
 
