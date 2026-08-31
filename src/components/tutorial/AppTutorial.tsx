@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { OnboardingSimulator } from "@/components/tutorial/OnboardingSimulator";
+import { CoachTour } from "@/components/tutorial/CoachTour";
 
 const storageKey = (userId: string) => `gf_tutorial_v1_${userId}`;
 
