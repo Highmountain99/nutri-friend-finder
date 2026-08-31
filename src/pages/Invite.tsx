@@ -162,7 +162,7 @@ export default function Invite() {
 
       await completeInvite();
     } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
+      setFormError(friendlySignupError(err));
     } finally {
       setSubmitting(false);
     }
