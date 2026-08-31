@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, User, Search, Paperclip, Check, Pencil, X, Bot } from "lucide-react";
+import { Loader2, Send, User, Search, Paperclip, Check, Pencil, X, Bot, ArrowLeft } from "lucide-react";
 import { ChatAttachmentPicker, AttachmentPreview } from "@/components/messages/ChatAttachmentPicker";
 import { ChatAttachmentDisplay } from "@/components/messages/ChatAttachmentDisplay";
 import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
@@ -176,8 +176,16 @@ export default function DietitianMessages() {
           ) : (
             <>
               {/* Chat header */}
-              <div className="px-4 py-3 border-b flex items-center justify-between">
+              <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="lg:hidden -ml-2 h-8 w-8"
+                    onClick={() => setSelectedPatient(null)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
                   <span className="font-medium text-sm">{selectedPatientData ? getPatientDisplayName(selectedPatientData) : `Patient ${selectedPatient.slice(0, 8)}`}</span>
                   {selectedConcern && (
                     <Badge variant="secondary" className="text-xs">{concernLabels[selectedConcern] ?? selectedConcern}</Badge>
