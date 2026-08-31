@@ -20,6 +20,7 @@ export default function Invite() {
   const [mode, setMode] = useState<"info" | "signup">("info");
   const [form, setForm] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const inviteCode = useMemo(() => {
     if (!code) return null;
@@ -81,25 +82,42 @@ export default function Invite() {
 
       if (error) throw error;
       if (!data) {
-        toast.error("Inbjudan kunde inte accepteras. Kontrollera att du använder rätt konto.");
+        setFormError("Inbjudan kunde inte kopplas till det här kontot. Kontrollera att du använder samma e-postadress som inbjudan skickades till, eller logga in med rätt konto.");
         return;
       }
 
       navigate("/home", { replace: true });
     } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
+      setFormError("Något gick fel när inbjudan skulle aktiveras. Försök igen om en liten stund.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  /** Translates common auth errors into clear Swedish messages. */
+  const friendlySignupError = (err: any): string => {
+    const code = err?.code || "";
+    const msg = (err?.message || "").toLowerCase();
+    if (code === "weak_password" || msg.includes("weak") || msg.includes("password")) {
+      return "Lösenordet är för svagt eller har läckt i tidigare intrång. Välj ett längre lösenord med blandade tecken, siffror och symboler.";
+    }
+    if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("already been registered")) {
+      return "Det finns redan ett konto med den här e-postadressen. Logga in istället via knappen nedan.";
+    }
+    if (msg.includes("invalid") && msg.includes("email")) {
+      return "E-postadressen verkar inte vara giltig. Kontrollera stavningen.";
+    }
+    return "Något gick fel vid skapandet av kontot. Försök igen om en liten stund.";
+  };
+
   const handleSignup = async () => {
+    setFormError(null);
     if (!form.email || !form.password || !form.firstName) {
-      toast.error("Fyll i alla obligatoriska fält");
+      setFormError("Fyll i alla obligatoriska fält");
       return;
     }
     if (form.password.length < 6) {
-      toast.error("Lösenordet måste vara minst 6 tecken");
+      setFormError("Lösenordet måste vara minst 6 tecken");
       return;
     }
 
@@ -144,7 +162,7 @@ export default function Invite() {
 
       await completeInvite();
     } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
+      setFormError(friendlySignupError(err));
     } finally {
       setSubmitting(false);
     }
@@ -274,10 +292,23 @@ export default function Invite() {
                 </div>
               </div>
 
+              {formError && (
+                <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+                  {formError}
+                </p>
+              )}
+
               <Button className="w-full" size="lg" onClick={handleSignup} disabled={submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Skapa konto och kom igång
               </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Har du redan ett konto?{" "}
+                <button className="text-primary underline" onClick={() => navigate(loginRedirectUrl)}>
+                  Logga in
+                </button>
+              </p>
 
               <button
                 className="w-full text-xs text-muted-foreground underline"
