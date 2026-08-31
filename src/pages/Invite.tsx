@@ -20,6 +20,7 @@ export default function Invite() {
   const [mode, setMode] = useState<"info" | "signup">("info");
   const [form, setForm] = useState({ email: "", password: "", firstName: "", lastName: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const inviteCode = useMemo(() => {
     if (!code) return null;
