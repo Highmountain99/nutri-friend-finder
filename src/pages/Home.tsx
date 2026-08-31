@@ -101,12 +101,14 @@ export default function Home() {
             onClick={() => navigate("/messages")}
             variant="accent"
           />
-          <QuickActionCard
-            icon={User}
-            title="Min hälsoprofil"
-            description="Visa hälsoprofil"
-            onClick={() => navigate("/profile")}
-          />
+          <div data-tour="home-health">
+            <QuickActionCard
+              icon={User}
+              title="Min hälsoprofil"
+              description="Visa hälsoprofil"
+              onClick={() => navigate("/profile")}
+            />
+          </div>
           <QuickActionCard
             icon={Settings}
             title="Profilinställningar"

@@ -61,5 +61,5 @@ export function AppTutorial() {
 
   if (!open) return null;
 
-  return <OnboardingSimulator onFinish={finish} />;
+  return <CoachTour onFinish={finish} />;
 }
