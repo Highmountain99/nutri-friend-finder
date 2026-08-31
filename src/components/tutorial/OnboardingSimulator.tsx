@@ -656,6 +656,7 @@ export function OnboardingSimulator({ onFinish }: { onFinish: () => void }) {
   const scenes = useMemo(
     () => [
       { node: <WelcomeScene /> },
+      { node: <FindProfileScene onDone={() => { handleReady(true); setStep((s) => s + 1); }} /> },
       { node: <HealthScene onReady={handleReady} /> },
       { node: <MealScene onReady={handleReady} onLogged={setLogged} /> },
       { node: <GoalsScene logged={logged} /> },
