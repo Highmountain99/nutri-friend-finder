@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+// MiniNav mocks the app's bottom bar; scenes highlight where each feature lives.
 import { createPortal } from "react-dom";
 import {
   BookOpen,
