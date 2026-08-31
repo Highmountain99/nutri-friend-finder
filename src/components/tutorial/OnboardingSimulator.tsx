@@ -269,14 +269,13 @@ function MealScene({ onReady, onLogged }: SceneProps & { onLogged: (v: boolean) 
       {phase === "result" && (
         <Card className="shadow-elevated overflow-hidden">
           <CardContent className="p-0">
-            {preview ? (
+            {preview && (
               <img src={preview} alt="Din måltid" className="w-full h-40 object-cover" />
-            ) : (
-              <img src={salmonImg} alt="Exempelmåltid" className="w-full h-40 object-cover" />
             )}
             <div className="p-4 space-y-3">
               <Input
                 value={name}
+                placeholder="Vad åt du?"
                 onChange={(e) => setName(e.target.value)}
                 className="bg-background font-serif text-lg h-auto py-2"
               />
