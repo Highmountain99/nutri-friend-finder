@@ -115,8 +115,8 @@ export default function DietitianMessages() {
       <h1 className="text-2xl font-bold text-foreground shrink-0 pb-4">Meddelanden</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-0 flex-1 min-h-0 border rounded-xl overflow-hidden">
-        {/* Left: conversation list */}
-        <div className="border-r bg-background flex flex-col min-h-0">
+        {/* Left: conversation list — hidden on mobile when a chat is open */}
+        <div className={`border-r bg-background flex-col min-h-0 ${selectedPatient ? "hidden lg:flex" : "flex"}`}>
           <div className="p-3 border-b">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -167,8 +167,8 @@ export default function DietitianMessages() {
           </div>
         </div>
 
-        {/* Right: active conversation */}
-        <div className="flex flex-col bg-background min-h-0">
+        {/* Right: active conversation — hidden on mobile until a chat is open */}
+        <div className={`flex-col bg-background min-h-0 ${selectedPatient ? "flex" : "hidden lg:flex"}`}>
           {!selectedPatient ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
               Välj en patient för att öppna chatten.
