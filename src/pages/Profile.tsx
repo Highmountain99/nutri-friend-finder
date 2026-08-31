@@ -63,7 +63,7 @@ export default function Profile() {
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
           Grundläggande information
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div data-tour="profile-health" className="grid grid-cols-2 gap-3">
           <EditableHealthCard
             icon={Scale}
             label="Vikt"

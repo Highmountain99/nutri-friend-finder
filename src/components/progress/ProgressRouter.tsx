@@ -98,6 +98,7 @@ function HeroB({
         aria-hidden
       />
       <button
+        data-tour="progress-hero"
         onClick={onOpen}
         className="relative w-full text-left bg-primary text-primary-foreground rounded-[22px] p-5 overflow-hidden shadow-[0_18px_44px_-22px_hsl(145_30%_11%/0.7)] active:scale-[0.99] transition-transform"
       >

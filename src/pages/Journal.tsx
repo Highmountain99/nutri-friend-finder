@@ -250,7 +250,7 @@ export default function Journal() {
                         <Settings2 className="w-3 h-3" /> Ändra mål
                       </button>
                     </div>
-                    <div className={cn(
+                    <div data-tour="journal-goals" className={cn(
                       "grid gap-2 sm:gap-3",
                       nutritionCards.length === 1 && "grid-cols-1",
                       nutritionCards.length === 2 && "grid-cols-2",
@@ -314,7 +314,7 @@ export default function Journal() {
 
       {/* Fixed Camera FAB - Always visible */}
       <div className="fixed right-4 z-50 bottom-[calc(6rem+env(safe-area-inset-bottom))]">
-        <Button size="icon" className="h-14 w-14 rounded-full shadow-elevated bg-primary hover:bg-primary/90 relative" onClick={() => cameraInputRef.current?.click()}>
+        <Button data-tour="journal-camera" size="icon" className="h-14 w-14 rounded-full shadow-elevated bg-primary hover:bg-primary/90 relative" onClick={() => cameraInputRef.current?.click()}>
           <Camera className="w-6 h-6 text-accent-foreground" />
         </Button>
       </div>
