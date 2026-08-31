@@ -197,7 +197,7 @@ function MealScene({ onReady, onLogged }: SceneProps & { onLogged: (v: boolean) 
     if (!file) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
-    analyze();
+    analyze(undefined, true);
   };
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
