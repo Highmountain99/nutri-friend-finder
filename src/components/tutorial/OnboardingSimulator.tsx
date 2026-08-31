@@ -627,8 +627,9 @@ function JourneyScene() {
     <div className="space-y-4">
       <SceneHeader
         title="Din utveckling"
-        body="Din dietist bygger en plan i faser med mål och delmål. Så här kan den se ut — kostrelaterade mål bockas av automatiskt när du loggar."
+        body="Din plan ligger i Utveckling-fliken. Din dietist bygger den i faser med mål och delmål — kostrelaterade mål bockas av automatiskt när du loggar."
       />
+      <MiniNav active="utveckling" hint="Här ligger din plan" />
       <Card className="shadow-soft rounded-[20px]">
         <CardContent className="p-5 space-y-5">
           <div className="space-y-1">
