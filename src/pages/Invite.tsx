@@ -88,7 +88,7 @@ export default function Invite() {
 
       navigate("/home", { replace: true });
     } catch (err: any) {
-      toast.error(err.message || "Något gick fel");
+      setFormError("Något gick fel när inbjudan skulle aktiveras. Försök igen om en liten stund.");
     } finally {
       setSubmitting(false);
     }
