@@ -3,22 +3,35 @@ import { createPortal } from "react-dom";
 import {
   Camera,
   Check,
+  Clock,
+  Droplets,
+  Dumbbell,
   Flag,
+  Flame,
+  Heart,
   Image as ImageIcon,
   PencilLine,
   Ruler,
   Scale,
   Sparkles,
   Target,
+  Users,
   Utensils,
+  Wheat,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { NutritionProgressCard } from "@/components/journal/NutritionProgressCard";
+import salmonImg from "@/assets/recipe-salmon.jpg";
+import chickenImg from "@/assets/recipe-chicken.jpg";
+import soupImg from "@/assets/recipe-soup.jpg";
 
 /* -------------------------------------------------------------------------- */
-/*  A fully self-contained onboarding simulation.                              */
+/*  A fully self-contained onboarding simulation, styled exactly like the app. */
 /*  Nothing here touches the database — all state is local and thrown away.    */
 /* -------------------------------------------------------------------------- */
 
@@ -30,15 +43,19 @@ interface SceneProps {
 
 function WelcomeScene() {
   return (
-    <div className="space-y-5 text-center py-4">
-      <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-        <Sparkles className="h-7 w-7 text-primary" strokeWidth={1.5} />
+    <div className="space-y-6 text-center py-6">
+      <div className="mx-auto h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-soft">
+        <Utensils className="h-7 w-7 text-primary-foreground" strokeWidth={1.5} />
       </div>
-      <div className="space-y-2">
-        <h2 className="font-serif text-3xl text-primary leading-tight">Välkommen</h2>
-        <p className="text-sm text-foreground/80 leading-relaxed">
-          Vi går igenom appen i en liten övningsversion. Allt du gör här är på låtsas —
-          inget sparas i din profil. När du är klar landar du i din egen app.
+      <div className="space-y-3">
+        <p className="eyebrow text-[10px]">Övningsläge</p>
+        <h2 className="font-serif text-4xl text-primary leading-[1.05]">
+          Välkommen till <em className="lede not-italic">Gut Feeling</em>
+        </h2>
+        <p className="text-sm text-foreground/80 leading-relaxed max-w-xs mx-auto">
+          Vi går igenom appen i en liten övningsversion. Allt du gör här är på
+          låtsas — inget sparas i din profil. När du är klar landar du i din
+          egen app.
         </p>
       </div>
     </div>
@@ -57,33 +74,40 @@ function HealthScene({ onReady }: SceneProps) {
   }, [weight, height, waist, onReady]);
 
   const fields = [
-    { icon: Scale, label: "Vikt (kg)", value: weight, set: setWeight, placeholder: "72" },
-    { icon: Ruler, label: "Längd (cm)", value: height, set: setHeight, placeholder: "174" },
-    { icon: Target, label: "Midjemått (cm)", value: waist, set: setWaist, placeholder: "84" },
+    { icon: Scale, label: "Vikt", unit: "kg", value: weight, set: setWeight, placeholder: "72" },
+    { icon: Ruler, label: "Längd", unit: "cm", value: height, set: setHeight, placeholder: "174" },
+    { icon: Target, label: "Midjemått", unit: "cm", value: waist, set: setWaist, placeholder: "84" },
   ];
 
   return (
     <div className="space-y-4">
       <SceneHeader
         title="Hälsoprofil"
-        body="Fyll i dina värden — vikt, längd, blodtryck och midjemått. Din dietist bygger mål utifrån dem. Testa att fylla i något här."
+        body="Fyll i dina värden — vikt, längd och midjemått. Din dietist bygger mål utifrån dem. Testa att fylla i något här."
       />
       <div className="space-y-2.5">
         {fields.map((f) => (
-          <div
-            key={f.label}
-            className="rounded-2xl bg-secondary/70 border border-border p-3 flex items-center gap-3"
-          >
-            <f.icon className="h-4 w-4 text-primary shrink-0" strokeWidth={1.6} />
-            <span className="text-xs text-muted-foreground flex-1">{f.label}</span>
-            <Input
-              inputMode="decimal"
-              value={f.value}
-              placeholder={f.placeholder}
-              onChange={(e) => f.set(e.target.value.replace(/[^\d.,]/g, ""))}
-              className="h-9 w-24 text-right bg-background"
-            />
-          </div>
+          <Card key={f.label} className="shadow-soft">
+            <CardContent className="p-4 flex items-center gap-3">
+              <span className="w-9 h-9 rounded-full bg-primary/10 grid place-items-center shrink-0">
+                <f.icon className="w-4 h-4 text-primary" strokeWidth={1.6} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{f.label}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {f.value ? `${f.value} ${f.unit}` : "Ej angivet"}
+                </p>
+              </div>
+              <Input
+                inputMode="decimal"
+                value={f.value}
+                placeholder={f.placeholder}
+                onChange={(e) => f.set(e.target.value.replace(/[^\d.,]/g, ""))}
+                className="h-9 w-20 text-right bg-background"
+                aria-label={f.label}
+              />
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>
@@ -163,62 +187,69 @@ function MealScene({ onReady, onLogged }: SceneProps & { onLogged: (v: boolean) 
       )}
 
       {phase === "text" && (
-        <div className="space-y-2.5">
-          <Input
-            autoFocus={false}
-            value={text}
-            placeholder="T.ex. lax med potatis och sås"
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && text.trim()) analyze(text.trim());
-            }}
-            className="bg-background"
-          />
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPhase("choose")}>
-              Tillbaka
-            </Button>
-            <Button size="sm" disabled={!text.trim()} onClick={() => analyze(text.trim())}>
-              Analysera
-            </Button>
-          </div>
-        </div>
+        <Card className="shadow-soft">
+          <CardContent className="p-4 space-y-3">
+            <Input
+              value={text}
+              placeholder="T.ex. lax med potatis och sås"
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && text.trim()) analyze(text.trim());
+              }}
+              className="bg-background"
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => setPhase("choose")}>
+                Tillbaka
+              </Button>
+              <Button size="sm" className="rounded-full" disabled={!text.trim()} onClick={() => analyze(text.trim())}>
+                Analysera
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {phase === "analyzing" && (
-        <div className="rounded-2xl bg-secondary/70 border border-border p-6 text-center space-y-2">
-          <Sparkles className="h-5 w-5 text-primary mx-auto animate-pulse" strokeWidth={1.6} />
-          <p className="text-sm text-muted-foreground">Analyserar måltiden…</p>
-        </div>
+        <Card className="shadow-soft">
+          <CardContent className="p-8 text-center space-y-3">
+            <Sparkles className="h-5 w-5 text-primary mx-auto animate-pulse" strokeWidth={1.6} />
+            <p className="text-sm text-muted-foreground">Analyserar måltiden…</p>
+          </CardContent>
+        </Card>
       )}
 
       {phase === "result" && (
-        <div className="rounded-2xl bg-secondary/70 border border-border overflow-hidden">
-          {preview ? (
-            <img src={preview} alt="Din måltid" className="w-full h-36 object-cover" />
-          ) : (
-            <div className="w-full h-20 bg-primary/10 flex items-center justify-center">
-              <Utensils className="h-6 w-6 text-primary" strokeWidth={1.5} />
+        <Card className="shadow-elevated overflow-hidden">
+          <CardContent className="p-0">
+            {preview ? (
+              <img src={preview} alt="Din måltid" className="w-full h-40 object-cover" />
+            ) : (
+              <img src={salmonImg} alt="Exempelmåltid" className="w-full h-40 object-cover" />
+            )}
+            <div className="p-4 space-y-3">
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-background font-serif text-lg h-auto py-2"
+              />
+              <div className="flex items-center gap-4 text-sm">
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Flame className="w-4 h-4 text-accent" />
+                  {MOCK_ANALYSIS.kcal} kcal
+                </span>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Dumbbell className="w-4 h-4 text-primary" />
+                  {MOCK_ANALYSIS.protein} g protein
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Stämmer det inte? Justera texten och uppskattningen räknas om.
+                Detta är en övning — måltiden sparas inte.
+              </p>
             </div>
-          )}
-          <div className="p-4 space-y-3">
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-background font-serif text-base"
-            />
-            <div className="grid grid-cols-4 gap-2">
-              <MacroChip label="Kalorier" value={`${MOCK_ANALYSIS.kcal}`} tone="cal" />
-              <MacroChip label="Protein" value={`${MOCK_ANALYSIS.protein} g`} tone="pro" />
-              <MacroChip label="Kolhydrat" value={`${MOCK_ANALYSIS.carbs} g`} tone="carb" />
-              <MacroChip label="Fett" value={`${MOCK_ANALYSIS.fat} g`} tone="fat" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Stämmer det inte? Justera texten och uppskattningen räknas om. Detta är en övning —
-              måltiden sparas inte.
-            </p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
@@ -234,47 +265,30 @@ function ChoiceRow({
   onClick: () => void;
 }) {
   return (
-    <button
+    <Card
+      className="shadow-soft cursor-pointer active:scale-[0.99] transition-transform"
       onClick={onClick}
-      className="w-full rounded-2xl bg-secondary/70 border border-border p-4 flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(); }}
     >
-      <span className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-        <Icon className="h-4 w-4 text-primary" strokeWidth={1.6} />
-      </span>
-      <span className="text-sm font-medium text-foreground">{label}</span>
-    </button>
-  );
-}
-
-function MacroChip({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "cal" | "pro" | "carb" | "fat";
-}) {
-  return (
-    <div className="rounded-xl bg-background/70 p-2 text-center">
-      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p
-        className="text-sm font-semibold"
-        style={{ color: `hsl(var(--nutrient-${tone}))` }}
-      >
-        {value}
-      </p>
-    </div>
+      <CardContent className="p-4 flex items-center gap-3">
+        <span className="w-9 h-9 rounded-full bg-primary/10 grid place-items-center shrink-0">
+          <Icon className="w-4 h-4 text-primary" strokeWidth={1.6} />
+        </span>
+        <span className="text-sm font-medium text-foreground">{label}</span>
+      </CardContent>
+    </Card>
   );
 }
 
 /* ------------------------------- 4. Goals --------------------------------- */
 
 const GOALS = [
-  { label: "Kalorier", goal: 2100, tone: "cal" as const, unit: "kcal", logged: MOCK_ANALYSIS.kcal },
-  { label: "Protein", goal: 115, tone: "pro" as const, unit: "g", logged: MOCK_ANALYSIS.protein },
-  { label: "Kolhydrater", goal: 240, tone: "carb" as const, unit: "g", logged: MOCK_ANALYSIS.carbs },
-  { label: "Fett", goal: 70, tone: "fat" as const, unit: "g", logged: MOCK_ANALYSIS.fat },
+  { key: "cal" as const, icon: Flame, label: "Kalorier", goal: 2100, unit: "kcal", logged: MOCK_ANALYSIS.kcal },
+  { key: "pro" as const, icon: Dumbbell, label: "Protein", goal: 115, unit: "g", logged: MOCK_ANALYSIS.protein },
+  { key: "carb" as const, icon: Wheat, label: "Kolhydrater", goal: 240, unit: "g", logged: MOCK_ANALYSIS.carbs },
+  { key: "fat" as const, icon: Droplets, label: "Fett", goal: 70, unit: "g", logged: MOCK_ANALYSIS.fat },
 ];
 
 function GoalsScene({ logged }: { logged: boolean }) {
@@ -294,29 +308,24 @@ function GoalsScene({ logged }: { logged: boolean }) {
             : "Du och din dietist sätter dagliga mål. De fylls på automatiskt varje gång du loggar en måltid."
         }
       />
-      <div className="space-y-3">
-        {GOALS.map((g) => {
-          const pct = filled ? Math.min(100, (g.logged / g.goal) * 100) : 0;
-          return (
-            <div key={g.label} className="space-y-1.5">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {g.label}
-                </span>
-                <span className="text-xs text-foreground/80">
-                  {g.logged} / {g.goal} {g.unit}
-                </span>
-              </div>
-              <div className="h-2 rounded-full bg-[hsl(var(--beige-3))] overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${pct}%`, background: `hsl(var(--nutrient-${g.tone}))` }}
-                />
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-2 gap-2.5">
+        {GOALS.map((g) => (
+          <NutritionProgressCard
+            key={g.key}
+            icon={g.icon}
+            label={g.label}
+            nutrient={g.key}
+            goal={g.goal}
+            unit={g.unit}
+            remaining={filled && logged ? g.goal - g.logged : g.goal}
+          />
+        ))}
       </div>
+      {logged && (
+        <p className="text-xs text-muted-foreground text-center">
+          Din övningsmåltid på {MOCK_ANALYSIS.kcal} kcal är inräknad.
+        </p>
+      )}
     </div>
   );
 }
@@ -324,9 +333,30 @@ function GoalsScene({ logged }: { logged: boolean }) {
 /* ------------------------------- 5. Recipes ------------------------------- */
 
 const MOCK_RECIPES = [
-  { title: "Ugnsbakad torsk med ärtpuré", time: 25, tag: "Proteinrik" },
-  { title: "Linsgryta med rotselleri", time: 35, tag: "Fiberrik" },
-  { title: "Kikärtssallad med feta", time: 15, tag: "Snabb" },
+  {
+    title: "Ugnsbakad lax med ärtpuré",
+    time: 25,
+    servings: 2,
+    tag: "Proteinrik",
+    img: salmonImg,
+    message: "Bra proteinkälla inför veckan — testa gärna!",
+  },
+  {
+    title: "Kycklinggryta med rotfrukter",
+    time: 35,
+    servings: 4,
+    tag: "Fiberrik",
+    img: chickenImg,
+    message: "Mild mot magen och enkel att laga i stor sats.",
+  },
+  {
+    title: "Krämig linsoppa med rotselleri",
+    time: 30,
+    servings: 3,
+    tag: "Snabb",
+    img: soupImg,
+    message: "Värmande och fiberrik vardagsfavorit.",
+  },
 ];
 
 function RecipeScene({ onReady }: SceneProps) {
@@ -355,13 +385,14 @@ function RecipeScene({ onReady }: SceneProps) {
         body="Din dietist föreslår recept här. Svep höger för att spara, vänster för att hoppa över. Prova på övningsrecepten."
       />
 
-      <div className="relative h-52">
+      <div className="relative">
         {current ? (
-          <div
-            className="absolute inset-0 rounded-[20px] bg-secondary border border-border p-5 flex flex-col justify-end shadow-elevated touch-none select-none"
+          <Card
+            className="shadow-elevated overflow-hidden cursor-grab active:cursor-grabbing select-none touch-pan-y"
             style={{
               transform: `translateX(${drag}px) rotate(${drag / 25}deg)`,
-              transition: startX.current === null ? "transform 220ms ease" : "none",
+              opacity: Math.max(0.6, 1 - Math.abs(drag) / 400),
+              transition: startX.current === null ? "transform 220ms ease, opacity 220ms ease" : "none",
             }}
             onPointerDown={(e) => {
               startX.current = e.clientX;
@@ -372,52 +403,93 @@ function RecipeScene({ onReady }: SceneProps) {
               setDrag(e.clientX - startX.current);
             }}
             onPointerUp={() => {
-              if (Math.abs(drag) > 90) decide(drag > 0);
+              if (Math.abs(drag) > 80) decide(drag > 0);
               else {
                 startX.current = null;
                 setDrag(0);
               }
             }}
           >
-            <div className="absolute inset-x-0 top-0 h-24 rounded-t-[20px] bg-primary/10" />
-            <div className="relative space-y-2">
-              <span className="eyebrow text-[10px] text-muted-foreground">
-                {current.tag} · {current.time} min
-              </span>
-              <h3 className="font-serif text-2xl text-primary leading-tight">{current.title}</h3>
-            </div>
-            {drag > 40 && (
-              <span className="absolute top-4 left-4 rounded-full bg-primary text-primary-foreground text-[11px] px-3 py-1">
-                Sparat
-              </span>
-            )}
-            {drag < -40 && (
-              <span className="absolute top-4 right-4 rounded-full bg-foreground/70 text-background text-[11px] px-3 py-1">
-                Hoppar över
-              </span>
-            )}
-          </div>
+            <CardContent className="p-0">
+              <div className="relative h-44 bg-muted">
+                <img
+                  src={current.img}
+                  alt={current.title}
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                />
+                {drag > 30 && (
+                  <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+                    <div className="bg-primary text-primary-foreground rounded-full p-4">
+                      <Heart className="w-8 h-8" />
+                    </div>
+                  </div>
+                )}
+                {drag < -30 && (
+                  <div className="absolute inset-0 bg-destructive/30 flex items-center justify-center">
+                    <div className="bg-destructive text-destructive-foreground rounded-full p-4">
+                      <X className="w-8 h-8" />
+                    </div>
+                  </div>
+                )}
+                <div className="absolute top-2 left-2">
+                  <Badge className="bg-accent/90 text-accent-foreground gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Din dietist
+                  </Badge>
+                </div>
+              </div>
+              <div className="p-4 space-y-2.5">
+                <h3 className="font-semibold text-lg text-foreground leading-snug">
+                  {current.title}
+                </h3>
+                <p className="text-sm text-muted-foreground italic">"{current.message}"</p>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {current.time} min
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {current.servings} port
+                  </span>
+                </div>
+                <Badge variant="secondary" className="text-xs">{current.tag}</Badge>
+              </div>
+              <div className="flex gap-2 p-4 pt-0">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  onClick={() => decide(false)}
+                >
+                  <X className="w-4 h-4" />
+                  Inte nu
+                </Button>
+                <Button className="flex-1 gap-2" onClick={() => decide(true)}>
+                  <Heart className="w-4 h-4" />
+                  Spara
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="absolute inset-0 rounded-[20px] border border-dashed border-border flex flex-col items-center justify-center gap-2 text-center px-6">
-            <Utensils className="h-5 w-5 text-primary" strokeWidth={1.5} />
-            <p className="text-sm text-foreground/80">
-              {saved.length > 0
-                ? `Du sparade ${saved.length} recept i övningen.`
-                : "Inga fler övningsrecept."}
-            </p>
-          </div>
+          <Card className="shadow-soft border-dashed">
+            <CardContent className="p-8 flex flex-col items-center justify-center gap-2 text-center">
+              <Utensils className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              <p className="text-sm text-foreground/80">
+                {saved.length > 0
+                  ? `Du sparade ${saved.length} recept i övningen.`
+                  : "Inga fler övningsrecept."}
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
 
       {current && (
-        <div className="flex items-center justify-center gap-3">
-          <Button variant="outline" size="icon" className="rounded-full" onClick={() => decide(false)}>
-            <X className="h-4 w-4" />
-          </Button>
-          <Button size="icon" className="rounded-full" onClick={() => decide(true)}>
-            <Check className="h-4 w-4" />
-          </Button>
-        </div>
+        <p className="text-[11px] text-muted-foreground text-center">
+          Svep på kortet — eller använd knapparna
+        </p>
       )}
     </div>
   );
@@ -454,58 +526,63 @@ function JourneyScene() {
         title="Din utveckling"
         body="Din dietist bygger en plan i faser med mål och delmål. Så här kan den se ut — kostrelaterade mål bockas av automatiskt när du loggar."
       />
-      <div className="rounded-[20px] bg-secondary/70 border border-border p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <Flag className="h-4 w-4 text-primary" strokeWidth={1.6} />
-          <span className="text-sm font-medium text-foreground">
-            Slutmål: stabil vikt och bättre mage till våren
-          </span>
-        </div>
-        {DEMO_PHASES.map((p) => (
-          <div key={p.title} className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "h-2 w-2 rounded-full",
-                  p.status === "done" && "bg-primary",
-                  p.status === "active" && "bg-[hsl(var(--nutrient-carb))]",
-                  p.status === "todo" && "bg-border"
-                )}
-              />
-              <span className="eyebrow text-[10px] text-muted-foreground">{p.title}</span>
-            </div>
-            <div className="pl-4 space-y-1.5">
-              {p.items.map((item) => {
-                const on = checked.includes(item);
-                return (
-                  <button
-                    key={item}
-                    onClick={() => toggle(item)}
-                    className="flex items-center gap-2 text-left w-full"
-                  >
-                    <span
-                      className={cn(
-                        "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
-                        on ? "bg-primary border-primary" : "border-border"
-                      )}
-                    >
-                      {on && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-sm",
-                        on ? "text-muted-foreground line-through" : "text-foreground/85"
-                      )}
-                    >
-                      {item}
-                    </span>
-                  </button>
-                );
-              })}
+      <Card className="shadow-soft rounded-[20px]">
+        <CardContent className="p-5 space-y-5">
+          <div className="space-y-1">
+            <p className="eyebrow text-[10px]">Slutmål</p>
+            <div className="flex items-start gap-2">
+              <Flag className="h-4 w-4 text-primary mt-1 shrink-0" strokeWidth={1.6} />
+              <p className="font-serif text-xl text-primary leading-tight">
+                Stabil vikt och bättre mage till våren
+              </p>
             </div>
           </div>
-        ))}
-      </div>
+          {DEMO_PHASES.map((p) => (
+            <div key={p.title} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-full",
+                    p.status === "done" && "bg-primary",
+                    p.status === "active" && "bg-[hsl(var(--nutrient-carb))]",
+                    p.status === "todo" && "bg-border"
+                  )}
+                />
+                <span className="eyebrow text-[10px] text-muted-foreground">{p.title}</span>
+              </div>
+              <div className="pl-4 space-y-1.5">
+                {p.items.map((item) => {
+                  const on = checked.includes(item);
+                  return (
+                    <button
+                      key={item}
+                      onClick={() => toggle(item)}
+                      className="flex items-center gap-2 text-left w-full"
+                    >
+                      <span
+                        className={cn(
+                          "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                          on ? "bg-primary border-primary" : "border-border"
+                        )}
+                      >
+                        {on && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-sm",
+                          on ? "text-muted-foreground line-through" : "text-foreground/85"
+                        )}
+                      >
+                        {item}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -515,7 +592,7 @@ function JourneyScene() {
 function SceneHeader({ title, body }: { title: string; body: string }) {
   return (
     <div className="space-y-2">
-      <h2 className="font-serif text-2xl text-primary leading-tight">{title}</h2>
+      <h2 className="font-serif text-3xl text-primary leading-[1.05]">{title}</h2>
       <p className="text-sm text-foreground/80 leading-relaxed">{body}</p>
     </div>
   );
@@ -532,12 +609,12 @@ export function OnboardingSimulator({ onFinish }: { onFinish: () => void }) {
 
   const scenes = useMemo(
     () => [
-      { node: <WelcomeScene />, optional: true },
-      { node: <HealthScene onReady={handleReady} />, optional: true },
-      { node: <MealScene onReady={handleReady} onLogged={setLogged} />, optional: true },
-      { node: <GoalsScene logged={logged} />, optional: true },
-      { node: <RecipeScene onReady={handleReady} />, optional: true },
-      { node: <JourneyScene />, optional: true },
+      { node: <WelcomeScene /> },
+      { node: <HealthScene onReady={handleReady} /> },
+      { node: <MealScene onReady={handleReady} onLogged={setLogged} /> },
+      { node: <GoalsScene logged={logged} /> },
+      { node: <RecipeScene onReady={handleReady} /> },
+      { node: <JourneyScene /> },
     ],
     [handleReady, logged]
   );
@@ -559,10 +636,13 @@ export function OnboardingSimulator({ onFinish }: { onFinish: () => void }) {
         className="flex items-center justify-between px-5 pb-2"
         style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}
       >
-        <span className="eyebrow text-[10px] text-muted-foreground">
+        <span className="eyebrow text-[10px]">
           Övningsläge · {step + 1} av {scenes.length}
         </span>
-        <button onClick={onFinish} className="text-xs text-muted-foreground underline-offset-4 hover:underline">
+        <button
+          onClick={onFinish}
+          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+        >
           Hoppa över
         </button>
       </div>
@@ -590,12 +670,16 @@ export function OnboardingSimulator({ onFinish }: { onFinish: () => void }) {
           size="sm"
           disabled={step === 0}
           onClick={() => setStep((s) => Math.max(0, s - 1))}
-          className={cn(step === 0 && "invisible")}
+          className={cn("rounded-full", step === 0 && "invisible")}
         >
           Tillbaka
         </Button>
-        <Button size="sm" onClick={() => (isLast ? onFinish() : setStep((s) => s + 1))}>
-          {isLast ? "Kom igång" : ready ? "Nästa" : "Nästa"}
+        <Button
+          size="sm"
+          className="rounded-full px-6"
+          onClick={() => (isLast ? onFinish() : setStep((s) => s + 1))}
+        >
+          {isLast ? "Kom igång" : "Nästa"}
         </Button>
       </div>
     </div>,
