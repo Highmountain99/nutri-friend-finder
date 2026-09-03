@@ -224,9 +224,9 @@ function TrendFocusCard({
         backgroundColor: C.cream,
         borderRadius: 24,
         padding: "18px 18px 14px",
-        zIndex: focused ? 60 : undefined,
       }}
     >
+
       <div className="flex items-center justify-between">
         <span style={cardTitleStyle}>{title}</span>
         {diff !== null && (
