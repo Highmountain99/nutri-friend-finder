@@ -37,6 +37,9 @@ export function useMyTrainingDays() {
       return (data ?? []) as TrainingDay[];
     },
     enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 
