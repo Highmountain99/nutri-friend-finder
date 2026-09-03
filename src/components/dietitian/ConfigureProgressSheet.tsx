@@ -220,31 +220,34 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                       <p className="text-xs text-muted-foreground mt-1">Lägg till block från biblioteket nedan</p>
                     </div>
                   ) : (
-                    items.map((item, idx) => {
-                      const isOver = overIdx === idx && dragIdx !== null;
-                      return (
+                    (() => {
+                      const ORDER = [
+                        "weight_trend_card",
+                        "meals_week_card",
+                        "logged_days_card",
+                        "waist_trend_card",
+                      ];
+                      const renderOf = (it: any) => it.displayConfig?.render_as || "";
+                      const sorted = [...items].sort((a, b) => {
+                        const ia = ORDER.indexOf(renderOf(a));
+                        const ib = ORDER.indexOf(renderOf(b));
+                        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+                      });
+                      const isHalf = (it: any) =>
+                        ["meals_week_card", "logged_days_card"].includes(renderOf(it));
+
+                      const wrap = (item: any) => (
                         <div
                           key={item.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(idx, e)}
-                          onDragEnter={() => handleDragEnter(idx)}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDragEnd={handleDragEnd}
-                          className={`
-                            group relative rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none overflow-hidden
-                            ${isOver ? "border-primary ring-2 ring-primary/20 scale-[1.02]" : "border-primary/30 hover:border-primary/50"}
-                          `}
+                          className="group relative rounded-xl border border-primary/30 hover:border-primary/50 transition-all overflow-hidden"
                         >
-                          <div className="absolute -left-0 top-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <GripVertical className="h-4 w-4 text-muted-foreground" />
-                          </div>
                           <button
                             onClick={(e) => { e.stopPropagation(); removeBlock(item); }}
                             className="absolute top-2 right-2 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all z-10"
                           >
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </button>
-                          <div className="transform scale-[0.85] origin-top pointer-events-none">
+                          <div className="pointer-events-none">
                             <BlockPreview
                               title={item.label}
                               description={item.description}
@@ -257,8 +260,28 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                           </div>
                         </div>
                       );
-                    })
+
+                      const rows: JSX.Element[] = [];
+                      let i = 0;
+                      while (i < sorted.length) {
+                        const cur = sorted[i];
+                        if (isHalf(cur) && sorted[i + 1] && isHalf(sorted[i + 1])) {
+                          rows.push(
+                            <div key={`row-${cur.id}`} className="grid grid-cols-2 gap-3">
+                              {wrap(cur)}
+                              {wrap(sorted[i + 1])}
+                            </div>
+                          );
+                          i += 2;
+                        } else {
+                          rows.push(wrap(cur));
+                          i += 1;
+                        }
+                      }
+                      return rows;
+                    })()
                   )}
+
                 </div>
 
                 <div className="h-5 flex items-center justify-center">
