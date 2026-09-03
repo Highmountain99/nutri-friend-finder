@@ -41,7 +41,9 @@ export function EditHeightSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+      <SheetContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        side="bottom" className="rounded-t-2xl max-h-[85dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
         <SheetHeader className="text-left">
           <SheetTitle>Redigera längd</SheetTitle>
           <SheetDescription>

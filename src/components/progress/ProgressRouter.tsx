@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Route, Sparkles, ArrowRight, Check } from "lucide-react";
+import { Route, Sparkles, ArrowRight, Check, ChevronDown } from "lucide-react";
+import { JourneyPanel } from "./JourneyPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
@@ -80,31 +81,48 @@ type Goal = { id: string; title: string; status: string };
 function JourneyHeader({
   goals,
   activeIdx,
-  onOpen,
+  open,
+  onToggle,
+  children,
 }: {
   goals: Goal[];
   activeIdx: number;
-  onOpen: () => void;
+  open: boolean;
+  onToggle: (next: boolean) => void;
+  children?: React.ReactNode;
 }) {
   const startY = useRef<number | null>(null);
   const steps = goals.slice(0, 3);
 
   return (
     <div
+      style={{
+        backgroundColor: "#C2AE84",
+        color: "#1F3A2E",
+        borderRadius: "0 0 28px 28px",
+        overflow: "hidden",
+      }}
+    >
+    <div
       data-tour="progress-hero"
       role="button"
       tabIndex={0}
-      onClick={onOpen}
+      onClick={() => onToggle(!open)}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onOpen();
+        if (e.key === "Enter" || e.key === " ") onToggle(!open);
       }}
       onPointerDown={(e) => {
         startY.current = e.clientY;
       }}
       onPointerMove={(e) => {
-        if (startY.current !== null && e.clientY - startY.current > 28) {
+        if (startY.current === null) return;
+        const dy = e.clientY - startY.current;
+        if (dy > 28) {
           startY.current = null;
-          onOpen();
+          onToggle(true);
+        } else if (dy < -28) {
+          startY.current = null;
+          onToggle(false);
         }
       }}
       onPointerUp={() => {
@@ -112,12 +130,10 @@ function JourneyHeader({
       }}
       className="w-full text-left touch-pan-y cursor-pointer select-none"
       style={{
-        backgroundColor: "#C2AE84",
-        color: "#1F3A2E",
-        padding: "64px 20px 24px",
-        borderRadius: "0 0 28px 28px",
+        padding: "64px 20px 20px",
       }}
     >
+
       <h1
         className="font-serif m-0"
         style={{ fontSize: 34, fontWeight: 800, lineHeight: 0.92, textTransform: "uppercase" }}
@@ -187,9 +203,28 @@ function JourneyHeader({
           );
         })}
       </div>
+
+      <div className="flex justify-center" style={{ marginTop: 14 }}>
+        <ChevronDown
+          className="w-5 h-5 transition-transform"
+          style={{ opacity: 0.6, transform: open ? "rotate(180deg)" : "none" }}
+        />
+      </div>
+    </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: open ? "1fr" : "0fr",
+          transition: "grid-template-rows 320ms cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        <div style={{ overflow: "hidden" }}>{children}</div>
+      </div>
     </div>
   );
 }
+
 
 function CurrentGoalCard({
   goal,
@@ -298,6 +333,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
   const { data: patientBlocks, isLoading: blocksLoading } = usePatientBlocks(user?.id);
   const { data: plan } = usePatientTreatmentPlan();
+  const [journeyOpen, setJourneyOpen] = useState(false);
 
   if (blocksLoading) {
     return (
@@ -329,7 +365,14 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const shell = (
     <div style={{ backgroundColor: "#EBE5D6" }}>
       {plan && goals.length > 0 && (
-        <JourneyHeader goals={goals} activeIdx={activeIdx} onOpen={onOpenJourney} />
+        <JourneyHeader
+          goals={goals}
+          activeIdx={activeIdx}
+          open={journeyOpen}
+          onToggle={setJourneyOpen}
+        >
+          <JourneyPanel onClose={() => setJourneyOpen(false)} />
+        </JourneyHeader>
       )}
 
       <div
