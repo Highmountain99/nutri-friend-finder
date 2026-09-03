@@ -24,19 +24,6 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Fetch dietitian profile for name slug
-  const { data: dietitianProfile } = useQuery({
-    queryKey: ["dietitian-profile-slug", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("dietitian_profiles")
-        .select("first_name, last_name")
-        .eq("user_id", user!.id)
-        .single();
-      return data;
-    },
-    enabled: !!user && open,
-  });
 
   // Get or create a general invite link for this dietitian
   const { data: generalInvite, isLoading: loadingGeneral } = useQuery({
