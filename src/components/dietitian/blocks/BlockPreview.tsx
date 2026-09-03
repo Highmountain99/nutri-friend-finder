@@ -428,7 +428,7 @@ export function BlockPreview({
     }
 
     /* ── Weekly overview ── */
-    if (metric === "weekly_overview") {
+    if (metric === "weekly_overview" || metric === "weekly_bars") {
       const days = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
       const active = [true, true, false, true, true, false, true];
       const activeCount = active.filter(Boolean).length;
