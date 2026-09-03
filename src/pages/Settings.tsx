@@ -281,12 +281,16 @@ export default function Settings() {
   const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in">
+    <div className="pb-8 space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Inställningar</h1>
-        <p className="text-sm text-muted-foreground">Hantera ditt konto</p>
-      </div>
+      <section className="screen-header bg-gold -mx-3 sm:-mx-4 px-4 pt-[calc(env(safe-area-inset-top)+18px)] pb-6">
+        <h1 className="display text-[38px] leading-[0.92]">
+          <span className="pill-highlight pill-highlight--light">Inställningar</span>
+        </h1>
+        <p className="text-sm font-bold text-primary/70 mt-2">Hantera ditt konto</p>
+      </section>
+
+      <div className="px-4 space-y-6">
 
       {/* Profile Card */}
       <Card className="shadow-soft">
