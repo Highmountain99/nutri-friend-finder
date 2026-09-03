@@ -141,7 +141,7 @@ export function AuthLanding() {
                 color: "#6F8A6C",
               }}
             >
-              Logga in som dietist
+              Logga in som coach
               <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.6} />
             </button>
           </div>
