@@ -404,8 +404,10 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
+
 
   return shell;
 }
