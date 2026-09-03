@@ -422,7 +422,7 @@ function LoggedDaysCard({
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 700,
-              fontSize: 9.5,
+              fontSize: 11,
               backgroundColor: d.logged ? C.green : "rgba(245,239,226,0.55)",
               color: d.logged ? C.cream : "rgba(31,42,34,0.45)",
             }}
