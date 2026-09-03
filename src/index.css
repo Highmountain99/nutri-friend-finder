@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Menti typefaces ───────────────────────────────────────── */
+@font-face {
+  font-family: 'MentiDisplay';
+  src: url('/fonts/MentiDisplay-ExtraBold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MentiText';
+  src: url('/fonts/MentiText-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MentiText';
+  src: url('/fonts/MentiText-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MentiText';
+  src: url('/fonts/MentiText-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Gutfeeling Brand System — Editorial, warm beige + deep forest green */
+
+
 /* Gutfeeling Brand System — Editorial, warm beige + deep forest green */
 
 @layer base {
@@ -10,8 +43,16 @@
     --background: 44 31% 88%;        /* #EBE5D6 */
     --foreground: 140 16% 14%;       /* #1F2A22 ink */
 
-    --card: 44 31% 88%;
+    --card: 41 50% 92%;              /* #F5EFE2 */
     --card-foreground: 145 30% 11%;
+
+    /* Accent blocks — jordtoner */
+    --gold: 38 51% 70%;              /* #DCC08A */
+    --sage: 88 20% 72%;              /* #B7C4A9 */
+    --apricot: 20 51% 69%;           /* #D9A488 */
+    --terracotta: 17 50% 57%;        /* #C97B5C */
+    --leaf: 100 24% 59%;             /* #8FAF7E */
+
 
     --popover: 44 33% 90%;
     --popover-foreground: 145 30% 11%;
@@ -126,8 +167,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    font-feature-settings: "ss01", "cv02";
+    font-family: 'MentiText', 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
     /* iOS WebView: avoid rubber-band scroll of the whole shell and the grey
        tap flash on buttons/links. */
     overscroll-behavior-y: none;
@@ -146,42 +186,79 @@
 
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Instrument Serif', 'Times New Roman', serif;
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-family: 'MentiDisplay', 'Anton', 'MentiText', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
     color: hsl(var(--primary));
-    line-height: 1.05;
+    line-height: 0.94;
   }
 
   .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
     color: hsl(var(--foreground));
   }
+
+  :where(input, textarea, select, button, [role="button"], a):focus-visible {
+    outline: 3px solid hsl(var(--gold));
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
+  /* Display headline — always uppercase, extra bold, tight leading */
+  .display {
+    font-family: 'MentiDisplay', 'Anton', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.93;
+    color: hsl(var(--primary));
+  }
+
+  /* Pill highlight inside a display headline */
+  .pill-highlight {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0 14px;
+    background: hsl(var(--gold));
+    color: hsl(var(--primary));
+  }
+  .pill-highlight--sage { background: hsl(var(--sage)); }
+  .pill-highlight--apricot { background: hsl(var(--apricot)); }
+  .pill-highlight--light { background: hsl(var(--card)); }
+
+  /* Hand drawn doodles on colour blocks */
+  .doodle {
+    mix-blend-mode: multiply;
+  }
+
+  /* Coloured screen header with rounded bottom corners */
+  .screen-header {
+    border-radius: 0 0 28px 28px;
+  }
+
   .font-serif {
-    font-family: 'Instrument Serif', 'Times New Roman', serif;
+    font-family: 'MentiDisplay', 'Anton', sans-serif;
+    text-transform: uppercase;
+    font-weight: 800;
   }
   .font-mono {
-    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-family: 'MentiText', 'Manrope', ui-sans-serif, sans-serif;
   }
 
   .eyebrow {
-    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-family: 'MentiText', 'Manrope', sans-serif;
     font-size: 11px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: hsl(var(--primary));
-    font-weight: 400;
+    font-weight: 600;
   }
 
   .lede {
-    font-family: 'Instrument Serif', serif;
-    font-style: italic;
-    color: hsl(var(--primary));
-    line-height: 1.2;
-    letter-spacing: -0.01em;
+    font-family: 'MentiText', 'Manrope', sans-serif;
+    color: hsl(var(--primary) / 0.75);
+    line-height: 1.45;
   }
+
 
   .gradient-hero {
     background: var(--gradient-hero);

@@ -23,9 +23,9 @@ const FIELD_BORDER = "rgba(31,42,34,0.14)";
 const LINE = "rgba(31,42,34,0.12)";
 const CORAL = "#C4564E";
 const OK = "#3C7A55";
-const FS = '"Instrument Serif", serif';
-const FN = "Geist, ui-sans-serif, system-ui, sans-serif";
-const FM = '"JetBrains Mono", ui-monospace, monospace';
+const FS = 'MentiDisplay, Anton, sans-serif';
+const FN = "MentiText, Manrope, ui-sans-serif, system-ui, sans-serif";
+const FM = 'MentiText, Manrope, sans-serif';
 
 export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   const navigate = useNavigate();

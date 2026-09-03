@@ -103,13 +103,13 @@ export function DietitianSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.end}
-                      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                      activeClassName="bg-sidebar-primary/10 text-sidebar-primary font-medium"
+                      className="flex items-center gap-3 rounded-pill px-3 py-2.5 text-sm font-semibold text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                      activeClassName="bg-sidebar-primary text-sidebar-primary-foreground font-bold"
                     >
                       <div className="relative shrink-0">
                         <item.icon className="h-4 w-4" />
                         {item.badgeKey === "messages" && (unread?.total ?? 0) > 0 && (
-                          <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+                          <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] flex items-center justify-center rounded-pill bg-terracotta text-primary text-[10px] font-bold px-1">
                             {unread!.total > 99 ? "99+" : unread!.total}
                           </span>
                         )}
@@ -140,7 +140,7 @@ export function DietitianSidebar() {
                         <NavLink
                           to="/dietitian/profile"
                           className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                          activeClassName="bg-sidebar-primary/10 text-sidebar-primary font-medium"
+                          activeClassName="bg-sidebar-primary text-sidebar-primary-foreground font-bold"
                         >
                           <User className="h-3.5 w-3.5 shrink-0" />
                           {!collapsed && <span>Profil</span>}
@@ -151,7 +151,7 @@ export function DietitianSidebar() {
                           <NavLink
                             to="/dietitian/admin"
                             className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                            activeClassName="bg-sidebar-primary/10 text-sidebar-primary font-medium"
+                            activeClassName="bg-sidebar-primary text-sidebar-primary-foreground font-bold"
                           >
                             <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                             {!collapsed && <span>Administration</span>}
