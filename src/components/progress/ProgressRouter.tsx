@@ -125,20 +125,20 @@ function JourneyHeader({
         }}
         className="w-full text-left touch-pan-y cursor-pointer select-none"
         style={{
-          padding: "52px 20px 10px",
+          padding: "calc(env(safe-area-inset-top) + 18px) 20px 14px",
         }}
       >
         <div className="flex items-center justify-between">
           <h1
             className="font-serif m-0"
-            style={{ fontSize: 28, fontWeight: 800, lineHeight: 0.95, textTransform: "uppercase" }}
+            style={{ fontSize: 38, fontWeight: 800, lineHeight: 0.95, textTransform: "uppercase" }}
           >
             Din{" "}
             <span
               style={{
                 backgroundColor: "#FFFFFF",
                 borderRadius: 999,
-                padding: "0 10px 2px",
+                padding: "0 14px 3px",
                 display: "inline-block",
               }}
             >
@@ -147,8 +147,8 @@ function JourneyHeader({
           </h1>
 
           <ChevronDown
-            className="w-5 h-5 transition-transform flex-shrink-0"
-            style={{ opacity: 0.6, transform: open ? "rotate(180deg)" : "none" }}
+            className="w-6 h-6 transition-transform flex-shrink-0"
+            style={{ opacity: 0.7, transform: open ? "rotate(180deg)" : "none" }}
           />
         </div>
       </div>
