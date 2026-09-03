@@ -3,24 +3,21 @@ import { Send, Paperclip, Loader2, Calendar, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAppointments } from "@/hooks/useAppointments";
+import { useMyDietitian } from "@/hooks/useMyDietitian";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChatHeader } from "@/components/messages/ChatHeader";
 import { ChatMessage } from "@/components/messages/ChatMessage";
-import { ChatBookingSheet } from "@/components/messages/ChatBookingSheet";
 import { ChatAttachmentPicker, AttachmentPreview } from "@/components/messages/ChatAttachmentPicker";
 import { ResponseChoiceDialog } from "@/components/messages/ResponseChoiceDialog";
 import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 
 export default function Messages() {
   const { user } = useAuth();
-  const { getUpcomingAppointment, loading: appointmentLoading } = useAppointments();
-  const upcomingAppointment = getUpcomingAppointment();
+  const { data: myDietitian, isLoading: appointmentLoading } = useMyDietitian();
   const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead, markAllAsRead } = useChatMessages();
 
   const [inputValue, setInputValue] = useState("");
-  const [bookingSheetOpen, setBookingSheetOpen] = useState(false);
   const [attachmentPickerOpen, setAttachmentPickerOpen] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
@@ -30,15 +27,13 @@ export default function Messages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Get dietitian info from appointment
-  const dietitian = upcomingAppointment?.dietitian;
-  const dietitianInfo = dietitian
+  const dietitianInfo = myDietitian
     ? {
-        id: upcomingAppointment.dietitianId || '',
-        firstName: dietitian.firstName,
-        lastName: dietitian.lastName,
-        title: dietitian.title || "Legitimerad dietist",
-        avatarUrl: dietitian.avatarUrl,
+        id: myDietitian.id,
+        firstName: myDietitian.first_name,
+        lastName: myDietitian.last_name,
+        title: myDietitian.title || "Coach",
+        avatarUrl: myDietitian.avatar_url ?? undefined,
       }
     : null;
 
@@ -135,10 +130,6 @@ export default function Messages() {
     }
   };
 
-  const handleBookingRequest = () => {
-    setBookingSheetOpen(true);
-  };
-
   useEffect(() => {
     if (messagesLoading || messages.length === 0) return;
 
@@ -186,20 +177,8 @@ export default function Messages() {
                 Hej!
               </h3>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Innan vi loopar in {dietitianInfo ? `${dietitianInfo.firstName}` : "din dietist"} kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!
+                Innan vi loopar in {dietitianInfo ? `${dietitianInfo.firstName}` : "din coach"} kan vi se om vi kan svara på dina frågor utifrån din journal. Skriv gärna din fråga!
               </p>
-              
-              {/* Quick action to book if no appointment */}
-              {!upcomingAppointment && (
-                <Button
-                  variant="outline"
-                  className="mt-6 gap-2"
-                  onClick={handleBookingRequest}
-                >
-                  <Calendar className="w-4 h-4" />
-                  Boka möte med dietist
-                </Button>
-              )}
             </div>
           ) : (
             messages.map((msg) => (
@@ -210,7 +189,6 @@ export default function Messages() {
                 timestamp={msg.created_at}
                 dietitian={dietitianInfo}
                 escalated={msg.escalated}
-                onBookingRequest={handleBookingRequest}
                 attachments={msg.attachments}
                 onVisible={
                   msg.sender !== "user" && !msg.id.startsWith("temp-") && !msg.read_at
@@ -326,13 +304,6 @@ export default function Messages() {
           onAttach={(att) => setPendingAttachments((prev) => [...prev, att])}
         />
       )}
-
-      {/* Booking Sheet */}
-      <ChatBookingSheet
-        open={bookingSheetOpen}
-        onOpenChange={setBookingSheetOpen}
-        dietitian={dietitianInfo}
-      />
 
       {/* Response Choice Dialog */}
       <ResponseChoiceDialog
