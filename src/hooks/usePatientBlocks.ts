@@ -362,11 +362,19 @@ export function usePatientBlocks(patientId: string | undefined) {
             };
           }
 
-          if (metric === "weekly_overview") {
+          if (metric === "weekly_overview" || metric === "weekly_bars") {
             const grid = getGrid();
             const last7 = grid.slice(-7);
             const daysLogged = last7.filter(d => d.count > 0).length;
             const totalMeals = last7.reduce((sum, d) => sum + d.count, 0);
+            const weekDays = last7.map((d) => {
+              const letters = ["S", "M", "T", "O", "T", "F", "L"];
+              return {
+                letter: letters[new Date(d.date).getDay()],
+                count: d.count,
+                logged: d.count > 0,
+              };
+            });
             return {
               block, ...base,
               computedLabel: `${daysLogged} aktiva dagar, ${totalMeals} måltider`,
@@ -374,13 +382,15 @@ export function usePatientBlocks(patientId: string | undefined) {
               computedValue: daysLogged,
               computedTotal: 7,
               source: "journal" as const,
+              weekDays,
               weeklyCheckin: {
                 loggedDays: daysLogged,
-                averageMealsPerDay: daysLogged > 0 ? Math.round((totalMeals / daysLogged) * 10) / 10 : 0,
+                averageMealsPerDay: Math.round((totalMeals / 7) * 10) / 10,
                 stability: daysLogged >= 6 ? "stabil" : daysLogged >= 4 ? "delvis" : "oregelbunden",
               },
             };
           }
+
 
           // meals_per_day (legacy)
           if (metric === "meals_per_day") {
