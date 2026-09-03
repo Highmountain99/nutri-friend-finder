@@ -75,7 +75,7 @@ function Arc({
   );
 }
 
-type Goal = { id: string; title: string; status: string };
+
 
 function JourneyHeader({
   open,
@@ -224,16 +224,6 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   // Derive phase info from plan goals (active = first non-completed)
   const goals = plan?.goals ?? [];
   const totalPhases = goals.length || 3;
-  const activeIdx = Math.max(
-    0,
-    goals.findIndex((g) => g.status !== "completed")
-  );
-  const activeGoal = goals[activeIdx];
-  const phaseName = activeGoal?.title || plan?.title || "Din behandling";
-  const planTitle = plan?.title || "Behandlingsplan";
-  const focusQuote =
-    activeGoal?.description ||
-    "Varje måltid är ett steg framåt — lita på processen.";
 
   const shell = (
     <div style={{ backgroundColor: "#EBE5D6" }}>
