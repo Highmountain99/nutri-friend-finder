@@ -446,6 +446,36 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
   const template = block.template;
   const title = block.override_title || template.title;
 
+  /* ── Viktutveckling / Midjemått (fokusinteraktion) ── */
+  if (renderAs === "weight_trend_card" || renderAs === "waist_trend_card") {
+    const isWaist = renderAs === "waist_trend_card";
+    return (
+      <TrendFocusCard
+        title={title}
+        unit={chartMeta?.unit || (isWaist ? "cm" : "kg")}
+        points={chartData || []}
+        chipColor={isWaist ? "#D9A488" : "#8FAF7E"}
+        fillColor={isWaist ? "#B7C4A9" : "#DCC08A"}
+      />
+    );
+  }
+
+  /* ── Måltider (veckostaplar) ── */
+  if (renderAs === "meals_week_card" && data.weekDays) {
+    return <MealsWeekCard title={title} days={data.weekDays} />;
+  }
+
+  /* ── Loggade dagar ── */
+  if (renderAs === "logged_days_card" && data.weekDays) {
+    return (
+      <LoggedDaysCard
+        title={title}
+        days={data.weekDays}
+        loggedCount={data.weekDays.filter((d) => d.logged).length}
+      />
+    );
+  }
+
   /* ── 02 · Dagens fokus ── */
   if (renderAs === "focus_card") {
     return (
