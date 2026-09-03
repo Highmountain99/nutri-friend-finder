@@ -251,15 +251,10 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const shell = (
     <div className="px-4 pt-4 pb-24 space-y-3.5">
       <HeaderB />
-      {plan && (
-        <HeroB
-          planTitle={planTitle}
-          phaseName={phaseName}
-          activeIdx={activeIdx}
-          totalPhases={totalPhases}
-          onOpen={onOpenJourney}
-        />
+      {plan && goals.length > 0 && (
+        <JourneySurface goals={goals} activeIdx={activeIdx} onOpen={onOpenJourney} />
       )}
+
       <FocusB quote={focusQuote} author="Din coach" />
 
       {hasBlocks ? (
