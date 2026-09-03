@@ -97,6 +97,24 @@ export function TrainingDaysCard({ patientId }: Props) {
     return res;
   };
 
+  const weekdayTimes = useMemo(() => {
+    const map: Record<number, string> = {};
+    (days ?? []).forEach((d) => {
+      if (d.start_time && map[d.weekday] === undefined) map[d.weekday] = d.start_time.slice(0, 5);
+    });
+    return map;
+  }, [days]);
+
+  const timeFor = (weekday: number) =>
+    weekdayTimeOverrides[weekday] ?? weekdayTimes[weekday] ?? defaultTime;
+
+  const setWeekdayTime = (weekday: number, value: string) => {
+    setWeekdayTimeOverrides((prev) => ({ ...prev, [weekday]: value }));
+    (days ?? [])
+      .filter((d) => d.weekday === weekday)
+      .forEach((d) => updateTime.mutate({ id: d.id, startTime: value }));
+  };
+
   const toggleDate = async (date: Date) => {
     const key = toKey(date);
     const existing = byDate.get(key);
@@ -104,7 +122,7 @@ export function TrainingDaysCard({ patientId }: Props) {
     else
       await addDay.mutateAsync({
         weekday: date.getDay(),
-        startTime: defaultTime,
+        startTime: timeFor(date.getDay()),
         sessionDate: key,
       });
   };
@@ -118,10 +136,11 @@ export function TrainingDaysCard({ patientId }: Props) {
       if (allSelected) {
         if (existing) await removeDay.mutateAsync(existing);
       } else if (!existing) {
-        await addDay.mutateAsync({ weekday, startTime: defaultTime, sessionDate: key });
+        await addDay.mutateAsync({ weekday, startTime: timeFor(weekday), sessionDate: key });
       }
     }
   };
+
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
