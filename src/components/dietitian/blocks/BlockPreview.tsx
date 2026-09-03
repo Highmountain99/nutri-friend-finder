@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
+import { DynamicBlock } from "@/components/progress/shared/DynamicBlock";
+import type { ComputedBlockData, WeekDayEntry } from "@/hooks/usePatientBlocks";
 
 interface BlockPreviewProps {
   title: string;
