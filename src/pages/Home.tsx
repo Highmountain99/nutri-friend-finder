@@ -31,7 +31,7 @@ const quickActions = [
   },
   {
     label: "Journal",
-    text: mealLabelForNow(),
+    text: "",
     illustration: studyDesk,
     bg: "bg-gold",
     to: "/journal",
@@ -125,7 +125,7 @@ export default function Home() {
                 className="doodle mx-auto h-16 w-auto object-contain"
               />
               <span className="text-[13px] font-bold text-primary leading-snug">
-                {a.text}
+                {a.to === "/journal" ? mealLabelForNow() : a.text}
               </span>
             </button>
           ))}
