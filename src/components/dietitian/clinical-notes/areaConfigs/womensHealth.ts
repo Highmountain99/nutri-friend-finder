@@ -119,7 +119,7 @@ export const womensHealthConfig: AreaConfig = {
       fields: [
         { type: "slider", key: "motivation", label: "Motivation", min: 1, max: 10 },
         { type: "chips", key: "barriers", label: "Hinder", options: ["Tidsbrist", "Sötsug", "Stress", "Oregelbundna vanor", "Brist på struktur", "Kunskap", "Energilöshet"], multi: true },
-        { type: "chips", key: "patient_goals", label: "Patientens mål", options: ["Reglera blodsocker", "Gå ner i vikt", "Minska symptom", "Optimera fertilitet", "Stabil energi", "Förbättra cykel", "Stabil vikt", "Bättre energi"], multi: true },
+        { type: "chips", key: "patient_goals", label: "Klientens mål", options: ["Reglera blodsocker", "Gå ner i vikt", "Minska symptom", "Optimera fertilitet", "Stabil energi", "Förbättra cykel", "Stabil vikt", "Bättre energi"], multi: true },
       ],
     },
   ],

@@ -98,7 +98,7 @@ export const ibsConfig: AreaConfig = {
       fields: [
         { type: "slider", key: "motivation", label: "Motivation", min: 1, max: 10 },
         { type: "chips", key: "barriers", label: "Hinder", options: ["Tidsbrist", "Stress", "Kunskap", "Social påverkan", "Rädsla att äta"], multi: true },
-        { type: "chips", key: "patient_goals", label: "Patientens mål", options: ["Minska symtom", "Hitta triggers", "Äta mer varierat", "Få struktur", "Minska ångest kring mat"], multi: true },
+        { type: "chips", key: "patient_goals", label: "Klientens mål", options: ["Minska symtom", "Hitta triggers", "Äta mer varierat", "Få struktur", "Minska ångest kring mat"], multi: true },
       ],
     },
   ],

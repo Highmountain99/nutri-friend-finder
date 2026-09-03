@@ -178,7 +178,7 @@ export function SuggestRecipeModal({
               </label>
             ))}
             {filteredPatients.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-6">Inga patienter hittades</p>
+              <p className="text-sm text-muted-foreground text-center py-6">Inga klienter hittades</p>
             )}
           </div>
 

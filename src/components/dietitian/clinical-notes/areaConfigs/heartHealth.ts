@@ -20,7 +20,7 @@ const g = (d: Record<string, any>) => {
       `Processad mat: ${d.processed || "—"} · Salt: ${d.salt || "—"} · Alkohol: ${d.alcohol || "—"} · Måltidsstruktur: ${d.meal_structure || "—"}`,
       `Livsstil: Aktivitet: ${d.activity || "—"} · Rökning: ${d.smoking || "—"} · Sömn: ${d.sleep || "—"} · Stress: ${d.stress || "—"}/10`,
       `Motivation: ${d.motivation || "—"}/10 · Hinder: ${barriers}`,
-      `Patientens mål: ${goals}`,
+      `Klientens mål: ${goals}`,
     ].join("\n"),
 
     assessment: `${(d.referral_reasons || []).includes("Hyperlipidemi") ? "Förhöjd kardiometabol risk" : "Kardiometabol riskbedömning genomförd"} med förbättringspotential inom ${d.fat_source === "Smör/Bregott" ? "fettkvalitet" : ""}${d.fiber === "Lågt" ? ", fiberintag" : ""}${(d.fish === "Aldrig" || d.fish === "1 gång/vecka") ? ", fiskintag" : ""}${d.activity === "Låg" ? ", fysisk aktivitet" : ""}.`.replace(/ ,/g, ",").replace(/inom ,/g, "inom "),
@@ -97,7 +97,7 @@ export const heartHealthConfig: AreaConfig = {
       fields: [
         { type: "slider", key: "motivation", label: "Motivation", min: 1, max: 10 },
         { type: "chips", key: "barriers", label: "Hinder", options: ["Tidsbrist", "Familj", "Vanor", "Ekonomi", "Matlagningsvana", "Sötsug", "Socialt"], multi: true },
-        { type: "chips", key: "patient_goals", label: "Patientens mål", options: ["Sänka kolesterol", "Sänka blodtryck", "Gå ner i vikt", "Äta bättre", "Struktur"], multi: true },
+        { type: "chips", key: "patient_goals", label: "Klientens mål", options: ["Sänka kolesterol", "Sänka blodtryck", "Gå ner i vikt", "Äta bättre", "Struktur"], multi: true },
       ],
     },
   ],

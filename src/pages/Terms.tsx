@@ -69,7 +69,7 @@ export default function Terms() {
             <h3 className="text-base font-medium text-foreground">2.2</h3>
             <p>
               Gut Feeling har avtal med Paean Hälsa AB om digitala vårdtjänster mellan Dietister/Kostrådgivare och 
-              deras patienter. Den vård som du som patient får via Appen tillhandahålls av en vårdcentral till 
+              deras klienter. Den vård som du som patient får via Appen tillhandahålls av en vårdcentral till 
               vilken Gut Feeling är en underleverantör. Dina vårdkontakter registreras hos följande vårdcentral: 
               Frösjö Vårdcentral, Sörmland. I samband med kontakt med en Dietist/Kostrådgivare registreras 
               därför vårdbesöket i din journal som ett besök på den aktuella vårdcentralen.

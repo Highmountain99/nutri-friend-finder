@@ -97,7 +97,7 @@ export function EditPatientGoalsSheet({ open, onOpenChange, patientId, currentGo
       <SheetContent side="right" className="w-[380px]">
         <SheetHeader>
           <SheetTitle>Justera näringsmål</SheetTitle>
-          <SheetDescription>Sätt dagliga mål för patienten. Patienten ser dessa som sina kvoter.</SheetDescription>
+          <SheetDescription>Sätt dagliga mål för klienten. Klienten ser dessa som sina kvoter.</SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <div className="space-y-2">

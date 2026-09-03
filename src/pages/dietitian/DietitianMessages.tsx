@@ -130,7 +130,7 @@ export default function DietitianMessages() {
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             {sortedPatients.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-4 text-center">Inga patienter.</p>
+              <p className="text-sm text-muted-foreground p-4 text-center">Inga klienter.</p>
             ) : (
               sortedPatients.map((p) => {
                 const unreadCount = unread?.byPatient[p.patient_id] ?? 0;

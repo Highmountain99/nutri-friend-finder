@@ -23,7 +23,7 @@ const ICON_OPTIONS = [
 
 const BEHAVIOR_MODES = [
   { value: "manual", label: "Manuellt block", desc: "Statisk text som dietisten sätter per patient" },
-  { value: "auto", label: "Automatiskt block", desc: "Fylls i från patientens data" },
+  { value: "auto", label: "Automatiskt block", desc: "Fylls i från klientens data" },
   { value: "hybrid", label: "Hybrid", desc: "Kombination av data och manuell text" },
 ];
 
@@ -369,12 +369,12 @@ export function BlockBuilderSheet({ open, onOpenChange, editTemplate }: BlockBui
           {/* ========== SECTION: PATIENT VIEW ========== */}
           <Collapsible open={openSections.patient_view}>
             <SectionHeader
-              title="Patientvy"
+              title="Klientvy"
               open={openSections.patient_view}
               onToggle={() => toggleSection("patient_view")}
             />
             <CollapsibleContent className="space-y-3 pb-3">
-              <p className="text-xs text-muted-foreground">Hur visas blocket för patienten?</p>
+              <p className="text-xs text-muted-foreground">Hur visas blocket för klienten?</p>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Visa som</Label>
                 <Select value={displayConfig.display_mode || "status_card"} onValueChange={(v) => setDisplayConfig({ ...displayConfig, display_mode: v })}>

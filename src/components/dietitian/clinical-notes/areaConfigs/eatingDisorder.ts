@@ -105,7 +105,7 @@ export const eatingDisorderConfig: AreaConfig = {
       fields: [
         { type: "slider", key: "motivation", label: "Motivation", min: 1, max: 10 },
         { type: "chips", key: "barriers", label: "Hinder", options: ["Rädsla för viktuppgång", "Kontrollbehov", "Ångest kring mat", "Sociala situationer", "Stress", "Oregelbundna rutiner"], multi: true },
-        { type: "chips", key: "patient_goals", label: "Patientens mål", options: ["Få struktur", "Mindre ångest kring mat", "Kunna äta mer fritt", "Regelbundet ätande", "Förbättrad relation till mat"], multi: true },
+        { type: "chips", key: "patient_goals", label: "Klientens mål", options: ["Få struktur", "Mindre ångest kring mat", "Kunna äta mer fritt", "Regelbundet ätande", "Förbättrad relation till mat"], multi: true },
       ],
     },
   ],

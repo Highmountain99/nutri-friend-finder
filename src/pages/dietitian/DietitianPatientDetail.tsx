@@ -216,7 +216,7 @@ export default function DietitianPatientDetail() {
               {/* Intake profile card */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Patientens profil från registrering</CardTitle>
+                  <CardTitle className="text-sm">Klientens profil från registrering</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {intake ? (
@@ -300,14 +300,14 @@ export default function DietitianPatientDetail() {
               {/* Progress configuration */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm">Patientens utvecklingsvy</CardTitle>
+                  <CardTitle className="text-sm">Klientens utvecklingsvy</CardTitle>
                   <Button variant="outline" size="sm" onClick={() => setConfigProgressOpen(true)}>
                     <Pencil className="h-3 w-3 mr-1" /> Anpassa
                   </Button>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Välj template och synliga element för patientens utvecklingssida.
+                    Välj template och synliga element för klientens utvecklingssida.
                   </p>
                 </CardContent>
               </Card>
@@ -329,7 +329,7 @@ export default function DietitianPatientDetail() {
               <Card>
                 <CardHeader><CardTitle className="text-sm">Anteckningar</CardTitle></CardHeader>
                 <CardContent className="space-y-2">
-                  <Textarea placeholder="Skriv snabbanteckningar om patienten..." value={noteContent} onChange={(e) => setNoteContent(e.target.value)} rows={4} />
+                  <Textarea placeholder="Skriv snabbanteckningar om klienten..." value={noteContent} onChange={(e) => setNoteContent(e.target.value)} rows={4} />
                   <Button size="sm" onClick={handleSaveNote} disabled={upsertNote.isPending}>Spara</Button>
                 </CardContent>
               </Card>
