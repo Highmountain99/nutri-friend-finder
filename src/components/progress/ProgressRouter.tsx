@@ -84,106 +84,104 @@ function JourneySurface({
   onOpen: () => void;
 }) {
   const startY = useRef<number | null>(null);
+  const steps = goals.slice(0, 4);
 
   return (
-    <div className="relative">
-      <div
-        className="absolute left-2.5 right-2.5 top-2.5 -bottom-2 rounded-[22px] bg-accent/35"
-        aria-hidden
-      />
-      <button
-        data-tour="progress-hero"
-        onClick={onOpen}
-        onPointerDown={(e) => {
-          startY.current = e.clientY;
-        }}
-        onPointerMove={(e) => {
-          if (startY.current !== null && e.clientY - startY.current > 28) {
-            startY.current = null;
-            onOpen();
-          }
-        }}
-        onPointerUp={() => {
+    <button
+      data-tour="progress-hero"
+      onClick={onOpen}
+      onPointerDown={(e) => {
+        startY.current = e.clientY;
+      }}
+      onPointerMove={(e) => {
+        if (startY.current !== null && e.clientY - startY.current > 28) {
           startY.current = null;
+          onOpen();
+        }
+      }}
+      onPointerUp={() => {
+        startY.current = null;
+      }}
+      className="relative w-full text-left rounded-[26px] px-5 pt-5 pb-4 overflow-hidden active:scale-[0.99] transition-transform touch-pan-y"
+      style={{ backgroundColor: "hsl(var(--gold))", color: "hsl(var(--primary))" }}
+    >
+      <h2
+        className="font-serif m-0"
+        style={{
+          fontSize: 28,
+          fontWeight: 800,
+          lineHeight: 1,
+          textTransform: "uppercase",
+          letterSpacing: "-0.01em",
         }}
-        className="relative w-full text-left bg-primary text-primary-foreground rounded-[22px] p-5 overflow-hidden shadow-[0_18px_44px_-22px_hsl(145_30%_11%/0.7)] active:scale-[0.99] transition-transform touch-pan-y"
       >
-        <div
-          className="absolute -right-12 -top-12 w-[150px] h-[150px] rounded-full bg-primary-foreground/5"
-          aria-hidden
-        />
-        <h2
-          className="relative font-serif m-0"
+        Din{" "}
+        <span
           style={{
-            fontSize: 26,
-            fontWeight: 800,
-            lineHeight: 1,
-            textTransform: "uppercase",
-            letterSpacing: "-0.01em",
+            backgroundColor: "hsl(var(--card))",
+            borderRadius: 999,
+            padding: "2px 16px 5px",
+            display: "inline-block",
           }}
         >
-          Din{" "}
-          <span
-            style={{
-              backgroundColor: "hsl(var(--primary-foreground))",
-              color: "hsl(var(--primary))",
-              borderRadius: 999,
-              padding: "0 12px 3px",
-              display: "inline-block",
-            }}
-          >
-            resa
-          </span>
-        </h2>
+          resa
+        </span>
+      </h2>
 
-        {/* Huvudmål från coachens behandlingsplan */}
-        <div className="relative mt-5 space-y-3">
-          {goals.map((g, i) => {
-            const done = g.status === "completed";
-            const active = i === activeIdx && !done;
-            return (
-              <div key={g.id} className="flex items-center gap-3">
+      <div className="flex items-start mt-5">
+        {steps.map((g, i) => {
+          const done = g.status === "completed";
+          const active = i === activeIdx && !done;
+          return (
+            <div key={g.id} className="flex items-start flex-1 min-w-0">
+              <div className="flex flex-col items-center gap-1.5 min-w-0 px-0.5">
                 <span
-                  className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-mono text-[11px]"
+                  className="w-10 h-10 rounded-full flex items-center justify-center font-mono text-[13px] flex-shrink-0"
                   style={{
                     backgroundColor: done
-                      ? "hsl(var(--primary-foreground))"
-                      : "transparent",
-                    color: done
                       ? "hsl(var(--primary))"
-                      : "hsl(var(--primary-foreground))",
-                    border: done
-                      ? "none"
-                      : `1.5px solid hsl(var(--primary-foreground) / ${active ? 1 : 0.35})`,
-                    opacity: done || active ? 1 : 0.7,
+                      : active
+                      ? "hsl(var(--card))"
+                      : "hsl(var(--primary) / 0.10)",
+                    color: done ? "hsl(var(--card))" : "hsl(var(--primary))",
+                    border: active ? "2px solid hsl(var(--primary))" : "none",
+                    opacity: done || active ? 1 : 0.55,
                   }}
                 >
-                  {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                  {done ? <Check className="w-4 h-4" /> : i + 1}
                 </span>
                 <span
-                  className="text-[14.5px] leading-snug truncate"
-                  style={{
-                    opacity: done ? 0.75 : active ? 1 : 0.6,
-                    fontWeight: active ? 600 : 400,
-                  }}
+                  className="text-[11px] leading-tight text-center line-clamp-2"
+                  style={{ opacity: done || active ? 0.9 : 0.55, fontWeight: active ? 600 : 400 }}
                 >
                   {g.title}
                 </span>
               </div>
-            );
-          })}
-        </div>
+              {i < steps.length - 1 && (
+                <span
+                  className="flex-1 h-[2px] rounded-full mt-5 min-w-[10px]"
+                  style={{
+                    backgroundColor: done
+                      ? "hsl(var(--primary))"
+                      : "hsl(var(--primary) / 0.22)",
+                  }}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-        <div className="relative flex justify-center mt-4">
-          <span
-            className="block rounded-full"
-            style={{ width: 40, height: 4, backgroundColor: "hsl(var(--primary-foreground) / 0.35)" }}
-          />
-        </div>
-      </button>
-    </div>
+      <div className="flex justify-center mt-4">
+        <span
+          className="block rounded-full"
+          style={{ width: 40, height: 4, backgroundColor: "hsl(var(--primary) / 0.28)" }}
+        />
+      </div>
+    </button>
   );
 }
+
 
 
 function FocusB({ quote, author }: { quote: string; author: string }) {
