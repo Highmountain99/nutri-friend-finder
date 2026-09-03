@@ -343,9 +343,24 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
       const { data, error } = await supabase.functions.invoke("suggest-treatment-plan", {
         body: { patientId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        // Read the function's own message (e.g. "Inga journalanteckningar finns...")
+        let msg = "Kunde inte generera AI-förslag";
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.error) msg = body.error;
+        } catch {
+          /* ignore */
+        }
+        toast.error(msg);
+        return;
+      }
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
       const plan = data.plan;
+
       setForm({
         title: plan.title || "",
         description: plan.description || "",
