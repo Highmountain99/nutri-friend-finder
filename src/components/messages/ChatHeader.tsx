@@ -26,7 +26,7 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
     : "DC";
 
   return (
-    <div className="-mx-3 sm:-mx-4">
+    <div>
       <div
         style={{
           backgroundColor: SAGE,

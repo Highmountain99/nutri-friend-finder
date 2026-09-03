@@ -79,7 +79,6 @@ function RecipesContent() {
       {/* Header - only show in default mode */}
       {viewMode === "default" && (
         <div
-          className="-mx-3 sm:-mx-4"
           style={{
             backgroundColor: "#D9A488",
             color: "#1F3A2E",
