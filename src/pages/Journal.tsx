@@ -16,6 +16,8 @@ import { useJournalData, type Ingredient, type NutritionEntry, type SymptomEntry
 import { calculateNutritionGoals } from "@/lib/nutritionCalculator";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { cn } from "@/lib/utils";
+import { format, isSameDay } from "date-fns";
+import { sv } from "date-fns/locale";
 type JournalView = "main" | "ai-setup";
 type SwipeView = "nutrition" | "health";
 
@@ -218,16 +220,9 @@ export default function Journal() {
     );
   }
 
-  return <div className="px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 animate-fade-in pb-32">
+  return <div className="px-3 sm:px-4 pt-0 pb-32 space-y-5 animate-fade-in">
       {/* Journal Calendar */}
-      <JournalCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} daysWithEntries={daysWithEntries} />
-
-      {/* Streak indicator - only show if streak > 0 */}
-      {streakDisplay && <div className="bg-accent/10 py-2 px-4 rounded-full text-center animate-fade-in">
-          <span className="text-sm text-accent font-medium">
-            {streakDisplay.emoji} {streakDisplay.text}
-          </span>
-        </div>}
+      <JournalCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} daysWithEntries={daysWithEntries} streak={streak} />
 
       {/* Swipeable Area Indicator */}
       <div className="flex justify-center gap-2">
@@ -245,7 +240,7 @@ export default function Journal() {
                 {nutritionCards.length > 0 && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-medium">Dagliga mål</span>
+                      <span className="text-[12px] font-bold uppercase tracking-[0.1em] text-primary/50">Dagliga mål</span>
                       <button onClick={() => setIsEditGoalsOpen(true)} className="text-xs text-primary flex items-center gap-1 hover:underline">
                         <Settings2 className="w-3 h-3" /> Ändra mål
                       </button>
@@ -274,23 +269,24 @@ export default function Journal() {
 
       {/* Add Meal & Symptom Buttons */}
       <div className="flex gap-3">
-        <Button variant="outline" className="flex-1 gap-2" onClick={() => setIsAddMealOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Lägg till måltid
+        <Button className="flex-1 h-12" onClick={() => setIsAddMealOpen(true)}>
+          + Måltid
         </Button>
-        <Button 
-          variant="outline" 
-          className="flex-1 gap-2" 
+        <Button
+          variant="outline"
+          className="flex-1 h-12"
           onClick={() => setIsAddSymptomOpen(true)}
           disabled={entries.length === 0}
         >
-          <AlertCircle className="w-4 h-4" />
-          Lägg till symptom
+          + Symptom
         </Button>
       </div>
 
       {/* Meal Timeline */}
       <div className="space-y-3">
+        <h2 className="display text-[22px]">
+          {isSameDay(selectedDate, new Date()) ? "Idag" : format(selectedDate, "d MMMM", { locale: sv })}
+        </h2>
         <MealTimeline 
           entries={entries}
           symptoms={symptoms}
