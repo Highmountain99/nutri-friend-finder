@@ -2,92 +2,168 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useClientTrainingDays, WEEKDAY_LABELS } from "@/hooks/useTrainingDays";
 
 interface Props {
   patientId: string;
 }
 
-const PRESETS: { label: string; days: number[] }[] = [
-  { label: "Mån + Ons", days: [1, 3] },
-  { label: "Tis + Tors", days: [2, 4] },
-  { label: "Mån/Ons/Fre", days: [1, 3, 5] },
-  { label: "Helg", days: [6, 0] },
+const MONTHS = [
+  "januari",
+  "februari",
+  "mars",
+  "april",
+  "maj",
+  "juni",
+  "juli",
+  "augusti",
+  "september",
+  "oktober",
+  "november",
+  "december",
 ];
 
-const WEEKS_SHOWN = 6;
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // mån..sön
+
+function toKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+}
 
 function startOfWeekMonday(d: Date) {
   const date = new Date(d);
   date.setHours(0, 0, 0, 0);
-  const diff = (date.getDay() + 6) % 7;
-  date.setDate(date.getDate() - diff);
+  date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
   return date;
+}
+
+function isoWeek(d: Date) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
 export function TrainingDaysCard({ patientId }: Props) {
   const { data: days, isLoading, addDay, updateTime, removeDay } = useClientTrainingDays(patientId);
   const [defaultTime, setDefaultTime] = useState("18:00");
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
 
-  const busy = isLoading || addDay.isPending || removeDay.isPending || updateTime.isPending;
-  const byWeekday = (w: number) => days?.find((d) => d.weekday === w);
-  const activeWeekdays = useMemo(() => new Set((days ?? []).map((d) => d.weekday)), [days]);
+  const busy = isLoading || addDay.isPending || removeDay.isPending;
 
-  const toggleWeekday = (w: number) => {
-    const existing = byWeekday(w);
-    if (existing) removeDay.mutate(existing.id);
-    else addDay.mutate({ weekday: w, startTime: defaultTime });
-  };
+  const byDate = useMemo(() => {
+    const map = new Map<string, string>(); // dateKey -> row id
+    (days ?? []).forEach((d) => {
+      if (d.session_date) map.set(d.session_date, d.id);
+    });
+    return map;
+  }, [days]);
 
-  const applyPreset = async (preset: number[]) => {
-    const wanted = new Set(preset);
-    for (const d of days ?? []) {
-      if (!wanted.has(d.weekday)) await removeDay.mutateAsync(d.id);
-    }
-    for (const w of preset) {
-      if (!activeWeekdays.has(w)) await addDay.mutateAsync({ weekday: w, startTime: defaultTime });
-    }
-  };
+  const recurringWeekdays = useMemo(
+    () => new Set((days ?? []).filter((d) => !d.session_date).map((d) => d.weekday)),
+    [days]
+  );
 
   const weeks = useMemo(() => {
-    const start = startOfWeekMonday(new Date());
-    return Array.from({ length: WEEKS_SHOWN }, (_, wi) =>
-      Array.from({ length: 7 }, (_, di) => {
-        const d = new Date(start);
-        d.setDate(start.getDate() + wi * 7 + di);
+    const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const start = startOfWeekMonday(first);
+    const rows: Date[][] = [];
+    const cur = new Date(start);
+    while (rows.length < 6) {
+      const row = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(cur);
+        d.setDate(cur.getDate() + i);
         return d;
-      })
-    );
-  }, []);
+      });
+      rows.push(row);
+      cur.setDate(cur.getDate() + 7);
+      if (cur.getMonth() !== cursor.getMonth() && cur > first) break;
+    }
+    return rows;
+  }, [cursor]);
+
+  const monthDatesForWeekday = (weekday: number) => {
+    const res: Date[] = [];
+    const d = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    while (d.getMonth() === cursor.getMonth()) {
+      if (d.getDay() === weekday) res.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return res;
+  };
+
+  const toggleDate = async (date: Date) => {
+    const key = toKey(date);
+    const existing = byDate.get(key);
+    if (existing) await removeDay.mutateAsync(existing);
+    else
+      await addDay.mutateAsync({
+        weekday: date.getDay(),
+        startTime: defaultTime,
+        sessionDate: key,
+      });
+  };
+
+  const toggleWeekdayInMonth = async (weekday: number) => {
+    const dates = monthDatesForWeekday(weekday);
+    const allSelected = dates.every((d) => byDate.has(toKey(d)));
+    for (const d of dates) {
+      const key = toKey(d);
+      const existing = byDate.get(key);
+      if (allSelected) {
+        if (existing) await removeDay.mutateAsync(existing);
+      } else if (!existing) {
+        await addDay.mutateAsync({ weekday, startTime: defaultTime, sessionDate: key });
+      }
+    }
+  };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const selectedCount = byDate.size;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-sm uppercase tracking-wide">Klientens träningspass</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Välj veckodagar – passen upprepas varje vecka. Klienten ser sitt nästa pass på startsidan.
+          Klicka på en dag för att lägga till ett pass, eller på en veckodag högst upp för att välja
+          alla den veckodagen i månaden.
         </p>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {PRESETS.map((p) => (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1">
             <Button
-              key={p.label}
               type="button"
-              size="sm"
-              variant="outline"
-              className="rounded-full"
-              disabled={busy}
-              onClick={() => applyPreset(p.days)}
+              size="icon"
+              variant="ghost"
+              aria-label="Föregående månad"
+              onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
             >
-              {p.label}
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-          ))}
-          <div className="ml-auto flex items-center gap-2">
+            <span className="min-w-[9rem] text-center text-sm font-semibold capitalize">
+              {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
+            </span>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label="Nästa månad"
+              onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Tid</span>
             <Input
               type="time"
@@ -104,18 +180,18 @@ export function TrainingDaysCard({ patientId }: Props) {
         </div>
 
         <div className="rounded-2xl border p-3">
-          <div className="grid grid-cols-7 gap-1 pb-2">
-            {[1, 2, 3, 4, 5, 6, 0].map((w) => (
+          <div className="grid grid-cols-[2.2rem_repeat(7,1fr)] gap-1 pb-1">
+            <span className="text-center text-[10px] uppercase text-muted-foreground">v.</span>
+            {WEEK_ORDER.map((w) => (
               <button
                 key={w}
                 type="button"
                 disabled={busy}
-                onClick={() => toggleWeekday(w)}
-                className={`rounded-full py-1 text-xs font-medium transition-colors ${
-                  activeWeekdays.has(w)
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
+                onClick={() => toggleWeekdayInMonth(w)}
+                className={`rounded-full py-1 text-xs font-medium transition-colors hover:bg-muted ${
+                  recurringWeekdays.has(w) ? "text-primary" : "text-muted-foreground"
                 }`}
+                title={`Välj alla ${WEEKDAY_LABELS[w]} i ${MONTHS[cursor.getMonth()]}`}
               >
                 {WEEKDAY_LABELS[w]}
               </button>
@@ -124,23 +200,30 @@ export function TrainingDaysCard({ patientId }: Props) {
 
           <div className="space-y-1">
             {weeks.map((week, wi) => (
-              <div key={wi} className="grid grid-cols-7 gap-1">
+              <div key={wi} className="grid grid-cols-[2.2rem_repeat(7,1fr)] items-center gap-1">
+                <span className="text-center text-[10px] text-muted-foreground">
+                  {isoWeek(week[0])}
+                </span>
                 {week.map((date) => {
-                  const active = activeWeekdays.has(date.getDay());
-                  const isPast = date < today;
+                  const key = toKey(date);
+                  const selected = byDate.has(key) || recurringWeekdays.has(date.getDay());
+                  const inMonth = date.getMonth() === cursor.getMonth();
+                  const isToday = date.getTime() === today.getTime();
                   return (
                     <button
-                      key={date.toISOString()}
+                      key={key}
                       type="button"
                       disabled={busy}
-                      onClick={() => toggleWeekday(date.getDay())}
-                      className={`flex h-9 flex-col items-center justify-center rounded-xl text-xs transition-colors ${
-                        active
-                          ? "bg-primary/15 font-semibold text-primary"
-                          : "text-muted-foreground hover:bg-muted"
-                      } ${isPast ? "opacity-40" : ""}`}
+                      onClick={() => toggleDate(date)}
+                      className={`flex h-9 items-center justify-center rounded-xl text-xs transition-colors ${
+                        selected
+                          ? "bg-primary text-primary-foreground font-semibold"
+                          : "hover:bg-muted"
+                      } ${inMonth ? "" : "opacity-35"} ${
+                        isToday && !selected ? "ring-1 ring-primary/50" : ""
+                      }`}
                     >
-                      <span>{date.getDate()}</span>
+                      {date.getDate()}
                     </button>
                   );
                 })}
@@ -149,15 +232,11 @@ export function TrainingDaysCard({ patientId }: Props) {
           </div>
         </div>
 
-        {days && days.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {days
-              .slice()
-              .sort((a, b) => ((a.weekday + 6) % 7) - ((b.weekday + 6) % 7))
-              .map((d) => `${WEEKDAY_LABELS[d.weekday]} ${d.start_time?.slice(0, 5) ?? ""}`.trim())
-              .join(" · ")}
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground">
+          {selectedCount > 0
+            ? `${selectedCount} inplanerade pass${defaultTime ? ` · ${defaultTime}` : ""}`
+            : "Inga pass inlagda ännu."}
+        </p>
       </CardContent>
     </Card>
   );

@@ -218,6 +218,7 @@ export type Database = {
           id: string
           label: string | null
           patient_id: string
+          session_date: string | null
           start_time: string | null
           updated_at: string
           weekday: number
@@ -228,6 +229,7 @@ export type Database = {
           id?: string
           label?: string | null
           patient_id: string
+          session_date?: string | null
           start_time?: string | null
           updated_at?: string
           weekday: number
@@ -238,6 +240,7 @@ export type Database = {
           id?: string
           label?: string | null
           patient_id?: string
+          session_date?: string | null
           start_time?: string | null
           updated_at?: string
           weekday?: number

@@ -8,6 +8,7 @@ export interface TrainingDay {
   weekday: number; // 0 = söndag ... 6 = lördag
   start_time: string | null;
   label: string | null;
+  session_date: string | null; // satt för enstaka pass
 }
 
 export const WEEKDAY_LABELS = ["Sön", "Mån", "Tis", "Ons", "Tors", "Fre", "Lör"];
@@ -29,7 +30,7 @@ export function useMyTrainingDays() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_training_days")
-        .select("id, patient_id, weekday, start_time, label")
+        .select("id, patient_id, weekday, start_time, label, session_date")
         .eq("patient_id", user!.id)
         .order("weekday", { ascending: true });
       if (error) throw error;
@@ -49,7 +50,7 @@ export function useClientTrainingDays(patientId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_training_days")
-        .select("id, patient_id, weekday, start_time, label")
+        .select("id, patient_id, weekday, start_time, label, session_date")
         .eq("patient_id", patientId!)
         .order("weekday", { ascending: true });
       if (error) throw error;
@@ -62,16 +63,22 @@ export function useClientTrainingDays(patientId?: string) {
     queryClient.invalidateQueries({ queryKey: ["training-days", patientId] });
 
   const addDay = useMutation({
-    mutationFn: async ({ weekday, startTime }: { weekday: number; startTime?: string | null }) => {
-      const { error } = await supabase.from("client_training_days").upsert(
-        {
-          patient_id: patientId!,
-          dietitian_id: user!.id,
-          weekday,
-          start_time: startTime || null,
-        },
-        { onConflict: "patient_id,weekday" }
-      );
+    mutationFn: async ({
+      weekday,
+      startTime,
+      sessionDate,
+    }: {
+      weekday: number;
+      startTime?: string | null;
+      sessionDate?: string | null;
+    }) => {
+      const { error } = await supabase.from("client_training_days").insert({
+        patient_id: patientId!,
+        dietitian_id: user!.id,
+        weekday,
+        start_time: startTime || null,
+        session_date: sessionDate || null,
+      });
       if (error) throw error;
     },
     onSuccess: invalidate,
@@ -106,6 +113,14 @@ export function getNextSession(days: TrainingDay[], now = new Date()) {
 
   for (const day of days) {
     const [h, m] = (day.start_time || "00:00").split(":").map(Number);
+    if (day.session_date) {
+      const [y, mo, dd] = day.session_date.split("-").map(Number);
+      const d = new Date(y, (mo || 1) - 1, dd || 1, h || 0, m || 0, 0, 0);
+      if (d.getTime() >= now.getTime() && (!best || d.getTime() < best.date.getTime())) {
+        best = { date: d, day };
+      }
+      continue;
+    }
     for (let offset = 0; offset < 8; offset++) {
       const d = new Date(now);
       d.setDate(now.getDate() + offset);
