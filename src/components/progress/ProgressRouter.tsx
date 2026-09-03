@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
-import { useAppointments } from "@/hooks/useAppointments";
+
 import { usePatientTreatmentPlan } from "@/hooks/usePatientTreatmentPlan";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus, Eye, Route, Sparkles, ArrowRight, Lock } from "lucide-react";
