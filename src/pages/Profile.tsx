@@ -180,6 +180,7 @@ export default function Profile() {
         currentValue={data.waistCm}
         onSave={updateWaist}
       />
+      </div>
     </div>
   );
 }
