@@ -214,7 +214,7 @@ export default function Invite() {
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>Skapa ditt konto så är du igång direkt:</p>
                 <ul className="space-y-2 list-disc list-inside">
-                  <li>Direktkontakt med din coach via chatt och videosamtal</li>
+                  <li>Direktkontakt med din coach via chatten</li>
                   <li>Personlig kostplan och receptförslag</li>
                   <li>Smarta verktyg för att följa din hälsa</li>
                 </ul>
