@@ -1,42 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, User, Settings, CalendarPlus } from "lucide-react";
-import { AppointmentCard } from "@/components/home/AppointmentCard";
+import { MessageCircle, User, Settings } from "lucide-react";
 import { QuickActionCard } from "@/components/home/QuickActionCard";
-import { useAppointments } from "@/hooks/useAppointments";
 import { useMyDietitian } from "@/hooks/useMyDietitian";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { getUpcomingAppointment, cancelAppointment, loading } = useAppointments();
   const { data: dietitian, isLoading: dietitianLoading } = useMyDietitian();
-
-  const upcomingAppointment = getUpcomingAppointment();
-
-  const formattedAppointment = upcomingAppointment
-    ? {
-        id: upcomingAppointment.id,
-        date: upcomingAppointment.appointmentDate,
-        dietitianName: upcomingAppointment.dietitian
-          ? `${upcomingAppointment.dietitian.firstName} ${upcomingAppointment.dietitian.lastName}`
-          : "Din dietist",
-        dietitianTitle: upcomingAppointment.dietitian?.title || "Legitimerad dietist",
-        dietitianImage: upcomingAppointment.dietitian?.avatarUrl || undefined,
-      }
-    : undefined;
-
-  const handleCancel = async () => {
-    if (upcomingAppointment) {
-      await cancelAppointment(upcomingAppointment.id);
-    }
-  };
 
   return (
     <div className="px-4 py-6 space-y-6 animate-fade-in">
-      {/* Dietitian Card */}
+      {/* Coach Card */}
       {dietitianLoading ? (
         <Skeleton className="h-24 w-full rounded-xl" />
       ) : dietitian ? (
@@ -54,39 +30,12 @@ export default function Home() {
                   {dietitian.first_name} {dietitian.last_name}
                 </p>
                 <p className="text-xs text-muted-foreground">{dietitian.title}</p>
-                <p className="text-xs text-primary font-medium mt-0.5">Din dietist</p>
+                <p className="text-xs text-primary font-medium mt-0.5">Din coach</p>
               </div>
-              {!upcomingAppointment && (
-                <Button
-                  size="sm"
-                  onClick={() => navigate("/booking", { state: { mode: "new", preselectedDietitian: dietitian } })}
-                  className="gap-1.5 shrink-0"
-                >
-                  <CalendarPlus className="h-3.5 w-3.5" />
-                  Boka samtal
-                </Button>
-              )}
             </div>
           </CardContent>
         </Card>
       ) : null}
-
-      {/* Appointment Section */}
-      <section>
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-          Din nästa tid
-        </h2>
-        {loading ? (
-          <Skeleton className="h-40 w-full rounded-xl" />
-        ) : (
-          <AppointmentCard
-            appointment={formattedAppointment}
-            onRebook={() => navigate("/booking", { state: { mode: "rebook" } })}
-            onBook={() => navigate("/booking", { state: { mode: "new" } })}
-            onCancel={handleCancel}
-          />
-        )}
-      </section>
 
       {/* Quick Actions */}
       <section>
