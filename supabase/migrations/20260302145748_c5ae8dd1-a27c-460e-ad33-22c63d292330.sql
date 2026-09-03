@@ -1,1 +1,0 @@
-ALTER TABLE public.dietitian_profiles ADD CONSTRAINT dietitian_profiles_user_id_unique UNIQUE (user_id);
