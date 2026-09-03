@@ -75,21 +75,55 @@ function RecipesContent() {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header - only show in default mode */}
       {viewMode === "default" && (
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Recept</h1>
-            <p className="text-sm text-muted-foreground">
-              Hitta recept som passar dig
-            </p>
+        <div
+          style={{
+            backgroundColor: "#D9A488",
+            color: "#1F3A2E",
+            borderRadius: "0 0 26px 26px",
+            padding: "20px 20px 24px",
+            marginBottom: 20,
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <h1
+              className="font-serif m-0"
+              style={{
+                fontSize: 34,
+                fontWeight: 800,
+                lineHeight: 1.02,
+                textTransform: "uppercase",
+              }}
+            >
+              Mat som{" "}
+              <span
+                style={{
+                  backgroundColor: "#1F3A2E",
+                  color: "#F5EFE2",
+                  borderRadius: 999,
+                  padding: "0 14px 3px",
+                  display: "inline-block",
+                }}
+              >
+                funkar
+              </span>{" "}
+              för dig
+            </h1>
+            <button
+              onClick={() => setScannerOpen(true)}
+              aria-label="Skanna produkt"
+              className="rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform"
+              style={{ width: 48, height: 48, backgroundColor: "#F5EFE2" }}
+            >
+              <ScanLine className="h-5 w-5" style={{ color: "#1F3A2E" }} />
+            </button>
           </div>
-          <Button variant="outline" size="icon" className="rounded-full" onClick={() => setScannerOpen(true)}>
-            <ScanLine className="h-5 w-5" />
-          </Button>
         </div>
       )}
+
+      <div className="px-4 pb-6 space-y-6">
 
       {/* Search Bar + Browse all */}
       <div className="flex gap-2 items-center">
