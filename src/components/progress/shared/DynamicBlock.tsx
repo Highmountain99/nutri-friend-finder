@@ -392,7 +392,7 @@ function LoggedDaysCard({
         </span>
         <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/{days.length}</span>
       </div>
-      <div className="flex mt-auto" style={{ gap: 5, paddingTop: 16 }}>
+      <div className="flex flex-wrap mt-auto" style={{ gap: 6, paddingTop: 16 }}>
         {days.map((d, i) => (
           <span
             key={i}
