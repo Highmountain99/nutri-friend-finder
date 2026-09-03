@@ -61,9 +61,9 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
   }, [open]);
 
   const handleClose = () => onClose();
-  const handleStartQuestions = () => {
+  const handleStart = () => {
     onClose();
-    navigate("/qualifying");
+    navigate("/home");
   };
 
   if (!mounted) return null;
@@ -82,25 +82,13 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
           willChange: "transform",
         }}
       >
-        <Pager page={page} setPage={setPage} count={3}>
-          <ValueScreen onNext={() => setPage(1)} onClose={handleClose} />
-          <HowScreen onNext={() => setPage(2)} onClose={handleClose} />
-          <FormScreen
-            onClose={handleClose}
-            onDone={(n) => {
-              setName(n);
-              setWelcome(true);
-            }}
-          />
-        </Pager>
-
-        {/* Static dot indicator */}
-        <div
-          className="absolute left-0 right-0 flex justify-center pointer-events-none"
-          style={{ bottom: 26, zIndex: 4 }}
-        >
-          <Dots active={page} total={3} />
-        </div>
+        <FormScreen
+          onClose={handleClose}
+          onDone={(n) => {
+            setName(n);
+            setWelcome(true);
+          }}
+        />
       </div>
 
       {/* Welcome sheet */}
@@ -116,11 +104,7 @@ export function OnboardingModal({ open, onClose }: OnboardingModalProps) {
       >
         <WelcomeScreen
           name={name}
-          onStart={handleStartQuestions}
-          onExplore={() => {
-            onClose();
-            navigate("/home");
-          }}
+          onStart={handleStart}
         />
       </div>
     </>
@@ -697,11 +681,9 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
 function WelcomeScreen({
   name,
   onStart,
-  onExplore,
 }: {
   name: string;
   onStart: () => void;
-  onExplore: () => void;
 }) {
   return (
     <div className="h-full box-border flex flex-col" style={{ padding: "48px 30px 36px" }}>
@@ -719,15 +701,14 @@ function WelcomeScreen({
           className="m-0"
           style={{ fontFamily: FN, fontSize: 16, lineHeight: 1.5, color: GREEN_SOFT, maxWidth: "26ch" }}
         >
-          Ditt konto är skapat. Nästa steg är några korta frågor så vi kan matcha dig med rätt dietist.
+          Ditt konto är skapat. Nu kan du börja logga din mat och följa din utveckling.
         </p>
       </div>
       <div className="flex flex-col gap-3">
         <PrimaryBtn onClick={onStart}>
-          Svara på frågorna
+          Kom igång
           <ArrowRight className="w-[18px] h-[18px]" />
         </PrimaryBtn>
-        <GhostBtn onClick={onExplore}>Utforska appen först</GhostBtn>
       </div>
     </div>
   );
