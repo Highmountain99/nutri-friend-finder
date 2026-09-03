@@ -1,7 +1,7 @@
 import { useState, useRef, useLayoutEffect } from "react";
 import { format, subDays, isSameDay, isBefore, isAfter, parseISO } from "date-fns";
 import { sv } from "date-fns/locale";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -100,8 +100,9 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries, s
         </Popover>
 
         {streak > 0 && (
-          <span className="ml-auto shrink-0 rounded-pill bg-terracotta px-3 py-1.5 text-[12px] font-bold text-card">
-            🔥 {streak} dagar
+          <span className="ml-auto shrink-0 inline-flex items-center gap-1 rounded-pill bg-terracotta px-3 py-1.5 text-[12px] font-bold text-card">
+            <Flame className="w-3.5 h-3.5" strokeWidth={2.2} />
+            {streak} dagar
           </span>
         )}
       </div>
