@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Route, Sparkles, ArrowRight, Check } from "lucide-react";
+import { Route, Sparkles, ArrowRight, Check, ChevronDown } from "lucide-react";
+import { JourneyPanel } from "./JourneyPanel";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
@@ -332,6 +333,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
   const { data: patientBlocks, isLoading: blocksLoading } = usePatientBlocks(user?.id);
   const { data: plan } = usePatientTreatmentPlan();
+  const [journeyOpen, setJourneyOpen] = useState(false);
 
   if (blocksLoading) {
     return (
@@ -363,7 +365,14 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const shell = (
     <div style={{ backgroundColor: "#EBE5D6" }}>
       {plan && goals.length > 0 && (
-        <JourneyHeader goals={goals} activeIdx={activeIdx} onOpen={onOpenJourney} />
+        <JourneyHeader
+          goals={goals}
+          activeIdx={activeIdx}
+          open={journeyOpen}
+          onToggle={setJourneyOpen}
+        >
+          <JourneyPanel onClose={() => setJourneyOpen(false)} />
+        </JourneyHeader>
       )}
 
       <div
