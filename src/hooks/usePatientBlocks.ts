@@ -480,8 +480,10 @@ export function usePatientBlocks(patientId: string | undefined) {
           if (config.metric === "trend_chart") {
             const cd = filtered.map((e: any) => ({
               date: format(new Date(e.entry_date), "d MMM"),
+              iso: String(e.entry_date).slice(0, 10),
               value: Number(e.value),
             }));
+
             const latest = cd.length > 0 ? cd[cd.length - 1].value : null;
             const first = cd.length > 0 ? cd[0].value : null;
             const diff = latest !== null && first !== null ? latest - first : null;
