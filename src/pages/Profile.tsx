@@ -52,7 +52,7 @@ export default function Profile() {
             hälsoprofil
           </span>
         </h1>
-        <p className="text-sm font-bold text-primary/70 mt-2">Din hälsoinformation</p>
+        <p className="text-sm font-bold text-primary/70 mt-4">Din hälsoinformation</p>
       </section>
 
       <div className="px-4 space-y-6">

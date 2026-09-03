@@ -68,7 +68,7 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
               >
                 {dietitian?.firstName || fullName}
               </h2>
-              <p style={{ marginTop: 6, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>{title}</p>
+              <p style={{ marginTop: 10, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>{title}</p>
             </div>
           </div>
         )}

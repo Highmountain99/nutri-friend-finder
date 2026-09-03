@@ -90,11 +90,11 @@ export default function Home() {
         </h1>
 
         {dietitianLoading ? (
-          <Skeleton className="h-14 w-full rounded-card mt-4" />
+          <Skeleton className="h-14 w-full rounded-card mt-6" />
         ) : dietitian ? (
           <button
             onClick={() => navigate("/messages")}
-            className="mt-4 w-full flex items-center gap-3 text-left"
+            className="mt-6 w-full flex items-center gap-3 text-left"
           >
             <Avatar className="h-11 w-11">
               <AvatarImage src={dietitian.avatar_url || undefined} />
