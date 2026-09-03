@@ -49,6 +49,7 @@ function isoWeek(d: Date) {
 export function TrainingDaysCard({ patientId }: Props) {
   const { data: days, isLoading, addDay, updateTime, removeDay } = useClientTrainingDays(patientId);
   const [defaultTime, setDefaultTime] = useState("18:00");
+  const [weekdayTimeOverrides, setWeekdayTimeOverrides] = useState<Record<number, string>>({});
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -97,6 +98,24 @@ export function TrainingDaysCard({ patientId }: Props) {
     return res;
   };
 
+  const weekdayTimes = useMemo(() => {
+    const map: Record<number, string> = {};
+    (days ?? []).forEach((d) => {
+      if (d.start_time && map[d.weekday] === undefined) map[d.weekday] = d.start_time.slice(0, 5);
+    });
+    return map;
+  }, [days]);
+
+  const timeFor = (weekday: number) =>
+    weekdayTimeOverrides[weekday] ?? weekdayTimes[weekday] ?? defaultTime;
+
+  const setWeekdayTime = (weekday: number, value: string) => {
+    setWeekdayTimeOverrides((prev) => ({ ...prev, [weekday]: value }));
+    (days ?? [])
+      .filter((d) => d.weekday === weekday)
+      .forEach((d) => updateTime.mutate({ id: d.id, startTime: value }));
+  };
+
   const toggleDate = async (date: Date) => {
     const key = toKey(date);
     const existing = byDate.get(key);
@@ -104,7 +123,7 @@ export function TrainingDaysCard({ patientId }: Props) {
     else
       await addDay.mutateAsync({
         weekday: date.getDay(),
-        startTime: defaultTime,
+        startTime: timeFor(date.getDay()),
         sessionDate: key,
       });
   };
@@ -118,10 +137,11 @@ export function TrainingDaysCard({ patientId }: Props) {
       if (allSelected) {
         if (existing) await removeDay.mutateAsync(existing);
       } else if (!existing) {
-        await addDay.mutateAsync({ weekday, startTime: defaultTime, sessionDate: key });
+        await addDay.mutateAsync({ weekday, startTime: timeFor(weekday), sessionDate: key });
       }
     }
   };
+
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -164,24 +184,33 @@ export function TrainingDaysCard({ patientId }: Props) {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Tid</span>
+            <span className="text-xs text-muted-foreground">Standardtid</span>
             <Input
               type="time"
               className="w-28"
               value={defaultTime}
-              onChange={(e) => {
-                setDefaultTime(e.target.value);
-                (days ?? []).forEach((d) =>
-                  updateTime.mutate({ id: d.id, startTime: e.target.value })
-                );
-              }}
+              onChange={(e) => setDefaultTime(e.target.value)}
             />
           </div>
         </div>
 
         <div className="rounded-2xl border p-3">
           <div className="grid grid-cols-[2.2rem_repeat(7,1fr)] gap-1 pb-1">
+            <span className="text-center text-[10px] uppercase text-muted-foreground">tid</span>
+            {WEEK_ORDER.map((w) => (
+              <input
+                key={`time-${w}`}
+                type="time"
+                value={timeFor(w)}
+                onChange={(e) => setWeekdayTime(w, e.target.value)}
+                className="w-full rounded-md border bg-background px-1 py-0.5 text-center text-[10px] tabular-nums"
+                aria-label={`Tid för ${WEEKDAY_LABELS[w]}`}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-[2.2rem_repeat(7,1fr)] gap-1 pb-1">
             <span className="text-center text-[10px] uppercase text-muted-foreground">v.</span>
+
             {WEEK_ORDER.map((w) => (
               <button
                 key={w}
