@@ -29,6 +29,10 @@ import { PatientHealthProfileCard } from "@/components/dietitian/PatientHealthPr
 import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
 import { ClinicalNoteWizard } from "@/components/dietitian/clinical-notes/ClinicalNoteWizard";
 import { getAreaConfig } from "@/components/dietitian/clinical-notes/areaConfigs/index";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { seedSystemTemplates } from "@/hooks/dietitian/useBlockTemplates";
+import { ensureDefaultPatientBlocks } from "@/lib/ensureDefaultPatientBlocks";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
@@ -65,6 +69,8 @@ const activityLabels: Record<string, string> = {
 
 export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const { meals, symptoms, healthTracking, goals, intakeProfile, nutritionSettings, isLoading } = usePatientJournal(id);
   const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(id);
   const { entries: journalEntries, addEntry, deleteEntry } = useJournalEntries(id);
@@ -90,6 +96,20 @@ export default function DietitianPatientDetail() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Standard treatment plan is always assigned to a new client
+  useEffect(() => {
+    if (!id || !user?.id) return;
+    let cancelled = false;
+    (async () => {
+      await seedSystemTemplates(user.id);
+      const seeded = await ensureDefaultPatientBlocks(id, user.id);
+      if (seeded && !cancelled) {
+        qc.invalidateQueries({ queryKey: ["patient-blocks", id] });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, user?.id, qc]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });

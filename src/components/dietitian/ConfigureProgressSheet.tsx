@@ -9,7 +9,8 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, GripVertical, Trash2, Smartphone, Sparkles } from "lucide-react";
 import { BlockPreview } from "./blocks/BlockPreview";
-import { useBlockTemplates } from "@/hooks/dietitian/useBlockTemplates";
+import { useBlockTemplates, seedSystemTemplates } from "@/hooks/dietitian/useBlockTemplates";
+import { ensureDefaultPatientBlocks } from "@/lib/ensureDefaultPatientBlocks";
 
 interface ConfigureProgressSheetProps {
   open: boolean;
@@ -43,6 +44,10 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
   const { data: patientBlocks, isLoading } = useQuery({
     queryKey: ["patient-blocks", patientId],
     queryFn: async () => {
+      if (user?.id) {
+        await seedSystemTemplates(user.id);
+        await ensureDefaultPatientBlocks(patientId, user.id);
+      }
       const { data, error } = await supabase
         .from("patient_blocks")
         .select("*, block_templates(*)")
@@ -75,7 +80,10 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
 
   const removeBlock = async (item: BlockItem) => {
     try {
-      const { error } = await supabase.from("patient_blocks").delete().eq("id", item.blockId);
+      const { error } = await supabase
+        .from("patient_blocks")
+        .update({ is_active: false })
+        .eq("id", item.blockId);
       if (error) throw error;
       setItems(prev => prev.filter(i => i.id !== item.id));
       queryClient.invalidateQueries({ queryKey: ["patient-blocks"] });
