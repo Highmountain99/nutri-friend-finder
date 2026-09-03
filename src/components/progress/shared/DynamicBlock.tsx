@@ -351,30 +351,31 @@ function MealsWeekCard({ title, days }: { title: string; days: { letter: string;
         </span>
         <span style={{ fontSize: 14, marginLeft: 4, color: C.soft }}>/dag</span>
       </div>
-      <div className="flex items-end mt-auto shrink-0" style={{ gap: 5, height: 22 }}>
+      <div className="flex items-end mt-auto shrink-0" style={{ gap: 6, height: 46 }}>
         {days.map((d, i) => (
           <div
             key={i}
             style={{
               flex: 1,
               minWidth: 0,
-              height: `${Math.max(18, (d.count / max) * 100)}%`,
-              borderRadius: 4,
+              height: `${Math.max(45, (d.count / max) * 100)}%`,
+              borderRadius: 8,
               backgroundColor: i === lowest && days[lowest].count < max ? C.gold : C.green,
             }}
           />
         ))}
       </div>
-      <div className="flex shrink-0" style={{ gap: 5, marginTop: 6 }}>
+      <div className="flex shrink-0" style={{ gap: 6, marginTop: 8 }}>
         {days.map((d, i) => (
           <span
             key={i}
-            style={{ flex: 1, minWidth: 0, textAlign: "center", fontWeight: 600, fontSize: 9, color: C.faint }}
+            style={{ flex: 1, minWidth: 0, textAlign: "center", fontWeight: 600, fontSize: 10, color: C.faint }}
           >
             {d.letter}
           </span>
         ))}
       </div>
+
 
     </div>
   );
