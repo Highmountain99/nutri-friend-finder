@@ -33,7 +33,7 @@ export interface BlockTemplateInput {
   is_shared?: boolean;
 }
 
-async function seedSystemTemplates(userId: string) {
+export async function seedSystemTemplates(userId: string) {
   const { data: existing } = await supabase
     .from("block_templates" as any)
     .select("id, title, data_config")

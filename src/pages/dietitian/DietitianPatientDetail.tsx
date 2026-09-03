@@ -65,6 +65,8 @@ const activityLabels: Record<string, string> = {
 
 export default function DietitianPatientDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const { meals, symptoms, healthTracking, goals, intakeProfile, nutritionSettings, isLoading } = usePatientJournal(id);
   const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(id);
   const { entries: journalEntries, addEntry, deleteEntry } = useJournalEntries(id);
@@ -90,6 +92,20 @@ export default function DietitianPatientDetail() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Standard treatment plan is always assigned to a new client
+  useEffect(() => {
+    if (!id || !user?.id) return;
+    let cancelled = false;
+    (async () => {
+      await seedSystemTemplates(user.id);
+      const seeded = await ensureDefaultPatientBlocks(id, user.id);
+      if (seeded && !cancelled) {
+        qc.invalidateQueries({ queryKey: ["patient-blocks", id] });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, user?.id, qc]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
