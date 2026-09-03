@@ -364,7 +364,7 @@ function Pager({
 const STATS = [
   { big: "100 000+", small: "har genomgått en behandling hos Gutfeeling" },
   { big: "80 %", small: "ser hälsoförbättringar inom 30 dagar" },
-  { big: "4,9 av 5", small: "är genomsnittsbetyget på våra dietister" },
+  { big: "4,9 av 5", small: "är genomsnittsbetyget på våra coacher" },
 ];
 function ValueScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
@@ -372,7 +372,7 @@ function ValueScreen({ onNext, onClose }: { onNext: () => void; onClose: () => v
       <TopBar onClose={onClose} />
       <div className="flex-1 min-h-0" style={{ paddingTop: 20 }}>
         <Heading size={26} style={{ marginBottom: 20, maxWidth: "15ch" }}>
-          Dietist eller kostrådgivning i mobilen
+          Coach eller kostrådgivning i mobilen
         </Heading>
         <div className="flex flex-col gap-4">
           {STATS.map((s, k) => (

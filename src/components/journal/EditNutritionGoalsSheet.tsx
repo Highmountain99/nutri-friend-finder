@@ -103,7 +103,7 @@ export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: E
       <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ändra dietistens mål?</AlertDialogTitle>
+            <AlertDialogTitle>Ändra coachens mål?</AlertDialogTitle>
             <AlertDialogDescription>
               Är du säker på att du vill ändra mål som din dietist har satt? Din dietist kommer bli notifierad att du har ändrat dina mål.
             </AlertDialogDescription>

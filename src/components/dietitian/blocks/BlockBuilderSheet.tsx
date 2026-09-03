@@ -22,7 +22,7 @@ const ICON_OPTIONS = [
 ];
 
 const BEHAVIOR_MODES = [
-  { value: "manual", label: "Manuellt block", desc: "Statisk text som dietisten sätter per patient" },
+  { value: "manual", label: "Manuellt block", desc: "Statisk text som coachen sätter per patient" },
   { value: "auto", label: "Automatiskt block", desc: "Fylls i från klientens data" },
   { value: "hybrid", label: "Hybrid", desc: "Kombination av data och manuell text" },
 ];
@@ -491,7 +491,7 @@ export function BlockBuilderSheet({ open, onOpenChange, editTemplate }: BlockBui
             <CollapsibleContent className="space-y-3 pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-medium">Dela med andra dietister</Label>
+                  <Label className="text-sm font-medium">Dela med andra coacher</Label>
                   <p className="text-xs text-muted-foreground">Synligt i gemensamt bibliotek</p>
                 </div>
                 <Switch checked={isShared} onCheckedChange={setIsShared} />

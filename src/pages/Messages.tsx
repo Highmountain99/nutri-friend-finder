@@ -204,7 +204,7 @@ export default function Messages() {
             <div className="mx-auto max-w-[300px] bg-muted/60 border border-border rounded-2xl p-4 text-center space-y-3">
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Bot className="w-4 h-4" />
-                <span>{dietitianInfo?.firstName || "Dietisten"} har inte svarat ännu</span>
+                <span>{dietitianInfo?.firstName || "Coachen"} har inte svarat ännu</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Vill du få ett svar från AI-assistenten istället?
