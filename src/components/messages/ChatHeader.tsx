@@ -32,7 +32,7 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
           backgroundColor: SAGE,
           color: GREEN,
           borderRadius: "0 0 28px 28px",
-          padding: "calc(env(safe-area-inset-top) + 18px) 20px 22px",
+          padding: "calc(env(safe-area-inset-top) + 28px) 20px 32px",
         }}
       >
         {loading ? (

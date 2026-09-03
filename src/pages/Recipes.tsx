@@ -83,7 +83,7 @@ function RecipesContent() {
             backgroundColor: "#D9A488",
             color: "#1F3A2E",
             borderRadius: "0 0 28px 28px",
-            padding: "calc(env(safe-area-inset-top) + 18px) 20px 24px",
+            padding: "calc(env(safe-area-inset-top) + 28px) 20px 36px",
           }}
         >
           <div className="flex items-start justify-between gap-3">

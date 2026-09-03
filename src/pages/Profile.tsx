@@ -45,7 +45,7 @@ export default function Profile() {
   return (
     <div className="pb-8 space-y-6 animate-fade-in">
       {/* Header */}
-      <section className="screen-header bg-apricot px-5 pt-[calc(env(safe-area-inset-top)+18px)] pb-6">
+      <section className="screen-header bg-apricot px-5 pt-[calc(env(safe-area-inset-top)+28px)] pb-8">
         <h1 className="display text-[38px] leading-[0.92]">
           Min{" "}
           <span className="pill-highlight pill-highlight--light">
