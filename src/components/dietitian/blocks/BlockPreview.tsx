@@ -127,18 +127,102 @@ function MonoLabel({ children, className = "" }: { children: React.ReactNode; cl
   );
 }
 
+/* ---------- New design preview (reuses the real client renderer) ---------- */
+
+const NEW_RENDERERS = new Set([
+  "weight_trend_card",
+  "waist_trend_card",
+  "meals_week_card",
+  "logged_days_card",
+]);
+
+const PREVIEW_WEEK_DAYS: WeekDayEntry[] = [
+  { letter: "M", count: 3, logged: true },
+  { letter: "T", count: 2, logged: true },
+  { letter: "O", count: 0, logged: false },
+  { letter: "T", count: 4, logged: true },
+  { letter: "F", count: 3, logged: true },
+  { letter: "L", count: 0, logged: false },
+  { letter: "S", count: 2, logged: true },
+];
+
+function buildPreviewData(
+  title: string,
+  icon: string,
+  dataSource: string,
+  dataConfig: Record<string, any>,
+  displayConfig: Record<string, any>,
+  blockType: string,
+): ComputedBlockData {
+  const renderAs = displayConfig.render_as as string;
+  const isWaist = renderAs === "waist_trend_card";
+  const sample = isWaist ? SAMPLE_CHART_DATA.waist : SAMPLE_CHART_DATA.weight;
+
+  return {
+    block: {
+      id: "preview",
+      patient_id: "preview",
+      block_template_id: "preview",
+      dietitian_id: "preview",
+      sort_order: 0,
+      is_active: true,
+      override_title: null,
+      manual_content: null,
+      created_at: new Date().toISOString(),
+      template: {
+        id: "preview",
+        title,
+        description: "",
+        icon,
+        block_type: blockType,
+        category: "system",
+        data_source: dataSource,
+        data_config: dataConfig,
+        display_config: displayConfig,
+      },
+    },
+    computedLabel: null,
+    computedItems: [],
+    computedValue: sample[sample.length - 1].value,
+    computedTotal: null,
+    chartData: sample.map((p, i) => ({
+      ...p,
+      iso: new Date(Date.now() - (sample.length - 1 - i) * 4 * 86400000)
+        .toISOString()
+        .slice(0, 10),
+    })),
+    chartMeta: { label: title, unit: isWaist ? "cm" : "kg" },
+    source: "journal",
+    weekDays: PREVIEW_WEEK_DAYS,
+    renderAs,
+  };
+}
+
 /* ---------- Main preview ---------- */
 
 export function BlockPreview({
   title,
   icon,
+  dataSource,
   dataConfig,
+  displayConfig = {},
   blockType = "action",
   compact = false,
 }: BlockPreviewProps) {
   const metric = dataConfig.metric || "";
   const progression = dataConfig.progression || "none";
   const progressionTarget = dataConfig.progression_target || 7;
+
+  if (NEW_RENDERERS.has(displayConfig.render_as)) {
+    return (
+      <div className="pointer-events-none">
+        <DynamicBlock
+          data={buildPreviewData(title, icon, dataSource, dataConfig, displayConfig, blockType)}
+        />
+      </div>
+    );
+  }
+
 
   /* ---------- source badge (small, always journal-ish in preview) ---------- */
   const sourceBadge = (
