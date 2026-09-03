@@ -307,8 +307,6 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
     <div style={{ backgroundColor: "#EBE5D6" }}>
       {plan && goals.length > 0 && (
         <JourneyHeader
-          goals={goals}
-          activeIdx={activeIdx}
           open={journeyOpen}
           onToggle={setJourneyOpen}
         >
