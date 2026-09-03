@@ -227,9 +227,6 @@ export function FollowUpBlock({ appointment }: { appointment: { appointment_date
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 rounded-full border-border/60 font-medium" onClick={() => navigate("/booking")}>
-                Boka om
-              </Button>
               <Button variant="outline" size="sm" className="flex-1 gap-2 rounded-full border-border/60 font-medium" onClick={() => navigate("/messages")}>
                 <MessageSquare className="w-4 h-4" /> Chatta
               </Button>
@@ -237,10 +234,7 @@ export function FollowUpBlock({ appointment }: { appointment: { appointment_date
           </>
         ) : (
           <div className="text-center py-3">
-            <p className="text-sm text-muted-foreground mb-3">Inget bokat samtal</p>
-            <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate("/booking")}>
-              Boka samtal
-            </Button>
+            <p className="text-sm text-muted-foreground mb-3">Inget planerat samtal</p>
           </div>
         )}
       </CardContent>

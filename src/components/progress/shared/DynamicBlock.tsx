@@ -619,17 +619,6 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => navigate("/booking")}
-                className="flex-1 rounded-full px-4 py-2.5 text-[13px] font-semibold border transition-colors"
-                style={{
-                  borderColor: "hsl(var(--primary-foreground) / 0.28)",
-                  color: "hsl(var(--primary-foreground))",
-                  backgroundColor: "transparent",
-                }}
-              >
-                Boka om
-              </button>
-              <button
                 onClick={() => navigate("/messages")}
                 className="flex-1 rounded-full px-4 py-2.5 text-[13px] font-semibold inline-flex items-center justify-center gap-1.5"
                 style={{
@@ -648,18 +637,8 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
               className="text-[13px] mb-3"
               style={{ color: "hsl(var(--primary-foreground) / 0.7)" }}
             >
-              Inget bokat samtal
+              Inget planerat samtal
             </p>
-            <button
-              onClick={() => navigate("/booking")}
-              className="rounded-full px-4 py-2.5 text-[13px] font-semibold"
-              style={{
-                backgroundColor: "hsl(var(--primary-foreground))",
-                color: "hsl(var(--primary))",
-              }}
-            >
-              Boka samtal
-            </button>
           </div>
         )}
       </div>
