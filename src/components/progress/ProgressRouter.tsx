@@ -190,21 +190,10 @@ function FocusB({ quote, author }: { quote: string; author: string }) {
 
 export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
-  const [previewMode, setPreviewMode] = useState(
-    () => typeof document !== "undefined" && document.body.hasAttribute("data-coach-tour")
-  );
   const { data: patientBlocks, isLoading: blocksLoading } = usePatientBlocks(user?.id);
-  const { appointments, loading: appointmentsLoading } = useAppointments();
   const { data: plan } = usePatientTreatmentPlan();
-  const navigate = useNavigate();
 
-  const hasCompletedAppointment = appointments.some(
-    (apt) =>
-      apt.status === "completed" ||
-      (apt.status === "booked" && apt.appointmentDate < new Date())
-  );
-
-  if (blocksLoading || appointmentsLoading) {
+  if (blocksLoading) {
     return (
       <div className="px-4 py-6 space-y-4">
         <Skeleton className="h-10 w-56" />
