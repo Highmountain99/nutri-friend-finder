@@ -8,7 +8,6 @@ import { useDietitianNotes } from "@/hooks/dietitian/useDietitianNotes";
 import { usePatientDocuments } from "@/hooks/dietitian/usePatientDocuments";
 import { useTreatmentPlan } from "@/hooks/dietitian/useTreatmentPlan";
 import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
-import { useDietitianSchedule } from "@/hooks/dietitian/useDietitianSchedule";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +15,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, ArrowLeft, Send, Plus, Upload, FileText, Calendar, Clock, User, AlertTriangle, Check, Pencil, X, Bot, Trash2, ChevronDown, ChevronUp, Video } from "lucide-react";
+import { Loader2, ArrowLeft, Send, Plus, Upload, FileText, Calendar, Clock, User, AlertTriangle, Check, Pencil, X, Bot, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { sv } from "date-fns/locale";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { VideoCallModal } from "@/components/dietitian/VideoCallModal";
 import { TreatmentPlanTab } from "@/components/dietitian/TreatmentPlanTab";
 import { FoodLogTab } from "@/components/dietitian/FoodLogTab";
 import { DietPatternsView } from "@/components/dietitian/DietPatternsView";
@@ -74,15 +72,7 @@ export default function DietitianPatientDetail() {
   const { documents, uploadDocument } = usePatientDocuments(id);
   const { activePlan } = useTreatmentPlan(id);
   const { data: patients } = useAssignedPatients();
-  const { appointments } = useDietitianSchedule();
 
-  // Find next upcoming appointment for this patient
-  const now = new Date();
-  const patientAppointments = (appointments.data ?? [])
-    .filter((a) => a.user_id === id && a.status === "booked")
-    .sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
-  const nextAppointment = patientAppointments.find((a) => differenceInMinutes(new Date(a.appointment_date), now) >= -60);
-  const canStartCall = nextAppointment && differenceInMinutes(new Date(nextAppointment.appointment_date), now) <= 5;
   const [activeTab, setActiveTab] = useState("overview");
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [configProgressOpen, setConfigProgressOpen] = useState(false);
@@ -90,7 +80,6 @@ export default function DietitianPatientDetail() {
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
   const [chatInput, setChatInput] = useState("");
-  const [videoOpen, setVideoOpen] = useState(false);
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState("");
   const [showJournalForm, setShowJournalForm] = useState(false);
@@ -182,7 +171,6 @@ export default function DietitianPatientDetail() {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <VideoCallModal open={videoOpen} onOpenChange={setVideoOpen} appointmentId={nextAppointment?.id} isHost />
 
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -705,26 +693,6 @@ export default function DietitianPatientDetail() {
               </CardContent>
             </Card>
           )}
-
-          {/* Video call CTA */}
-          <Card>
-            <CardContent className="py-4">
-              <Button
-                className="w-full"
-                onClick={() => setVideoOpen(true)}
-                disabled={!canStartCall}
-              >
-                <Video className="h-4 w-4 mr-2" />
-                {canStartCall ? "Starta videosamtal" : nextAppointment ? `Videosamtal ${format(new Date(nextAppointment.appointment_date), "HH:mm")}` : "Inget bokat möte"}
-              </Button>
-              {nextAppointment && !canStartCall && (
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  Tillgänglig 5 min innan mötet
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Symptom patterns */}
           {id && <SymptomPatternCard patientId={id} onNavigate={() => setActiveTab("foodlog")} />}
 
