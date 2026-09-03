@@ -389,7 +389,14 @@ function LoggedDaysCard({
 }) {
   return (
     <div
-      style={{ backgroundColor: C.sage, borderRadius: 24, padding: 18, aspectRatio: "1 / 1" }}
+      style={{
+        backgroundColor: C.sage,
+        borderRadius: 24,
+        padding: 18,
+        aspectRatio: "1 / 1",
+        minHeight: 0,
+        overflow: "hidden",
+      }}
       className="flex flex-col"
     >
       <span style={cardTitleStyle}>{title}</span>
@@ -399,7 +406,7 @@ function LoggedDaysCard({
         </span>
         <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/{days.length}</span>
       </div>
-      <div className="flex flex-wrap mt-auto" style={{ gap: 6, paddingTop: 16 }}>
+      <div className="flex flex-wrap mt-auto min-h-0" style={{ gap: 6, paddingTop: 12 }}>
         {days.map((d, i) => (
           <span
             key={i}
