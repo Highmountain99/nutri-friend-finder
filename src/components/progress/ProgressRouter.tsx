@@ -232,12 +232,49 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
       <FocusB quote={focusQuote} author="Din coach" />
 
       {hasBlocks ? (
-        <div className="space-y-3">
-          {patientBlocks!.map((bd) => (
-            <DynamicBlock key={bd.block.id} data={bd} />
-          ))}
+        <div className="space-y-3.5 pt-2">
+          <h2
+            className="font-serif"
+            style={{ fontSize: 22, fontWeight: 800, lineHeight: 1, textTransform: "uppercase", color: "#1F2A22" }}
+          >
+            Din{" "}
+            <span
+              style={{
+                backgroundColor: "#B7C4A9",
+                borderRadius: 999,
+                padding: "0 10px 2px",
+                display: "inline-block",
+              }}
+            >
+              utveckling
+            </span>
+          </h2>
+          {(() => {
+            const isHalf = (bd: any) =>
+              ["meals_week_card", "logged_days_card"].includes(bd.renderAs || "");
+            const rows: JSX.Element[] = [];
+            let i = 0;
+            while (i < patientBlocks!.length) {
+              const bd = patientBlocks![i];
+              if (isHalf(bd) && patientBlocks![i + 1] && isHalf(patientBlocks![i + 1])) {
+                const next = patientBlocks![i + 1];
+                rows.push(
+                  <div key={bd.block.id} className="grid grid-cols-2 gap-3">
+                    <DynamicBlock data={bd} />
+                    <DynamicBlock data={next} />
+                  </div>
+                );
+                i += 2;
+              } else {
+                rows.push(<DynamicBlock key={bd.block.id} data={bd} />);
+                i += 1;
+              }
+            }
+            return rows;
+          })()}
         </div>
       ) : (
+
         <div className="text-center py-10">
           <div className="w-16 h-16 rounded-[20px] bg-secondary border border-border shadow-[0_6px_26px_-12px_hsl(145_30%_11%/0.30)] flex items-center justify-center mx-auto mb-4">
             <Sparkles className="w-6 h-6 text-accent" />

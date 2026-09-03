@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+
 import {
   Check,
   Circle,
@@ -121,6 +123,302 @@ function CardShell({
   );
 }
 
+/* ---------------- UTVECKLING blocks (curated set) ---------------- */
+
+const C = {
+  cream: "#F5EFE2",
+  green: "#1F3A2E",
+  ink: "#1F2A22",
+  gold: "#DCC08A",
+  sage: "#B7C4A9",
+  sageDark: "#8FAF7E",
+  apricot: "#D9A488",
+  scrim: "rgba(31,42,34,0.5)",
+  soft: "rgba(31,42,34,0.6)",
+  faint: "rgba(31,42,34,0.5)",
+};
+
+const cardTitleStyle: React.CSSProperties = {
+  fontWeight: 700,
+  fontSize: 12,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  color: C.soft,
+};
+
+function Sparkline({ points, fill }: { points: number[]; fill: string }) {
+  if (points.length < 2) {
+    return (
+      <div
+        className="w-full flex items-center"
+        style={{ height: 64, color: C.faint, fontSize: 11 }}
+      >
+        För lite data för en kurva
+      </div>
+    );
+  }
+  const w = 300;
+  const h = 64;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+  const step = w / (points.length - 1);
+  const coords = points.map((p, i) => [i * step, h - 6 - ((p - min) / span) * (h - 14)]);
+  const line = coords.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const area = `${line} L${w},${h} L0,${h} Z`;
+  return (
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="none"
+      style={{ width: "100%", height: 64, display: "block" }}
+    >
+      <path d={area} fill={fill} opacity={0.45} />
+      <path d={line} fill="none" stroke={C.green} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const RANGES = [
+  { key: "1v", top: "1v", sub: "Vecka", days: 7, caption: "Senaste veckan" },
+  { key: "2v", top: "2v", sub: "Veckor", days: 14, caption: "Senaste 2 veckorna" },
+  { key: "1m", top: "1m", sub: "Månad", days: 30, caption: "Senaste 30 dagarna" },
+  { key: "all", top: "Allt", sub: "Start", days: null as number | null, caption: "Sedan start" },
+];
+
+function TrendFocusCard({
+  title,
+  unit,
+  points,
+  chipColor,
+  fillColor,
+}: {
+  title: string;
+  unit: string;
+  points: { iso?: string; date: string; value: number }[];
+  chipColor: string;
+  fillColor: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [rangeKey, setRangeKey] = useState("1m");
+  const range = RANGES.find((r) => r.key === rangeKey)!;
+
+  const cutoff = range.days
+    ? new Date(Date.now() - range.days * 86400000).toISOString().slice(0, 10)
+    : null;
+  let selected = cutoff ? points.filter((p) => (p.iso || "") >= cutoff) : points;
+  if (selected.length < 2) selected = points.slice(-Math.max(2, selected.length));
+
+  const values = selected.map((p) => p.value);
+  const latest = points.length > 0 ? points[points.length - 1].value : null;
+  const diff = values.length > 1 ? values[values.length - 1] - values[0] : null;
+  const caption =
+    range.days === null && points[0]?.date
+      ? `Sedan start · ${points[0].date}`
+      : range.caption;
+
+  const card = (
+    <div
+      onClick={() => setFocused(true)}
+      className="relative cursor-pointer"
+      style={{
+        backgroundColor: C.cream,
+        borderRadius: 24,
+        padding: "18px 18px 14px",
+        zIndex: focused ? 60 : undefined,
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span style={cardTitleStyle}>{title}</span>
+        {diff !== null && (
+          <span
+            style={{
+              backgroundColor: chipColor,
+              color: C.green,
+              borderRadius: 999,
+              padding: "3px 10px",
+              fontWeight: 700,
+              fontSize: 11,
+            }}
+          >
+            {diff > 0 ? "+" : "−"}
+            {Math.abs(diff).toFixed(1).replace(".", ",")} {unit}
+          </span>
+        )}
+      </div>
+
+      <div style={{ marginTop: 8, marginBottom: 6 }}>
+        <span
+          className="font-serif"
+          style={{ fontSize: 40, fontWeight: 800, lineHeight: 1, color: C.ink }}
+        >
+          {latest !== null ? String(latest).replace(".", ",") : "—"}
+        </span>
+        <span style={{ fontSize: 18, marginLeft: 4, color: C.soft }}>{unit}</span>
+      </div>
+
+      <Sparkline points={values} fill={fillColor} />
+
+      <div
+        style={{
+          marginTop: 8,
+          fontWeight: 600,
+          fontSize: 10.5,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: C.faint,
+        }}
+      >
+        {caption}
+      </div>
+    </div>
+  );
+
+  if (!focused) return card;
+
+  return (
+    <>
+      {card}
+      <div
+        className="fixed inset-0 z-50"
+        style={{ backgroundColor: C.scrim }}
+        onClick={() => setFocused(false)}
+      />
+      <div className="fixed inset-x-0 z-[60] px-4" style={{ top: "50%", transform: "translateY(-50%)" }}>
+        {card}
+        <div className="flex items-center justify-center gap-3 mt-4">
+          {RANGES.map((r) => {
+            const active = r.key === rangeKey;
+            return (
+              <button
+                key={r.key}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRangeKey(r.key);
+                }}
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 999,
+                  backgroundColor: active ? C.green : C.cream,
+                  color: active ? C.cream : C.green,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "none",
+                }}
+              >
+                <span style={{ fontWeight: 700, fontSize: 13 }}>{r.top}</span>
+                <span
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 8,
+                    textTransform: "uppercase",
+                    opacity: 0.75,
+                  }}
+                >
+                  {r.sub}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function MealsWeekCard({ title, days }: { title: string; days: { letter: string; count: number }[] }) {
+  const max = Math.max(1, ...days.map((d) => d.count));
+  const avg = days.length ? days.reduce((s, d) => s + d.count, 0) / days.length : 0;
+  const lowest = days.reduce((min, d, i) => (d.count < days[min].count ? i : min), 0);
+  return (
+    <div
+      style={{ backgroundColor: C.cream, borderRadius: 24, padding: 18, height: "100%" }}
+      className="flex flex-col"
+    >
+      <span style={cardTitleStyle}>{title}</span>
+      <div style={{ marginTop: 8, marginBottom: 12 }}>
+        <span className="font-serif" style={{ fontSize: 34, fontWeight: 800, lineHeight: 1, color: C.ink }}>
+          {avg.toFixed(1).replace(".", ",")}
+        </span>
+        <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/dag</span>
+      </div>
+      <div className="flex items-end mt-auto" style={{ gap: 5, height: 44 }}>
+        {days.map((d, i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: `${Math.max(12, (d.count / max) * 100)}%`,
+              borderRadius: 6,
+              backgroundColor: i === lowest && days[lowest].count < max ? C.gold : C.green,
+            }}
+          />
+        ))}
+      </div>
+      <div className="flex" style={{ gap: 5, marginTop: 6 }}>
+        {days.map((d, i) => (
+          <span
+            key={i}
+            style={{ flex: 1, textAlign: "center", fontWeight: 600, fontSize: 8.5, color: C.faint }}
+          >
+            {d.letter}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LoggedDaysCard({
+  title,
+  days,
+  loggedCount,
+}: {
+  title: string;
+  days: { letter: string; logged: boolean }[];
+  loggedCount: number;
+}) {
+  return (
+    <div
+      style={{ backgroundColor: C.sage, borderRadius: 24, padding: 18, height: "100%" }}
+      className="flex flex-col"
+    >
+      <span style={cardTitleStyle}>{title}</span>
+      <div style={{ marginTop: 8 }}>
+        <span className="font-serif" style={{ fontSize: 34, fontWeight: 800, lineHeight: 1, color: C.ink }}>
+          {loggedCount}
+        </span>
+        <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/{days.length}</span>
+      </div>
+      <div className="flex mt-auto" style={{ gap: 5, paddingTop: 16 }}>
+        {days.map((d, i) => (
+          <span
+            key={i}
+            style={{
+              width: 26,
+              height: 26,
+              flex: "0 0 auto",
+              borderRadius: 999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+              fontSize: 9.5,
+              backgroundColor: d.logged ? C.green : "rgba(245,239,226,0.55)",
+              color: d.logged ? C.cream : "rgba(31,42,34,0.45)",
+            }}
+          >
+            {d.letter}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 /* --------------------------- Main --------------------------- */
 
 interface DynamicBlockProps {
@@ -147,6 +445,36 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
   } = data;
   const template = block.template;
   const title = block.override_title || template.title;
+
+  /* ── Viktutveckling / Midjemått (fokusinteraktion) ── */
+  if (renderAs === "weight_trend_card" || renderAs === "waist_trend_card") {
+    const isWaist = renderAs === "waist_trend_card";
+    return (
+      <TrendFocusCard
+        title={title}
+        unit={chartMeta?.unit || (isWaist ? "cm" : "kg")}
+        points={chartData || []}
+        chipColor={isWaist ? "#D9A488" : "#8FAF7E"}
+        fillColor={isWaist ? "#B7C4A9" : "#DCC08A"}
+      />
+    );
+  }
+
+  /* ── Måltider (veckostaplar) ── */
+  if (renderAs === "meals_week_card" && data.weekDays) {
+    return <MealsWeekCard title={title} days={data.weekDays} />;
+  }
+
+  /* ── Loggade dagar ── */
+  if (renderAs === "logged_days_card" && data.weekDays) {
+    return (
+      <LoggedDaysCard
+        title={title}
+        days={data.weekDays}
+        loggedCount={data.weekDays.filter((d) => d.logged).length}
+      />
+    );
+  }
 
   /* ── 02 · Dagens fokus ── */
   if (renderAs === "focus_card") {

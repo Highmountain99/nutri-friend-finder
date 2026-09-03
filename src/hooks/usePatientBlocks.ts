@@ -49,13 +49,19 @@ export interface WeeklyCheckinData {
   stability: "stabil" | "delvis" | "oregelbunden";
 }
 
+export interface WeekDayEntry {
+  letter: string;
+  count: number;
+  logged: boolean;
+}
+
 export interface ComputedBlockData {
   block: PatientBlock;
   computedLabel: string | null;
   computedItems: { key: string; label: string; done: boolean }[];
   computedValue: number | null;
   computedTotal: number | null;
-  chartData: { date: string; value: number }[] | null;
+  chartData: { date: string; value: number; iso?: string }[] | null;
   chartMeta: { label: string; unit: string } | null;
   source: "journal" | "dietitian" | "manual";
   // Rich data for system blocks
@@ -64,12 +70,14 @@ export interface ComputedBlockData {
   daysWithThreePlus?: number;
   mealStructure?: { label: string; avgMeals: number };
   weeklyCheckin?: WeeklyCheckinData;
+  weekDays?: WeekDayEntry[];
   symptomPatterns?: SymptomPatternEntry[];
   nextAppointment?: { appointment_date: string; notes?: string | null } | null;
   milestones?: { id: string; title: string; is_completed: boolean }[];
   focusText?: string;
   renderAs?: string;
 }
+
 
 export function usePatientBlocks(patientId: string | undefined) {
   const queryClient = useQueryClient();
@@ -354,11 +362,19 @@ export function usePatientBlocks(patientId: string | undefined) {
             };
           }
 
-          if (metric === "weekly_overview") {
+          if (metric === "weekly_overview" || metric === "weekly_bars") {
             const grid = getGrid();
             const last7 = grid.slice(-7);
             const daysLogged = last7.filter(d => d.count > 0).length;
             const totalMeals = last7.reduce((sum, d) => sum + d.count, 0);
+            const weekDays = last7.map((d) => {
+              const letters = ["S", "M", "T", "O", "T", "F", "L"];
+              return {
+                letter: letters[new Date(d.date).getDay()],
+                count: d.count,
+                logged: d.count > 0,
+              };
+            });
             return {
               block, ...base,
               computedLabel: `${daysLogged} aktiva dagar, ${totalMeals} måltider`,
@@ -366,13 +382,15 @@ export function usePatientBlocks(patientId: string | undefined) {
               computedValue: daysLogged,
               computedTotal: 7,
               source: "journal" as const,
+              weekDays,
               weeklyCheckin: {
                 loggedDays: daysLogged,
-                averageMealsPerDay: daysLogged > 0 ? Math.round((totalMeals / daysLogged) * 10) / 10 : 0,
+                averageMealsPerDay: Math.round((totalMeals / 7) * 10) / 10,
                 stability: daysLogged >= 6 ? "stabil" : daysLogged >= 4 ? "delvis" : "oregelbunden",
               },
             };
           }
+
 
           // meals_per_day (legacy)
           if (metric === "meals_per_day") {
@@ -462,8 +480,10 @@ export function usePatientBlocks(patientId: string | undefined) {
           if (config.metric === "trend_chart") {
             const cd = filtered.map((e: any) => ({
               date: format(new Date(e.entry_date), "d MMM"),
+              iso: String(e.entry_date).slice(0, 10),
               value: Number(e.value),
             }));
+
             const latest = cd.length > 0 ? cd[cd.length - 1].value : null;
             const first = cd.length > 0 ? cd[0].value : null;
             const diff = latest !== null && first !== null ? latest - first : null;

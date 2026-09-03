@@ -33,50 +33,50 @@ export interface BlockTemplateInput {
   is_shared?: boolean;
 }
 
-// Old system_keys that have been consolidated into other blocks
-const DEPRECATED_SYSTEM_KEYS = new Set([
-  "ed_behavior_goals", "ed_symptom_patterns", "gh_symptom_count",
-  "ed_follow_up", "ed_meal_rhythm", "ed_weekly_checkin", "wl_weekly",
-  "wl_weight_trend", "wl_weight_values", "wl_weekly_overview",
-  "gh_meal_rhythm", "gh_weekly", "gh_regularity",
-  "hh_weekly", "hh_meal_structure",
-  "db_weekly", "db_meal_structure",
-]);
-
 async function seedSystemTemplates(userId: string) {
   const { data: existing } = await supabase
     .from("block_templates" as any)
     .select("id, title, data_config")
     .eq("dietitian_id", userId);
 
-  const validKeys = new Set(SYSTEM_BLOCK_TEMPLATES.map(t => t.key));
+  const systemMap = new Map(SYSTEM_BLOCK_TEMPLATES.map(t => [t.key, t]));
   const existingByKey = new Map<string, { id: string; title: string }>();
+  const toDelete: string[] = [];
 
   for (const row of existing || []) {
     const key = (row as any).data_config?.system_key;
-    if (key) existingByKey.set(key, { id: (row as any).id, title: (row as any).title });
+    // Anything not in the curated set is removed (old system blocks + duplicates)
+    if (!key || !systemMap.has(key) || existingByKey.has(key)) {
+      toDelete.push((row as any).id);
+      continue;
+    }
+    existingByKey.set(key, { id: (row as any).id, title: (row as any).title });
   }
 
-  // 1. Delete deprecated/duplicate blocks
-  const toDelete = [...existingByKey.entries()]
-    .filter(([key]) => DEPRECATED_SYSTEM_KEYS.has(key) || (!validKeys.has(key) && key.startsWith("ed_") || key.startsWith("wl_") || key.startsWith("gh_") || key.startsWith("hh_") || key.startsWith("db_")))
-    .filter(([key]) => !validKeys.has(key))
-    .map(([, v]) => v.id);
-
   if (toDelete.length > 0) {
+    // Remove patient assignments first to avoid orphan references
+    await supabase.from("patient_blocks" as any).delete().in("block_template_id", toDelete);
     await supabase.from("block_templates" as any).delete().in("id", toDelete);
   }
 
-  // 2. Update existing blocks with current titles (removes time periods etc.)
-  const systemMap = new Map(SYSTEM_BLOCK_TEMPLATES.map(t => [t.key, t]));
-  for (const [key, { id, title }] of existingByKey) {
-    const def = systemMap.get(key);
-    if (def && def.title !== title) {
-      await supabase.from("block_templates" as any).update({ title: def.title }).eq("id", id);
-    }
+  // Keep existing blocks in sync with the current definitions
+  for (const [key, { id }] of existingByKey) {
+    const def = systemMap.get(key)!;
+    await supabase
+      .from("block_templates" as any)
+      .update({
+        title: def.title,
+        description: def.description,
+        icon: def.icon,
+        block_type: def.block_type,
+        category: def.category,
+        data_source: def.data_source,
+        data_config: def.data_config,
+        display_config: def.display_config,
+      })
+      .eq("id", id);
   }
 
-  // 3. Seed new blocks
   const toSeed = SYSTEM_BLOCK_TEMPLATES.filter(t => !existingByKey.has(t.key));
   if (toSeed.length === 0) return;
 
@@ -95,6 +95,7 @@ async function seedSystemTemplates(userId: string) {
 
   await supabase.from("block_templates" as any).insert(rows);
 }
+
 
 export function useBlockTemplates(filters?: { category?: string; block_type?: string; data_source?: string }) {
   const { user } = useAuth();
