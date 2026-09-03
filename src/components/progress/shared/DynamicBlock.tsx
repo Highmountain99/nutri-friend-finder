@@ -402,20 +402,21 @@ function LoggedDaysCard({
       className="flex flex-col"
     >
       <span style={cardTitleStyle}>{title}</span>
-      <div style={{ marginTop: 8 }}>
-        <span className="font-serif" style={{ fontSize: 34, fontWeight: 800, lineHeight: 1, color: C.ink }}>
+      <div style={{ marginTop: 6 }}>
+        <span className="font-serif" style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, color: C.ink }}>
           {loggedCount}
         </span>
-        <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/{days.length}</span>
+        <span style={{ fontSize: 14, marginLeft: 4, color: C.soft }}>/{days.length}</span>
       </div>
-      <div className="flex flex-wrap mt-auto min-h-0" style={{ gap: 6, paddingTop: 12 }}>
+      <div className="flex mt-auto shrink-0" style={{ gap: 4 }}>
         {days.map((d, i) => (
           <span
             key={i}
             style={{
-              width: 26,
-              height: 26,
-              flex: "0 0 auto",
+              flex: 1,
+              minWidth: 0,
+              maxWidth: 28,
+              aspectRatio: "1 / 1",
               borderRadius: 999,
               display: "flex",
               alignItems: "center",
@@ -430,6 +431,7 @@ function LoggedDaysCard({
           </span>
         ))}
       </div>
+
     </div>
   );
 }
