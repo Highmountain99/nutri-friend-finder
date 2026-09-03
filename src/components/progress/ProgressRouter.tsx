@@ -202,9 +202,28 @@ function JourneyHeader({
           );
         })}
       </div>
+
+      <div className="flex justify-center" style={{ marginTop: 14 }}>
+        <ChevronDown
+          className="w-5 h-5 transition-transform"
+          style={{ opacity: 0.6, transform: open ? "rotate(180deg)" : "none" }}
+        />
+      </div>
+    </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: open ? "1fr" : "0fr",
+          transition: "grid-template-rows 320ms cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        <div style={{ overflow: "hidden" }}>{children}</div>
+      </div>
     </div>
   );
 }
+
 
 function CurrentGoalCard({
   goal,
