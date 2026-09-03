@@ -49,13 +49,19 @@ export interface WeeklyCheckinData {
   stability: "stabil" | "delvis" | "oregelbunden";
 }
 
+export interface WeekDayEntry {
+  letter: string;
+  count: number;
+  logged: boolean;
+}
+
 export interface ComputedBlockData {
   block: PatientBlock;
   computedLabel: string | null;
   computedItems: { key: string; label: string; done: boolean }[];
   computedValue: number | null;
   computedTotal: number | null;
-  chartData: { date: string; value: number }[] | null;
+  chartData: { date: string; value: number; iso?: string }[] | null;
   chartMeta: { label: string; unit: string } | null;
   source: "journal" | "dietitian" | "manual";
   // Rich data for system blocks
@@ -64,12 +70,14 @@ export interface ComputedBlockData {
   daysWithThreePlus?: number;
   mealStructure?: { label: string; avgMeals: number };
   weeklyCheckin?: WeeklyCheckinData;
+  weekDays?: WeekDayEntry[];
   symptomPatterns?: SymptomPatternEntry[];
   nextAppointment?: { appointment_date: string; notes?: string | null } | null;
   milestones?: { id: string; title: string; is_completed: boolean }[];
   focusText?: string;
   renderAs?: string;
 }
+
 
 export function usePatientBlocks(patientId: string | undefined) {
   const queryClient = useQueryClient();
