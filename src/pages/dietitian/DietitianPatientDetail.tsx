@@ -29,6 +29,10 @@ import { PatientHealthProfileCard } from "@/components/dietitian/PatientHealthPr
 import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
 import { ClinicalNoteWizard } from "@/components/dietitian/clinical-notes/ClinicalNoteWizard";
 import { getAreaConfig } from "@/components/dietitian/clinical-notes/areaConfigs/index";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { seedSystemTemplates } from "@/hooks/dietitian/useBlockTemplates";
+import { ensureDefaultPatientBlocks } from "@/lib/ensureDefaultPatientBlocks";
 
 const concernLabels: Record<string, string> = {
   weight_loss: "Viktnedgång",
