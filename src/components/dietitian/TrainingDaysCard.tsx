@@ -49,6 +49,7 @@ function isoWeek(d: Date) {
 export function TrainingDaysCard({ patientId }: Props) {
   const { data: days, isLoading, addDay, updateTime, removeDay } = useClientTrainingDays(patientId);
   const [defaultTime, setDefaultTime] = useState("18:00");
+  const [weekdayTimeOverrides, setWeekdayTimeOverrides] = useState<Record<number, string>>({});
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
