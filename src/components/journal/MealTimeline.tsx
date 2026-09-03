@@ -63,25 +63,20 @@ export function MealTimeline({
   if (timelineItems.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <p className="text-sm">Inga måltider loggade idag</p>
-        <p className="text-xs mt-1">Tryck på kameraknappen för att börja</p>
+        <p className="text-sm font-semibold text-primary/70">Inga måltider loggade</p>
+        <p className="text-xs mt-1 text-primary/50">Tryck på kameraknappen för att börja</p>
       </div>
     );
   }
 
   return (
-    <div className="relative space-y-3">
-      {/* Timeline line */}
-      <div className="absolute left-4 top-6 bottom-6 w-0.5 bg-muted-foreground/20" />
+    <div className="space-y-2.5">
       
       {timelineItems.map((item) => (
         <div key={item.id} className="relative">
           {item.type === "meal" ? (
             <>
-              <div className="pl-8">
-                {/* Timeline dot for meal */}
-                <div className="absolute left-3 top-6 w-3 h-3 rounded-full bg-primary border-2 border-background" />
-                
+              <div>
                 <MealEntryCard 
                   entry={item.data as NutritionEntry} 
                   onClick={() => onEntryClick?.(item.data as NutritionEntry)}
@@ -94,11 +89,10 @@ export function MealTimeline({
               
               {/* Linked symptoms as sub-items */}
               {item.linkedSymptoms && item.linkedSymptoms.length > 0 && (
-                <div className="ml-4 mt-1 border-l-2 border-accent/30 pl-4 space-y-1">
+                <div className="ml-6 mt-1.5 space-y-1">
                   {item.linkedSymptoms.map((symptom) => (
                     <div key={symptom.id} className="relative flex items-center">
                       {/* Horisontell kopplingsstreck */}
-                      <div className="absolute -left-4 top-1/2 w-3 h-0.5 bg-accent/30" />
                       <SymptomCard
                         symptom={symptom}
                         onClick={() => onSymptomClick?.(symptom)}
@@ -109,10 +103,7 @@ export function MealTimeline({
               )}
             </>
           ) : (
-            <div className="pl-8">
-              {/* Timeline dot for standalone symptom */}
-              <div className="absolute left-3 top-6 w-3 h-3 rounded-full bg-accent border-2 border-background" />
-              
+            <div>
               <SymptomCard
                 symptom={item.data as SymptomEntry}
                 onClick={() => onSymptomClick?.(item.data as SymptomEntry)}
