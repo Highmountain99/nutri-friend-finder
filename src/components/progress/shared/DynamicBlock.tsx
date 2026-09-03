@@ -329,9 +329,12 @@ function TrendFocusCard({
               </button>
             );
           })}
-        </div>
-      </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
+
   );
 }
 
