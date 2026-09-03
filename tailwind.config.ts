@@ -14,9 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Geist', 'Inter', 'system-ui', 'sans-serif'],
-        serif: ['"Instrument Serif"', 'Times New Roman', 'serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'Menlo', 'monospace'],
+        sans: ['MentiText', 'Manrope', 'system-ui', 'sans-serif'],
+        display: ['MentiDisplay', 'Anton', 'sans-serif'],
+        serif: ['MentiDisplay', 'Anton', 'sans-serif'],
+        mono: ['MentiText', 'Manrope', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -67,6 +68,11 @@ export default {
         "star-rating": "hsl(var(--star-rating))",
         "trustpilot": "hsl(var(--trustpilot))",
         // Beige surface scale
+        gold: "hsl(var(--gold))",
+        sage: "hsl(var(--sage))",
+        apricot: "hsl(var(--apricot))",
+        terracotta: "hsl(var(--terracotta))",
+        leaf: "hsl(var(--leaf))",
         "beige-2": "hsl(var(--beige-2))",
         "beige-3": "hsl(var(--beige-3))",
         // Nutrient accents — Hybrid (jord + mönster)
@@ -84,6 +90,10 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "24px",
+        card: "24px",
+        panel: "28px",
+        pill: "999px",
       },
       keyframes: {
         "accordion-down": {
