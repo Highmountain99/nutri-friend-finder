@@ -138,17 +138,17 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setWeightOpen(true)}
-            className="rounded-card bg-card p-4 text-left transition-transform active:scale-[0.97]"
+            className="rounded-card bg-card p-4 text-left flex items-center gap-3 transition-transform active:scale-[0.97]"
           >
-            <Scale className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
-            <span className="block text-[13px] font-bold text-primary">Uppdatera vikt</span>
+            <Scale className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
+            <span className="text-[13px] font-bold text-primary">Uppdatera vikt</span>
           </button>
           <button
             onClick={() => setWaistOpen(true)}
-            className="rounded-card bg-card p-4 text-left transition-transform active:scale-[0.97]"
+            className="rounded-card bg-card p-4 text-left flex items-center gap-3 transition-transform active:scale-[0.97]"
           >
-            <Ruler className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
-            <span className="block text-[13px] font-bold text-primary">Uppdatera midjemått</span>
+            <Ruler className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
+            <span className="text-[13px] font-bold text-primary">Uppdatera midjemått</span>
           </button>
         </div>
       </section>
