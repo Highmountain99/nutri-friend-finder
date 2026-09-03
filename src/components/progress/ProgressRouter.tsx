@@ -74,22 +74,29 @@ function Arc({
   );
 }
 
-function JourneySurface({
+type Goal = { id: string; title: string; status: string };
+
+function JourneyHeader({
   goals,
   activeIdx,
   onOpen,
 }: {
-  goals: { id: string; title: string; status: string }[];
+  goals: Goal[];
   activeIdx: number;
   onOpen: () => void;
 }) {
   const startY = useRef<number | null>(null);
-  const steps = goals.slice(0, 4);
+  const steps = goals.slice(0, 3);
 
   return (
-    <button
+    <div
       data-tour="progress-hero"
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onOpen();
+      }}
       onPointerDown={(e) => {
         startY.current = e.clientY;
       }}
@@ -102,68 +109,76 @@ function JourneySurface({
       onPointerUp={() => {
         startY.current = null;
       }}
-      className="relative w-full text-left rounded-[26px] px-5 pt-5 pb-4 overflow-hidden active:scale-[0.99] transition-transform touch-pan-y"
-      style={{ backgroundColor: "hsl(var(--gold))", color: "hsl(var(--primary))" }}
+      className="w-full text-left touch-pan-y cursor-pointer select-none"
+      style={{
+        backgroundColor: "#C2AE84",
+        color: "#1F3A2E",
+        padding: "64px 20px 24px",
+        borderRadius: "0 0 28px 28px",
+      }}
     >
-      <h2
+      <h1
         className="font-serif m-0"
-        style={{
-          fontSize: 28,
-          fontWeight: 800,
-          lineHeight: 1,
-          textTransform: "uppercase",
-          letterSpacing: "-0.01em",
-        }}
+        style={{ fontSize: 34, fontWeight: 800, lineHeight: 0.92, textTransform: "uppercase" }}
       >
         Din{" "}
         <span
           style={{
-            backgroundColor: "hsl(var(--card))",
+            backgroundColor: "#DCC08A",
             borderRadius: 999,
-            padding: "2px 16px 5px",
+            padding: "0 12px 2px",
             display: "inline-block",
           }}
         >
           resa
         </span>
-      </h2>
+      </h1>
 
-      <div className="flex items-start mt-5">
+      <div className="flex items-start" style={{ marginTop: 20 }}>
         {steps.map((g, i) => {
           const done = g.status === "completed";
           const active = i === activeIdx && !done;
           return (
             <div key={g.id} className="flex items-start flex-1 min-w-0">
-              <div className="flex flex-col items-center gap-1.5 min-w-0 px-0.5">
+              <div className="flex flex-col items-center min-w-0 px-0.5" style={{ gap: 6, flex: 1 }}>
                 <span
-                  className="w-10 h-10 rounded-full flex items-center justify-center font-mono text-[13px] flex-shrink-0"
+                  className="rounded-full flex items-center justify-center flex-shrink-0"
                   style={{
+                    width: 34,
+                    height: 34,
                     backgroundColor: done
-                      ? "hsl(var(--primary))"
+                      ? "#1F3A2E"
                       : active
-                      ? "hsl(var(--card))"
-                      : "hsl(var(--primary) / 0.10)",
-                    color: done ? "hsl(var(--card))" : "hsl(var(--primary))",
-                    border: active ? "2px solid hsl(var(--primary))" : "none",
-                    opacity: done || active ? 1 : 0.55,
+                      ? "#F5EFE2"
+                      : "rgba(255,255,255,0.5)",
+                    border: active ? "3px solid #1F3A2E" : "none",
+                    color: done ? "#F5EFE2" : active ? "#1F3A2E" : "rgba(0,0,0,0.5)",
+                    fontSize: 13,
+                    fontWeight: 700,
                   }}
                 >
                   {done ? <Check className="w-4 h-4" /> : i + 1}
                 </span>
                 <span
-                  className="text-[11px] leading-tight text-center line-clamp-2"
-                  style={{ opacity: done || active ? 0.9 : 0.55, fontWeight: active ? 600 : 400 }}
+                  className="text-center line-clamp-2"
+                  style={{
+                    fontSize: 11,
+                    lineHeight: 1.15,
+                    fontWeight: done ? 600 : active ? 700 : 500,
+                    color: done || active ? "#1F3A2E" : "rgba(0,0,0,0.5)",
+                  }}
                 >
                   {g.title}
                 </span>
               </div>
               {i < steps.length - 1 && (
                 <span
-                  className="flex-1 h-[2px] rounded-full mt-5 min-w-[10px]"
+                  className="flex-1 rounded-full min-w-[10px]"
                   style={{
-                    backgroundColor: done
-                      ? "hsl(var(--primary))"
-                      : "hsl(var(--primary) / 0.22)",
+                    height: 3,
+                    marginBottom: 22,
+                    marginTop: 16,
+                    backgroundColor: done ? "#1F3A2E" : "rgba(0,0,0,0.25)",
                   }}
                 />
               )}
@@ -171,16 +186,78 @@ function JourneySurface({
           );
         })}
       </div>
-
-      <div className="flex justify-center mt-4">
-        <span
-          className="block rounded-full"
-          style={{ width: 40, height: 4, backgroundColor: "hsl(var(--primary) / 0.28)" }}
-        />
-      </div>
-    </button>
+    </div>
   );
 }
+
+function CurrentGoalCard({
+  goal,
+  activeIdx,
+  total,
+}: {
+  goal: Goal;
+  activeIdx: number;
+  total: number;
+}) {
+  const navigate = useNavigate();
+  return (
+    <div style={{ backgroundColor: "#DCC08A", borderRadius: 24, padding: 20, color: "#1F3A2E" }}>
+      <span
+        className="inline-block uppercase"
+        style={{
+          backgroundColor: "#F5EFE2",
+          borderRadius: 999,
+          padding: "5px 12px",
+          fontWeight: 700,
+          fontSize: 11,
+          letterSpacing: "0.04em",
+        }}
+      >
+        Pågående mål
+      </span>
+      <h2
+        className="font-serif m-0"
+        style={{
+          marginTop: 12,
+          fontSize: 28,
+          fontWeight: 800,
+          lineHeight: 0.95,
+          textTransform: "uppercase",
+        }}
+      >
+        {goal.title}
+      </h2>
+      <div className="flex" style={{ marginTop: 12, gap: 6 }}>
+        {Array.from({ length: Math.max(total, 1) }).map((_, i) => (
+          <span
+            key={i}
+            style={{
+              flex: 1,
+              height: 10,
+              borderRadius: 999,
+              backgroundColor: i <= activeIdx ? "#1F3A2E" : "rgba(0,0,0,0.2)",
+            }}
+          />
+        ))}
+      </div>
+      <button
+        onClick={() => navigate("/journal")}
+        style={{
+          marginTop: 16,
+          backgroundColor: "#1F3A2E",
+          color: "#F5EFE2",
+          borderRadius: 999,
+          padding: "13px 20px",
+          fontWeight: 700,
+          fontSize: 13,
+        }}
+      >
+        Logga dagens måltid
+      </button>
+    </div>
+  );
+}
+
 
 
 
