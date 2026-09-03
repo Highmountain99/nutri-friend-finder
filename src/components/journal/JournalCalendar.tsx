@@ -1,7 +1,7 @@
 import { useState, useRef, useLayoutEffect } from "react";
 import { format, subDays, isSameDay, isBefore, isAfter, parseISO } from "date-fns";
 import { sv } from "date-fns/locale";
-import { CalendarDays, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import {
