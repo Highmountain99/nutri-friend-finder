@@ -79,20 +79,15 @@ function Arc({
 type Goal = { id: string; title: string; status: string };
 
 function JourneyHeader({
-  goals,
-  activeIdx,
   open,
   onToggle,
   children,
 }: {
-  goals: Goal[];
-  activeIdx: number;
   open: boolean;
   onToggle: (next: boolean) => void;
   children?: React.ReactNode;
 }) {
   const startY = useRef<number | null>(null);
-  const steps = goals.slice(0, 3);
 
   return (
     <div
@@ -103,114 +98,60 @@ function JourneyHeader({
         overflow: "hidden",
       }}
     >
-    <div
-      data-tour="progress-hero"
-      role="button"
-      tabIndex={0}
-      onClick={() => onToggle(!open)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onToggle(!open);
-      }}
-      onPointerDown={(e) => {
-        startY.current = e.clientY;
-      }}
-      onPointerMove={(e) => {
-        if (startY.current === null) return;
-        const dy = e.clientY - startY.current;
-        if (dy > 28) {
+      <div
+        data-tour="progress-hero"
+        role="button"
+        tabIndex={0}
+        onClick={() => onToggle(!open)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onToggle(!open);
+        }}
+        onPointerDown={(e) => {
+          startY.current = e.clientY;
+        }}
+        onPointerMove={(e) => {
+          if (startY.current === null) return;
+          const dy = e.clientY - startY.current;
+          if (dy > 28) {
+            startY.current = null;
+            onToggle(true);
+          } else if (dy < -28) {
+            startY.current = null;
+            onToggle(false);
+          }
+        }}
+        onPointerUp={() => {
           startY.current = null;
-          onToggle(true);
-        } else if (dy < -28) {
-          startY.current = null;
-          onToggle(false);
-        }
-      }}
-      onPointerUp={() => {
-        startY.current = null;
-      }}
-      className="w-full text-left touch-pan-y cursor-pointer select-none"
-      style={{
-        padding: "64px 20px 20px",
-      }}
-    >
-
-      <h1
-        className="font-serif m-0"
-        style={{ fontSize: 34, fontWeight: 800, lineHeight: 0.92, textTransform: "uppercase" }}
+        }}
+        className="w-full text-left touch-pan-y cursor-pointer select-none"
+        style={{
+          padding: "52px 20px 10px",
+        }}
       >
-        Din{" "}
-        <span
-          style={{
-            backgroundColor: "#DCC08A",
-            borderRadius: 999,
-            padding: "0 12px 2px",
-            display: "inline-block",
-          }}
-        >
-          resa
-        </span>
-      </h1>
+        <div className="flex items-center justify-between">
+          <h1
+            className="font-serif m-0"
+            style={{ fontSize: 28, fontWeight: 800, lineHeight: 0.95, textTransform: "uppercase" }}
+          >
+            Din{" "}
+            <span
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderRadius: 999,
+                padding: "0 10px 2px",
+                display: "inline-block",
+              }}
+            >
+              resa
+            </span>
+          </h1>
 
-      <div className="flex items-start" style={{ marginTop: 20 }}>
-        {steps.map((g, i) => {
-          const done = g.status === "completed";
-          const active = i === activeIdx && !done;
-          return (
-            <div key={g.id} className="flex items-start flex-1 min-w-0">
-              <div className="flex flex-col items-center min-w-0 px-0.5" style={{ gap: 6, flex: 1 }}>
-                <span
-                  className="rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    width: 34,
-                    height: 34,
-                    backgroundColor: done
-                      ? "#1F3A2E"
-                      : active
-                      ? "#F5EFE2"
-                      : "rgba(255,255,255,0.5)",
-                    border: active ? "3px solid #1F3A2E" : "none",
-                    color: done ? "#F5EFE2" : active ? "#1F3A2E" : "rgba(0,0,0,0.5)",
-                    fontSize: 13,
-                    fontWeight: 700,
-                  }}
-                >
-                  {done ? <Check className="w-4 h-4" /> : i + 1}
-                </span>
-                <span
-                  className="text-center line-clamp-2"
-                  style={{
-                    fontSize: 11,
-                    lineHeight: 1.15,
-                    fontWeight: done ? 600 : active ? 700 : 500,
-                    color: done || active ? "#1F3A2E" : "rgba(0,0,0,0.5)",
-                  }}
-                >
-                  {g.title}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <span
-                  className="flex-1 rounded-full min-w-[10px]"
-                  style={{
-                    height: 3,
-                    marginBottom: 22,
-                    marginTop: 16,
-                    backgroundColor: done ? "#1F3A2E" : "rgba(0,0,0,0.25)",
-                  }}
-                />
-              )}
-            </div>
-          );
-        })}
+          <ChevronDown
+            className="w-5 h-5 transition-transform flex-shrink-0"
+            style={{ opacity: 0.6, transform: open ? "rotate(180deg)" : "none" }}
+          />
+        </div>
       </div>
-
-      <div className="flex justify-center" style={{ marginTop: 14 }}>
-        <ChevronDown
-          className="w-5 h-5 transition-transform"
-          style={{ opacity: 0.6, transform: open ? "rotate(180deg)" : "none" }}
-        />
-      </div>
-    </div>
 
       <div
         style={{
@@ -366,8 +307,6 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
     <div style={{ backgroundColor: "#EBE5D6" }}>
       {plan && goals.length > 0 && (
         <JourneyHeader
-          goals={goals}
-          activeIdx={activeIdx}
           open={journeyOpen}
           onToggle={setJourneyOpen}
         >
