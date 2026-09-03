@@ -41,7 +41,7 @@ export function EditWaistSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent side="bottom" className="rounded-t-2xl max-h-[85dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
         <SheetHeader className="text-left">
           <SheetTitle>Redigera midjemått</SheetTitle>
           <SheetDescription>
@@ -62,6 +62,10 @@ export function EditWaistSheet({
               max={200}
               step={0.5}
               autoFocus={false}
+              onFocus={(e) => {
+                const el = e.currentTarget;
+                setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+              }}
             />
           </div>
           <Button 
