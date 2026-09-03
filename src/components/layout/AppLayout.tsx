@@ -42,12 +42,20 @@ export function AppLayout() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header userName={userName} onMenuClick={() => setIsMenuOpen(true)} />
+      <button
+        aria-label="Öppna meny"
+        onClick={() => setIsMenuOpen(true)}
+        className="fixed left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-card/80 text-foreground backdrop-blur"
+        style={{ top: "calc(env(safe-area-inset-top) + 12px)" }}
+      >
+        <Menu className="h-5 w-5" />
+      </button>
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       
       <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] max-w-lg mx-auto">
         <Outlet />
       </main>
+
       
       <BottomNav />
       <AppTutorial />
