@@ -265,7 +265,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
               if (isHalf(bd) && sorted[i + 1] && isHalf(sorted[i + 1])) {
                 const next = sorted[i + 1];
                 rows.push(
-                  <div key={bd.block.id} className="grid grid-cols-2 gap-3">
+                  <div key={bd.block.id} className="grid grid-cols-2 gap-3 items-start">
                     <DynamicBlock data={bd} />
                     <DynamicBlock data={next} />
                   </div>

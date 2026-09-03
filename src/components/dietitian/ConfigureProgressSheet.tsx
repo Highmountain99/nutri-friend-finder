@@ -267,7 +267,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                         const cur = sorted[i];
                         if (isHalf(cur) && sorted[i + 1] && isHalf(sorted[i + 1])) {
                           rows.push(
-                            <div key={`row-${cur.id}`} className="grid grid-cols-2 gap-3">
+                            <div key={`row-${cur.id}`} className="grid grid-cols-2 gap-3 items-start">
                               {wrap(cur)}
                               {wrap(sorted[i + 1])}
                             </div>
