@@ -202,6 +202,7 @@ function RecipesContent() {
           )}
         </div>
       )}
+      </div>
 
       {/* Recipe Detail Sheet */}
       <RecipeDetailSheet
