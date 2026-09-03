@@ -69,16 +69,16 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries, s
   const daysWithEntriesAsDate = daysWithEntries.map(d => parseISO(d));
 
   return (
-    <div className="screen-header bg-gold -mx-3 sm:-mx-4 px-4 pt-3 pb-5">
+    <div className="screen-header bg-gold -mx-3 sm:-mx-4 px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-5">
       {/* Date row */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-5">
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
             <button className="flex items-baseline gap-2 min-w-0 text-left">
-              <span className="display text-[26px] truncate">
+              <span className="display text-[32px] truncate">
                 {format(selectedDate, "EEEE", { locale: sv })}
               </span>
-              <span className="pill-highlight pill-highlight--light display text-[22px] py-0.5 whitespace-nowrap">
+              <span className="pill-highlight pill-highlight--light display text-[26px] py-0.5 whitespace-nowrap">
                 {format(selectedDate, "d MMM", { locale: sv })}
               </span>
             </button>

@@ -31,8 +31,8 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
         style={{
           backgroundColor: SAGE,
           color: GREEN,
-          borderRadius: "0 0 26px 26px",
-          padding: "18px 20px 20px",
+          borderRadius: "0 0 28px 28px",
+          padding: "calc(env(safe-area-inset-top) + 18px) 20px 22px",
         }}
       >
         {loading ? (
@@ -59,16 +59,16 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
               <h2
                 className="font-serif m-0 truncate"
                 style={{
-                  fontSize: 26,
+                  fontSize: 34,
                   fontWeight: 800,
-                  lineHeight: 1,
+                  lineHeight: 0.95,
                   textTransform: "uppercase",
                   color: GREEN,
                 }}
               >
                 {dietitian?.firstName || fullName}
               </h2>
-              <p style={{ marginTop: 4, fontSize: 12.5, color: "rgba(31,58,46,0.75)" }}>{title}</p>
+              <p style={{ marginTop: 6, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>{title}</p>
             </div>
           </div>
         )}

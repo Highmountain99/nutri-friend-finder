@@ -82,18 +82,17 @@ function RecipesContent() {
           style={{
             backgroundColor: "#D9A488",
             color: "#1F3A2E",
-            borderRadius: "0 0 26px 26px",
-            padding: "20px 20px 24px",
-            marginBottom: 20,
+            borderRadius: "0 0 28px 28px",
+            padding: "calc(env(safe-area-inset-top) + 18px) 20px 24px",
           }}
         >
           <div className="flex items-start justify-between gap-3">
             <h1
               className="font-serif m-0"
               style={{
-                fontSize: 34,
+                fontSize: 38,
                 fontWeight: 800,
-                lineHeight: 1.02,
+                lineHeight: 0.95,
                 textTransform: "uppercase",
               }}
             >

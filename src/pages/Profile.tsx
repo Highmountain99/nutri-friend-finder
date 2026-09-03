@@ -43,12 +43,19 @@ export default function Profile() {
   }
 
   return (
-    <div className="px-4 py-6 space-y-6 animate-fade-in">
+    <div className="pb-8 space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Min hälsoprofil</h1>
-        <p className="text-sm text-muted-foreground">Din hälsoinformation</p>
-      </div>
+      <section className="screen-header bg-apricot px-5 pt-[calc(env(safe-area-inset-top)+18px)] pb-6">
+        <h1 className="display text-[38px] leading-[0.92]">
+          Min{" "}
+          <span className="pill-highlight pill-highlight--light">
+            hälsoprofil
+          </span>
+        </h1>
+        <p className="text-sm font-bold text-primary/70 mt-2">Din hälsoinformation</p>
+      </section>
+
+      <div className="px-4 space-y-6">
 
       {/* Basic Info */}
       <section>
@@ -173,6 +180,7 @@ export default function Profile() {
         currentValue={data.waistCm}
         onSave={updateWaist}
       />
+      </div>
     </div>
   );
 }
