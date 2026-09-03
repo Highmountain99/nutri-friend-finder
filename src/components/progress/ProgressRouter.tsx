@@ -1,3 +1,4 @@
+import { Route, Sparkles, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
