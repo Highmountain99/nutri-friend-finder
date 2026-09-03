@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Route, Sparkles, ArrowRight, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
