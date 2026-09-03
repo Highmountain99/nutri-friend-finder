@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Menti typefaces ───────────────────────────────────────── */
+@font-face {
+  font-family: 'MentiDisplay';
+  src: url('/fonts/MentiDisplay-ExtraBold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MentiText';
+  src: url('/fonts/MentiText-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MentiText';
+  src: url('/fonts/MentiText-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MentiText';
+  src: url('/fonts/MentiText-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Gutfeeling Brand System — Editorial, warm beige + deep forest green */
+
+
 /* Gutfeeling Brand System — Editorial, warm beige + deep forest green */
 
 @layer base {
