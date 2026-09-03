@@ -80,31 +80,48 @@ type Goal = { id: string; title: string; status: string };
 function JourneyHeader({
   goals,
   activeIdx,
-  onOpen,
+  open,
+  onToggle,
+  children,
 }: {
   goals: Goal[];
   activeIdx: number;
-  onOpen: () => void;
+  open: boolean;
+  onToggle: (next: boolean) => void;
+  children?: React.ReactNode;
 }) {
   const startY = useRef<number | null>(null);
   const steps = goals.slice(0, 3);
 
   return (
     <div
+      style={{
+        backgroundColor: "#C2AE84",
+        color: "#1F3A2E",
+        borderRadius: "0 0 28px 28px",
+        overflow: "hidden",
+      }}
+    >
+    <div
       data-tour="progress-hero"
       role="button"
       tabIndex={0}
-      onClick={onOpen}
+      onClick={() => onToggle(!open)}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onOpen();
+        if (e.key === "Enter" || e.key === " ") onToggle(!open);
       }}
       onPointerDown={(e) => {
         startY.current = e.clientY;
       }}
       onPointerMove={(e) => {
-        if (startY.current !== null && e.clientY - startY.current > 28) {
+        if (startY.current === null) return;
+        const dy = e.clientY - startY.current;
+        if (dy > 28) {
           startY.current = null;
-          onOpen();
+          onToggle(true);
+        } else if (dy < -28) {
+          startY.current = null;
+          onToggle(false);
         }
       }}
       onPointerUp={() => {
@@ -112,12 +129,10 @@ function JourneyHeader({
       }}
       className="w-full text-left touch-pan-y cursor-pointer select-none"
       style={{
-        backgroundColor: "#C2AE84",
-        color: "#1F3A2E",
-        padding: "64px 20px 24px",
-        borderRadius: "0 0 28px 28px",
+        padding: "64px 20px 20px",
       }}
     >
+
       <h1
         className="font-serif m-0"
         style={{ fontSize: 34, fontWeight: 800, lineHeight: 0.92, textTransform: "uppercase" }}
