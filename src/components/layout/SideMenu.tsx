@@ -1,5 +1,4 @@
-import { openExternal } from "@/lib/openExternal";
-import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, ExternalLink, CreditCard, KeyRound, Shield, CalendarDays, Compass } from "lucide-react";
+import { X, Home, BookOpen, MessageCircle, UtensilsCrossed, TrendingUp, User, Settings, HelpCircle, LogOut, Leaf, Compass } from "lucide-react";
 import { restartTutorial } from "@/components/tutorial/AppTutorial";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,12 +22,6 @@ const secondaryNavItems = [
   { path: "/profile", icon: User, label: "Hälsoprofil" },
   { path: "/settings", icon: Settings, label: "Inställningar" },
   { path: "/help", icon: HelpCircle, label: "Hjälp & Support" },
-];
-
-const paymentNavItems = [
-  { path: "/frikort", icon: CreditCard, label: "Frikort" },
-  { path: "/koder", icon: KeyRound, label: "Koder" },
-  { path: "/seb-forsakring", icon: Shield, label: "SEB försäkring" },
 ];
 
 export function SideMenu({ isOpen, onClose }: SideMenuProps) {
@@ -95,18 +88,6 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
               <span>Hälsoprofil</span>
             </NavLink>
 
-            {/* 1177 External Link */}
-            <button
-              onClick={() => {
-                openExternal("https://m07-mg-local.idp.funktionstjanster.se/samlv2/idp/sign_in/781");
-                onClose();
-              }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-foreground hover:bg-muted w-full text-left"
-            >
-              <ExternalLink className="w-5 h-5" />
-              <span>1177 - Journal</span>
-            </button>
-
             <NavLink
               to="/settings"
               onClick={onClose}
@@ -139,22 +120,6 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
               <span>Hjälp & Support</span>
             </NavLink>
 
-            <NavLink
-              to="/meeting-history"
-              onClick={onClose}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                  isActive
-                    ? "bg-primary-soft text-primary font-medium"
-                    : "text-foreground hover:bg-muted"
-                )
-              }
-            >
-              <CalendarDays className="w-5 h-5" />
-              <span>Möteshistorik</span>
-            </NavLink>
-
             <button
               onClick={() => {
                 onClose();
@@ -165,31 +130,6 @@ export function SideMenu({ isOpen, onClose }: SideMenuProps) {
               <Compass className="w-5 h-5" />
               <span>Visa introduktion igen</span>
             </button>
-
-
-            <div className="h-px bg-border my-4" />
-
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 px-3">
-              Betalningsmetod
-            </p>
-            {paymentNavItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                    isActive
-                      ? "bg-primary-soft text-primary font-medium"
-                      : "text-foreground hover:bg-muted"
-                  )
-                }
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
           </nav>
 
           {/* Footer */}

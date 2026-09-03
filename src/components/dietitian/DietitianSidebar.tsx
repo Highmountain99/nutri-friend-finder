@@ -1,9 +1,7 @@
 import {
   LayoutDashboard,
   Users,
-  CalendarDays,
   MessageSquare,
-  BarChart3,
   Settings,
   LogOut,
   ChevronsUpDown,
@@ -11,7 +9,6 @@ import {
   ChevronDown,
   User,
   ShieldCheck,
-  Blocks,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -47,12 +44,9 @@ import {
 
 const items = [
   { title: "Översikt", url: "/dietitian", icon: LayoutDashboard, end: true },
-  { title: "Patienter", url: "/dietitian/patients", icon: Users },
-  { title: "Kalender", url: "/dietitian/schedule", icon: CalendarDays },
+  { title: "Klienter", url: "/dietitian/patients", icon: Users },
   { title: "Meddelanden", url: "/dietitian/messages", icon: MessageSquare, badgeKey: "messages" },
   { title: "Recept", url: "/dietitian/recipes", icon: UtensilsCrossed },
-  { title: "Blockbibliotek", url: "/dietitian/blocks", icon: Blocks },
-  { title: "Statistik", url: "/dietitian/statistics", icon: BarChart3 },
 ];
 
 export function DietitianSidebar() {
@@ -186,10 +180,10 @@ export function DietitianSidebar() {
               {!collapsed && (
                 <div className="flex-1 text-left min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {profile ? `${profile.first_name} ${profile.last_name}` : "Dietist"}
+                    {profile ? `${profile.first_name} ${profile.last_name}` : "Coach"}
                   </p>
                   <p className="text-xs text-sidebar-foreground/60 truncate">
-                    {profile?.title ?? "Leg. dietist"}
+                    {profile?.title ?? "Coach"}
                   </p>
                 </div>
               )}
