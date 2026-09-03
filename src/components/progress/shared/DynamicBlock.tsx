@@ -219,8 +219,13 @@ function TrendFocusCard({
 
   const card = (
     <div
-      onClick={() => setFocused(true)}
+      ref={cardRef}
+      onClick={(e) => {
+        setRect((e.currentTarget as HTMLElement).getBoundingClientRect());
+        setFocused(true);
+      }}
       className="relative cursor-pointer"
+
       style={{
         backgroundColor: C.cream,
         borderRadius: 24,
