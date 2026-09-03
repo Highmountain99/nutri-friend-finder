@@ -251,11 +251,13 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
           </h2>
           {(() => {
             const ORDER = ["weight_trend_card", "meals_week_card", "logged_days_card", "waist_trend_card"];
-            const sorted = [...patientBlocks!].sort((a, b) => {
-              const ia = ORDER.indexOf(a.renderAs || "");
-              const ib = ORDER.indexOf(b.renderAs || "");
-              return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-            });
+            const sorted = [...(patientBlocks || [])]
+              .filter((bd: any) => bd?.block?.id && bd?.block?.template)
+              .sort((a, b) => {
+                const ia = ORDER.indexOf(a.renderAs || "");
+                const ib = ORDER.indexOf(b.renderAs || "");
+                return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+              });
             const isHalf = (bd: any) =>
               ["meals_week_card", "logged_days_card"].includes(bd.renderAs || "");
             const rows: JSX.Element[] = [];
