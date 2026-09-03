@@ -250,17 +250,15 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: hsl(var(--primary));
-
-    font-weight: 400;
+    font-weight: 600;
   }
 
   .lede {
-    font-family: 'Instrument Serif', serif;
-    font-style: italic;
-    color: hsl(var(--primary));
-    line-height: 1.2;
-    letter-spacing: -0.01em;
+    font-family: 'MentiText', 'Manrope', sans-serif;
+    color: hsl(var(--primary) / 0.75);
+    line-height: 1.45;
   }
+
 
   .gradient-hero {
     background: var(--gradient-hero);
