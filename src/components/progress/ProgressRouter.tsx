@@ -250,14 +250,20 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
             </span>
           </h2>
           {(() => {
+            const ORDER = ["weight_trend_card", "meals_week_card", "logged_days_card", "waist_trend_card"];
+            const sorted = [...patientBlocks!].sort((a, b) => {
+              const ia = ORDER.indexOf(a.renderAs || "");
+              const ib = ORDER.indexOf(b.renderAs || "");
+              return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            });
             const isHalf = (bd: any) =>
               ["meals_week_card", "logged_days_card"].includes(bd.renderAs || "");
             const rows: JSX.Element[] = [];
             let i = 0;
-            while (i < patientBlocks!.length) {
-              const bd = patientBlocks![i];
-              if (isHalf(bd) && patientBlocks![i + 1] && isHalf(patientBlocks![i + 1])) {
-                const next = patientBlocks![i + 1];
+            while (i < sorted.length) {
+              const bd = sorted[i];
+              if (isHalf(bd) && sorted[i + 1] && isHalf(sorted[i + 1])) {
+                const next = sorted[i + 1];
                 rows.push(
                   <div key={bd.block.id} className="grid grid-cols-2 gap-3">
                     <DynamicBlock data={bd} />
@@ -272,6 +278,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
             }
             return rows;
           })()}
+
         </div>
       ) : (
 
