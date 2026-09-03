@@ -121,10 +121,13 @@ export function usePatientBlocks(patientId: string | undefined) {
       if (error) throw error;
       if (!blocks || blocks.length === 0) return [];
 
-      const patientBlocks: PatientBlock[] = (blocks as any[]).map((b) => ({
-        ...b,
-        template: b.block_templates,
-      }));
+      const patientBlocks: PatientBlock[] = (blocks as any[])
+        .filter((b) => b && b.block_templates)
+        .map((b) => ({
+          ...b,
+          template: b.block_templates,
+        }));
+      if (patientBlocks.length === 0) return [];
 
       const today = format(new Date(), "yyyy-MM-dd");
       const thirtyDaysAgo = format(subDays(new Date(), 30), "yyyy-MM-dd");
