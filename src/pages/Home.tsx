@@ -8,6 +8,7 @@ import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { EditWeightSheet } from "@/components/profile/EditWeightSheet";
 import { EditWaistSheet } from "@/components/profile/EditWaistSheet";
 import { Scale, Ruler } from "lucide-react";
+import { useMyTrainingDays, getNextSession, WEEKDAY_LABELS } from "@/hooks/useTrainingDays";
 import dialogBubbles from "@/assets/illustrations/33-dialog-bubbles.jpg";
 import studyDesk from "@/assets/illustrations/12-study-desk.jpg";
 import cheeringTrio from "@/assets/illustrations/24-cheering-trio.jpg";
@@ -59,6 +60,8 @@ export default function Home() {
   const { data: health, updateWeight, updateWaist } = useHealthProfile();
   const [weightOpen, setWeightOpen] = useState(false);
   const [waistOpen, setWaistOpen] = useState(false);
+  const { data: trainingDays } = useMyTrainingDays();
+  const nextSession = getNextSession(trainingDays ?? []);
 
   const firstName =
     user?.user_metadata?.first_name ||
@@ -71,7 +74,19 @@ export default function Home() {
       <section className="screen-header bg-sage px-5 pt-5 pb-6">
         <h1 className="display text-[34px]">
           Hej {firstName}.{" "}
-          <span className="pill-highlight pill-highlight--light">Redo?</span>
+          {nextSession ? (
+            <>
+              Nästa pass{" "}
+              <span className="pill-highlight pill-highlight--light">
+                {WEEKDAY_LABELS[nextSession.day.weekday]}{" "}
+                {nextSession.day.start_time
+                  ? nextSession.day.start_time.slice(0, 5)
+                  : ""}
+              </span>
+            </>
+          ) : (
+            <span className="pill-highlight pill-highlight--light">Redo?</span>
+          )}
         </h1>
 
         {dietitianLoading ? (
