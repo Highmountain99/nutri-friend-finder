@@ -62,7 +62,7 @@ export default function DietitianPatients() {
         <div className="flex items-center gap-2">
           <Button onClick={() => setInviteOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
-            Bjud in patient
+            Bjud in klient
           </Button>
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
@@ -84,7 +84,7 @@ export default function DietitianPatients() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Sök patient eller fokusområde..."
+          placeholder="Sök klient eller fokusområde..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -102,7 +102,7 @@ export default function DietitianPatients() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left text-xs font-medium text-muted-foreground p-3">Patient</th>
+                <th className="text-left text-xs font-medium text-muted-foreground p-3">Klient</th>
                 <th className="text-left text-xs font-medium text-muted-foreground p-3">Fokusområde</th>
                 <th className="text-left text-xs font-medium text-muted-foreground p-3 hidden md:table-cell">Nästa besök</th>
                 <th className="text-left text-xs font-medium text-muted-foreground p-3 hidden lg:table-cell">Senaste kontakt</th>
