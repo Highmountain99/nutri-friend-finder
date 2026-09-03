@@ -49,8 +49,8 @@ export function AuthLanding() {
             style={{
               fontFamily: 'MentiDisplay, Anton, sans-serif',
               fontWeight: 800,
-              fontSize: "clamp(58px, 16vw, 88px)",
-              lineHeight: 0.9,
+              fontSize: "clamp(44px, 12vw, 66px)",
+              lineHeight: 0.92,
               color: "#1F3A2E",
               textTransform: "uppercase",
               letterSpacing: "-0.01em",
