@@ -128,7 +128,7 @@ export function TreatmentJourneySheet({ open, onOpenChange }: Props) {
             <PhaseDetail
               phase={activePhase}
               total={phases.length}
-              dietitianName="Din dietist"
+              dietitianName="Din coach"
               onBack={() => setOpenPhaseIdx(null)}
             />
           ) : (
@@ -764,7 +764,7 @@ function EmptyState({ onClose }: { onClose: () => void }) {
           className="mt-2 text-[13px] leading-relaxed max-w-[28ch]"
           style={{ color: T.mut }}
         >
-          När din dietist satt upp planen dyker kartan upp här.
+          När din coach satt upp planen dyker kartan upp här.
         </p>
       </div>
     </div>

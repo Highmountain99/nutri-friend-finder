@@ -46,7 +46,7 @@ export function EditGoalsSheet({
           <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
             <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
-              Dina mål sattes under registreringen. Kontakta din dietist 
+              Dina mål sattes under registreringen. Kontakta din coach 
               om du vill uppdatera dina hälsomål.
             </p>
           </div>

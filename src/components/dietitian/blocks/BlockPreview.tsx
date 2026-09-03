@@ -713,7 +713,7 @@ export function BlockPreview({
     /* ── Fallback ── */
     return (
       <p className="text-[12px] text-muted-foreground mt-2 line-clamp-2">
-        Innehåll sätts per patient av dietisten
+        Innehåll sätts per patient av coachen
       </p>
     );
   };

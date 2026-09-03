@@ -79,7 +79,7 @@ export function BlockPickerSheet({ open, onOpenChange, patientId }: BlockPickerS
         <div className="p-6 pb-3">
           <DialogHeader className="text-left">
             <DialogTitle>Lägg till block från biblioteket</DialogTitle>
-            <DialogDescription>Välj block att lägga till i patientens utvecklingsvy.</DialogDescription>
+            <DialogDescription>Välj block att lägga till i klientens utvecklingsvy.</DialogDescription>
           </DialogHeader>
         </div>
 

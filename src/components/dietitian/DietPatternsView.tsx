@@ -135,7 +135,7 @@ export function DietPatternsView({ meals, symptoms }: Props) {
               <div>
                 <p className="text-sm font-semibold">AI-mönster</p>
                 <p className="text-xs text-muted-foreground">
-                  Gruppera vad patienten äter automatiskt
+                  Gruppera vad klienten äter automatiskt
                 </p>
               </div>
             </div>

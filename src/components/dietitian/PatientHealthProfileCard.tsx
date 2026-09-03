@@ -249,8 +249,8 @@ export function PatientHealthProfileCard({
       <Sheet open={editGoals} onOpenChange={setEditGoals}>
         <SheetContent side="right" className="w-full sm:max-w-md">
           <SheetHeader>
-            <SheetTitle>Patientens mål</SheetTitle>
-            <SheetDescription>Sätt mål för patienten baserat på journal och bedömning</SheetDescription>
+            <SheetTitle>Klientens mål</SheetTitle>
+            <SheetDescription>Sätt mål för klienten baserat på journal och bedömning</SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
             <div className="flex gap-2">

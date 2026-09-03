@@ -63,10 +63,10 @@ const Admin = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Ticket className="h-5 w-5" />
-              Dietist-inbjudningar
+              Coach-inbjudningar
             </CardTitle>
             <CardDescription>
-              Skapa inbjudningskoder som nya dietister använder för att registrera sig
+              Skapa inbjudningskoder som nya coacher använder för att registrera sig
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

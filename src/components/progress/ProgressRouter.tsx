@@ -1,12 +1,9 @@
-import { useState } from "react";
+import { Route, Sparkles, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
-import { useAppointments } from "@/hooks/useAppointments";
+
 import { usePatientTreatmentPlan } from "@/hooks/usePatientTreatmentPlan";
-import { Button } from "@/components/ui/button";
-import { CalendarPlus, Eye, Route, Sparkles, ArrowRight, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProgressRouterProps {
@@ -190,21 +187,10 @@ function FocusB({ quote, author }: { quote: string; author: string }) {
 
 export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
   const { user } = useAuth();
-  const [previewMode, setPreviewMode] = useState(
-    () => typeof document !== "undefined" && document.body.hasAttribute("data-coach-tour")
-  );
   const { data: patientBlocks, isLoading: blocksLoading } = usePatientBlocks(user?.id);
-  const { appointments, loading: appointmentsLoading } = useAppointments();
   const { data: plan } = usePatientTreatmentPlan();
-  const navigate = useNavigate();
 
-  const hasCompletedAppointment = appointments.some(
-    (apt) =>
-      apt.status === "completed" ||
-      (apt.status === "booked" && apt.appointmentDate < new Date())
-  );
-
-  if (blocksLoading || appointmentsLoading) {
+  if (blocksLoading) {
     return (
       <div className="px-4 py-6 space-y-4">
         <Skeleton className="h-10 w-56" />
@@ -243,7 +229,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
           onOpen={onOpenJourney}
         />
       )}
-      <FocusB quote={focusQuote} author="Din dietist" />
+      <FocusB quote={focusQuote} author="Din coach" />
 
       {hasBlocks ? (
         <div className="space-y-3">
@@ -258,95 +244,12 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
           </div>
           <h2 className="font-serif text-[25px] text-primary mb-2">Inga block ännu</h2>
           <p className="text-sm text-muted-foreground max-w-[28ch] mx-auto leading-relaxed">
-            Din dietist anpassar din utvecklingsvy med block som passar just din behandling.
+            Din coach anpassar din utvecklingsvy med block som passar just din behandling.
           </p>
         </div>
       )}
     </div>
   );
-
-  // Locked state
-  if (!hasCompletedAppointment && !previewMode) {
-    return (
-      <div className="relative min-h-[calc(100vh-8rem)] overflow-hidden">
-        <div className="pointer-events-none select-none blur-[7px] opacity-50" aria-hidden="true">
-          <div className="px-4 pt-4 space-y-3.5">
-            <HeaderB />
-            <HeroB
-              planTitle="FODMAP"
-              phaseName="Återintroduktion"
-              activeIdx={1}
-              totalPhases={3}
-              onOpen={() => {}}
-            />
-            <FocusB quote={focusQuote} author="Din dietist" />
-          </div>
-        </div>
-
-        <div className="absolute inset-0 flex items-center justify-center z-10 px-6">
-          <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-[22px] shadow-[0_24px_60px_-28px_hsl(145_30%_11%/0.4)] p-7 text-center max-w-sm w-full">
-            <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-5 h-5 text-primary" />
-            </div>
-            <div
-              className="font-mono text-[10px] tracking-[0.16em] uppercase"
-              style={{ color: "hsl(var(--nutrient-cal))" }}
-            >
-              Lås upp
-            </div>
-            <h2 className="font-serif text-[26px] leading-tight text-primary mt-2 mb-2.5">
-              Din utvecklingsplan väntar
-            </h2>
-            <p className="text-[13px] leading-[1.5] text-muted-foreground mb-5 max-w-[30ch] mx-auto">
-              Planen aktiveras när du haft ditt första möte med din personliga dietist.
-            </p>
-            <Button className="w-full rounded-2xl" size="lg" onClick={() => navigate("/booking")}>
-              <CalendarPlus className="w-4 h-4 mr-2" />
-              Boka tid med dietist
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full rounded-2xl mt-1 text-muted-foreground"
-              onClick={() => setPreviewMode(true)}
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Hur kan det se ut?
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Preview mode banner
-  if (!hasCompletedAppointment && previewMode) {
-    return (
-      <>
-        <div className="mx-4 mb-1 mt-3 bg-primary/5 border border-primary/20 rounded-2xl p-3.5">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Förhandsvisning</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Det här är ett exempel på hur din plan kan se ut
-              </p>
-            </div>
-            <Button
-              size="sm"
-              className="rounded-xl text-xs h-8 shrink-0"
-              onClick={() => {
-                setPreviewMode(false);
-                navigate("/booking");
-              }}
-            >
-              <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
-              Boka tid
-            </Button>
-          </div>
-        </div>
-        {shell}
-      </>
-    );
-  }
 
   return shell;
 }

@@ -113,7 +113,7 @@ export const pregnancyConfig: AreaConfig = {
       fields: [
         { type: "slider", key: "motivation", label: "Motivation", min: 1, max: 10 },
         { type: "chips", key: "barriers", label: "Hinder", options: ["Trötthet", "Illamående", "Tidsbrist", "Sömnbrist", "Aptit", "Stress", "Småbarn"], multi: true },
-        { type: "chips", key: "patient_goals", label: "Patientens mål", options: ["Äta tillräckligt", "Minska illamående", "Få struktur", "Säkerställa näring", "Få energi", "Stabilisera måltider", "Orka vardagen", "Återfå balans"], multi: true },
+        { type: "chips", key: "patient_goals", label: "Klientens mål", options: ["Äta tillräckligt", "Minska illamående", "Få struktur", "Säkerställa näring", "Få energi", "Stabilisera måltider", "Orka vardagen", "Återfå balans"], multi: true },
       ],
     },
   ],

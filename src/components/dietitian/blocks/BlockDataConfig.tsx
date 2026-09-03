@@ -8,7 +8,7 @@ import { Plus, X } from "lucide-react";
 
 const DATA_SOURCE_OPTIONS = [
   { value: "meal_log", label: "Kostlogg", desc: "Loggade måltider och portioner" },
-  { value: "meal_times", label: "Måltidstider", desc: "När patienten äter" },
+  { value: "meal_times", label: "Måltidstider", desc: "När klienten äter" },
   { value: "symptom_log", label: "Symptomlogg", desc: "Symptom kopplade till måltider" },
   { value: "macro_data", label: "Makro-/näringsdata", desc: "Protein, kolhydrater, fett" },
   { value: "treatment_goals", label: "Behandlingsmål", desc: "Milstolpar och mål" },

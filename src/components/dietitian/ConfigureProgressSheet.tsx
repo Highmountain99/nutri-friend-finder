@@ -187,7 +187,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
           <SheetHeader className="text-left">
             <SheetTitle className="text-lg">Designa utvecklingsvy</SheetTitle>
             <SheetDescription className="text-sm">
-              Bygg patientens vy genom att lägga till block från biblioteket.
+              Bygg klientens vy genom att lägga till block från biblioteket.
             </SheetDescription>
           </SheetHeader>
         </div>
@@ -203,7 +203,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
               <div className="flex items-center gap-2 mb-3">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Patientens vy
+                  Klientens vy
                 </Label>
               </div>
 
@@ -275,7 +275,7 @@ export function ConfigureProgressSheet({ open, onOpenChange, patientId }: Config
                   Blockbibliotek
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Klicka för att lägga till i patientens vy.
+                  Klicka för att lägga till i klientens vy.
                 </p>
 
                 <div className="grid grid-cols-2 gap-2">

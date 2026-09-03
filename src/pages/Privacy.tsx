@@ -24,10 +24,10 @@ export default function Privacy() {
 
             <h3 className="text-lg font-semibold text-foreground">Inledning</h3>
             <p>
-              Varje vecka träffar tusentals patienter runt om i världen en Dietist och/eller Kostrådgivare 
+              Varje vecka träffar tusentals klienter runt om i världen en Dietist och/eller Kostrådgivare 
               via EatSuite. Det innebär att EatSuite har ett stort ansvar – för att skydda dina uppgifter, 
               men också gentemot det nutritionella fältet och världen i stort. Vi måste kunna tolka den 
-              stora mängden data och se till att använda den för att erbjuda alla våra patienter en ständigt 
+              stora mängden data och se till att använda den för att erbjuda alla våra klienter en ständigt 
               förbättrad vård.
             </p>
             <p>

@@ -56,8 +56,8 @@ export default function DietitianPatients() {
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Patienter</h1>
-          <p className="text-muted-foreground">{patients?.length ?? 0} tilldelade patienter</p>
+          <h1 className="text-2xl font-bold text-foreground">Klienter</h1>
+          <p className="text-muted-foreground">{patients?.length ?? 0} tilldelade klienter</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => setInviteOpen(true)}>
@@ -94,7 +94,7 @@ export default function DietitianPatients() {
       {!filtered.length ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            {search ? "Inga patienter matchar din sökning." : "Du har inga tilldelade patienter ännu."}
+            {search ? "Inga klienter matchar din sökning." : "Du har inga tilldelade klienter ännu."}
           </CardContent>
         </Card>
       ) : viewMode === "list" ? (

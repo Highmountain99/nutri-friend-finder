@@ -100,7 +100,7 @@ export const diabetesConfig: AreaConfig = {
       fields: [
         { type: "slider", key: "motivation", label: "Motivation", min: 1, max: 10 },
         { type: "chips", key: "barriers", label: "Hinder", options: ["Tidsbrist", "Vanor", "Sötsug", "Stress", "Sociala situationer", "Kunskap", "Ekonomi"], multi: true },
-        { type: "chips", key: "patient_goals", label: "Patientens mål", options: ["Sänka HbA1c", "Jämnare blodsocker", "Gå ner i vikt", "Mindre toppar", "Få struktur"], multi: true },
+        { type: "chips", key: "patient_goals", label: "Klientens mål", options: ["Sänka HbA1c", "Jämnare blodsocker", "Gå ner i vikt", "Mindre toppar", "Få struktur"], multi: true },
       ],
     },
   ],

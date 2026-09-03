@@ -389,7 +389,7 @@ function CreatePlanForm({ form, setForm, addGoal, removeGoal, updateGoal, addMil
       <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
         <div className="flex items-center gap-2">
           <Target className="h-4 w-4 text-primary" />
-          <p className="text-sm font-medium">Slutmål (visas i patientens resa)</p>
+          <p className="text-sm font-medium">Slutmål (visas i klientens resa)</p>
         </div>
         <Textarea
           placeholder="T.ex. Långsiktig magbalans utan symtom"
@@ -485,7 +485,7 @@ function EditPlanDialog({
           <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
-              <p className="text-sm font-medium">Slutmål (visas i patientens resa)</p>
+              <p className="text-sm font-medium">Slutmål (visas i klientens resa)</p>
             </div>
             <Textarea
               placeholder="T.ex. Långsiktig magbalans utan symtom"

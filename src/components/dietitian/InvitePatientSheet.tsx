@@ -144,7 +144,7 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
               <Label className="font-medium">Din inbjudningslänk</Label>
             </div>
             <p className="text-xs text-muted-foreground">
-              Dela denna länk med patienter. De som registrerar sig via länken kopplas automatiskt till dig.
+              Dela denna länk med klienter. De som registrerar sig via länken kopplas automatiskt till dig.
             </p>
             {loadingGeneral ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -172,7 +172,7 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
               <Label className="font-medium">Skicka inbjudan via e-post</Label>
             </div>
             <p className="text-xs text-muted-foreground">
-              Ange patientens e-postadress. En personlig inbjudningslänk skapas automatiskt.
+              Ange klientens e-postadress. En personlig inbjudningslänk skapas automatiskt.
             </p>
             <div className="flex gap-2">
               <Input

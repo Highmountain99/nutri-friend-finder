@@ -90,7 +90,7 @@ export function InstallPrompt({ force = false }: { force?: boolean } = {}) {
         </div>
 
         <p className="text-sm text-muted-foreground mb-5">
-          Få snabb tillgång till din dietist, dagbok och recept – direkt från din hemskärm.
+          Få snabb tillgång till din coach, dagbok och recept – direkt från din hemskärm.
         </p>
 
         {platform === "ios" && (

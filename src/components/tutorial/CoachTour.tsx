@@ -38,14 +38,14 @@ const STEPS: TourStep[] = [
     route: "/recipes",
     selector: '[data-tour="recipes-browse"]',
     title: "Recept",
-    body: "Sök fritt eller bläddra i hela receptbanken med filter. Din dietist kan också skicka recept direkt till dig.",
+    body: "Sök fritt eller bläddra i hela receptbanken med filter. Din coach kan också skicka recept direkt till dig.",
     delay: 400,
   },
   {
     route: "/progress",
     selector: '[data-tour="progress-hero"]',
     title: "Din utveckling",
-    body: "Följ din resa, dina milstolpar och behandlingsplanen från din dietist. Tryck på kortet för att öppna kartan.",
+    body: "Följ din resa, dina milstolpar och behandlingsplanen från din coach. Tryck på kortet för att öppna kartan.",
     delay: 500,
   },
 ];

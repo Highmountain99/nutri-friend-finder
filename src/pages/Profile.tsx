@@ -1,31 +1,23 @@
 import { useState } from "react";
-import { Heart, Activity, Ruler, Scale, AlertCircle, Pencil, MessageSquareText, Target } from "lucide-react";
+import { Activity, Ruler, Scale, AlertCircle, Pencil, MessageSquareText, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditableHealthCard } from "@/components/profile/EditableHealthCard";
 import { EditWeightSheet } from "@/components/profile/EditWeightSheet";
 import { EditHeightSheet } from "@/components/profile/EditHeightSheet";
-import { EditBloodPressureSheet } from "@/components/profile/EditBloodPressureSheet";
 import { EditActivitySheet } from "@/components/profile/EditActivitySheet";
-import { EditConditionsSheet } from "@/components/profile/EditConditionsSheet";
 import { EditGoalsSheet } from "@/components/profile/EditGoalsSheet";
 import { EditWaistSheet } from "@/components/profile/EditWaistSheet";
 import { useHealthProfile, activityLevelLabels } from "@/hooks/useHealthProfile";
 import { useIntakeProfile } from "@/hooks/useIntakeProfile";
 
-type EditSheet = "weight" | "height" | "bloodPressure" | "activity" | "conditions" | "goals" | "waist" | null;
+type EditSheet = "weight" | "height" | "activity" | "goals" | "waist" | null;
 
 export default function Profile() {
-  const { data, loading, updateWeight, updateHeight, updateBloodPressure, updateActivityLevel, updateWaist } = useHealthProfile();
+  const { data, loading, updateWeight, updateHeight, updateActivityLevel, updateWaist } = useHealthProfile();
   const { profile: intakeProfile, loading: intakeLoading } = useIntakeProfile();
   const [openSheet, setOpenSheet] = useState<EditSheet>(null);
-
-  const formatBloodPressure = () => {
-    if (!data.bloodPressure) return undefined;
-    return `${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}`;
-  };
 
   const formatActivityLevel = () => {
     if (!data.activityLevel) return undefined;
@@ -77,12 +69,6 @@ export default function Profile() {
             onEdit={() => setOpenSheet("height")}
           />
           <EditableHealthCard
-            icon={Heart}
-            label="Blodtryck"
-            value={formatBloodPressure()}
-            onEdit={() => setOpenSheet("bloodPressure")}
-          />
-          <EditableHealthCard
             icon={Activity}
             label="Aktivitetsnivå"
             value={formatActivityLevel()}
@@ -111,39 +97,6 @@ export default function Profile() {
           </Card>
         </section>
       )}
-
-      {/* Conditions */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            Diagnoser & tillstånd
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            onClick={() => setOpenSheet("conditions")}
-            aria-label="Visa diagnoser"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-        <Card className="shadow-soft">
-          <CardContent className="p-4">
-            {data.conditions.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {data.conditions.map((condition) => (
-                  <Badge key={condition} variant="secondary" className="px-3 py-1">
-                    {condition}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm italic">Inga diagnoser registrerade</p>
-            )}
-          </CardContent>
-        </Card>
-      </section>
 
       {/* Goals */}
       <section>
@@ -203,22 +156,11 @@ export default function Profile() {
         currentValue={data.heightCm}
         onSave={updateHeight}
       />
-      <EditBloodPressureSheet
-        open={openSheet === "bloodPressure"}
-        onOpenChange={(open) => !open && setOpenSheet(null)}
-        currentValue={data.bloodPressure}
-        onSave={updateBloodPressure}
-      />
       <EditActivitySheet
         open={openSheet === "activity"}
         onOpenChange={(open) => !open && setOpenSheet(null)}
         currentValue={data.activityLevel}
         onSave={updateActivityLevel}
-      />
-      <EditConditionsSheet
-        open={openSheet === "conditions"}
-        onOpenChange={(open) => !open && setOpenSheet(null)}
-        conditions={data.conditions}
       />
       <EditGoalsSheet
         open={openSheet === "goals"}
