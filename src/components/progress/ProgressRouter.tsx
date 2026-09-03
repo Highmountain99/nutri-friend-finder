@@ -1,12 +1,8 @@
-import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePatientBlocks } from "@/hooks/usePatientBlocks";
 import { DynamicBlock } from "./shared/DynamicBlock";
 
 import { usePatientTreatmentPlan } from "@/hooks/usePatientTreatmentPlan";
-import { Button } from "@/components/ui/button";
-import { CalendarPlus, Eye, Route, Sparkles, ArrowRight, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProgressRouterProps {
