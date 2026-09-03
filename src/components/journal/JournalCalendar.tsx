@@ -71,14 +71,14 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries, s
   return (
     <div className="screen-header bg-gold -mx-3 sm:-mx-4 px-4 pt-[calc(env(safe-area-inset-top)+28px)] pb-7">
       {/* Date row */}
-      <div className="flex items-center gap-2 mb-7">
+      <div className="flex items-start gap-2 mb-7">
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <button className="flex items-baseline gap-2 min-w-0 text-left">
-              <span className="display text-[32px] truncate">
+            <button className="flex flex-col items-start gap-1 min-w-0 text-left">
+              <span className="display text-[32px]">
                 {format(selectedDate, "EEEE", { locale: sv })}
               </span>
-              <span className="pill-highlight pill-highlight--light display text-[26px] py-0.5 whitespace-nowrap">
+              <span className="pill-highlight pill-highlight--light display text-[26px] py-0.5 px-5 whitespace-nowrap">
                 {format(selectedDate, "d MMM", { locale: sv })}
               </span>
             </button>
