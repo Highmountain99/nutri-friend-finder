@@ -72,24 +72,19 @@ function Arc({
   );
 }
 
-function HeroB({
-  planTitle,
-  phaseName,
+function JourneySurface({
+  goals,
   activeIdx,
-  totalPhases,
-  weekLabel,
   onOpen,
 }: {
-  planTitle: string;
-  phaseName: string;
+  goals: { id: string; title: string; status: string }[];
   activeIdx: number;
-  totalPhases: number;
-  weekLabel?: string;
   onOpen: () => void;
 }) {
+  const startY = useRef<number | null>(null);
+
   return (
     <div className="relative">
-      {/* layered peek */}
       <div
         className="absolute left-2.5 right-2.5 top-2.5 -bottom-2 rounded-[22px] bg-accent/35"
         aria-hidden
@@ -97,61 +92,97 @@ function HeroB({
       <button
         data-tour="progress-hero"
         onClick={onOpen}
-        className="relative w-full text-left bg-primary text-primary-foreground rounded-[22px] p-5 overflow-hidden shadow-[0_18px_44px_-22px_hsl(145_30%_11%/0.7)] active:scale-[0.99] transition-transform"
+        onPointerDown={(e) => {
+          startY.current = e.clientY;
+        }}
+        onPointerMove={(e) => {
+          if (startY.current !== null && e.clientY - startY.current > 28) {
+            startY.current = null;
+            onOpen();
+          }
+        }}
+        onPointerUp={() => {
+          startY.current = null;
+        }}
+        className="relative w-full text-left bg-primary text-primary-foreground rounded-[22px] p-5 overflow-hidden shadow-[0_18px_44px_-22px_hsl(145_30%_11%/0.7)] active:scale-[0.99] transition-transform touch-pan-y"
       >
         <div
           className="absolute -right-12 -top-12 w-[150px] h-[150px] rounded-full bg-primary-foreground/5"
           aria-hidden
         />
-        <div className="relative flex items-center justify-between mb-4">
-          <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-primary-foreground/70">
-            Min resa · {planTitle}
+        <h2
+          className="relative font-serif m-0"
+          style={{
+            fontSize: 26,
+            fontWeight: 800,
+            lineHeight: 1,
+            textTransform: "uppercase",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Din{" "}
+          <span
+            style={{
+              backgroundColor: "hsl(var(--primary-foreground))",
+              color: "hsl(var(--primary))",
+              borderRadius: 999,
+              padding: "0 12px 3px",
+              display: "inline-block",
+            }}
+          >
+            resa
           </span>
-          <Route className="w-3.5 h-3.5 text-primary-foreground/70" />
-        </div>
-        <div className="relative flex items-center gap-4">
-          <Arc value={activeIdx + 1} total={Math.max(totalPhases, 1)}>
-            <span className="font-serif text-[26px] leading-none text-primary-foreground">
-              {activeIdx + 1}
-            </span>
-            <span className="font-mono text-[8px] tracking-[0.1em] text-primary-foreground/70 mt-0.5">
-              AV {Math.max(totalPhases, 1)}
-            </span>
-          </Arc>
-          <div className="flex-1 min-w-0">
-            <div className="font-serif text-[26px] leading-tight tracking-tight truncate">
-              {phaseName}
-            </div>
-            {weekLabel && (
-              <div className="font-mono text-[9.5px] tracking-[0.1em] text-primary-foreground/70 mt-1.5 uppercase">
-                {weekLabel}
-              </div>
-            )}
-            <div className="flex gap-1.5 mt-2.5">
-              {Array.from({ length: Math.max(totalPhases, 1) }).map((_, i) => (
+        </h2>
+
+        {/* Huvudmål från coachens behandlingsplan */}
+        <div className="relative mt-5 space-y-3">
+          {goals.map((g, i) => {
+            const done = g.status === "completed";
+            const active = i === activeIdx && !done;
+            return (
+              <div key={g.id} className="flex items-center gap-3">
                 <span
-                  key={i}
-                  className={`h-1 flex-1 rounded-full ${
-                    i <= activeIdx ? "bg-primary-foreground" : "bg-primary-foreground/18"
-                  }`}
-                  style={{ backgroundColor: i <= activeIdx ? undefined : "hsl(var(--primary-foreground) / 0.18)" }}
-                />
-              ))}
-            </div>
-          </div>
+                  className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-mono text-[11px]"
+                  style={{
+                    backgroundColor: done
+                      ? "hsl(var(--primary-foreground))"
+                      : "transparent",
+                    color: done
+                      ? "hsl(var(--primary))"
+                      : "hsl(var(--primary-foreground))",
+                    border: done
+                      ? "none"
+                      : `1.5px solid hsl(var(--primary-foreground) / ${active ? 1 : 0.35})`,
+                    opacity: done || active ? 1 : 0.7,
+                  }}
+                >
+                  {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                </span>
+                <span
+                  className="text-[14.5px] leading-snug truncate"
+                  style={{
+                    opacity: done ? 0.75 : active ? 1 : 0.6,
+                    fontWeight: active ? 600 : 400,
+                  }}
+                >
+                  {g.title}
+                </span>
+              </div>
+            );
+          })}
         </div>
-        <div className="relative flex items-center justify-between mt-4 pt-3.5 border-t border-primary-foreground/18">
-          <span className="text-[12.5px] text-primary-foreground/70">
-            Öppna din behandlingsplan
-          </span>
-          <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-primary-foreground/12 rounded-full px-3 py-1.5">
-            Min resa <ArrowRight className="w-3 h-3" />
-          </span>
+
+        <div className="relative flex justify-center mt-4">
+          <span
+            className="block rounded-full"
+            style={{ width: 40, height: 4, backgroundColor: "hsl(var(--primary-foreground) / 0.35)" }}
+          />
         </div>
       </button>
     </div>
   );
 }
+
 
 function FocusB({ quote, author }: { quote: string; author: string }) {
   return (
