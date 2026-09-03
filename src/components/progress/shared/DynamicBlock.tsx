@@ -200,6 +200,7 @@ function TrendFocusCard({
   fillColor: string;
 }) {
   const [focused, setFocused] = useState(false);
+  const [rect, setRect] = useState<DOMRect | null>(null);
   const [rangeKey, setRangeKey] = useState("1m");
   const range = RANGES.find((r) => r.key === rangeKey)!;
 
@@ -219,7 +220,6 @@ function TrendFocusCard({
 
   const card = (
     <div
-      ref={cardRef}
       onClick={(e) => {
         setRect((e.currentTarget as HTMLElement).getBoundingClientRect());
         setFocused(true);
@@ -294,10 +294,17 @@ function TrendFocusCard({
           }}
           onClick={() => setFocused(false)}
         >
-          <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="absolute"
+            style={
+              rect
+                ? { top: rect.top, left: rect.left, width: rect.width }
+                : { top: "20%", left: 16, right: 16 }
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
             {card}
-          </div>
-          <div className="flex items-center justify-center gap-3 mt-5">
+            <div className="flex items-center justify-center gap-3 mt-4">
 
           {RANGES.map((r) => {
             const active = r.key === rangeKey;
@@ -335,6 +342,7 @@ function TrendFocusCard({
               </button>
             );
           })}
+            </div>
           </div>
         </div>,
         document.body
