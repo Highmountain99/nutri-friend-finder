@@ -334,7 +334,14 @@ function MealsWeekCard({ title, days }: { title: string; days: { letter: string;
   const lowest = days.reduce((min, d, i) => (d.count < days[min].count ? i : min), 0);
   return (
     <div
-      style={{ backgroundColor: C.cream, borderRadius: 24, padding: 18, aspectRatio: "1 / 1" }}
+      style={{
+        backgroundColor: C.cream,
+        borderRadius: 24,
+        padding: 18,
+        aspectRatio: "1 / 1",
+        minHeight: 0,
+        overflow: "hidden",
+      }}
       className="flex flex-col"
     >
       <span style={cardTitleStyle}>{title}</span>
@@ -344,7 +351,7 @@ function MealsWeekCard({ title, days }: { title: string; days: { letter: string;
         </span>
         <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/dag</span>
       </div>
-      <div className="flex items-end mt-auto" style={{ gap: 5, height: 44 }}>
+      <div className="flex items-end mt-auto min-h-0" style={{ gap: 5, flex: "1 1 0%" }}>
         {days.map((d, i) => (
           <div
             key={i}
@@ -382,7 +389,14 @@ function LoggedDaysCard({
 }) {
   return (
     <div
-      style={{ backgroundColor: C.sage, borderRadius: 24, padding: 18, aspectRatio: "1 / 1" }}
+      style={{
+        backgroundColor: C.sage,
+        borderRadius: 24,
+        padding: 18,
+        aspectRatio: "1 / 1",
+        minHeight: 0,
+        overflow: "hidden",
+      }}
       className="flex flex-col"
     >
       <span style={cardTitleStyle}>{title}</span>
@@ -392,7 +406,7 @@ function LoggedDaysCard({
         </span>
         <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/{days.length}</span>
       </div>
-      <div className="flex flex-wrap mt-auto" style={{ gap: 6, paddingTop: 16 }}>
+      <div className="flex flex-wrap mt-auto min-h-0" style={{ gap: 6, paddingTop: 12 }}>
         {days.map((d, i) => (
           <span
             key={i}
