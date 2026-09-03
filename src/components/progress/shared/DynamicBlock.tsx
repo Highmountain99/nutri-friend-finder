@@ -345,35 +345,37 @@ function MealsWeekCard({ title, days }: { title: string; days: { letter: string;
       className="flex flex-col"
     >
       <span style={cardTitleStyle}>{title}</span>
-      <div style={{ marginTop: 8, marginBottom: 12 }}>
-        <span className="font-serif" style={{ fontSize: 34, fontWeight: 800, lineHeight: 1, color: C.ink }}>
+      <div style={{ marginTop: 6 }}>
+        <span className="font-serif" style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, color: C.ink }}>
           {avg.toFixed(1).replace(".", ",")}
         </span>
-        <span style={{ fontSize: 15, marginLeft: 4, color: C.soft }}>/dag</span>
+        <span style={{ fontSize: 14, marginLeft: 4, color: C.soft }}>/dag</span>
       </div>
-      <div className="flex items-end mt-auto min-h-0" style={{ gap: 5, flex: "1 1 0%" }}>
+      <div className="flex items-end mt-auto shrink-0" style={{ gap: 5, height: 22 }}>
         {days.map((d, i) => (
           <div
             key={i}
             style={{
               flex: 1,
-              height: `${Math.max(12, (d.count / max) * 100)}%`,
-              borderRadius: 6,
+              minWidth: 0,
+              height: `${Math.max(18, (d.count / max) * 100)}%`,
+              borderRadius: 4,
               backgroundColor: i === lowest && days[lowest].count < max ? C.gold : C.green,
             }}
           />
         ))}
       </div>
-      <div className="flex" style={{ gap: 5, marginTop: 6 }}>
+      <div className="flex shrink-0" style={{ gap: 5, marginTop: 6 }}>
         {days.map((d, i) => (
           <span
             key={i}
-            style={{ flex: 1, textAlign: "center", fontWeight: 600, fontSize: 8.5, color: C.faint }}
+            style={{ flex: 1, minWidth: 0, textAlign: "center", fontWeight: 600, fontSize: 9, color: C.faint }}
           >
             {d.letter}
           </span>
         ))}
       </div>
+
     </div>
   );
 }
