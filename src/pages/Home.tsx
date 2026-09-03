@@ -45,7 +45,7 @@ export default function Home() {
         <div className="space-y-3">
           <QuickActionCard
             icon={MessageCircle}
-            title="Chatta med din dietist"
+            title="Chatta med din coach"
             description="Skicka ett meddelande när som helst"
             onClick={() => navigate("/messages")}
             variant="accent"

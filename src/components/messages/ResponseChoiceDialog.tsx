@@ -28,7 +28,7 @@ export function ResponseChoiceDialog({
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-sm">
             Välj om du vill ha ett direkt svar eller vänta på{" "}
-            {dietitianName || "din dietist"}.
+            {dietitianName || "din coach"}.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

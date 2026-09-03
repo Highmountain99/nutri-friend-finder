@@ -52,7 +52,7 @@ function SourceBadge({ source }: { source: "journal" | "dietitian" | "manual" })
           color: "hsl(var(--nutrient-fat))",
         }}
       >
-        Din dietist
+        Din coach
       </span>
     );
   return null;
@@ -178,7 +178,7 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
             {data.focusText || "Varje måltid är ett steg framåt — lita på processen."}
           </p>
           <span className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/70 mt-2.5 block">
-            — {dietitian?.name || "Din dietist"}
+            — {dietitian?.name || "Din coach"}
           </span>
         </div>
       </div>
@@ -613,7 +613,7 @@ export function DynamicBlock({ data }: DynamicBlockProps) {
                   className="text-[12px] mt-0.5"
                   style={{ color: "hsl(var(--primary-foreground) / 0.7)" }}
                 >
-                  kl {format(new Date(data.nextAppointment.appointment_date), "HH:mm")} · videosamtal med {dietitian?.name?.split(" ")[0] || "din dietist"}
+                  kl {format(new Date(data.nextAppointment.appointment_date), "HH:mm")} · videosamtal med {dietitian?.name?.split(" ")[0] || "din coach"}
                 </div>
               </div>
             </div>

@@ -214,7 +214,7 @@ export default function Invite() {
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>Skapa ditt konto så är du igång direkt:</p>
                 <ul className="space-y-2 list-disc list-inside">
-                  <li>Direktkontakt med din dietist via chatt och videosamtal</li>
+                  <li>Direktkontakt med din coach via chatt och videosamtal</li>
                   <li>Personlig kostplan och receptförslag</li>
                   <li>Smarta verktyg för att följa din hälsa</li>
                 </ul>
@@ -245,7 +245,7 @@ export default function Invite() {
               <div className="text-center space-y-2">
                 <h1 className="text-xl font-bold">Skapa ditt konto</h1>
                 {dietitianName && (
-                  <p className="text-sm text-muted-foreground">{dietitianName} blir din dietist</p>
+                  <p className="text-sm text-muted-foreground">{dietitianName} blir din coach</p>
                 )}
               </div>
 

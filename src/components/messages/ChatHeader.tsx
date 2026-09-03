@@ -29,7 +29,7 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
 
   const fullName = dietitian
     ? `${dietitian.firstName} ${dietitian.lastName}`
-    : "Din dietist";
+    : "Din coach";
   const title = dietitian?.title || "Legitimerad dietist";
   const initials = dietitian
     ? `${dietitian.firstName[0]}${dietitian.lastName[0]}`
@@ -62,7 +62,7 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
       {isEscalated && (
         <div className="px-4 py-2 bg-primary/5 border-t border-primary/10">
           <p className="text-xs text-muted-foreground">
-            {dietitian?.firstName || "Din dietist"} har kopplats på och återkommer så snart som möjligt.
+            {dietitian?.firstName || "Din coach"} har kopplats på och återkommer så snart som möjligt.
           </p>
         </div>
       )}

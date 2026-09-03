@@ -229,7 +229,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
           onOpen={onOpenJourney}
         />
       )}
-      <FocusB quote={focusQuote} author="Din dietist" />
+      <FocusB quote={focusQuote} author="Din coach" />
 
       {hasBlocks ? (
         <div className="space-y-3">
@@ -244,7 +244,7 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
           </div>
           <h2 className="font-serif text-[25px] text-primary mb-2">Inga block ännu</h2>
           <p className="text-sm text-muted-foreground max-w-[28ch] mx-auto leading-relaxed">
-            Din dietist anpassar din utvecklingsvy med block som passar just din behandling.
+            Din coach anpassar din utvecklingsvy med block som passar just din behandling.
           </p>
         </div>
       )}

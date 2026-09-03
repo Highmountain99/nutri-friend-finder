@@ -72,7 +72,7 @@ export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: E
             <SheetTitle>Justera näringsmål</SheetTitle>
             <SheetDescription>
               {goals.setByDietist
-                ? "Dessa mål har satts av din dietist."
+                ? "Dessa mål har satts av din coach."
                 : "Sätt dina dagliga mål för kalorier och makronutrienter."}
             </SheetDescription>
           </SheetHeader>
@@ -105,7 +105,7 @@ export function EditNutritionGoalsSheet({ open, onOpenChange, goals, onSave }: E
           <AlertDialogHeader>
             <AlertDialogTitle>Ändra coachens mål?</AlertDialogTitle>
             <AlertDialogDescription>
-              Är du säker på att du vill ändra mål som din dietist har satt? Din dietist kommer bli notifierad att du har ändrat dina mål.
+              Är du säker på att du vill ändra mål som din coach har satt? Din coach kommer bli notifierad att du har ändrat dina mål.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

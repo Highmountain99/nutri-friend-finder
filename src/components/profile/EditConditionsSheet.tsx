@@ -46,8 +46,8 @@ export function EditConditionsSheet({
           <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
             <AlertCircle className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
-              Diagnoser sätts i samråd med din dietist och kan inte ändras här. 
-              Kontakta din dietist om något behöver uppdateras.
+              Diagnoser sätts i samråd med din coach och kan inte ändras här. 
+              Kontakta din coach om något behöver uppdateras.
             </p>
           </div>
         </div>

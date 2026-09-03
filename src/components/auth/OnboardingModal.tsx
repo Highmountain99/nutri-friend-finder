@@ -399,7 +399,7 @@ const STEPS = [
   "Svara på några frågor så att vi förstår ditt besvär och om du kvalificerar dig för dietistvård eller kostrådgivning.",
   "Välj en dietist eller kostrådgivare och boka ett första videosamtal där ni reder ut vad du behöver hjälp med.",
   "Tillsammans skapar ni en behandlingsplan som passar just dig.",
-  "Mellan samtalen använder du appens näringsspårning och följer de mål din dietist sätter upp.",
+  "Mellan samtalen använder du appens näringsspårning och följer de mål din coach sätter upp.",
 ];
 function HowScreen({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
