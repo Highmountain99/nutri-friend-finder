@@ -334,7 +334,7 @@ function MealsWeekCard({ title, days }: { title: string; days: { letter: string;
   const lowest = days.reduce((min, d, i) => (d.count < days[min].count ? i : min), 0);
   return (
     <div
-      style={{ backgroundColor: C.cream, borderRadius: 24, padding: 18, height: "100%" }}
+      style={{ backgroundColor: C.cream, borderRadius: 24, padding: 18, height: "100%", aspectRatio: "1 / 1" }}
       className="flex flex-col"
     >
       <span style={cardTitleStyle}>{title}</span>
@@ -382,7 +382,7 @@ function LoggedDaysCard({
 }) {
   return (
     <div
-      style={{ backgroundColor: C.sage, borderRadius: 24, padding: 18, height: "100%" }}
+      style={{ backgroundColor: C.sage, borderRadius: 24, padding: 18, height: "100%", aspectRatio: "1 / 1" }}
       className="flex flex-col"
     >
       <span style={cardTitleStyle}>{title}</span>
