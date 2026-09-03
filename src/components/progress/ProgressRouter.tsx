@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Route, Sparkles, ArrowRight, Check, ChevronDown } from "lucide-react";
 import { JourneyPanel } from "./JourneyPanel";
 import { useAuth } from "@/contexts/AuthContext";
@@ -167,73 +166,6 @@ function JourneyHeader({
 }
 
 
-function CurrentGoalCard({
-  goal,
-  activeIdx,
-  total,
-}: {
-  goal: Goal;
-  activeIdx: number;
-  total: number;
-}) {
-  const navigate = useNavigate();
-  return (
-    <div style={{ backgroundColor: "#DCC08A", borderRadius: 24, padding: 20, color: "#1F3A2E" }}>
-      <span
-        className="inline-block uppercase"
-        style={{
-          backgroundColor: "#F5EFE2",
-          borderRadius: 999,
-          padding: "5px 12px",
-          fontWeight: 700,
-          fontSize: 11,
-          letterSpacing: "0.04em",
-        }}
-      >
-        Pågående mål
-      </span>
-      <h2
-        className="font-serif m-0"
-        style={{
-          marginTop: 12,
-          fontSize: 28,
-          fontWeight: 800,
-          lineHeight: 0.95,
-          textTransform: "uppercase",
-        }}
-      >
-        {goal.title}
-      </h2>
-      <div className="flex" style={{ marginTop: 12, gap: 6 }}>
-        {Array.from({ length: Math.max(total, 1) }).map((_, i) => (
-          <span
-            key={i}
-            style={{
-              flex: 1,
-              height: 10,
-              borderRadius: 999,
-              backgroundColor: i <= activeIdx ? "#1F3A2E" : "rgba(0,0,0,0.2)",
-            }}
-          />
-        ))}
-      </div>
-      <button
-        onClick={() => navigate("/journal")}
-        style={{
-          marginTop: 16,
-          backgroundColor: "#1F3A2E",
-          color: "#F5EFE2",
-          borderRadius: 999,
-          padding: "13px 20px",
-          fontWeight: 700,
-          fontSize: 13,
-        }}
-      >
-        Logga dagens måltid
-      </button>
-    </div>
-  );
-}
 
 
 
@@ -318,11 +250,6 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
         className="flex flex-col"
         style={{ padding: "22px 20px 110px", gap: 14 }}
       >
-        {plan && activeGoal && (
-          <CurrentGoalCard goal={activeGoal} activeIdx={activeIdx} total={goals.length} />
-        )}
-
-
       {hasBlocks ? (
         <div className="space-y-3.5 pt-2">
           <h2
