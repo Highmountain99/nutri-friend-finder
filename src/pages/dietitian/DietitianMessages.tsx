@@ -121,7 +121,7 @@ export default function DietitianMessages() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Sök patient..."
+                placeholder="Sök klient..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -186,7 +186,7 @@ export default function DietitianMessages() {
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <span className="font-medium text-sm">{selectedPatientData ? getPatientDisplayName(selectedPatientData) : `Patient ${selectedPatient.slice(0, 8)}`}</span>
+                  <span className="font-medium text-sm">{selectedPatientData ? getPatientDisplayName(selectedPatientData) : `Klient ${selectedPatient.slice(0, 8)}`}</span>
                   {selectedConcern && (
                     <Badge variant="secondary" className="text-xs">{concernLabels[selectedConcern] ?? selectedConcern}</Badge>
                   )}

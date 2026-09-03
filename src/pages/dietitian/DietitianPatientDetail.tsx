@@ -181,7 +181,7 @@ export default function DietitianPatientDetail() {
           <h1 className="text-xl font-bold">
             {(() => {
               const patient = patients?.find((p) => p.patient_id === id);
-              return patient ? getPatientDisplayName(patient) : `Patient ${id?.slice(0, 8)}`;
+              return patient ? getPatientDisplayName(patient) : `Klient ${id?.slice(0, 8)}`;
             })()}
           </h1>
           {concern && <Badge variant="secondary" className="mt-1">{concernLabels[concern] ?? concern}</Badge>}
@@ -641,7 +641,7 @@ export default function DietitianPatientDetail() {
             <CardHeader><CardTitle className="text-sm">Snabbinfo</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Patient-ID</span>
+                <span className="text-muted-foreground">Klient-ID</span>
                 <span className="font-mono text-xs">{id?.slice(0, 12)}</span>
               </div>
               {intake?.completed_at && (

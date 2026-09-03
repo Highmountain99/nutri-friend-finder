@@ -132,7 +132,7 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Bjud in patient
+            Bjud in klient
           </SheetTitle>
         </SheetHeader>
 
@@ -177,7 +177,7 @@ export function InvitePatientSheet({ open, onOpenChange }: InvitePatientSheetPro
             <div className="flex gap-2">
               <Input
                 type="email"
-                placeholder="patient@email.com"
+                placeholder="klient@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendEmail()}

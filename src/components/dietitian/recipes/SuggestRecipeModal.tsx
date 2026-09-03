@@ -158,7 +158,7 @@ export function SuggestRecipeModal({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Sök patient..."
+              placeholder="Sök klient..."
               className="pl-9 h-10"
             />
           </div>

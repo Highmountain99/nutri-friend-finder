@@ -700,7 +700,7 @@ export function useJournalData(selectedDate: Date) {
             dietitian_id: assignment.dietist_id,
             patient_id: user.id,
             notification_type: "goal_override",
-            message: "Patienten har ändrat sina näringsmål som du tidigare satt.",
+            message: "Klienten har ändrat sina näringsmål som du tidigare satt.",
           });
         }
       }

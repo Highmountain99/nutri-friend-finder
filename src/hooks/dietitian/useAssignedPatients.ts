@@ -25,7 +25,7 @@ export interface PatientSummary {
 export function getPatientDisplayName(p: { patient_id: string; first_name?: string | null; last_name?: string | null }) {
   if (p.first_name && p.last_name) return `${p.first_name} ${p.last_name}`;
   if (p.first_name) return p.first_name;
-  return `Patient ${p.patient_id.slice(0, 8)}`;
+  return `Klient ${p.patient_id.slice(0, 8)}`;
 }
 
 export function useAssignedPatients() {
