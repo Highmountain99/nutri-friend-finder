@@ -47,21 +47,23 @@ export function AuthLanding() {
           <h1
             className="m-0 font-serif"
             style={{
-              fontFamily: '"Instrument Serif", serif',
-              fontWeight: 400,
-              fontSize: "clamp(64px, 18vw, 96px)",
-              lineHeight: 0.95,
+              fontFamily: 'MentiDisplay, Anton, sans-serif',
+              fontWeight: 800,
+              fontSize: "clamp(58px, 16vw, 88px)",
+              lineHeight: 0.9,
               color: "#1F3A2E",
+              textTransform: "uppercase",
               letterSpacing: "-0.01em",
             }}
           >
-            Gut<span className="italic">feeling</span>
+            Gut<span>feeling</span>
           </h1>
           <p
-            className="mt-5 italic"
+            className="mt-5"
             style={{
-              fontFamily: '"Instrument Serif", serif',
-              fontSize: 25,
+              fontFamily: 'MentiText, Manrope, sans-serif',
+              fontWeight: 600,
+              fontSize: 18,
               color: "#2D4F3E",
             }}
           >
@@ -82,7 +84,7 @@ export function AuthLanding() {
                 padding: "17px 20px",
                 background: "#142319",
                 color: "#EBE5D6",
-                fontFamily: "Geist, sans-serif",
+                fontFamily: "MentiText, Manrope, sans-serif",
                 fontSize: 16.5,
                 boxShadow: "0 10px 26px -14px rgba(20,35,25,0.7)",
               }}
@@ -97,7 +99,7 @@ export function AuthLanding() {
                 background: "transparent",
                 border: "1.5px solid rgba(31,42,34,0.34)",
                 color: "#142319",
-                fontFamily: "Geist, sans-serif",
+                fontFamily: "MentiText, Manrope, sans-serif",
                 fontSize: 16.5,
               }}
             >
@@ -109,7 +111,7 @@ export function AuthLanding() {
             className="mx-auto mt-5 text-center"
             style={{
               maxWidth: "34ch",
-              fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+              fontFamily: 'MentiText, Manrope, sans-serif',
               fontSize: 10.5,
               lineHeight: 1.7,
               letterSpacing: "0.04em",
@@ -134,7 +136,7 @@ export function AuthLanding() {
               className="inline-flex items-center gap-2 whitespace-nowrap"
               style={{
                 background: "transparent",
-                fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                fontFamily: 'MentiText, Manrope, sans-serif',
                 fontSize: 11.5,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
