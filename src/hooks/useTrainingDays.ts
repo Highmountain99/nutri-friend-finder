@@ -21,10 +21,6 @@ export const WEEKDAY_LONG = [
   "lördag",
 ];
 
-function selectCols() {
-  return "id, patient_id, weekday, start_time, label";
-}
-
 /** Klientens egna passdagar */
 export function useMyTrainingDays() {
   const { user } = useAuth();
@@ -33,7 +29,7 @@ export function useMyTrainingDays() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_training_days")
-        .select(selectCols())
+        .select("id, patient_id, weekday, start_time, label")
         .eq("patient_id", user!.id)
         .order("weekday", { ascending: true });
       if (error) throw error;
@@ -53,7 +49,7 @@ export function useClientTrainingDays(patientId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_training_days")
-        .select(selectCols())
+        .select("id, patient_id, weekday, start_time, label")
         .eq("patient_id", patientId!)
         .order("weekday", { ascending: true });
       if (error) throw error;
