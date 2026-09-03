@@ -211,6 +211,39 @@ export type Database = {
         }
         Relationships: []
       }
+      client_training_days: {
+        Row: {
+          created_at: string
+          dietitian_id: string
+          id: string
+          label: string | null
+          patient_id: string
+          start_time: string | null
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          label?: string | null
+          patient_id: string
+          start_time?: string | null
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          label?: string | null
+          patient_id?: string
+          start_time?: string | null
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
       daily_health_metrics: {
         Row: {
           active_energy_kcal: number | null

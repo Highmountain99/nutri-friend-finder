@@ -27,6 +27,7 @@ import { SymptomPatternCard } from "@/components/dietitian/SymptomPatternCard";
 import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSheet";
 import { PatientHealthProfileCard } from "@/components/dietitian/PatientHealthProfileCard";
 import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
+import { TrainingDaysCard } from "@/components/dietitian/TrainingDaysCard";
 import { ClinicalNoteWizard } from "@/components/dietitian/clinical-notes/ClinicalNoteWizard";
 import { getAreaConfig } from "@/components/dietitian/clinical-notes/areaConfigs/index";
 import { useAuth } from "@/contexts/AuthContext";
@@ -331,6 +332,8 @@ export default function DietitianPatientDetail() {
                   </p>
                 </CardContent>
               </Card>
+
+              <TrainingDaysCard patientId={id!} />
 
               <EditPatientGoalsSheet
                 open={editGoalsOpen}
