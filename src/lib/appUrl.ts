@@ -1,7 +1,7 @@
 // Canonical public URL for the app. Share links (invites, etc.) should point at
 // the published app. In the preview we fall back to the current origin so links
 // stay testable.
-const PUBLISHED_URL = "https://nutri-friend-finder.lovable.app";
+const PUBLISHED_URL = "https://pt.gutfeeling.se";
 
 function resolveBaseUrl(): string {
   if (typeof window === "undefined") return PUBLISHED_URL;
