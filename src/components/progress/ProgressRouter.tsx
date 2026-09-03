@@ -327,13 +327,19 @@ export function ProgressRouter({ onOpenJourney }: ProgressRouterProps) {
     "Varje måltid är ett steg framåt — lita på processen.";
 
   const shell = (
-    <div className="px-4 pt-4 pb-24 space-y-3.5">
-      <HeaderB />
+    <div style={{ backgroundColor: "#EBE5D6" }}>
       {plan && goals.length > 0 && (
-        <JourneySurface goals={goals} activeIdx={activeIdx} onOpen={onOpenJourney} />
+        <JourneyHeader goals={goals} activeIdx={activeIdx} onOpen={onOpenJourney} />
       )}
 
-      <FocusB quote={focusQuote} author="Din coach" />
+      <div
+        className="flex flex-col"
+        style={{ padding: "22px 20px 110px", gap: 14 }}
+      >
+        {plan && activeGoal && (
+          <CurrentGoalCard goal={activeGoal} activeIdx={activeIdx} total={goals.length} />
+        )}
+
 
       {hasBlocks ? (
         <div className="space-y-3.5 pt-2">
