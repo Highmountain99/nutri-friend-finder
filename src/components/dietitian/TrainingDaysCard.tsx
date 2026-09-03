@@ -184,24 +184,33 @@ export function TrainingDaysCard({ patientId }: Props) {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Tid</span>
+            <span className="text-xs text-muted-foreground">Standardtid</span>
             <Input
               type="time"
               className="w-28"
               value={defaultTime}
-              onChange={(e) => {
-                setDefaultTime(e.target.value);
-                (days ?? []).forEach((d) =>
-                  updateTime.mutate({ id: d.id, startTime: e.target.value })
-                );
-              }}
+              onChange={(e) => setDefaultTime(e.target.value)}
             />
           </div>
         </div>
 
         <div className="rounded-2xl border p-3">
           <div className="grid grid-cols-[2.2rem_repeat(7,1fr)] gap-1 pb-1">
+            <span className="text-center text-[10px] uppercase text-muted-foreground">tid</span>
+            {WEEK_ORDER.map((w) => (
+              <input
+                key={`time-${w}`}
+                type="time"
+                value={timeFor(w)}
+                onChange={(e) => setWeekdayTime(w, e.target.value)}
+                className="w-full rounded-md border bg-background px-1 py-0.5 text-center text-[10px] tabular-nums"
+                aria-label={`Tid för ${WEEKDAY_LABELS[w]}`}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-[2.2rem_repeat(7,1fr)] gap-1 pb-1">
             <span className="text-center text-[10px] uppercase text-muted-foreground">v.</span>
+
             {WEEK_ORDER.map((w) => (
               <button
                 key={w}
