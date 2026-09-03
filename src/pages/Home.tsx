@@ -71,7 +71,7 @@ export default function Home() {
   return (
     <div className="pb-8 animate-fade-in">
       {/* Sage header block */}
-      <section className="screen-header bg-sage px-5 pt-[calc(env(safe-area-inset-top)+18px)] pb-6">
+      <section className="screen-header bg-sage px-5 pt-[calc(env(safe-area-inset-top)+28px)] pb-8">
         <h1 className="display text-[38px] leading-[0.92]">
           Hej {firstName}.{" "}
           {nextSession ? (
@@ -90,11 +90,11 @@ export default function Home() {
         </h1>
 
         {dietitianLoading ? (
-          <Skeleton className="h-14 w-full rounded-card mt-4" />
+          <Skeleton className="h-14 w-full rounded-card mt-6" />
         ) : dietitian ? (
           <button
             onClick={() => navigate("/messages")}
-            className="mt-4 w-full flex items-center gap-3 text-left"
+            className="mt-6 w-full flex items-center gap-3 text-left"
           >
             <Avatar className="h-11 w-11">
               <AvatarImage src={dietitian.avatar_url || undefined} />

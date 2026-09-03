@@ -69,9 +69,9 @@ export function JournalCalendar({ selectedDate, onSelectDate, daysWithEntries, s
   const daysWithEntriesAsDate = daysWithEntries.map(d => parseISO(d));
 
   return (
-    <div className="screen-header bg-gold -mx-3 sm:-mx-4 px-4 pt-[calc(env(safe-area-inset-top)+14px)] pb-5">
+    <div className="screen-header bg-gold -mx-3 sm:-mx-4 px-4 pt-[calc(env(safe-area-inset-top)+28px)] pb-7">
       {/* Date row */}
-      <div className="flex items-center gap-2 mb-5">
+      <div className="flex items-center gap-2 mb-7">
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
             <button className="flex items-baseline gap-2 min-w-0 text-left">
