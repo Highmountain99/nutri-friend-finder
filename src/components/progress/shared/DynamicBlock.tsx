@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -224,9 +225,9 @@ function TrendFocusCard({
         backgroundColor: C.cream,
         borderRadius: 24,
         padding: "18px 18px 14px",
-        zIndex: focused ? 60 : undefined,
       }}
     >
+
       <div className="flex items-center justify-between">
         <span style={cardTitleStyle}>{title}</span>
         {diff !== null && (
@@ -278,14 +279,21 @@ function TrendFocusCard({
   return (
     <>
       {card}
-      <div
-        className="fixed inset-0 z-50"
-        style={{ backgroundColor: C.scrim }}
-        onClick={() => setFocused(false)}
-      />
-      <div className="fixed inset-x-0 z-[60] px-4" style={{ top: "50%", transform: "translateY(-50%)" }}>
-        {card}
-        <div className="flex items-center justify-center gap-3 mt-4">
+      {createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-4"
+          style={{
+            backgroundColor: "rgba(31,58,46,0.28)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+          }}
+          onClick={() => setFocused(false)}
+        >
+          <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            {card}
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-5">
+
           {RANGES.map((r) => {
             const active = r.key === rangeKey;
             return (
@@ -322,9 +330,12 @@ function TrendFocusCard({
               </button>
             );
           })}
-        </div>
-      </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
+
   );
 }
 
