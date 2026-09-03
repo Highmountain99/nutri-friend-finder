@@ -142,7 +142,6 @@ export default function Home() {
           >
             <Scale className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
             <span className="block text-[13px] font-bold text-primary">Uppdatera vikt</span>
-            <span className="block text-xs text-primary/60 mt-0.5">Tryck för att uppdatera</span>
           </button>
           <button
             onClick={() => setWaistOpen(true)}
@@ -150,7 +149,6 @@ export default function Home() {
           >
             <Ruler className="h-5 w-5 text-primary mb-2" aria-hidden="true" />
             <span className="block text-[13px] font-bold text-primary">Uppdatera midjemått</span>
-            <span className="block text-xs text-primary/60 mt-0.5">Tryck för att uppdatera</span>
           </button>
         </div>
       </section>
