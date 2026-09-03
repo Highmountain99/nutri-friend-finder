@@ -19,8 +19,8 @@ const BEIGE = "#EBE5D6";
 const FIELD = "#E8E1D0";
 const FIELD_BORDER = "rgba(31,42,34,0.14)";
 const LINE_STRONG = "rgba(31,42,34,0.34)";
-const FS = '"Instrument Serif", serif';
-const FN = "Geist, ui-sans-serif, system-ui, sans-serif";
+const FS = 'MentiDisplay, Anton, sans-serif';
+const FN = "MentiText, Manrope, ui-sans-serif, system-ui, sans-serif";
 
 export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetProps) {
   const [email, setEmail] = useState("");
@@ -160,7 +160,7 @@ export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetPr
           <span className="flex-1 h-px" style={{ background: FIELD_BORDER }} />
           <span
             style={{
-              fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+              fontFamily: 'MentiText, Manrope, sans-serif',
               fontSize: 10,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
