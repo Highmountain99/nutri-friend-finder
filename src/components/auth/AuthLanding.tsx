@@ -91,12 +91,15 @@ export function AuthLanding() {
         </div>
 
         {/* Hero */}
-        <div className="flex-1 flex flex-col justify-center" style={{ padding: "0 24px" }}>
+        <div
+          className="flex-1 flex flex-col justify-center"
+          style={{ padding: "0 24px", marginTop: 8 }}
+        >
           <h1
             style={{
               ...display,
               fontSize: 46,
-              lineHeight: 0.92,
+              lineHeight: 1,
               textWrap: "balance" as any,
               margin: 0,
             }}
@@ -104,11 +107,12 @@ export function AuthLanding() {
             TILLSAMMANS MOT DINA{" "}
             <span
               style={{
+                display: "inline-block",
                 background: "#DCC08A",
                 borderRadius: 999,
                 padding: "1px 14px 3px",
-                boxDecorationBreak: "clone",
-                WebkitBoxDecorationBreak: "clone",
+                marginTop: 2,
+                verticalAlign: "baseline",
               }}
             >
               MÅL
@@ -118,7 +122,7 @@ export function AuthLanding() {
           <p
             style={{
               ...text,
-              marginTop: 20,
+              marginTop: 18,
               fontSize: 16,
               lineHeight: 1.5,
               maxWidth: "30ch",
@@ -143,7 +147,7 @@ export function AuthLanding() {
         </div>
 
         {/* Bottom action zone */}
-        <div style={{ padding: "12px 24px 40px" }}>
+        <div style={{ padding: "28px 24px 40px" }}>
           <div className="flex flex-col gap-3">
             <button
               onClick={() => setShowLogin(true)}
@@ -177,7 +181,7 @@ export function AuthLanding() {
           </div>
 
           <p
-            className="mx-auto mt-4 text-center"
+            className="mx-auto mt-5 text-center"
             style={{
               ...text,
               maxWidth: "36ch",
@@ -197,7 +201,7 @@ export function AuthLanding() {
             .
           </p>
 
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-5">
             <button
               onClick={() => navigate("/dietitian/login")}
               className="inline-flex items-center gap-2 whitespace-nowrap"
