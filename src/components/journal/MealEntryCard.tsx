@@ -1,5 +1,6 @@
 import { Camera } from "lucide-react";
 import type { NutritionEntry } from "@/hooks/useJournalData";
+import { useMealImage } from "@/lib/mealImages";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 
