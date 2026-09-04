@@ -366,6 +366,12 @@ export function useJournalData(selectedDate: Date) {
           };
         });
 
+        // Batch-sign all meal photo refs in one request so thumbnails are
+        // ready in the cache before the entries render
+        await warmMealImageCache(
+          (entriesBulk.data ?? []).map((r: Record<string, unknown>) => r.image_url as string)
+        );
+
         byDate.forEach((b, d) => {
           uc.days.set(d, {
             entries: b.entries,
