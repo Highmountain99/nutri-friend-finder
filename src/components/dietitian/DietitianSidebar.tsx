@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Users,
+  Users2,
   MessageSquare,
   Settings,
   LogOut,
