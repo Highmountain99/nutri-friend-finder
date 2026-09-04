@@ -394,44 +394,6 @@ export function useJournalData(selectedDate: Date) {
     })();
   }, [user, loadEntryDates, dateKey]);
 
-  // Lazily load meal thumbnails for the selected day. `image_url` is excluded
-  // from list/bulk queries (huge base64 blobs hang them), so we fetch it in a
-  // separate small query once the day's entries are known and merge by id.
-  useEffect(() => {
-    if (!user) return;
-    if (entries.length === 0) return;
-    // Skip when every entry already has a resolved image
-    if (entries.every((e) => e.imageUrl)) return;
-
-    let cancelled = false;
-    (async () => {
-      const { data, error } = await supabase
-        .from("nutrition_entries")
-        .select("id, image_url")
-        .eq("user_id", user.id)
-        .eq("entry_date", dateKey)
-        .not("image_url", "is", null);
-      if (cancelled || error || !data || data.length === 0) return;
-
-      const imageById = new Map(data.map((r) => [r.id as string, r.image_url as string]));
-      setEntries((prev) => {
-        let changed = false;
-        const next = prev.map((e) => {
-          if (!e.imageUrl && imageById.has(e.id)) {
-            changed = true;
-            return { ...e, imageUrl: imageById.get(e.id) };
-          }
-          return e;
-        });
-        return changed ? next : prev;
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, dateKey, entries.length === 0]);
-
   // DAY-LEVEL data — only fetches when the date is NOT already in the cache.
   useEffect(() => {
     if (!user) {
