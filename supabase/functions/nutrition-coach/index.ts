@@ -223,17 +223,24 @@ RIKTLINJER:
       }
     }
 
+    let savedMessage: { id: string; created_at: string } | null = null;
     if (reply) {
-      await db.from("chat_messages").insert({
-        user_id: userId,
-        sender: "ai",
-        content: reply,
-        conversation_type: "ai",
-        status: "sent",
-      });
+      const { data: inserted, error: replyErr } = await db
+        .from("chat_messages")
+        .insert({
+          user_id: userId,
+          sender: "ai",
+          content: reply,
+          conversation_type: "ai",
+          status: "sent",
+        })
+        .select("id, created_at")
+        .single();
+      if (replyErr) console.error("[nutrition-coach] reply insert error:", replyErr.message);
+      else savedMessage = inserted;
     }
 
-    return json({ ok: true, reply });
+    return json({ ok: true, reply, message: savedMessage });
   } catch (error) {
     console.error("[nutrition-coach] Error:", error);
     return json({ error: "An unexpected error occurred. Please try again." }, 500);
