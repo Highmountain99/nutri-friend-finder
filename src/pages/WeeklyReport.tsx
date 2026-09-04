@@ -53,6 +53,10 @@ export default function WeeklyReport() {
   const coachName = coach ? `${coach.first_name} ${coach.last_name}` : null;
   const initials = coach ? `${coach.first_name?.[0] ?? ""}${coach.last_name?.[0] ?? ""}` : "GF";
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="min-h-dvh bg-background pb-[110px] animate-fade-in">
       {/* Header */}
