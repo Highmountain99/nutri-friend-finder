@@ -7,6 +7,7 @@ import { RecipeFiltersBar } from "@/components/recipes/RecipeFiltersBar";
 import { RecipeSearchResultsList } from "@/components/recipes/RecipeSearchResultsList";
 import { SuggestedRecipesSection } from "@/components/recipes/SuggestedRecipesSection";
 import { MyRecipesSection } from "@/components/recipes/MyRecipesSection";
+import { AiSuggestedRecipesSection } from "@/components/recipes/AiSuggestedRecipesSection";
 import { RecipeDetailSheet } from "@/components/recipes/RecipeDetailSheet";
 import { ScannerSheet } from "@/components/scanner/ScannerSheet";
 import { MyRecipesSheet } from "@/components/recipes/MyRecipesSheet";
@@ -199,6 +200,9 @@ function RecipesContent() {
               onViewAll={() => setMyRecipesOpen(true)}
             />
           )}
+
+          {/* AI coach suggestions */}
+          {user && <AiSuggestedRecipesSection onRecipeSelect={handleRecipeIdSelect} />}
         </div>
       )}
       </div>

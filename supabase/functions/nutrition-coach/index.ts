@@ -49,7 +49,7 @@ serve(async (req) => {
     since.setDate(since.getDate() - 14);
     const sinceStr = since.toISOString().split("T")[0];
 
-    const [mealsRes, settingsRes, goalsRes, recipesRes, planRes, historyRes] = await Promise.all([
+    const [mealsRes, settingsRes, goalsRes, recipesRes, planRes, historyRes, catalogRes] = await Promise.all([
       db
         .from("nutrition_entries")
         .select("entry_date, meal_type, meal_name, calories, protein")
@@ -87,7 +87,22 @@ serve(async (req) => {
         .eq("conversation_type", "ai")
         .order("created_at", { ascending: false })
         .limit(12),
+      db
+        .from("recipes")
+        .select("id, title, tags, meal_types, dietary_needs, time_minutes, calories_per_serving, protein_per_serving")
+        .eq("is_published", true)
+        .limit(300),
     ]);
+
+    const catalog = catalogRes.data || [];
+    const catalogText = catalog.length
+      ? catalog
+          .map(
+            (r) =>
+              `${r.id} | ${r.title} | ${(r.meal_types || []).join("/") || "-"} | ${(r.tags || []).slice(0, 4).join(", ") || "-"} | ${r.time_minutes ?? "?"} min | ${r.calories_per_serving ?? "?"} kcal | ${r.protein_per_serving ?? "?"}g protein`
+          )
+          .join("\n")
+      : "Inga recept i databasen.";
 
     const meals = (mealsRes.data || [])
       .map((m) => `- ${m.entry_date} ${m.meal_type || ""}: ${m.meal_name || "okänt"}`)
@@ -124,13 +139,18 @@ ${meals}
 SPARADE RECEPT:
 ${savedRecipes}
 
+RECEPTDATABAS (id | titel | måltidstyp | taggar | tid | kcal | protein):
+${catalogText}
+
 RIKTLINJER:
 1. Svara alltid på svenska, varmt, konkret och utan att döma.
-2. Håll svaren korta (2-5 meningar) om användaren inte ber om mer. Använd punktlistor för receptförslag.
+2. Håll svaren korta (2-5 meningar) om användaren inte ber om mer.
 3. Referera till användarens loggade måltider och mål när det är relevant.
-4. Föreslå gärna konkreta recept med huvudingredienser och ungefärlig näring.
-5. Använd aldrig emojis.
-6. Ge aldrig medicinsk rådgivning, diagnoser eller läkemedelsråd. Vid symtom, sjukdom, kraftig viktnedgång eller oro: hänvisa användaren till att skriva till sin coach i fliken bredvid.`;
+4. Du får ALDRIG hitta på recept, skriva ut ingredienslistor eller tillagningsinstruktioner i text.
+5. Receptförslag får ENDAST komma från RECEPTDATABAS ovan. Rekommendera max 3 recept per svar genom att avsluta svaret med en rad per recept i exakt formatet [[RECIPE:<id>]] – inget annat på den raden. Nämn gärna receptets titel i löptexten och skriv att förslagen läggs i receptfliken.
+6. Finns inget passande recept i databasen: säg det ärligt och ge allmänna kostråd istället, utan att skriva ett recept.
+7. Använd aldrig emojis.
+8. Ge aldrig medicinsk rådgivning, diagnoser eller läkemedelsråd. Vid symtom, sjukdom, kraftig viktnedgång eller oro: hänvisa användaren till att skriva till sin coach i fliken bredvid.`;
 
     const messages: Array<{ role: string; content: string }> = [
       { role: "system", content: systemPrompt },
@@ -169,7 +189,39 @@ RIKTLINJER:
     }
 
     const data = await response.json();
-    const reply = (data?.choices?.[0]?.message?.content || "").trim();
+    const raw = (data?.choices?.[0]?.message?.content || "").trim();
+
+    // Extract recommended recipe ids and validate against the catalog
+    const validIds = new Set(catalog.map((r) => r.id as string));
+    const suggestedIds: string[] = [];
+    for (const m of raw.matchAll(/\[\[RECIPE:\s*([0-9a-fA-F-]{36})\s*\]\]/g)) {
+      const id = m[1];
+      if (validIds.has(id) && !suggestedIds.includes(id)) suggestedIds.push(id);
+    }
+    const reply = raw.replace(/\[\[RECIPE:[^\]]*\]\]/g, "").replace(/\n{3,}/g, "\n\n").trim();
+
+    if (suggestedIds.length > 0) {
+      const today = new Date().toISOString().split("T")[0];
+      const { data: existing } = await db
+        .from("user_recipe_interactions")
+        .select("recipe_id, status")
+        .eq("user_id", userId)
+        .in("recipe_id", suggestedIds);
+      const skip = new Set((existing || []).map((e) => e.recipe_id as string));
+      const rows = suggestedIds
+        .filter((id) => !skip.has(id))
+        .map((id) => ({
+          user_id: userId,
+          recipe_id: id,
+          status: "suggested",
+          source: "ai",
+          suggested_date: today,
+        }));
+      if (rows.length > 0) {
+        const { error: insertErr } = await db.from("user_recipe_interactions").insert(rows);
+        if (insertErr) console.error("[nutrition-coach] suggestion insert error:", insertErr.message);
+      }
+    }
 
     if (reply) {
       await db.from("chat_messages").insert({

@@ -1,0 +1,2 @@
+ALTER TABLE public.user_recipe_interactions DROP CONSTRAINT IF EXISTS user_recipe_interactions_source_check;
+ALTER TABLE public.user_recipe_interactions ADD CONSTRAINT user_recipe_interactions_source_check CHECK (source = ANY (ARRAY['algo'::text, 'dietitian'::text, 'ai'::text]));
