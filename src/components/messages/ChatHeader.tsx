@@ -29,7 +29,21 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
     ? `${dietitian.firstName[0]}${dietitian.lastName[0]}`
     : "DC";
 
+  const [displayMode, setDisplayMode] = useState(mode);
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    if (mode === displayMode) return;
+    setIsFading(true);
+    const t = window.setTimeout(() => {
+      setDisplayMode(mode);
+      setIsFading(false);
+    }, 140);
+    return () => window.clearTimeout(t);
+  }, [mode, displayMode]);
+
   const isAi = mode === "ai";
+  const isAiDisplay = displayMode === "ai";
 
   return (
     <div>
