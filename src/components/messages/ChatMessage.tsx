@@ -76,7 +76,7 @@ export function ChatMessage({
         </Avatar>
       )}
 
-      <div className={cn("max-w-[80%] space-y-1", isUser && "items-end")}>
+      <div className={cn("max-w-[80%] space-y-1", isUser ? "items-end" : "animate-text-in")}>
         {/* Message bubble */}
         <div
           className={cn(
