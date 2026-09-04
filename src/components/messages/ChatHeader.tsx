@@ -68,8 +68,15 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            {isAi ? (
+          <div
+            className="flex items-center gap-3"
+            style={{
+              opacity: isFading ? 0 : 1,
+              transform: isFading ? "translateY(-6px)" : "translateY(0)",
+              transition: "opacity 140ms ease, transform 140ms ease",
+            }}
+          >
+            {isAiDisplay ? (
               <div
                 className="w-[52px] h-[52px] rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: CREAM, color: GREEN }}
@@ -100,10 +107,10 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                   color: GREEN,
                 }}
               >
-                {isAi ? "Flora" : dietitian?.firstName || fullName}
+                {isAiDisplay ? "Flora" : dietitian?.firstName || fullName}
               </h2>
               <p style={{ marginTop: 8, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>
-                {isAi ? "din ai-coach, tränad av sveriges dietister" : dietitian?.title || "Din coach"}
+                {isAiDisplay ? "din ai-coach, tränad av sveriges dietister" : dietitian?.title || "Din coach"}
               </p>
             </div>
 
