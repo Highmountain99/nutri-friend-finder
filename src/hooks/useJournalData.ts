@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { uploadMealImage } from "@/lib/mealImages";
+import { uploadMealImage, warmMealImageCache } from "@/lib/mealImages";
 
 // Types for journal data
 export interface NutritionGoals {
@@ -216,11 +216,12 @@ function sumTotals(entries: NutritionEntry[]): DailyTotals {
   );
 }
 
-// Columns to select for list views — exclude `image_url` because meal photos
-// are often stored as huge base64 blobs that would hang bulk/day queries and
-// prevent historical logging from ever loading.
+// Columns for list views. `image_url` is included again now that meal photos
+// are stored as tiny storage references ("storage:meal-photos/..."), so the
+// image ref arrives together with the rest of the meal values and can be
+// batch-signed in the same fetch — thumbnails render instantly.
 const ENTRY_LIST_COLUMNS =
-  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, created_at";
+  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, image_url, created_at";
 
 
 
