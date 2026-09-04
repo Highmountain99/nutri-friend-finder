@@ -17,7 +17,7 @@ interface ChatHeaderProps {
   onModeChange: (mode: ConversationType) => void;
 }
 
-const SAGE = "#B7C4A9";
+const SAGE = "#82A570";
 const GOLD = "#DCC08A";
 const CREAM = "#F5EFE2";
 const GREEN = "#1F3A2E";
@@ -53,12 +53,30 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
           color: GREEN,
           borderRadius: "0 0 28px 28px",
           padding: "calc(env(safe-area-inset-top) + 28px) 20px 28px",
-          backgroundImage: `linear-gradient(135deg, ${SAGE} 0%, ${GOLD} 50%, ${SAGE} 100%)`,
-          backgroundSize: "200% 200%",
-          backgroundPosition: isAi ? "100% 100%" : "0% 0%",
-          transition: "background-position 1100ms cubic-bezier(0.35, 0, 0.2, 1)",
+          backgroundColor: SAGE,
         }}
       >
+        {/* Coach layer */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${SAGE} 0%, #9BB98A 100%)`,
+            opacity: isAi ? 0 : 1,
+            transition: "opacity 700ms cubic-bezier(0.4,0,0.2,1)",
+          }}
+        />
+        {/* AI layer */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: `linear-gradient(120deg, ${GOLD} 0%, #D6AB7B 55%, #C9BE96 100%)`,
+            opacity: isAi ? 1 : 0,
+            transition: "opacity 700ms cubic-bezier(0.4,0,0.2,1)",
+          }}
+        />
+
         {/* Slow shimmer sweep across the header */}
         <div
           aria-hidden
@@ -73,7 +91,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
         />
 
         {loading ? (
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
             <Skeleton className="w-[52px] h-[52px] rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-32" />
@@ -82,7 +100,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
           </div>
         ) : (
           <div
-            className="flex items-center gap-3"
+            className="relative flex items-center gap-3"
             style={{
               opacity: isFading ? 0 : 1,
               filter: isFading ? "blur(6px)" : "blur(0px)",
