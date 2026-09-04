@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadMealImage } from "@/lib/mealImages";
 
 // Types for journal data
 export interface NutritionGoals {
@@ -520,6 +521,12 @@ export function useJournalData(selectedDate: Date) {
       setEntries(optimisticEntries);
       calculateTotals(optimisticEntries);
 
+      // Photos go to storage (tiny path in DB) instead of multi-MB base64 rows
+      let storedImageUrl = entry.imageUrl;
+      if (entry.imageUrl?.startsWith("data:")) {
+        storedImageUrl = await uploadMealImage(user.id, entry.imageUrl);
+      }
+
       const insertData = {
         user_id: user.id,
         entry_date: dateKey,
@@ -530,7 +537,7 @@ export function useJournalData(selectedDate: Date) {
         carbs: entry.carbs,
         fat: entry.fat,
         is_ai_estimated: entry.isAiEstimated,
-        image_url: entry.imageUrl,
+        image_url: storedImageUrl,
       };
 
       const { data, error } = await supabase
