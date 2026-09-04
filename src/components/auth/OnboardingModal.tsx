@@ -501,6 +501,8 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
   const [showPw, setShowPw] = useState(false);
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email);
@@ -517,6 +519,46 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
     return Math.min(s, 3);
   })();
   const strengthLabel = ["Svagt", "Okej", "Bra", "Starkt"][strength];
+
+  const socialDisabled = loading || isGoogleLoading || isAppleLoading;
+
+  const handleGoogleSignUp = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const { error, redirected } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (redirected) return;
+      if (error) {
+        toast.error(error.message || "Google-registrering misslyckades");
+        return;
+      }
+      onClose();
+    } catch {
+      toast.error("Ett fel uppstod vid Google-registrering");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleAppleSignUp = async () => {
+    setIsAppleLoading(true);
+    try {
+      const { error, redirected } = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      if (redirected) return;
+      if (error) {
+        toast.error(error.message || "Apple-registrering misslyckades");
+        return;
+      }
+      onClose();
+    } catch {
+      toast.error("Ett fel uppstod vid Apple-registrering");
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
 
   const submit = async () => {
     setTouched(true);
