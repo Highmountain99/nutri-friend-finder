@@ -48,12 +48,15 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
   return (
     <div>
       <div
+        className="relative overflow-hidden"
         style={{
-          backgroundColor: isAi ? GOLD : SAGE,
           color: GREEN,
           borderRadius: "0 0 28px 28px",
           padding: "calc(env(safe-area-inset-top) + 28px) 20px 28px",
-          transition: "background-color 200ms ease",
+          backgroundImage: `linear-gradient(135deg, ${SAGE} 0%, ${GOLD} 50%, ${SAGE} 100%)`,
+          backgroundSize: "200% 200%",
+          backgroundPosition: isAi ? "100% 100%" : "0% 0%",
+          transition: "background-position 400ms ease",
         }}
       >
         {loading ? (
