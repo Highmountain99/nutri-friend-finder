@@ -41,7 +41,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
       className="absolute inset-0 flex flex-col justify-center"
       style={{
         backfaceVisibility: "hidden",
-        transform: `rotateX(${top ? 0 : -90}deg) translateZ(30px)`,
+        transform: `rotateX(${top ? 0 : -90}deg) translateZ(26px)`,
       }}
     >
       {content}
