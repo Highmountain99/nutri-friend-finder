@@ -15,7 +15,9 @@ export interface ChatMessage {
   status?: string;
 }
 
-export function useChatMessages() {
+export type ConversationType = "dietitian" | "ai";
+
+export function useChatMessages(conversationType: ConversationType = "dietitian") {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +32,19 @@ export function useChatMessages() {
       return;
     }
 
+    let cancelled = false;
+
     const fetchMessages = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("chat_messages")
         .select("id, sender, content, created_at, escalated, escalation_reason, status, attachments, read_at")
         .eq("user_id", user.id)
+        .eq("conversation_type", conversationType)
         .or("status.eq.sent,status.is.null")
         .order("created_at", { ascending: true });
+
+      if (cancelled) return;
 
       if (error) {
         console.error("Error fetching messages:", error);
@@ -56,7 +63,7 @@ export function useChatMessages() {
 
     // Subscribe to realtime updates
     const channel = supabase
-      .channel("chat_messages_changes")
+      .channel(`chat_messages_${conversationType}`)
       .on(
         "postgres_changes",
         {
@@ -66,22 +73,25 @@ export function useChatMessages() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          const newMessage = payload.new as ChatMessage;
-          if (newMessage.sender !== "user" && (!newMessage.status || newMessage.status === "sent")) {
-            setMessages((prev) => [...prev, newMessage]);
-          }
+          const newMessage = payload.new as ChatMessage & { conversation_type?: string };
+          if (newMessage.conversation_type !== conversationType) return;
+          if (newMessage.sender === "user") return;
+          if (newMessage.status && newMessage.status !== "sent") return;
+          setMessages((prev) =>
+            prev.some((m) => m.id === newMessage.id) ? prev : [...prev, newMessage]
+          );
         }
       )
       .subscribe();
 
     return () => {
+      cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, conversationType]);
 
-  // Send message – mode "ai" sends AI response directly, "wait" creates AI draft for dietitian
   const sendMessage = useCallback(
-    async (messageText: string, attachments?: ChatAttachment[], mode: "ai" | "wait" = "ai") => {
+    async (messageText: string, attachments?: ChatAttachment[]) => {
       if (!user || (!messageText.trim() && (!attachments || attachments.length === 0))) return;
 
       setSending(true);
@@ -97,33 +107,37 @@ export function useChatMessages() {
       setMessages((prev) => [...prev, userMessage]);
 
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData?.session?.access_token;
+        if (conversationType === "dietitian") {
+          const { error: insertError } = await supabase.from("chat_messages").insert({
+            user_id: user.id,
+            sender: "user",
+            content: messageText.trim(),
+            conversation_type: "dietitian",
+            status: "sent",
+            attachments: (attachments || []) as never,
+          });
+          if (insertError) throw new Error(insertError.message);
+        } else {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData?.session?.access_token;
+          if (!token) throw new Error("Inte inloggad");
 
-        if (!token) {
-          throw new Error("Inte inloggad");
-        }
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nutrition-coach`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ message: messageText.trim() }),
+            }
+          );
 
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-assistant`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              message: messageText.trim(),
-              conversationHistory: messages.slice(-10),
-              attachments: attachments || [],
-              mode,
-            }),
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || "Ett fel uppstod");
           }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || "Ett fel uppstod");
         }
       } catch (err) {
         console.error("Send message error:", err);
@@ -133,7 +147,7 @@ export function useChatMessages() {
         setSending(false);
       }
     },
-    [user, messages]
+    [user, conversationType]
   );
 
   const markAsRead = useCallback(
