@@ -41,7 +41,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
       className="absolute inset-0 flex flex-col justify-center"
       style={{
         backfaceVisibility: "hidden",
-        transform: `rotateX(${top ? 0 : -90}deg) translateZ(28px)`,
+        transform: `rotateX(${top ? 0 : -90}deg) translateZ(30px)`,
       }}
     >
       {content}
@@ -53,7 +53,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
       <h2
         className="font-serif m-0 truncate"
         style={{
-          fontSize: 24,
+          fontSize: 27,
           fontWeight: 800,
           lineHeight: 0.95,
           textTransform: "uppercase",
@@ -65,7 +65,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
       <p
         style={{
           marginTop: 5,
-          fontSize: 11.5,
+          fontSize: 12.5,
           lineHeight: 1.25,
           color: "rgba(31,58,46,0.75)",
           fontWeight: 600,
@@ -106,17 +106,59 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
 
         {loading ? (
           <div className="relative flex items-center gap-3">
-            <Skeleton className="w-[46px] h-[46px] rounded-full" />
+            <Skeleton className="w-[52px] h-[52px] rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-32" />
               <Skeleton className="h-3 w-24" />
             </div>
           </div>
         ) : (
-          <div className="relative flex items-center gap-3">
+          <div className="relative flex flex-col">
+            {/* Sliding toggle */}
+            <div
+              className="relative flex items-center self-end mb-4 p-1"
+              style={{ backgroundColor: CREAM, borderRadius: 999 }}
+            >
+              <div
+                aria-hidden
+                className="absolute top-1 bottom-1"
+                style={{
+                  left: 4,
+                  width: "calc(50% - 4px)",
+                  backgroundColor: GREEN,
+                  borderRadius: 999,
+                  transform: isAi ? "translateX(100%)" : "translateX(0%)",
+                  transition: `transform 760ms ${EASE}`,
+                }}
+              />
+              {(
+                [
+                  { key: "dietitian" as const, label: coachLabel },
+                  { key: "ai" as const, label: "Flora" },
+                ]
+              ).map((tab) => {
+                const active = mode === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => onModeChange(tab.key)}
+                    className="relative px-4 py-2 text-[13px] font-semibold text-center"
+                    style={{
+                      minWidth: 72,
+                      color: active ? CREAM : GREEN,
+                      transition: "color 380ms ease",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-3">
             {/* Avatar: rotates inside its circle */}
             <div
-              className="relative w-[46px] h-[46px] rounded-full overflow-hidden flex-shrink-0"
+              className="relative w-[52px] h-[52px] rounded-full overflow-hidden flex-shrink-0"
               style={{ backgroundColor: CREAM }}
             >
               <div
@@ -133,7 +175,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                     transition: `opacity 380ms ${EASE}`,
                   }}
                 >
-                  <Avatar className="w-[46px] h-[46px]">
+                  <Avatar className="w-[52px] h-[52px]">
                     {dietitian?.avatarUrl ? (
                       <AvatarImage src={dietitian.avatarUrl} alt={fullName} className="object-cover" />
                     ) : null}
@@ -161,7 +203,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             {/* Name + subtitle on a rotating wheel */}
             <div
               className="min-w-0 flex-1 relative"
-              style={{ height: 56, perspective: 700 }}
+              style={{ height: 60, perspective: 800 }}
             >
               <div
                 className="absolute inset-0"
@@ -176,47 +218,6 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
               </div>
             </div>
 
-            {/* Sliding toggle */}
-            <div
-              className="relative flex items-center flex-shrink-0 ml-2 p-[3px]"
-              style={{ backgroundColor: CREAM, borderRadius: 999 }}
-            >
-              <div
-                aria-hidden
-                className="absolute top-1 bottom-1"
-                style={{
-                  left: 3,
-                  width: "calc(50% - 3px)",
-                  backgroundColor: GREEN,
-                  borderRadius: 999,
-                  transform: isAi ? "translateX(100%)" : "translateX(0%)",
-                  transition: `transform 760ms ${EASE}`,
-                }}
-              />
-              {(
-                [
-                  { key: "dietitian" as const, label: coachLabel },
-                  { key: "ai" as const, label: "Flora" },
-                ]
-              ).map((tab) => {
-                const active = mode === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => onModeChange(tab.key)}
-                    className="relative px-2.5 py-1 text-[11px] font-semibold text-center"
-                    style={{
-                      minWidth: 46,
-                      color: active ? CREAM : GREEN,
-                      transition: "color 380ms ease",
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
           </div>
         )}
       </div>
