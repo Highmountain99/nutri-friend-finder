@@ -23,6 +23,7 @@ import { DietitianRoute } from "@/components/dietitian/DietitianRoute";
 import { DietitianLayout } from "@/components/dietitian/DietitianLayout";
 import DietitianDashboard from "./pages/dietitian/DietitianDashboard";
 import DietitianPatients from "./pages/dietitian/DietitianPatients";
+import DietitianGroups from "./pages/dietitian/DietitianGroups";
 import DietitianPatientDetail from "./pages/dietitian/DietitianPatientDetail";
 import DietitianRecipes from "./pages/dietitian/DietitianRecipes";
 import DietitianMessages from "./pages/dietitian/DietitianMessages";
@@ -85,6 +86,7 @@ const App = () => (
               <Route element={<DietitianLayout />}>
                 <Route path="/dietitian" element={<DietitianDashboard />} />
                 <Route path="/dietitian/patients" element={<DietitianPatients />} />
+                <Route path="/dietitian/groups" element={<DietitianGroups />} />
                 <Route path="/dietitian/patients/:id" element={<DietitianPatientDetail />} />
                 <Route path="/dietitian/recipes" element={<DietitianRecipes />} />
                 <Route path="/dietitian/messages" element={<DietitianMessages />} />

@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Users,
+  Users2,
   MessageSquare,
   Settings,
   LogOut,
@@ -117,6 +118,21 @@ export function DietitianSidebar() {
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
+
+                  {item.url === "/dietitian/patients" && (
+                    <div className={collapsed ? "" : "ml-4 border-l border-sidebar-border pl-3 mt-1 space-y-0.5"}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to="/dietitian/groups"
+                          className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                          activeClassName="bg-sidebar-primary text-sidebar-primary-foreground font-bold"
+                        >
+                          <Users2 className="h-3.5 w-3.5 shrink-0" />
+                          {!collapsed && <span>Träningsgrupper</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </div>
+                  )}
                 </SidebarMenuItem>
               ))}
 

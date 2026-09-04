@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Search, Send } from "lucide-react";
+import { Loader2, Search, Send, Users2 } from "lucide-react";
 import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
+import { useClientGroups } from "@/hooks/dietitian/useClientGroups";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -37,6 +38,7 @@ export function SuggestRecipeModal({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: patients } = useAssignedPatients();
+  const { data: groups } = useClientGroups();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -57,6 +59,15 @@ export function SuggestRecipeModal({
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  };
+
+  const toggleGroup = (memberIds: string[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = memberIds.length > 0 && memberIds.every((id) => prev.includes(id));
+      return allSelected
+        ? prev.filter((id) => !memberIds.includes(id))
+        : Array.from(new Set([...prev, ...memberIds]));
+    });
   };
 
   const handleSend = async () => {
@@ -149,6 +160,31 @@ export function SuggestRecipeModal({
                   <p className="text-sm truncate">{r.title}</p>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Training groups */}
+          {(groups?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-1.5 shrink-0">
+              {groups!.map((g) => {
+                const active = g.member_ids.length > 0 && g.member_ids.every((id) => selectedIds.includes(id));
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => toggleGroup(g.member_ids)}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:bg-accent/40"
+                    }`}
+                  >
+                    <Users2 className="h-3 w-3" />
+                    {g.name}
+                    <span className="opacity-60">{g.member_ids.length}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
