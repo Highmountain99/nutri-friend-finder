@@ -60,6 +60,15 @@ export function SuggestRecipeModal({
     );
   };
 
+  const toggleGroup = (memberIds: string[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = memberIds.length > 0 && memberIds.every((id) => prev.includes(id));
+      return allSelected
+        ? prev.filter((id) => !memberIds.includes(id))
+        : Array.from(new Set([...prev, ...memberIds]));
+    });
+  };
+
   const handleSend = async () => {
     if (selectedIds.length === 0 || recipesToSuggest.length === 0) return;
     setSending(true);
