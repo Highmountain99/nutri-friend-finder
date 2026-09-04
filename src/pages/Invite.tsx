@@ -9,6 +9,51 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Heart, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
+const display: React.CSSProperties = {
+  fontFamily: "MentiDisplay, Anton, sans-serif",
+  fontWeight: 800,
+  textTransform: "uppercase",
+  letterSpacing: "-0.01em",
+};
+const text: React.CSSProperties = {
+  fontFamily: "MentiText, Manrope, sans-serif",
+};
+
+const ROW_ONE = [
+  { label: "Kostråd från din PT", color: "#DCC08A" },
+  { label: "Matdagbok", color: "#F5EFE2" },
+  { label: "Chatt med din PT", color: "#8FAF7E" },
+  { label: "Veckouppföljning", color: "#F5EFE2" },
+  { label: "Proteinmål", color: "#D9A488" },
+];
+const ROW_TWO = [
+  { label: "Måltidsmål", color: "#D9A488" },
+  { label: "Recept", color: "#8FAF7E" },
+  { label: "Feedback på måltider", color: "#F5EFE2" },
+  { label: "Vanor & rutiner", color: "#DCC08A" },
+  { label: "Din utveckling", color: "#F5EFE2" },
+];
+
+function Chip({ label, color }: { label: string; color: string }) {
+  return (
+    <span
+      style={{
+        ...text,
+        background: color,
+        color: "#1F3A2E",
+        borderRadius: 999,
+        padding: "8px 16px",
+        fontWeight: 600,
+        fontSize: 13,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+
 export default function Invite() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
