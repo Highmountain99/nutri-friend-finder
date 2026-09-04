@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useWeeklyReport } from "@/hooks/useWeeklyReport";
 import { useMyDietitian } from "@/hooks/useMyDietitian";
+import { usePublishedWeeklyComment } from "@/hooks/useWeeklyReportComment";
+import { getISOWeek } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const TONE: Record<string, string> = {
@@ -44,6 +46,8 @@ export default function WeeklyReport() {
   const navigate = useNavigate();
   const { data, isLoading } = useWeeklyReport();
   const { data: coach } = useMyDietitian();
+  const { data: published } = usePublishedWeeklyComment();
+  const commentWeek = published ? getISOWeek(new Date(`${published.week_start}T00:00:00`)) : null;
 
   const coachName = coach ? `${coach.first_name} ${coach.last_name}` : null;
   const initials = coach ? `${coach.first_name?.[0] ?? ""}${coach.last_name?.[0] ?? ""}` : "GF";
@@ -112,12 +116,16 @@ export default function WeeklyReport() {
                 </div>
                 <div>
                   <p className="text-[13px] italic leading-snug text-primary">
-                    {coachName
-                      ? `${coach?.first_name} lämnar en kommentar här efter veckans genomgång.`
-                      : "Din kostrådgivare lämnar en kommentar här efter veckans genomgång."}
+                    {published
+                      ? published.comment
+                      : coachName
+                        ? `${coach?.first_name} lämnar en kommentar här när veckan publiceras på måndagen.`
+                        : "Din kostrådgivare lämnar en kommentar här när veckan publiceras på måndagen."}
                   </p>
-                  <p className="mt-1 text-[11px] font-semibold text-primary/60">
-                    {coachName ? `${coachName}, kostrådgivare` : "Väntar på kommentar"}
+                  <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-primary/50">
+                    {published
+                      ? `${coachName ?? "Kostrådgivare"} · vecka ${commentWeek}`
+                      : "Väntar på kommentar"}
                   </p>
                 </div>
 
