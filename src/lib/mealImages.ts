@@ -38,6 +38,8 @@ export async function uploadMealImage(
       console.error("Meal image upload failed:", error);
       return dataUrl; // fall back to base64 so the photo is never lost
     }
+    // Prime the signed-URL cache so the new thumbnail renders instantly
+    warmMealImageCache([PREFIX + path]).catch(() => {});
     return PREFIX + path;
   } catch (e) {
     console.error("Meal image upload failed:", e);
