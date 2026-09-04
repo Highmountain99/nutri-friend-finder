@@ -82,45 +82,45 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                   color: GREEN,
                 }}
               >
-                {isAi ? "Kostcoach" : dietitian?.firstName || fullName}
+                {isAi ? "Flora" : dietitian?.firstName || fullName}
               </h2>
               <p style={{ marginTop: 8, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>
-                {isAi ? "AI · tränad av legitimerade dietister" : dietitian?.title || "Din coach"}
+                {isAi ? "din ai-coach, tränad av sveriges dietister" : dietitian?.title || "Din coach"}
               </p>
+            </div>
+
+            {/* Small corner toggle */}
+            <div
+              className="flex items-center p-1 flex-shrink-0 ml-3"
+              style={{ backgroundColor: CREAM, borderRadius: 999 }}
+            >
+              {(
+                [
+                  { key: "dietitian" as const, label: coachLabel },
+                  { key: "ai" as const, label: "Flora" },
+                ]
+              ).map((tab) => {
+                const active = mode === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => onModeChange(tab.key)}
+                    className="px-3 py-1.5 text-xs font-semibold"
+                    style={{
+                      borderRadius: 999,
+                      backgroundColor: active ? GREEN : "transparent",
+                      color: active ? CREAM : GREEN,
+                      transition: "all 160ms ease",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
-
-        {/* Toggle */}
-        <div
-          className="mt-5 flex items-center p-1 mx-auto"
-          style={{ backgroundColor: CREAM, borderRadius: 999, width: "fit-content" }}
-        >
-          {(
-            [
-              { key: "dietitian" as const, label: coachLabel },
-              { key: "ai" as const, label: "Kostcoach" },
-            ]
-          ).map((tab) => {
-            const active = mode === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => onModeChange(tab.key)}
-                className="px-5 py-2 text-sm font-semibold"
-                style={{
-                  borderRadius: 999,
-                  backgroundColor: active ? GREEN : "transparent",
-                  color: active ? CREAM : GREEN,
-                  transition: "all 160ms ease",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {isEscalated && !isAi && (
