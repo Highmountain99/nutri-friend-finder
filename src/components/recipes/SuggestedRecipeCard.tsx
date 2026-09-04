@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
-import { Clock, Users, Heart, X, Flame, Dumbbell, Sparkles } from "lucide-react";
+import { Clock, Users, Heart, X, Flame, Dumbbell } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
