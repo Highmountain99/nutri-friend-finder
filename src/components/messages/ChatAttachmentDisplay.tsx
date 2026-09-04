@@ -6,15 +6,17 @@ import type { ChatAttachment } from "./ChatAttachmentPicker";
 
 interface ChatAttachmentDisplayProps {
   attachments: ChatAttachment[];
+  /** Namn som visas i receptkortets etikett, t.ex. "Anna" eller "Kostcoachen" */
+  senderLabel?: string;
 }
 
-function RecipeCard({ recipeId }: { recipeId: string }) {
+function RecipeCard({ recipeId, senderLabel }: { recipeId: string; senderLabel?: string }) {
   const { data: recipe } = useQuery({
     queryKey: ["recipe-mini", recipeId],
     queryFn: async () => {
       const { data } = await supabase
         .from("recipes")
-        .select("id, title, image_url, time_minutes, calories_per_serving")
+        .select("id, title, image_url, time_minutes, calories_per_serving, tags")
         .eq("id", recipeId)
         .single();
       return data;
@@ -23,27 +25,35 @@ function RecipeCard({ recipeId }: { recipeId: string }) {
 
   if (!recipe) return null;
 
+  const meta = [
+    recipe.time_minutes ? `${recipe.time_minutes} min` : null,
+    Array.isArray(recipe.tags) && recipe.tags.length > 0
+      ? String(recipe.tags[0])
+      : recipe.calories_per_serving
+        ? `${recipe.calories_per_serving} kcal`
+        : null,
+  ].filter(Boolean);
+
   return (
-    <div className="flex items-center gap-2 bg-background/80 rounded-lg p-2 border border-border/50 max-w-[220px]">
-      {recipe.image_url ? (
-        <img src={recipe.image_url} alt={recipe.title} className="h-10 w-10 rounded object-cover shrink-0" />
-      ) : (
-        <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
-          <BookOpen className="h-4 w-4 text-primary" />
-        </div>
+    <Link
+      to={`/recipes?recipe=${recipe.id}`}
+      className="block rounded-2xl px-4 py-3 max-w-[280px] active:scale-[0.99] transition-transform"
+      style={{ backgroundColor: "#DCC38B", color: "#1F3A2E" }}
+    >
+      <p className="text-[11px] font-bold uppercase tracking-wide mb-1.5">
+        {(senderLabel || "Din coach").toUpperCase()} DELADE ETT RECEPT
+      </p>
+      <p className="text-[15px] font-bold leading-snug">{recipe.title}</p>
+      {meta.length > 0 && (
+        <p className="text-[13px] mt-0.5" style={{ color: "#1F3A2E", opacity: 0.75 }}>
+          {meta.join(" · ")}
+        </p>
       )}
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium truncate">{recipe.title}</p>
-        <div className="flex gap-2 text-[10px] text-muted-foreground">
-          {recipe.time_minutes && <span>{recipe.time_minutes} min</span>}
-          {recipe.calories_per_serving && <span>{recipe.calories_per_serving} kcal</span>}
-        </div>
-      </div>
-    </div>
+    </Link>
   );
 }
 
-export function ChatAttachmentDisplay({ attachments }: ChatAttachmentDisplayProps) {
+export function ChatAttachmentDisplay({ attachments, senderLabel }: ChatAttachmentDisplayProps) {
   if (!attachments || attachments.length === 0) return null;
 
   return (
