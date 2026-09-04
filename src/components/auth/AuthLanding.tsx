@@ -6,6 +6,50 @@ import { LoginSheet } from "./LoginSheet";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { useAuth } from "@/contexts/AuthContext";
 
+const display: React.CSSProperties = {
+  fontFamily: "MentiDisplay, Anton, sans-serif",
+  fontWeight: 800,
+  textTransform: "uppercase",
+  letterSpacing: "-0.01em",
+};
+const text: React.CSSProperties = {
+  fontFamily: "MentiText, Manrope, sans-serif",
+};
+
+const ROW_ONE = [
+  { label: "Kostråd från din PT", color: "#DCC08A" },
+  { label: "Matdagbok", color: "#F5EFE2" },
+  { label: "Chatt med din PT", color: "#8FAF7E" },
+  { label: "Veckouppföljning", color: "#F5EFE2" },
+  { label: "Proteinmål", color: "#D9A488" },
+];
+const ROW_TWO = [
+  { label: "Måltidsmål", color: "#D9A488" },
+  { label: "Recept", color: "#8FAF7E" },
+  { label: "Feedback på måltider", color: "#F5EFE2" },
+  { label: "Vanor & rutiner", color: "#DCC08A" },
+  { label: "Din utveckling", color: "#F5EFE2" },
+];
+
+function Chip({ label, color }: { label: string; color: string }) {
+  return (
+    <span
+      style={{
+        ...text,
+        background: color,
+        color: "#1F3A2E",
+        borderRadius: 999,
+        padding: "8px 16px",
+        fontWeight: 600,
+        fontSize: 13,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function AuthLanding() {
   const { session, isLoading } = useAuth();
   const nav = useNavigate();
@@ -25,13 +69,12 @@ export function AuthLanding() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLogin, setShowLogin] = useState(shouldOpenLogin);
 
-  // iOS-style: dim & scale the splash when the onboarding sheet is up
   const sheetUp = showOnboarding;
 
   return (
     <div
       className="min-h-dvh flex flex-col safe-area-inset overflow-hidden relative"
-      style={{ background: "#EBE5D6" }}
+      style={{ background: "#B7C4A9", color: "#1F3A2E" }}
     >
       <div
         className="flex-1 flex flex-col transition-all duration-[520ms]"
@@ -42,51 +85,76 @@ export function AuthLanding() {
           transitionTimingFunction: "cubic-bezier(.16,1,.3,1)",
         }}
       >
-        {/* Wordmark zone */}
-        <div className="flex-1 flex flex-col items-center justify-center px-9 text-center">
+        {/* Top wordmark */}
+        <div style={{ padding: "64px 24px 0" }}>
+          <span style={{ ...display, fontSize: 18 }}>GUTFEELING</span>
+        </div>
+
+        {/* Hero */}
+        <div className="flex-1 flex flex-col justify-center" style={{ padding: "0 24px" }}>
           <h1
-            className="m-0 font-serif"
             style={{
-              fontFamily: 'MentiDisplay, Anton, sans-serif',
-              fontWeight: 800,
-              fontSize: "clamp(44px, 12vw, 66px)",
+              ...display,
+              fontSize: 46,
               lineHeight: 0.92,
-              color: "#1F3A2E",
-              textTransform: "uppercase",
-              letterSpacing: "-0.01em",
+              textWrap: "balance" as any,
+              margin: 0,
             }}
           >
-            Gut<span>feeling</span>
+            TILLSAMMANS MOT DINA{" "}
+            <span
+              style={{
+                background: "#DCC08A",
+                borderRadius: 999,
+                padding: "1px 14px 3px",
+                boxDecorationBreak: "clone",
+                WebkitBoxDecorationBreak: "clone",
+              }}
+            >
+              MÅL
+            </span>
+            .
           </h1>
           <p
-            className="mt-5"
             style={{
-              fontFamily: 'MentiText, Manrope, sans-serif',
-              fontWeight: 600,
-              fontSize: 18,
-              color: "#2D4F3E",
+              ...text,
+              marginTop: 20,
+              fontSize: 16,
+              lineHeight: 1.5,
+              maxWidth: "30ch",
             }}
           >
-            Lita på din magkänsla.
+            Personlig vägledning från din PT, anpassad efter dig och din träning.
           </p>
         </div>
 
+        {/* Chip marquee */}
+        <div className="flex flex-col overflow-hidden" style={{ gap: 8, padding: "0 0 12px" }}>
+          <div className="gf-marquee-row gf-marquee-row--left">
+            {[...ROW_ONE, ...ROW_ONE].map((c, i) => (
+              <Chip key={`r1-${i}`} label={c.label} color={c.color} />
+            ))}
+          </div>
+          <div className="gf-marquee-row gf-marquee-row--right">
+            {[...ROW_TWO, ...ROW_TWO].map((c, i) => (
+              <Chip key={`r2-${i}`} label={c.label} color={c.color} />
+            ))}
+          </div>
+        </div>
+
         {/* Bottom action zone */}
-        <div
-          className="px-7 pt-6 pb-12"
-          style={{ borderTop: "1px solid rgba(31,42,34,0.12)" }}
-        >
+        <div style={{ padding: "12px 24px 40px" }}>
           <div className="flex flex-col gap-3">
             <button
               onClick={() => setShowLogin(true)}
               className="w-full rounded-full font-semibold transition-transform active:scale-[0.98]"
               style={{
                 padding: "17px 20px",
-                background: "#142319",
-                color: "#EBE5D6",
-                fontFamily: "MentiText, Manrope, sans-serif",
+                background: "#1F3A2E",
+                color: "#F5EFE2",
+                ...text,
                 fontSize: 16.5,
-                boxShadow: "0 10px 26px -14px rgba(20,35,25,0.7)",
+                fontWeight: 700,
               }}
             >
               Logga in
@@ -97,10 +165,11 @@ export function AuthLanding() {
               style={{
                 padding: "17px 20px",
                 background: "transparent",
-                border: "1.5px solid rgba(31,42,34,0.34)",
-                color: "#142319",
-                fontFamily: "MentiText, Manrope, sans-serif",
+                border: "1.5px solid rgba(31,58,46,0.45)",
+                color: "#1F3A2E",
+                ...text,
                 fontSize: 16.5,
+                fontWeight: 700,
               }}
             >
               Ny användare
@@ -108,15 +177,13 @@ export function AuthLanding() {
           </div>
 
           <p
-            className="mx-auto mt-5 text-center"
+            className="mx-auto mt-4 text-center"
             style={{
-              maxWidth: "34ch",
-              fontFamily: 'MentiText, Manrope, sans-serif',
-              fontSize: 10.5,
-              lineHeight: 1.7,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              color: "#2D4F3E",
+              ...text,
+              maxWidth: "36ch",
+              fontSize: 11,
+              lineHeight: 1.6,
+              color: "rgba(0,0,0,0.6)",
             }}
           >
             Genom att fortsätta godkänner du våra{" "}
@@ -130,17 +197,19 @@ export function AuthLanding() {
             .
           </p>
 
-          <div className="flex justify-center mt-5">
+          <div className="flex justify-center mt-4">
             <button
               onClick={() => navigate("/dietitian/login")}
               className="inline-flex items-center gap-2 whitespace-nowrap"
               style={{
                 background: "transparent",
-                fontFamily: 'MentiText, Manrope, sans-serif',
+                ...text,
                 fontSize: 11.5,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "#6F8A6C",
+                fontWeight: 700,
+                color: "#1F3A2E",
+                opacity: 0.75,
               }}
             >
               Logga in som coach
