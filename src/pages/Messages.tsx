@@ -155,6 +155,11 @@ export default function Messages() {
                 dietitian={dietitianInfo}
                 escalated={msg.escalated}
                 attachments={msg.attachments}
+                senderLabel={
+                  msg.sender === "ai"
+                    ? "Kostcoachen"
+                    : dietitianInfo?.firstName || "Din coach"
+                }
                 onVisible={
                   msg.sender !== "user" && !msg.id.startsWith("temp-") && !msg.read_at
                     ? () => markAsRead(msg.id)

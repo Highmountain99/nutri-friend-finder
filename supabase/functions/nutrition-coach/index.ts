@@ -233,6 +233,12 @@ RIKTLINJER:
           content: reply,
           conversation_type: "ai",
           status: "sent",
+          attachments: suggestedIds.map((id) => ({
+            type: "recipe_link",
+            recipeId: id,
+            name: catalog.find((r) => r.id === id)?.title || "Recept",
+            url: "",
+          })),
         })
         .select("id, created_at")
         .single();
