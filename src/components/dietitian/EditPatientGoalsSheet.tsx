@@ -25,22 +25,18 @@ export function EditPatientGoalsSheet({ open, onOpenChange, patientId, currentGo
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    calories: currentGoals?.calories_goal ?? 2000,
-    protein: currentGoals?.protein_goal ?? 50,
-    carbs: currentGoals?.carbs_goal ?? 250,
-    fat: currentGoals?.fat_goal ?? 65,
+    calories: "",
+    protein: "",
+    carbs: "",
+    fat: "",
   });
 
   useEffect(() => {
-    if (open && currentGoals) {
-      setForm({
-        calories: currentGoals.calories_goal ?? 2000,
-        protein: currentGoals.protein_goal ?? 50,
-        carbs: currentGoals.carbs_goal ?? 250,
-        fat: currentGoals.fat_goal ?? 65,
-      });
+    if (open) {
+      // Leave inputs empty so the keyboard does not cover a pre-filled value.
+      setForm({ calories: "", protein: "", carbs: "", fat: "" });
     }
-  }, [open, currentGoals]);
+  }, [open]);
 
   const handleSave = async () => {
     if (!user) return;
