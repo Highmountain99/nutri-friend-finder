@@ -234,7 +234,12 @@ export default function Messages() {
         </div>
 
         {/* Input */}
-        <div className="px-4 py-3 border-t border-border bg-card">
+        <div
+          className={cn(
+            "px-4 py-3 border-t border-border bg-card transition-all duration-200",
+            modeTransitioning && "opacity-40 blur-[6px] pointer-events-none"
+          )}
+        >
           {pendingAttachments.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {pendingAttachments.map((att, i) => (
