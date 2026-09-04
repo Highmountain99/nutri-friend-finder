@@ -1568,6 +1568,36 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_report_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          dietitian_id: string
+          id: string
+          patient_id: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          patient_id: string
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          patient_id?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
