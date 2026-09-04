@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Search, Send } from "lucide-react";
+import { Loader2, Search, Send, Users2 } from "lucide-react";
 import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
 import { useClientGroups } from "@/hooks/dietitian/useClientGroups";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,7 @@ export function SuggestRecipeModal({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: patients } = useAssignedPatients();
+  const { data: groups } = useClientGroups();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
