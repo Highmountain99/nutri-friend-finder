@@ -1,4 +1,4 @@
-import { RefreshCw, Sparkles, UtensilsCrossed } from "lucide-react";
+import { RefreshCw, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SuggestedRecipeCard } from "./SuggestedRecipeCard";
