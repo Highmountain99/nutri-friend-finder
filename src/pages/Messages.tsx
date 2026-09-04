@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { cn } from "@/lib/utils";
 import { Send, Paperclip, Loader2 } from "lucide-react";
 import { AiThinkingBubble } from "@/components/messages/AiThinkingBubble";
 import { Button } from "@/components/ui/button";
