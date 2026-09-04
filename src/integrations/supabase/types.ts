@@ -211,6 +211,62 @@ export type Database = {
         }
         Relationships: []
       }
+      client_group_members: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "client_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_groups: {
+        Row: {
+          color: string | null
+          created_at: string
+          dietitian_id: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          dietitian_id: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          dietitian_id?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_training_days: {
         Row: {
           created_at: string
