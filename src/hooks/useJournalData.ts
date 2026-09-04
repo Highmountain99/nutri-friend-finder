@@ -547,13 +547,14 @@ export function useJournalData(selectedDate: Date) {
         .single();
 
       if (data && !error) {
-        // Reconcile temp id with real server id
+        // Reconcile temp id with real server id + swap base64 for storage ref
         setEntries((prev) =>
           prev.map((e) =>
             e.id === tempId
               ? {
                   ...e,
                   id: data.id,
+                  imageUrl: storedImageUrl,
                   createdAt: new Date(data.created_at || Date.now()),
                 }
               : e
@@ -582,6 +583,12 @@ export function useJournalData(selectedDate: Date) {
       
       const newCreatedAt = updates.mealTime?.toISOString();
 
+      // Upload new photos to storage; keep existing refs as-is
+      let storedImageUrl = updates.imageUrl;
+      if (updates.imageUrl?.startsWith("data:")) {
+        storedImageUrl = await uploadMealImage(user.id, updates.imageUrl);
+      }
+
       const { error } = await supabase
         .from("nutrition_entries")
         .update({
@@ -592,7 +599,7 @@ export function useJournalData(selectedDate: Date) {
           carbs: updates.carbs,
           fat: updates.fat,
           is_ai_estimated: updates.isAiEstimated,
-          image_url: updates.imageUrl,
+          image_url: storedImageUrl,
           ...(newEntryDate && { entry_date: newEntryDate }),
           ...(newCreatedAt && { created_at: newCreatedAt }),
         })
