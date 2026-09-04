@@ -105,7 +105,7 @@ export function ChatAttachmentDisplay({ attachments, senderLabel }: ChatAttachme
         }
 
         if (att.type === "recipe_link" && att.recipeId) {
-          return <RecipeCard key={idx} recipeId={att.recipeId} />;
+          return <RecipeCard key={idx} recipeId={att.recipeId} senderLabel={senderLabel} />;
         }
 
         // Document fallback
