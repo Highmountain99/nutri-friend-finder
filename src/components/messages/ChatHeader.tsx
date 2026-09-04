@@ -91,7 +91,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
         />
 
         {loading ? (
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
             <Skeleton className="w-[52px] h-[52px] rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-32" />
@@ -100,7 +100,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
           </div>
         ) : (
           <div
-            className="flex items-center gap-3"
+            className="relative flex items-center gap-3"
             style={{
               opacity: isFading ? 0 : 1,
               filter: isFading ? "blur(6px)" : "blur(0px)",
