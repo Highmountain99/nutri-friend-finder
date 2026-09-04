@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Salad } from "lucide-react";
@@ -22,28 +21,55 @@ const GOLD = "#DCC08A";
 const CREAM = "#F5EFE2";
 const GREEN = "#1F3A2E";
 
+const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+
 export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange }: ChatHeaderProps) {
   const fullName = dietitian ? `${dietitian.firstName} ${dietitian.lastName}` : "Din coach";
   const coachLabel = dietitian?.firstName || "Coach";
-  const initials = dietitian
-    ? `${dietitian.firstName[0]}${dietitian.lastName[0]}`
-    : "DC";
-
-  const [displayMode, setDisplayMode] = useState(mode);
-  const [isFading, setIsFading] = useState(false);
-
-  useEffect(() => {
-    if (mode === displayMode) return;
-    setIsFading(true);
-    const t = window.setTimeout(() => {
-      setDisplayMode(mode);
-      setIsFading(false);
-    }, 260);
-    return () => window.clearTimeout(t);
-  }, [mode, displayMode]);
+  const initials = dietitian ? `${dietitian.firstName[0]}${dietitian.lastName[0]}` : "DC";
 
   const isAi = mode === "ai";
-  const isAiDisplay = displayMode === "ai";
+
+  const coachName = (dietitian?.firstName || fullName).toUpperCase();
+  const coachSub = dietitian?.title || "Din coach";
+  const aiSub = "din ai-coach, tränad av sveriges dietister";
+
+  // Wheel: two faces on a rotating cylinder (X axis)
+  const wheelFace = (content: React.ReactNode, top: boolean, key: string) => (
+    <div
+      key={key}
+      className="absolute inset-0 flex flex-col justify-center"
+      style={{
+        backfaceVisibility: "hidden",
+        transform: `rotateX(${top ? 0 : -90}deg) translateZ(30px)`,
+      }}
+    >
+      {content}
+    </div>
+  );
+
+  const nameBlock = (name: string, sub: string) => (
+    <>
+      <h2
+        className="font-serif m-0 truncate"
+        style={{
+          fontSize: 30,
+          fontWeight: 800,
+          lineHeight: 0.95,
+          textTransform: "uppercase",
+          color: GREEN,
+        }}
+      >
+        {name}
+      </h2>
+      <p
+        className="truncate"
+        style={{ marginTop: 6, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}
+      >
+        {sub}
+      </p>
+    </>
+  );
 
   return (
     <div>
@@ -56,37 +82,16 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
           backgroundColor: SAGE,
         }}
       >
-        {/* Coach layer */}
+        {/* One wide gradient that slides sideways — same direction as the toggle */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-y-0"
           style={{
-            backgroundImage: `linear-gradient(135deg, ${SAGE} 0%, #9BB98A 100%)`,
-            opacity: isAi ? 0 : 1,
-            transition: "opacity 700ms cubic-bezier(0.4,0,0.2,1)",
-          }}
-        />
-        {/* AI layer */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: `linear-gradient(120deg, ${GOLD} 0%, #D6AB7B 55%, #C9BE96 100%)`,
-            opacity: isAi ? 1 : 0,
-            transition: "opacity 700ms cubic-bezier(0.4,0,0.2,1)",
-          }}
-        />
-
-        {/* Slow shimmer sweep across the header */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 w-1/2"
-          style={{
-            backgroundImage:
-              "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%)",
-            opacity: isAi ? 1 : 0,
-            transition: "opacity 900ms ease",
-            animation: "shimmer-sweep 7s ease-in-out infinite",
+            left: 0,
+            width: "200%",
+            backgroundImage: `linear-gradient(100deg, ${SAGE} 0%, #9BB98A 30%, #C9BE96 52%, #D6AB7B 72%, ${GOLD} 100%)`,
+            transform: isAi ? "translateX(-50%)" : "translateX(0%)",
+            transition: `transform 760ms ${EASE}`,
           }}
         />
 
@@ -99,59 +104,86 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             </div>
           </div>
         ) : (
-          <div
-            className="relative flex items-center gap-3"
-            style={{
-              opacity: isFading ? 0 : 1,
-              filter: isFading ? "blur(6px)" : "blur(0px)",
-              transform: isFading ? "translateY(-8px) scale(0.98)" : "translateY(0) scale(1)",
-              transition:
-                "opacity 260ms cubic-bezier(0.4,0,0.2,1), transform 260ms cubic-bezier(0.4,0,0.2,1), filter 260ms ease",
-            }}
-          >
-            {isAiDisplay ? (
+          <div className="relative flex items-center gap-3">
+            {/* Avatar: rotates inside its circle */}
+            <div
+              className="relative w-[52px] h-[52px] rounded-full overflow-hidden flex-shrink-0"
+              style={{ backgroundColor: CREAM }}
+            >
               <div
-                className="w-[52px] h-[52px] rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: CREAM, color: GREEN }}
-              >
-                <Salad className="w-6 h-6" />
-              </div>
-            ) : (
-              <Avatar className="w-[52px] h-[52px]">
-                {dietitian?.avatarUrl ? (
-                  <AvatarImage src={dietitian.avatarUrl} alt={fullName} className="object-cover" />
-                ) : null}
-                <AvatarFallback
-                  style={{ backgroundColor: CREAM, color: GREEN, fontWeight: 700, fontSize: 16 }}
-                >
-                  {initials.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            )}
-
-            <div className="min-w-0 flex-1">
-              <h2
-                className="font-serif m-0 truncate"
+                className="absolute inset-0"
                 style={{
-                  fontSize: 30,
-                  fontWeight: 800,
-                  lineHeight: 0.95,
-                  textTransform: "uppercase",
-                  color: GREEN,
+                  transform: isAi ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: `transform 760ms ${EASE}`,
                 }}
               >
-                {isAiDisplay ? "Flora" : dietitian?.firstName || fullName}
-              </h2>
-              <p style={{ marginTop: 8, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>
-                {isAiDisplay ? "din ai-coach, tränad av sveriges dietister" : dietitian?.title || "Din coach"}
-              </p>
+                <div
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{
+                    opacity: isAi ? 0 : 1,
+                    transition: `opacity 380ms ${EASE}`,
+                  }}
+                >
+                  <Avatar className="w-[52px] h-[52px]">
+                    {dietitian?.avatarUrl ? (
+                      <AvatarImage src={dietitian.avatarUrl} alt={fullName} className="object-cover" />
+                    ) : null}
+                    <AvatarFallback
+                      style={{ backgroundColor: CREAM, color: GREEN, fontWeight: 700, fontSize: 16 }}
+                    >
+                      {initials.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{
+                    color: GREEN,
+                    opacity: isAi ? 1 : 0,
+                    transform: "rotate(180deg)",
+                    transition: `opacity 380ms ${EASE}`,
+                  }}
+                >
+                  <Salad className="w-6 h-6" />
+                </div>
+              </div>
             </div>
 
-            {/* Small corner toggle */}
+            {/* Name + subtitle on a rotating wheel */}
             <div
-              className="flex items-center p-1 flex-shrink-0 ml-3"
+              className="min-w-0 flex-1 relative"
+              style={{ height: 52, perspective: 600 }}
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  transformStyle: "preserve-3d",
+                  transform: `rotateX(${isAi ? 90 : 0}deg)`,
+                  transition: `transform 760ms ${EASE}`,
+                }}
+              >
+                {wheelFace(nameBlock(coachName, coachSub), true, "coach")}
+                {wheelFace(nameBlock("FLORA", aiSub), false, "ai")}
+              </div>
+            </div>
+
+            {/* Sliding toggle */}
+            <div
+              className="relative flex items-center flex-shrink-0 ml-3 p-1"
               style={{ backgroundColor: CREAM, borderRadius: 999 }}
             >
+              <div
+                aria-hidden
+                className="absolute top-1 bottom-1"
+                style={{
+                  left: 4,
+                  width: "calc(50% - 4px)",
+                  backgroundColor: GREEN,
+                  borderRadius: 999,
+                  transform: isAi ? "translateX(100%)" : "translateX(0%)",
+                  transition: `transform 760ms ${EASE}`,
+                }}
+              />
               {(
                 [
                   { key: "dietitian" as const, label: coachLabel },
@@ -164,12 +196,11 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                     key={tab.key}
                     type="button"
                     onClick={() => onModeChange(tab.key)}
-                    className="px-3 py-1.5 text-xs font-semibold"
+                    className="relative px-3 py-1.5 text-xs font-semibold text-center"
                     style={{
-                      borderRadius: 999,
-                      backgroundColor: active ? GREEN : "transparent",
+                      minWidth: 58,
                       color: active ? CREAM : GREEN,
-                      transition: "all 320ms cubic-bezier(0.4,0,0.2,1)",
+                      transition: "color 380ms ease",
                     }}
                   >
                     {tab.label}
