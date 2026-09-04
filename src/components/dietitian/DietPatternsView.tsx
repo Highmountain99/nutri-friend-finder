@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { useMealImage } from "@/lib/mealImages";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+function MealThumb({ url, alt }: { url: string; alt: string }) {
+  const src = useMealImage(url);
+  if (!src) return null;
+  return <img src={src} alt={alt} className="w-full h-32 object-cover" />;
+}
 
 type Meal = {
   id: string;
