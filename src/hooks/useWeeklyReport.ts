@@ -168,8 +168,15 @@ export function useWeeklyReport() {
         .filter((p) => p.size > 0);
 
       const skippedLunch = perDay.filter(
-        (d) => d.count > 0 && !meals.some((m) => m.entry_date === d.date && m.meal_type === "lunch"),
+        (d) =>
+          d.count > 0 &&
+          !meals.some(
+            (m) =>
+              m.entry_date === d.date &&
+              (m.meal_type ?? "").toLowerCase().includes("lunch"),
+          ),
       ).length;
+
 
       const patternInsights: WeeklyReportData["patternInsights"] = [];
       if (activeDays.length >= 3) {
@@ -261,16 +268,19 @@ export function useWeeklyReport() {
       if (completeDays >= 3)
         correlations.push(`Regelbundenheten höll i sig — ${completeDays} dagar med tre eller fler måltider.`);
       if (skippedLunch > 0)
-        correlations.push(`Frukosten var mer regelbunden, men lunchen saknades ${skippedLunch} dagar.`);
+        correlations.push(
+          `Lunch saknades ${skippedLunch} ${skippedLunch === 1 ? "dag" : "dagar"} med annan loggning.`,
+        );
       if (correlations.length === 0)
         correlations.push("Logga några fler dagar så hittar vi mönster i din vecka.");
 
       const highlight =
         fiberDays >= 3
-          ? "Fibermålet nått fler dagar än förra veckan"
+          ? `Fibermålet nått ${fiberDays} av veckans dagar`
           : completeDays >= 3
-            ? "Fler kompletta dagar än tidigare"
+            ? `${completeDays} kompletta dagar den här veckan`
             : "Fortsätt logga — varje dag ger tydligare mönster";
+
 
       return {
         weekNumber: getISOWeek(now),
