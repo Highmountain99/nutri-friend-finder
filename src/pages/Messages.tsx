@@ -110,7 +110,7 @@ export default function Messages() {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100dvh-8rem-env(safe-area-inset-bottom))]">
+      <div className="flex flex-col h-[calc(100dvh-5.5rem-env(safe-area-inset-bottom))]">
         <ChatHeader
           loading={loading}
           dietitian={dietitianInfo}
