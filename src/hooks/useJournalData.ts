@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { uploadMealImage } from "@/lib/mealImages";
+import { uploadMealImage, warmMealImageCache } from "@/lib/mealImages";
 
 // Types for journal data
 export interface NutritionGoals {
@@ -216,11 +216,12 @@ function sumTotals(entries: NutritionEntry[]): DailyTotals {
   );
 }
 
-// Columns to select for list views — exclude `image_url` because meal photos
-// are often stored as huge base64 blobs that would hang bulk/day queries and
-// prevent historical logging from ever loading.
+// Columns for list views. `image_url` is included again now that meal photos
+// are stored as tiny storage references ("storage:meal-photos/..."), so the
+// image ref arrives together with the rest of the meal values and can be
+// batch-signed in the same fetch — thumbnails render instantly.
 const ENTRY_LIST_COLUMNS =
-  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, created_at";
+  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, image_url, created_at";
 
 
 
@@ -365,6 +366,12 @@ export function useJournalData(selectedDate: Date) {
           };
         });
 
+        // Batch-sign all meal photo refs in one request so thumbnails are
+        // ready in the cache before the entries render
+        await warmMealImageCache(
+          (entriesBulk.data ?? []).map((r: Record<string, unknown>) => r.image_url as string)
+        );
+
         byDate.forEach((b, d) => {
           uc.days.set(d, {
             entries: b.entries,
@@ -386,44 +393,6 @@ export function useJournalData(selectedDate: Date) {
       }
     })();
   }, [user, loadEntryDates, dateKey]);
-
-  // Lazily load meal thumbnails for the selected day. `image_url` is excluded
-  // from list/bulk queries (huge base64 blobs hang them), so we fetch it in a
-  // separate small query once the day's entries are known and merge by id.
-  useEffect(() => {
-    if (!user) return;
-    if (entries.length === 0) return;
-    // Skip when every entry already has a resolved image
-    if (entries.every((e) => e.imageUrl)) return;
-
-    let cancelled = false;
-    (async () => {
-      const { data, error } = await supabase
-        .from("nutrition_entries")
-        .select("id, image_url")
-        .eq("user_id", user.id)
-        .eq("entry_date", dateKey)
-        .not("image_url", "is", null);
-      if (cancelled || error || !data || data.length === 0) return;
-
-      const imageById = new Map(data.map((r) => [r.id as string, r.image_url as string]));
-      setEntries((prev) => {
-        let changed = false;
-        const next = prev.map((e) => {
-          if (!e.imageUrl && imageById.has(e.id)) {
-            changed = true;
-            return { ...e, imageUrl: imageById.get(e.id) };
-          }
-          return e;
-        });
-        return changed ? next : prev;
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, dateKey, entries.length === 0]);
 
   // DAY-LEVEL data — only fetches when the date is NOT already in the cache.
   useEffect(() => {
@@ -457,6 +426,9 @@ export function useJournalData(selectedDate: Date) {
         if (cancelled) return;
 
         const nextEntries = (entriesRes.data ?? []).map((r) => mapEntry(r as Record<string, unknown>));
+        // Sign this day's photo refs before rendering so thumbnails appear instantly
+        await warmMealImageCache(nextEntries.map((e) => e.imageUrl));
+        if (cancelled) return;
         setEntries(nextEntries);
         const nextTotals = sumTotals(nextEntries);
         setDailyTotals(nextTotals);
