@@ -489,7 +489,7 @@ export function CookingModeSheet({
                         Steg {i + 1} / {total}
                       </span>
                     </div>
-                    <div className="font-serif text-[26px] leading-tight text-primary tracking-tight">
+                    <div className="font-sans text-[17px] leading-relaxed text-foreground font-medium">
                       {step.text}
                     </div>
                     {stepTime[i] && (
