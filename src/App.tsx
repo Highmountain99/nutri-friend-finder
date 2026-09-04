@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { QualifyingRoute } from "@/components/auth/QualifyingRoute";
@@ -37,10 +38,19 @@ import { OfflineBanner } from "./components/layout/OfflineBanner";
 
 const queryClient = new QueryClient();
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <OfflineBanner />
           <InstallPrompt />
