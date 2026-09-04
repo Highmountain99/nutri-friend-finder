@@ -8,6 +8,7 @@ import { useHealthProfile } from "@/hooks/useHealthProfile";
 import { EditWeightSheet } from "@/components/profile/EditWeightSheet";
 import { EditWaistSheet } from "@/components/profile/EditWaistSheet";
 import { Scale, Ruler } from "lucide-react";
+import { WeeklySummaryCard } from "@/components/home/WeeklySummaryCard";
 import { useMyTrainingDays, getNextSession, WEEKDAY_LABELS } from "@/hooks/useTrainingDays";
 import dialogBubbles from "@/assets/illustrations/33-dialog-bubbles.jpg";
 import studyDesk from "@/assets/illustrations/12-study-desk.jpg";
@@ -145,6 +146,10 @@ export default function Home() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="px-4 pt-5">
+        <WeeklySummaryCard />
       </section>
 
       {/* Snabbuppdatering av mätvärden */}
