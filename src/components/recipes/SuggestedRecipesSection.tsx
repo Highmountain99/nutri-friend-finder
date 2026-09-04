@@ -1,4 +1,4 @@
-import { RefreshCw, Sparkles, UtensilsCrossed } from "lucide-react";
+import { RefreshCw, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SuggestedRecipeCard } from "./SuggestedRecipeCard";
@@ -31,14 +31,52 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
     restoreDismissed();
   };
 
+  const coachFullName = active[0]?.dietitianName || "Din coach";
+  const coachFirstName = coachFullName.split(" ")[0];
+
+  const header = (
+    <div className="flex items-end justify-between gap-3">
+      <h2
+        className="font-serif m-0"
+        style={{
+          fontSize: 26,
+          fontWeight: 800,
+          lineHeight: 1.05,
+          textTransform: "uppercase",
+          color: "#1F3A2E",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        Från{" "}
+        <span
+          style={{
+            backgroundColor: "#C6D2BA",
+            color: "#1F3A2E",
+            borderRadius: 999,
+            padding: "1px 12px 3px",
+            display: "inline-block",
+          }}
+        >
+          {coachFirstName}
+        </span>{" "}
+        till dig
+      </h2>
+      {active.length > 0 && (
+        <span
+          className="shrink-0 pb-0.5"
+          style={{ fontSize: 13, fontWeight: 600, color: "#8A8471" }}
+        >
+          {active.length} kvar
+        </span>
+      )}
+    </div>
+  );
+
   if (isLoading) {
     return (
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Föreslagna av din coach</h2>
-        </div>
-        <Skeleton className="h-[400px] rounded-lg" />
+      <section className="space-y-4">
+        {header}
+        <Skeleton className="h-[400px] rounded-2xl" />
       </section>
     );
   }
@@ -46,10 +84,7 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
   if (active.length === 0 && !hasDismissed && !hasSaved) {
     return (
       <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Föreslagna av din coach</h2>
-        </div>
+        {header}
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <UtensilsCrossed className="h-10 w-10 mb-3 opacity-30" />
           <p className="font-medium text-sm">Inga receptförslag ännu</p>
@@ -66,18 +101,8 @@ export function SuggestedRecipesSection({ onRecipeSelect }: SuggestedRecipesSect
   const visibleCards = active.slice(0, 4);
 
   return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Föreslagna av din coach</h2>
-        </div>
-        {!isFinished && active.length > 0 && (
-          <span className="text-sm text-muted-foreground">
-            {active.length} kvar
-          </span>
-        )}
-      </div>
+    <section className="space-y-4">
+      {header}
 
       {isFinished ? (
         <div className="bg-muted/50 rounded-lg p-8 text-center space-y-4">

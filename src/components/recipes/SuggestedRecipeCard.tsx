@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
-import { Clock, Users, Heart, X, Flame, Dumbbell, Sparkles } from "lucide-react";
+import { Clock, Users, Heart, X, Flame, Dumbbell } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -166,10 +166,19 @@ export function SuggestedRecipeCard({
             </div>
           </div>
 
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-accent/90 text-accent-foreground gap-1">
-              <Sparkles className="w-3 h-3" />{recipe.dietitianName}
-            </Badge>
+          <div className="absolute top-3 left-3">
+            <span
+              className="inline-flex items-center rounded-full backdrop-blur-sm"
+              style={{
+                backgroundColor: "rgba(237, 241, 229, 0.92)",
+                color: "#1F3A2E",
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "6px 12px",
+              }}
+            >
+              {recipe.dietitianName.split(" ")[0]} föreslår
+            </span>
           </div>
         </div>
 
