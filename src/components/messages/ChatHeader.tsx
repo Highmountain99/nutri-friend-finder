@@ -62,14 +62,13 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
         {/* Slow shimmer sweep across the header */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-y-0 left-0 w-1/2"
           style={{
             backgroundImage:
-              "linear-gradient(100deg, rgba(255,255,255,0) 35%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 65%)",
-            backgroundSize: "250% 100%",
+              "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%)",
             opacity: isAi ? 1 : 0,
             transition: "opacity 900ms ease",
-            animation: "shimmer-sweep 7s linear infinite",
+            animation: "shimmer-sweep 7s ease-in-out infinite",
           }}
         />
 
