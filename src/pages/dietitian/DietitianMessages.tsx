@@ -288,7 +288,10 @@ export default function DietitianMessages() {
                             }`}>
                               {m.content}
                               {(m as any).attachments && (m as any).attachments.length > 0 && (
-                                <ChatAttachmentDisplay attachments={(m as any).attachments as ChatAttachment[]} />
+                                <ChatAttachmentDisplay
+                                  attachments={(m as any).attachments as ChatAttachment[]}
+                                  senderLabel={m.sender === "ai" ? "Kostcoachen" : "Du"}
+                                />
                               )}
                             </div>
                             <div className="flex items-center gap-1 mt-0.5 px-1">

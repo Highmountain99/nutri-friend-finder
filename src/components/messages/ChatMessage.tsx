@@ -21,6 +21,7 @@ interface ChatMessageProps {
   escalated?: boolean;
   onBookingRequest?: () => void;
   attachments?: ChatAttachment[];
+  senderLabel?: string;
   onVisible?: () => void;
 }
 
@@ -32,6 +33,7 @@ export function ChatMessage({
   escalated,
   onBookingRequest,
   attachments,
+  senderLabel,
   onVisible,
 }: ChatMessageProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -94,7 +96,7 @@ export function ChatMessage({
             <p className="text-sm whitespace-pre-wrap">{content}</p>
           )}
           {attachments && attachments.length > 0 && (
-            <ChatAttachmentDisplay attachments={attachments} />
+            <ChatAttachmentDisplay attachments={attachments} senderLabel={senderLabel} />
           )}
         </div>
 
