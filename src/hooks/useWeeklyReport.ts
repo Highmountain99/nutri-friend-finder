@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfWeek, endOfWeek, format, getISOWeek, differenceInCalendarDays } from "date-fns";
+import { sv } from "date-fns/locale";
 
 export interface WeeklyReportData {
   weekNumber: number;
@@ -273,7 +274,7 @@ export function useWeeklyReport() {
 
       return {
         weekNumber: getISOWeek(now),
-        rangeLabel: `${format(start, "d MMM")} – ${format(end, "d MMM")}`,
+        rangeLabel: `${format(start, "d MMM", { locale: sv })} – ${format(end, "d MMM", { locale: sv })}`,
         completeDays,
         mealsLogged,
         planFollowedPct,
