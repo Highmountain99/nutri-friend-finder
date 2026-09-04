@@ -61,7 +61,7 @@ export function ChatMessage({
   return (
     <div ref={ref} className={cn("flex gap-2", isUser ? "justify-end" : "justify-start")}>
       {/* Avatar for non-user messages – always show dietitian avatar */}
-      {!isUser && (
+      {!isUser && sender !== "ai" && (
         <Avatar className="w-8 h-8 flex-shrink-0">
           {dietitian?.avatarUrl ? (
             <AvatarImage
