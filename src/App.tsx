@@ -23,6 +23,7 @@ import { DietitianRoute } from "@/components/dietitian/DietitianRoute";
 import { DietitianLayout } from "@/components/dietitian/DietitianLayout";
 import DietitianDashboard from "./pages/dietitian/DietitianDashboard";
 import DietitianPatients from "./pages/dietitian/DietitianPatients";
+import DietitianGroups from "./pages/dietitian/DietitianGroups";
 import DietitianPatientDetail from "./pages/dietitian/DietitianPatientDetail";
 import DietitianRecipes from "./pages/dietitian/DietitianRecipes";
 import DietitianMessages from "./pages/dietitian/DietitianMessages";
