@@ -5,6 +5,7 @@ import { startOfWeek, endOfWeek, format, getISOWeek, differenceInCalendarDays } 
 import { sv } from "date-fns/locale";
 
 export interface WeeklyReportData {
+  weekStart: string;
   weekNumber: number;
   rangeLabel: string;
   // Veckan i korthet
@@ -41,12 +42,13 @@ export interface WeeklyReportData {
 
 const SWEET_WORDS = ["glass", "godis", "choklad", "kaka", "bulle", "vin", "öl", "cider", "dessert", "läsk"];
 
-export function useWeeklyReport() {
+export function useWeeklyReport(targetUserId?: string) {
   const { user } = useAuth();
+  const userId = targetUserId ?? user?.id;
 
   return useQuery({
-    queryKey: ["weekly-report", user?.id],
-    enabled: !!user,
+    queryKey: ["weekly-report", userId],
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<WeeklyReportData> => {
       const now = new Date();
@@ -59,24 +61,24 @@ export function useWeeklyReport() {
         supabase
           .from("nutrition_entries")
           .select("id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, fiber, created_at")
-          .eq("user_id", user!.id)
+          .eq("user_id", userId!)
           .gte("entry_date", startStr)
           .lte("entry_date", endStr),
         supabase
           .from("user_nutrition_goals")
           .select("calories_goal, protein_goal, carbs_goal, fat_goal")
-          .eq("user_id", user!.id)
+          .eq("user_id", userId!)
           .maybeSingle(),
         supabase
           .from("symptom_entries")
           .select("entry_date")
-          .eq("user_id", user!.id)
+          .eq("user_id", userId!)
           .gte("entry_date", startStr)
           .lte("entry_date", endStr),
         supabase
           .from("health_tracking_entries")
           .select("entry_date, value")
-          .eq("user_id", user!.id)
+          .eq("user_id", userId!)
           .eq("metric_type", "weight")
           .gte("entry_date", startStr)
           .lte("entry_date", endStr)
@@ -283,6 +285,7 @@ export function useWeeklyReport() {
 
 
       return {
+        weekStart: startStr,
         weekNumber: getISOWeek(now),
         rangeLabel: `${format(start, "d MMM", { locale: sv })} – ${format(end, "d MMM", { locale: sv })}`,
         completeDays,

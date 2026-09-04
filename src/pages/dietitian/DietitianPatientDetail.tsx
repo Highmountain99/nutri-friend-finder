@@ -28,6 +28,7 @@ import { EditPatientGoalsSheet } from "@/components/dietitian/EditPatientGoalsSh
 import { PatientHealthProfileCard } from "@/components/dietitian/PatientHealthProfileCard";
 import { ConfigureProgressSheet } from "@/components/dietitian/ConfigureProgressSheet";
 import { TrainingDaysCard } from "@/components/dietitian/TrainingDaysCard";
+import { WeeklySummaryReviewCard } from "@/components/dietitian/WeeklySummaryReviewCard";
 import { ClinicalNoteWizard } from "@/components/dietitian/clinical-notes/ClinicalNoteWizard";
 import { getAreaConfig } from "@/components/dietitian/clinical-notes/areaConfigs/index";
 import { useAuth } from "@/contexts/AuthContext";
@@ -218,6 +219,7 @@ export default function DietitianPatientDetail() {
               <TabsTrigger value="overview">Översikt</TabsTrigger>
               <TabsTrigger value="journal">Journal</TabsTrigger>
               <TabsTrigger value="foodlog">Kostdagbok</TabsTrigger>
+              <TabsTrigger value="weekly">Veckosammanfattning</TabsTrigger>
               <TabsTrigger value="treatment">Behandlingsplan</TabsTrigger>
               <TabsTrigger value="visits">Diet</TabsTrigger>
               <TabsTrigger value="documents">Dokument</TabsTrigger>
@@ -523,6 +525,10 @@ export default function DietitianPatientDetail() {
             </TabsContent>
 
             {/* Treatment Plan tab */}
+            <TabsContent value="weekly" className="mt-4">
+              <WeeklySummaryReviewCard patientId={id!} />
+            </TabsContent>
+
             <TabsContent value="treatment" className="mt-4">
               {id && <TreatmentPlanTab patientId={id} />}
             </TabsContent>
