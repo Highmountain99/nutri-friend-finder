@@ -134,9 +134,26 @@ export function useChatMessages(conversationType: ConversationType = "dietitian"
             }
           );
 
+          const result = await response.json().catch(() => ({} as Record<string, unknown>));
+
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || "Ett fel uppstod");
+            throw new Error((result as { error?: string }).error || "Ett fel uppstod");
+          }
+
+          const reply = (result as { reply?: string }).reply;
+          const saved = (result as { message?: { id: string; created_at: string } | null }).message;
+
+          if (reply) {
+            const aiMessage: ChatMessage = {
+              id: saved?.id ?? `ai-${Date.now()}`,
+              sender: "ai",
+              content: reply,
+              created_at: saved?.created_at ?? new Date().toISOString(),
+              attachments: [],
+            };
+            setMessages((prev) =>
+              prev.some((m) => m.id === aiMessage.id) ? prev : [...prev, aiMessage]
+            );
           }
         }
       } catch (err) {
