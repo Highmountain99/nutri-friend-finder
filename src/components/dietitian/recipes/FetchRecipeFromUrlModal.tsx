@@ -92,7 +92,8 @@ export function FetchRecipeFromUrlModal({ open, onOpenChange }: FetchRecipeFromU
                 onKeyDown={(e) => e.key === "Enter" && handleFetch()}
               />
               <p className="text-xs text-muted-foreground mt-1.5">
-                Fungerar med de flesta receptsajter som Köket.se, ICA.se, Arla.se, Coop.se m.fl.
+                Fungerar med Köket, Tasteline, Recept.se, HelloFresh, Mathem, Lidl, Coop, Zeta,
+                matbloggar m.fl. Saknas näringsvärden görs en uppskattning.
               </p>
             </div>
             <Button className="w-full" onClick={handleFetch} disabled={!url.trim() || loading}>
