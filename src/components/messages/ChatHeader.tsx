@@ -176,11 +176,51 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
               </div>
             </div>
 
+            {/* Sliding toggle */}
+            <div
+              className="relative flex items-center flex-shrink-0 p-1"
+              style={{ backgroundColor: CREAM, borderRadius: 999 }}
+            >
+              <div
+                aria-hidden
+                className="absolute top-1 bottom-1"
+                style={{
+                  left: 4,
+                  width: "calc(50% - 4px)",
+                  backgroundColor: GREEN,
+                  borderRadius: 999,
+                  transform: isAi ? "translateX(100%)" : "translateX(0%)",
+                  transition: `transform 760ms ${EASE}`,
+                }}
+              />
+              {(
+                [
+                  { key: "dietitian" as const, label: coachLabel },
+                  { key: "ai" as const, label: "Flora" },
+                ]
+              ).map((tab) => {
+                const active = mode === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => onModeChange(tab.key)}
+                    className="relative px-3 py-1.5 text-[12.5px] font-semibold text-center"
+                    style={{
+                      minWidth: 58,
+                      color: active ? CREAM : GREEN,
+                      transition: "color 380ms ease",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
-
       </div>
+
 
       {isEscalated && !isAi && (
         <div className="px-5 py-2">
