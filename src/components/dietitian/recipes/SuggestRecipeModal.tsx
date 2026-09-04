@@ -153,6 +153,31 @@ export function SuggestRecipeModal({
             </div>
           )}
 
+          {/* Training groups */}
+          {(groups?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-1.5 shrink-0">
+              {groups!.map((g) => {
+                const active = g.member_ids.length > 0 && g.member_ids.every((id) => selectedIds.includes(id));
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => toggleGroup(g.member_ids)}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:bg-accent/40"
+                    }`}
+                  >
+                    <Users2 className="h-3 w-3" />
+                    {g.name}
+                    <span className="opacity-60">{g.member_ids.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Search patients */}
           <div className="relative shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
