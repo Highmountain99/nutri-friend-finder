@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, ArrowRight, Eye, EyeOff, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import onboardingSofa from "@/assets/onboarding-sofa.png";
 import onboardingHealth from "@/assets/onboarding-health.png";
@@ -500,6 +501,8 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
   const [showPw, setShowPw] = useState(false);
   const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email);
@@ -516,6 +519,46 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
     return Math.min(s, 3);
   })();
   const strengthLabel = ["Svagt", "Okej", "Bra", "Starkt"][strength];
+
+  const socialDisabled = loading || isGoogleLoading || isAppleLoading;
+
+  const handleGoogleSignUp = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const { error, redirected } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (redirected) return;
+      if (error) {
+        toast.error(error.message || "Google-registrering misslyckades");
+        return;
+      }
+      onClose();
+    } catch {
+      toast.error("Ett fel uppstod vid Google-registrering");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleAppleSignUp = async () => {
+    setIsAppleLoading(true);
+    try {
+      const { error, redirected } = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      if (redirected) return;
+      if (error) {
+        toast.error(error.message || "Apple-registrering misslyckades");
+        return;
+      }
+      onClose();
+    } catch {
+      toast.error("Ett fel uppstod vid Apple-registrering");
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
 
   const submit = async () => {
     setTouched(true);
@@ -545,6 +588,85 @@ function FormScreen({ onClose, onDone }: { onClose: () => void; onDone: (firstNa
         <p className="m-0" style={{ marginBottom: 18, fontFamily: FN, fontSize: 13.5, color: GREEN_SOFT }}>
           Fyll i dina uppgifter för att komma igång.
         </p>
+
+        {/* Social signup */}
+        <div className="flex flex-col gap-3" style={{ marginBottom: 18 }}>
+          <button
+            type="button"
+            onClick={handleGoogleSignUp}
+            disabled={socialDisabled}
+            className="w-full rounded-full flex items-center justify-center gap-3 transition-transform active:scale-[0.98]"
+            style={{
+              padding: "13px 18px",
+              background: "transparent",
+              border: `1.5px solid ${FIELD_BORDER}`,
+              color: GREEN_DEEP,
+              fontFamily: FN,
+              fontSize: 14.5,
+              fontWeight: 600,
+              opacity: socialDisabled ? 0.6 : 1,
+            }}
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+            {isGoogleLoading ? "Ansluter…" : "Fortsätt med Google"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleAppleSignUp}
+            disabled={socialDisabled}
+            className="w-full rounded-full flex items-center justify-center gap-3 transition-transform active:scale-[0.98]"
+            style={{
+              padding: "13px 18px",
+              background: "transparent",
+              border: `1.5px solid ${FIELD_BORDER}`,
+              color: GREEN_DEEP,
+              fontFamily: FN,
+              fontSize: 14.5,
+              fontWeight: 600,
+              opacity: socialDisabled ? 0.6 : 1,
+            }}
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16.365 1.43c0 1.14-.42 2.2-1.26 3.02-.9.9-1.98 1.42-3.12 1.33-.03-1.09.44-2.2 1.24-3 .84-.85 2.05-1.44 3.14-1.35zM20.7 17.06c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.39 3.52-4.12 3.53-1.54.01-1.94-1-4.03-.99-2.09.01-2.53 1.01-4.07.99-1.73-.01-3.05-1.77-4.04-3.34C.09 15.83-.2 10.7 1.5 8c1.22-1.93 3.14-3.06 4.95-3.06 1.84 0 3 1.01 4.52 1.01 1.48 0 2.38-1.01 4.51-1.01 1.61 0 3.32.88 4.54 2.39-3.99 2.18-3.34 7.86 1.68 9.73z" />
+            </svg>
+            {isAppleLoading ? "Ansluter…" : "Fortsätt med Apple"}
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3" style={{ marginBottom: 18 }}>
+          <span className="flex-1 h-px" style={{ background: FIELD_BORDER }} />
+          <span
+            style={{
+              fontFamily: FN,
+              fontSize: 10,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: GREEN_SOFT,
+            }}
+          >
+            eller
+          </span>
+          <span className="flex-1 h-px" style={{ background: FIELD_BORDER }} />
+        </div>
 
         <form
           onSubmit={(e) => {
