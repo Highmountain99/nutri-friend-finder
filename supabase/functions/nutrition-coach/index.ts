@@ -49,7 +49,7 @@ serve(async (req) => {
     since.setDate(since.getDate() - 14);
     const sinceStr = since.toISOString().split("T")[0];
 
-    const [mealsRes, settingsRes, goalsRes, recipesRes, planRes, historyRes] = await Promise.all([
+    const [mealsRes, settingsRes, goalsRes, recipesRes, planRes, historyRes, catalogRes] = await Promise.all([
       db
         .from("nutrition_entries")
         .select("entry_date, meal_type, meal_name, calories, protein")
