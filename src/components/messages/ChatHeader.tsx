@@ -121,6 +121,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             </div>
           </div>
         )}
+      </div>
 
       {isEscalated && !isAi && (
         <div className="px-5 py-2">
