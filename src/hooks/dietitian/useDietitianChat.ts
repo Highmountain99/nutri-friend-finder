@@ -29,6 +29,7 @@ export function useDietitianChat(patientId: string | undefined) {
         .from("chat_messages")
         .select("*")
         .eq("user_id", patientId!)
+        .eq("conversation_type", "dietitian")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data;

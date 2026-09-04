@@ -1,5 +1,7 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Salad } from "lucide-react";
+import type { ConversationType } from "@/hooks/useChatMessages";
 
 interface ChatHeaderProps {
   loading?: boolean;
@@ -10,29 +12,33 @@ interface ChatHeaderProps {
     avatarUrl?: string | null;
   } | null;
   isEscalated?: boolean;
+  mode: ConversationType;
+  onModeChange: (mode: ConversationType) => void;
 }
 
-const SAGE = "#8FAF7E";
+const SAGE = "#B7C4A9";
+const GOLD = "#DCC08A";
 const CREAM = "#F5EFE2";
 const GREEN = "#1F3A2E";
 
-export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps) {
-  const fullName = dietitian
-    ? `${dietitian.firstName} ${dietitian.lastName}`
-    : "Din coach";
-  const title = dietitian?.title || "Din coach";
+export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange }: ChatHeaderProps) {
+  const fullName = dietitian ? `${dietitian.firstName} ${dietitian.lastName}` : "Din coach";
+  const coachLabel = dietitian?.firstName || "Coach";
   const initials = dietitian
     ? `${dietitian.firstName[0]}${dietitian.lastName[0]}`
     : "DC";
+
+  const isAi = mode === "ai";
 
   return (
     <div>
       <div
         style={{
-          backgroundColor: SAGE,
+          backgroundColor: isAi ? GOLD : SAGE,
           color: GREEN,
           borderRadius: "0 0 28px 28px",
-          padding: "calc(env(safe-area-inset-top) + 28px) 20px 32px",
+          padding: "calc(env(safe-area-inset-top) + 28px) 20px 28px",
+          transition: "background-color 200ms ease",
         }}
       >
         {loading ? (
@@ -45,36 +51,79 @@ export function ChatHeader({ loading, dietitian, isEscalated }: ChatHeaderProps)
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <Avatar className="w-[52px] h-[52px]">
-              {dietitian?.avatarUrl ? (
-                <AvatarImage src={dietitian.avatarUrl} alt={fullName} className="object-cover" />
-              ) : null}
-              <AvatarFallback
-                style={{ backgroundColor: CREAM, color: GREEN, fontWeight: 700, fontSize: 16 }}
+            {isAi ? (
+              <div
+                className="w-[52px] h-[52px] rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: CREAM, color: GREEN }}
               >
-                {initials.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
+                <Salad className="w-6 h-6" />
+              </div>
+            ) : (
+              <Avatar className="w-[52px] h-[52px]">
+                {dietitian?.avatarUrl ? (
+                  <AvatarImage src={dietitian.avatarUrl} alt={fullName} className="object-cover" />
+                ) : null}
+                <AvatarFallback
+                  style={{ backgroundColor: CREAM, color: GREEN, fontWeight: 700, fontSize: 16 }}
+                >
+                  {initials.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            )}
+
+            <div className="min-w-0 flex-1">
               <h2
                 className="font-serif m-0 truncate"
                 style={{
-                  fontSize: 34,
+                  fontSize: 30,
                   fontWeight: 800,
                   lineHeight: 0.95,
                   textTransform: "uppercase",
                   color: GREEN,
                 }}
               >
-                {dietitian?.firstName || fullName}
+                {isAi ? "Kostcoach" : dietitian?.firstName || fullName}
               </h2>
-              <p style={{ marginTop: 10, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>{title}</p>
+              <p style={{ marginTop: 8, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}>
+                {isAi ? "AI · tränad av legitimerade dietister" : dietitian?.title || "Din coach"}
+              </p>
             </div>
           </div>
         )}
+
+        {/* Toggle */}
+        <div
+          className="mt-5 flex items-center p-1 mx-auto"
+          style={{ backgroundColor: CREAM, borderRadius: 999, width: "fit-content" }}
+        >
+          {(
+            [
+              { key: "dietitian" as const, label: coachLabel },
+              { key: "ai" as const, label: "Kostcoach" },
+            ]
+          ).map((tab) => {
+            const active = mode === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => onModeChange(tab.key)}
+                className="px-5 py-2 text-sm font-semibold"
+                style={{
+                  borderRadius: 999,
+                  backgroundColor: active ? GREEN : "transparent",
+                  color: active ? CREAM : GREEN,
+                  transition: "all 160ms ease",
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {isEscalated && (
+      {isEscalated && !isAi && (
         <div className="px-5 py-2">
           <p className="text-xs text-muted-foreground">
             {dietitian?.firstName || "Din coach"} har kopplats på och återkommer så snart som
