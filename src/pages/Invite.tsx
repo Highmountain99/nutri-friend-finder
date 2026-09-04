@@ -410,9 +410,8 @@ export default function Invite() {
               >
                 Tillbaka
               </button>
-            </>
-          )}
         </CardContent>
+
       </Card>
     </div>
   );
