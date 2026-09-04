@@ -113,13 +113,14 @@ export default function WeeklyReport() {
                 <div>
                   <p className="text-[13px] italic leading-snug text-primary">
                     {coachName
-                      ? "Fin vecka! Regelbundenheten börjar sitta — vi tittar vidare tillsammans nästa gång."
+                      ? `${coach?.first_name} lämnar en kommentar här efter veckans genomgång.`
                       : "Din kostrådgivare lämnar en kommentar här efter veckans genomgång."}
                   </p>
                   <p className="mt-1 text-[11px] font-semibold text-primary/60">
                     {coachName ? `${coachName}, kostrådgivare` : "Väntar på kommentar"}
                   </p>
                 </div>
+
               </div>
             </Card>
 
