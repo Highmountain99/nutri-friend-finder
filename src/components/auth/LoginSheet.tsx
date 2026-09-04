@@ -27,6 +27,7 @@ export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetPr
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
