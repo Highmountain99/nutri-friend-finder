@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Search, Send } from "lucide-react";
 import { useAssignedPatients, getPatientDisplayName } from "@/hooks/dietitian/useAssignedPatients";
+import { useClientGroups } from "@/hooks/dietitian/useClientGroups";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
