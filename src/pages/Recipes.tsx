@@ -199,6 +199,9 @@ function RecipesContent() {
               onViewAll={() => setMyRecipesOpen(true)}
             />
           )}
+
+          {/* AI coach suggestions */}
+          {user && <AiSuggestedRecipesSection onRecipeSelect={handleRecipeIdSelect} />}
         </div>
       )}
       </div>
