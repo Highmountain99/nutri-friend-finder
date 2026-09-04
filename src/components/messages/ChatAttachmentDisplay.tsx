@@ -1,4 +1,4 @@
-import { FileText, BookOpen, ExternalLink, UtensilsCrossed, ChevronRight } from "lucide-react";
+import { FileText, ExternalLink, UtensilsCrossed, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
