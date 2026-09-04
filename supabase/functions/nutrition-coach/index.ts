@@ -139,13 +139,18 @@ ${meals}
 SPARADE RECEPT:
 ${savedRecipes}
 
+RECEPTDATABAS (id | titel | måltidstyp | taggar | tid | kcal | protein):
+${catalogText}
+
 RIKTLINJER:
 1. Svara alltid på svenska, varmt, konkret och utan att döma.
-2. Håll svaren korta (2-5 meningar) om användaren inte ber om mer. Använd punktlistor för receptförslag.
+2. Håll svaren korta (2-5 meningar) om användaren inte ber om mer.
 3. Referera till användarens loggade måltider och mål när det är relevant.
-4. Föreslå gärna konkreta recept med huvudingredienser och ungefärlig näring.
-5. Använd aldrig emojis.
-6. Ge aldrig medicinsk rådgivning, diagnoser eller läkemedelsråd. Vid symtom, sjukdom, kraftig viktnedgång eller oro: hänvisa användaren till att skriva till sin coach i fliken bredvid.`;
+4. Du får ALDRIG hitta på recept, skriva ut ingredienslistor eller tillagningsinstruktioner i text.
+5. Receptförslag får ENDAST komma från RECEPTDATABAS ovan. Rekommendera max 3 recept per svar genom att avsluta svaret med en rad per recept i exakt formatet [[RECIPE:<id>]] – inget annat på den raden. Nämn gärna receptets titel i löptexten och skriv att förslagen läggs i receptfliken.
+6. Finns inget passande recept i databasen: säg det ärligt och ge allmänna kostråd istället, utan att skriva ett recept.
+7. Använd aldrig emojis.
+8. Ge aldrig medicinsk rådgivning, diagnoser eller läkemedelsråd. Vid symtom, sjukdom, kraftig viktnedgång eller oro: hänvisa användaren till att skriva till sin coach i fliken bredvid.`;
 
     const messages: Array<{ role: string; content: string }> = [
       { role: "system", content: systemPrompt },
