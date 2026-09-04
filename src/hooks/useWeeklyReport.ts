@@ -168,8 +168,15 @@ export function useWeeklyReport() {
         .filter((p) => p.size > 0);
 
       const skippedLunch = perDay.filter(
-        (d) => d.count > 0 && !meals.some((m) => m.entry_date === d.date && m.meal_type === "lunch"),
+        (d) =>
+          d.count > 0 &&
+          !meals.some(
+            (m) =>
+              m.entry_date === d.date &&
+              (m.meal_type ?? "").toLowerCase().includes("lunch"),
+          ),
       ).length;
+
 
       const patternInsights: WeeklyReportData["patternInsights"] = [];
       if (activeDays.length >= 3) {
