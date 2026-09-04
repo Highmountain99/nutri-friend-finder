@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Paperclip, Loader2 } from "lucide-react";
+import { AiThinkingBubble } from "@/components/messages/AiThinkingBubble";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -181,18 +182,22 @@ export default function Messages() {
 
           {/* Streaming indicator */}
           {sending && (
-            <div className="flex gap-2 justify-start">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
-              </div>
-              <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            isAi ? (
+              <AiThinkingBubble />
+            ) : (
+              <div className="flex gap-2 justify-start">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+                </div>
+                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
                 </div>
               </div>
-            </div>
+            )
           )}
 
           {error && (
