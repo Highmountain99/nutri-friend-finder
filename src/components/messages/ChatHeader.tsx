@@ -218,8 +218,10 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
               </div>
             </div>
 
+            </div>
           </div>
         )}
+
       </div>
 
       {isEscalated && !isAi && (
