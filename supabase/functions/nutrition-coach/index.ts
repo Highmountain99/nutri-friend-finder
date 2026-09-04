@@ -87,7 +87,22 @@ serve(async (req) => {
         .eq("conversation_type", "ai")
         .order("created_at", { ascending: false })
         .limit(12),
+      db
+        .from("recipes")
+        .select("id, title, tags, meal_types, dietary_needs, time_minutes, calories_per_serving, protein_per_serving")
+        .eq("is_published", true)
+        .limit(300),
     ]);
+
+    const catalog = catalogRes.data || [];
+    const catalogText = catalog.length
+      ? catalog
+          .map(
+            (r) =>
+              `${r.id} | ${r.title} | ${(r.meal_types || []).join("/") || "-"} | ${(r.tags || []).slice(0, 4).join(", ") || "-"} | ${r.time_minutes ?? "?"} min | ${r.calories_per_serving ?? "?"} kcal | ${r.protein_per_serving ?? "?"}g protein`
+          )
+          .join("\n")
+      : "Inga recept i databasen.";
 
     const meals = (mealsRes.data || [])
       .map((m) => `- ${m.entry_date} ${m.meal_type || ""}: ${m.meal_name || "okänt"}`)
