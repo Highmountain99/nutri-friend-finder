@@ -32,7 +32,7 @@ export default function Messages() {
     setMode(next);
     modeTimeoutRef.current = window.setTimeout(() => {
       setModeTransitioning(false);
-    }, 220);
+    }, 420);
   }, [mode]);
 
   const { data: myDietitian, isLoading: dietitianLoading } = useMyDietitian();
@@ -122,8 +122,10 @@ export default function Messages() {
         {/* Messages */}
         <div
           className={cn(
-            "flex-1 overflow-y-auto px-4 py-4 space-y-4 transition-all duration-200",
-            modeTransitioning && "opacity-40 blur-[6px] pointer-events-none"
+            "flex-1 overflow-y-auto px-4 py-4 space-y-4 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            modeTransitioning
+              ? "opacity-0 blur-[10px] scale-[0.98] translate-y-2 pointer-events-none"
+              : "opacity-100 blur-0 scale-100 translate-y-0"
           )}
         >
           {isAi && (
@@ -236,8 +238,10 @@ export default function Messages() {
         {/* Input */}
         <div
           className={cn(
-            "px-4 py-3 border-t border-border bg-card transition-all duration-200",
-            modeTransitioning && "opacity-40 blur-[6px] pointer-events-none"
+            "px-4 py-3 border-t border-border bg-card transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            modeTransitioning
+              ? "opacity-0 blur-[8px] translate-y-1 pointer-events-none"
+              : "opacity-100 blur-0 translate-y-0"
           )}
         >
           {pendingAttachments.length > 0 && (

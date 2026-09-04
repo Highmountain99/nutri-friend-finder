@@ -38,7 +38,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
     const t = window.setTimeout(() => {
       setDisplayMode(mode);
       setIsFading(false);
-    }, 140);
+    }, 260);
     return () => window.clearTimeout(t);
   }, [mode, displayMode]);
 
@@ -56,9 +56,23 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
           backgroundImage: `linear-gradient(135deg, ${SAGE} 0%, ${GOLD} 50%, ${SAGE} 100%)`,
           backgroundSize: "200% 200%",
           backgroundPosition: isAi ? "100% 100%" : "0% 0%",
-          transition: "background-position 400ms ease",
+          transition: "background-position 1100ms cubic-bezier(0.35, 0, 0.2, 1)",
         }}
       >
+        {/* Slow shimmer sweep across the header */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(100deg, rgba(255,255,255,0) 35%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 65%)",
+            backgroundSize: "250% 100%",
+            opacity: isAi ? 1 : 0,
+            transition: "opacity 900ms ease",
+            animation: "shimmer-sweep 7s linear infinite",
+          }}
+        />
+
         {loading ? (
           <div className="flex items-center gap-3">
             <Skeleton className="w-[52px] h-[52px] rounded-full" />
@@ -72,8 +86,10 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             className="flex items-center gap-3"
             style={{
               opacity: isFading ? 0 : 1,
-              transform: isFading ? "translateY(-6px)" : "translateY(0)",
-              transition: "opacity 140ms ease, transform 140ms ease",
+              filter: isFading ? "blur(6px)" : "blur(0px)",
+              transform: isFading ? "translateY(-8px) scale(0.98)" : "translateY(0) scale(1)",
+              transition:
+                "opacity 260ms cubic-bezier(0.4,0,0.2,1), transform 260ms cubic-bezier(0.4,0,0.2,1), filter 260ms ease",
             }}
           >
             {isAiDisplay ? (
@@ -136,7 +152,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                       borderRadius: 999,
                       backgroundColor: active ? GREEN : "transparent",
                       color: active ? CREAM : GREEN,
-                      transition: "all 160ms ease",
+                      transition: "all 320ms cubic-bezier(0.4,0,0.2,1)",
                     }}
                   >
                     {tab.label}
