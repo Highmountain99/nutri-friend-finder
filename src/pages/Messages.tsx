@@ -23,19 +23,17 @@ export default function Messages() {
   const { user } = useAuth();
   const [mode, setMode] = useState<ConversationType>("dietitian");
   const [modeTransitioning, setModeTransitioning] = useState(false);
-  const prevModeRef = useRef(mode);
+  const modeTimeoutRef = useRef<number | null>(null);
 
   const handleModeChange = useCallback((next: ConversationType) => {
-    if (next === prevModeRef.current) return;
+    if (next === mode) return;
+    if (modeTimeoutRef.current) window.clearTimeout(modeTimeoutRef.current);
     setModeTransitioning(true);
     setMode(next);
-    window.clearTimeout(prevModeRef.current as unknown as number);
-    const t = window.setTimeout(() => {
+    modeTimeoutRef.current = window.setTimeout(() => {
       setModeTransitioning(false);
-      prevModeRef.current = next;
     }, 220);
-    return () => window.clearTimeout(t);
-  }, []);
+  }, [mode]);
 
   const { data: myDietitian, isLoading: dietitianLoading } = useMyDietitian();
   const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead, markAllAsRead } =
