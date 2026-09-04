@@ -41,7 +41,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
       className="absolute inset-0 flex flex-col justify-center"
       style={{
         backfaceVisibility: "hidden",
-        transform: `rotateX(${top ? 0 : -90}deg) translateZ(26px)`,
+        transform: `rotateX(${top ? 0 : -90}deg) translateZ(28px)`,
       }}
     >
       {content}
@@ -53,7 +53,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
       <h2
         className="font-serif m-0 truncate"
         style={{
-          fontSize: 30,
+          fontSize: 24,
           fontWeight: 800,
           lineHeight: 0.95,
           textTransform: "uppercase",
@@ -63,8 +63,17 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
         {name}
       </h2>
       <p
-        className="truncate"
-        style={{ marginTop: 6, fontSize: 13, color: "rgba(31,58,46,0.75)", fontWeight: 600 }}
+        style={{
+          marginTop: 5,
+          fontSize: 11.5,
+          lineHeight: 1.25,
+          color: "rgba(31,58,46,0.75)",
+          fontWeight: 600,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
       >
         {sub}
       </p>
@@ -97,7 +106,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
 
         {loading ? (
           <div className="relative flex items-center gap-3">
-            <Skeleton className="w-[52px] h-[52px] rounded-full" />
+            <Skeleton className="w-[46px] h-[46px] rounded-full" />
             <div className="space-y-2">
               <Skeleton className="h-5 w-32" />
               <Skeleton className="h-3 w-24" />
@@ -107,7 +116,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
           <div className="relative flex items-center gap-3">
             {/* Avatar: rotates inside its circle */}
             <div
-              className="relative w-[52px] h-[52px] rounded-full overflow-hidden flex-shrink-0"
+              className="relative w-[46px] h-[46px] rounded-full overflow-hidden flex-shrink-0"
               style={{ backgroundColor: CREAM }}
             >
               <div
@@ -124,7 +133,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                     transition: `opacity 380ms ${EASE}`,
                   }}
                 >
-                  <Avatar className="w-[52px] h-[52px]">
+                  <Avatar className="w-[46px] h-[46px]">
                     {dietitian?.avatarUrl ? (
                       <AvatarImage src={dietitian.avatarUrl} alt={fullName} className="object-cover" />
                     ) : null}
@@ -152,7 +161,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             {/* Name + subtitle on a rotating wheel */}
             <div
               className="min-w-0 flex-1 relative"
-              style={{ height: 52, perspective: 600 }}
+              style={{ height: 56, perspective: 700 }}
             >
               <div
                 className="absolute inset-0"
@@ -169,15 +178,15 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
 
             {/* Sliding toggle */}
             <div
-              className="relative flex items-center flex-shrink-0 ml-3 p-1"
+              className="relative flex items-center flex-shrink-0 ml-2 p-[3px]"
               style={{ backgroundColor: CREAM, borderRadius: 999 }}
             >
               <div
                 aria-hidden
                 className="absolute top-1 bottom-1"
                 style={{
-                  left: 4,
-                  width: "calc(50% - 4px)",
+                  left: 3,
+                  width: "calc(50% - 3px)",
                   backgroundColor: GREEN,
                   borderRadius: 999,
                   transform: isAi ? "translateX(100%)" : "translateX(0%)",
@@ -196,9 +205,9 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                     key={tab.key}
                     type="button"
                     onClick={() => onModeChange(tab.key)}
-                    className="relative px-3 py-1.5 text-xs font-semibold text-center"
+                    className="relative px-2.5 py-1 text-[11px] font-semibold text-center"
                     style={{
-                      minWidth: 58,
+                      minWidth: 46,
                       color: active ? CREAM : GREEN,
                       transition: "color 380ms ease",
                     }}
