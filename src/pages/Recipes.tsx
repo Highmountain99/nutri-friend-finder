@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ScanLine, BookOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecipeSearchBar } from "@/components/recipes/RecipeSearchBar";
@@ -36,6 +37,17 @@ function RecipesContent() {
   const [myRecipesOpen, setMyRecipesOpen] = useState(false);
   const [browseAll, setBrowseAll] = useState(false);
   const [sort, setSort] = useState<RecipeSortKey>("rating");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Open a recipe directly when linked from chat (/recipes?recipe=<id>)
+  useEffect(() => {
+    const id = searchParams.get("recipe");
+    if (!id) return;
+    setSelectedRecipeId(id);
+    const next = new URLSearchParams(searchParams);
+    next.delete("recipe");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Determine view mode
   const viewMode: ViewMode =
