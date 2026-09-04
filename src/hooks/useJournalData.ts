@@ -426,6 +426,9 @@ export function useJournalData(selectedDate: Date) {
         if (cancelled) return;
 
         const nextEntries = (entriesRes.data ?? []).map((r) => mapEntry(r as Record<string, unknown>));
+        // Sign this day's photo refs before rendering so thumbnails appear instantly
+        await warmMealImageCache(nextEntries.map((e) => e.imageUrl));
+        if (cancelled) return;
         setEntries(nextEntries);
         const nextTotals = sumTotals(nextEntries);
         setDailyTotals(nextTotals);
