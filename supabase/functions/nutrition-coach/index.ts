@@ -189,7 +189,39 @@ RIKTLINJER:
     }
 
     const data = await response.json();
-    const reply = (data?.choices?.[0]?.message?.content || "").trim();
+    const raw = (data?.choices?.[0]?.message?.content || "").trim();
+
+    // Extract recommended recipe ids and validate against the catalog
+    const validIds = new Set(catalog.map((r) => r.id as string));
+    const suggestedIds: string[] = [];
+    for (const m of raw.matchAll(/\[\[RECIPE:\s*([0-9a-fA-F-]{36})\s*\]\]/g)) {
+      const id = m[1];
+      if (validIds.has(id) && !suggestedIds.includes(id)) suggestedIds.push(id);
+    }
+    const reply = raw.replace(/\[\[RECIPE:[^\]]*\]\]/g, "").replace(/\n{3,}/g, "\n\n").trim();
+
+    if (suggestedIds.length > 0) {
+      const today = new Date().toISOString().split("T")[0];
+      const { data: existing } = await db
+        .from("user_recipe_interactions")
+        .select("recipe_id, status")
+        .eq("user_id", userId)
+        .in("recipe_id", suggestedIds);
+      const skip = new Set((existing || []).map((e) => e.recipe_id as string));
+      const rows = suggestedIds
+        .filter((id) => !skip.has(id))
+        .map((id) => ({
+          user_id: userId,
+          recipe_id: id,
+          status: "suggested",
+          source: "ai",
+          suggested_date: today,
+        }));
+      if (rows.length > 0) {
+        const { error: insertErr } = await db.from("user_recipe_interactions").insert(rows);
+        if (insertErr) console.error("[nutrition-coach] suggestion insert error:", insertErr.message);
+      }
+    }
 
     if (reply) {
       await db.from("chat_messages").insert({
