@@ -11,6 +11,7 @@ import Journal from "./pages/Journal";
 import Messages from "./pages/Messages";
 import Recipes from "./pages/Recipes";
 import Progress from "./pages/Progress";
+import WeeklyReport from "./pages/WeeklyReport";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
@@ -68,6 +69,7 @@ const App = () => (
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/progress" element={<Progress />} />
+                <Route path="/weekly-report" element={<WeeklyReport />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
