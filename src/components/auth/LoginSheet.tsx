@@ -53,6 +53,26 @@ export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetPr
     }
   };
 
+  const handleAppleLogin = async () => {
+    setIsAppleLoading(true);
+    try {
+      const { error, redirected } = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: `${window.location.origin}${safeRedirect}`,
+      });
+      if (redirected) return;
+      if (error) {
+        toast.error(error.message || "Apple-inloggning misslyckades");
+        return;
+      }
+      onClose();
+      navigate(safeRedirect);
+    } catch {
+      toast.error("Ett fel uppstod vid Apple-inloggning");
+    } finally {
+      setIsAppleLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
