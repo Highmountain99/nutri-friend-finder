@@ -478,7 +478,9 @@ export function usePatientBlocks(patientId: string | undefined) {
             blood_sugar_postprandial: { label: "Blodsocker (efter mat)", unit: "mmol/L" },
           };
           const meta = METRIC_META[healthMetric] || { label: healthMetric, unit: "" };
-          const filtered = healthEntries.filter((e: any) => e.metric_type === healthMetric);
+          // "waist" i mallarna motsvarar metric_type "waist_circumference" i databasen
+          const dbMetric = healthMetric === "waist" ? "waist_circumference" : healthMetric;
+          const filtered = healthEntries.filter((e: any) => e.metric_type === dbMetric);
 
           if (config.metric === "trend_chart") {
             const cd = filtered.map((e: any) => ({
