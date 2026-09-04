@@ -12,7 +12,7 @@ const TONE: Record<string, string> = {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded-[16px] bg-[hsl(var(--card))]/[0.12] px-2 py-2.5 text-center">
-      <div className="display text-[20px] leading-none text-[hsl(var(--card))]">{value}</div>
+      <div className="display text-[20px] leading-none" style={{ color: "hsl(var(--card))" }}>{value}</div>
       <div className="mt-1 text-[9.5px] font-semibold uppercase tracking-wide text-[hsl(var(--card))]/70 leading-tight">
         {label}
       </div>
@@ -40,14 +40,14 @@ export function WeeklySummaryCard() {
       </div>
 
       {!showWeek ? (
-        <p className="display mt-3 text-[22px] leading-[1.05] text-[hsl(var(--card))]">
+        <p className="display mt-3 text-[22px] leading-[1.05]" style={{ color: "hsl(var(--card))" }}>
           Små steg varje dag leder till stora förändringar.
         </p>
       ) : (
         <>
-          <h3 className="display mt-3 text-[22px] leading-[1.05] text-[hsl(var(--card))]">
+          <h3 className="display mt-3 text-[22px] leading-[1.05]" style={{ color: "hsl(var(--card))" }}>
             EN STARK{" "}
-            <span className="rounded-pill bg-gold px-2.5 pb-0.5 text-primary">VECKA</span>.
+            <span className="rounded-pill bg-gold px-2.5 pb-0.5" style={{ color: "hsl(var(--primary))" }}>VECKA</span>.
           </h3>
 
           <div className="mt-3.5 grid grid-cols-3 gap-2">

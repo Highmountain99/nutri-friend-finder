@@ -62,7 +62,7 @@ export default function WeeklyReport() {
           </button>
           <div className="flex-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gold">Veckorapport</p>
-            <h1 className="display text-[28px] leading-none text-card">
+            <h1 className="display text-[28px] leading-none" style={{ color: "hsl(var(--card))" }}>
               Vecka {data?.weekNumber ?? ""}
             </h1>
           </div>
