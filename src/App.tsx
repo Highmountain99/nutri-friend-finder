@@ -85,6 +85,7 @@ const App = () => (
               <Route element={<DietitianLayout />}>
                 <Route path="/dietitian" element={<DietitianDashboard />} />
                 <Route path="/dietitian/patients" element={<DietitianPatients />} />
+                <Route path="/dietitian/groups" element={<DietitianGroups />} />
                 <Route path="/dietitian/patients/:id" element={<DietitianPatientDetail />} />
                 <Route path="/dietitian/recipes" element={<DietitianRecipes />} />
                 <Route path="/dietitian/messages" element={<DietitianMessages />} />
