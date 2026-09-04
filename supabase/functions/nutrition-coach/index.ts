@@ -75,8 +75,8 @@ serve(async (req) => {
         .limit(10),
       db
         .from("treatment_plans")
-        .select("title, end_goal, target_date")
-        .eq("user_id", userId)
+        .select("title, end_goal, end_goal_target_date")
+        .eq("patient_id", userId)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
