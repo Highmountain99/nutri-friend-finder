@@ -27,7 +27,6 @@ export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetPr
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -50,26 +49,6 @@ export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetPr
       toast.error("Ett fel uppstod vid Google-inloggning");
     } finally {
       setIsGoogleLoading(false);
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    setIsAppleLoading(true);
-    try {
-      const { error, redirected } = await lovable.auth.signInWithOAuth("apple", {
-        redirect_uri: `${window.location.origin}${safeRedirect}`,
-      });
-      if (redirected) return;
-      if (error) {
-        toast.error(error.message || "Apple-inloggning misslyckades");
-        return;
-      }
-      onClose();
-      navigate(safeRedirect);
-    } catch {
-      toast.error("Ett fel uppstod vid Apple-inloggning");
-    } finally {
-      setIsAppleLoading(false);
     }
   };
 
@@ -229,29 +208,6 @@ export function LoginSheet({ open, onClose, redirectTo = "/home" }: LoginSheetPr
           </svg>
           {isGoogleLoading ? "Ansluter…" : "Fortsätt med Google"}
         </button>
-
-        {/* Apple */}
-        <button
-          type="button"
-          onClick={handleAppleLogin}
-          disabled={isLoading || isGoogleLoading || isAppleLoading}
-          className="w-full rounded-full flex items-center justify-center gap-3 transition-transform active:scale-[0.98] mt-3"
-          style={{
-            padding: "15px 20px",
-            background: "transparent",
-            border: `1.5px solid ${LINE_STRONG}`,
-            color: GREEN_DEEP,
-            fontFamily: FN,
-            fontSize: 15.5,
-            fontWeight: 600,
-          }}
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M16.365 1.43c0 1.14-.42 2.2-1.26 3.02-.9.9-1.98 1.42-3.12 1.33-.03-1.09.44-2.2 1.24-3 .84-.85 2.05-1.44 3.14-1.35zM20.7 17.06c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.39 3.52-4.12 3.53-1.54.01-1.94-1-4.03-.99-2.09.01-2.53 1.01-4.07.99-1.73-.01-3.05-1.77-4.04-3.34C.09 15.83-.2 10.7 1.5 8c1.22-1.93 3.14-3.06 4.95-3.06 1.84 0 3 1.01 4.52 1.01 1.48 0 2.38-1.01 4.51-1.01 1.61 0 3.32.88 4.54 2.39-3.99 2.18-3.34 7.86 1.68 9.73z" />
-          </svg>
-          {isAppleLoading ? "Ansluter…" : "Fortsätt med Apple"}
-        </button>
-
 
         <button
           type="button"
