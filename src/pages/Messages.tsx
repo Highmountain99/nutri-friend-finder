@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { cn } from "@/lib/utils";
 import { Send, Paperclip, Loader2 } from "lucide-react";
 import { AiThinkingBubble } from "@/components/messages/AiThinkingBubble";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,19 @@ const AI_SUGGESTIONS = [
 export default function Messages() {
   const { user } = useAuth();
   const [mode, setMode] = useState<ConversationType>("dietitian");
+  const [modeTransitioning, setModeTransitioning] = useState(false);
+  const modeTimeoutRef = useRef<number | null>(null);
+
+  const handleModeChange = useCallback((next: ConversationType) => {
+    if (next === mode) return;
+    if (modeTimeoutRef.current) window.clearTimeout(modeTimeoutRef.current);
+    setModeTransitioning(true);
+    setMode(next);
+    modeTimeoutRef.current = window.setTimeout(() => {
+      setModeTransitioning(false);
+    }, 220);
+  }, [mode]);
+
   const { data: myDietitian, isLoading: dietitianLoading } = useMyDietitian();
   const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead, markAllAsRead } =
     useChatMessages(mode);
@@ -102,11 +116,16 @@ export default function Messages() {
           dietitian={dietitianInfo}
           isEscalated={hasEscalation}
           mode={mode}
-          onModeChange={setMode}
+          onModeChange={handleModeChange}
         />
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div
+          className={cn(
+            "flex-1 overflow-y-auto px-4 py-4 space-y-4 transition-all duration-200",
+            modeTransitioning && "opacity-40 blur-[6px] pointer-events-none"
+          )}
+        >
           {isAi && (
             <p className="text-center text-[11px] tracking-widest uppercase text-muted-foreground px-6">
               Svaren bygger på råd från legitimerade dietister · ej medicinsk rådgivning
@@ -215,7 +234,12 @@ export default function Messages() {
         </div>
 
         {/* Input */}
-        <div className="px-4 py-3 border-t border-border bg-card">
+        <div
+          className={cn(
+            "px-4 py-3 border-t border-border bg-card transition-all duration-200",
+            modeTransitioning && "opacity-40 blur-[6px] pointer-events-none"
+          )}
+        >
           {pendingAttachments.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {pendingAttachments.map((att, i) => (
