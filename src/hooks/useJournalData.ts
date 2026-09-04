@@ -616,12 +616,13 @@ export function useJournalData(selectedDate: Date) {
           calculateTotals(updatedEntries);
         } else {
           const updatedEntries = entries.map((entry) =>
-            entry.id === id 
-              ? { 
-                  ...entry, 
+            entry.id === id
+              ? {
+                  ...entry,
                   ...updates,
+                  imageUrl: storedImageUrl ?? entry.imageUrl,
                   createdAt: updates.mealTime || entry.createdAt,
-                } 
+                }
               : entry
           );
           setEntries(updatedEntries);
