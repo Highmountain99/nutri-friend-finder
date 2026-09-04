@@ -22,6 +22,21 @@ const AI_SUGGESTIONS = [
 export default function Messages() {
   const { user } = useAuth();
   const [mode, setMode] = useState<ConversationType>("dietitian");
+  const [modeTransitioning, setModeTransitioning] = useState(false);
+  const prevModeRef = useRef(mode);
+
+  const handleModeChange = useCallback((next: ConversationType) => {
+    if (next === prevModeRef.current) return;
+    setModeTransitioning(true);
+    setMode(next);
+    window.clearTimeout(prevModeRef.current as unknown as number);
+    const t = window.setTimeout(() => {
+      setModeTransitioning(false);
+      prevModeRef.current = next;
+    }, 220);
+    return () => window.clearTimeout(t);
+  }, []);
+
   const { data: myDietitian, isLoading: dietitianLoading } = useMyDietitian();
   const { messages, loading: messagesLoading, sending, error, sendMessage, markAsRead, markAllAsRead } =
     useChatMessages(mode);
