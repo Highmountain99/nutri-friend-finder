@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, ArrowRight, Eye, EyeOff, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import onboardingSofa from "@/assets/onboarding-sofa.png";
 import onboardingHealth from "@/assets/onboarding-health.png";
