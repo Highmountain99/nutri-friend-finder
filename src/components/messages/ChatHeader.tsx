@@ -53,7 +53,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
       <h2
         className="font-serif m-0 truncate"
         style={{
-          fontSize: 27,
+          fontSize: 25,
           fontWeight: 800,
           lineHeight: 0.95,
           textTransform: "uppercase",
@@ -113,49 +113,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             </div>
           </div>
         ) : (
-          <div className="relative flex flex-col">
-            {/* Sliding toggle */}
-            <div
-              className="relative flex items-center self-end mb-4 p-1"
-              style={{ backgroundColor: CREAM, borderRadius: 999 }}
-            >
-              <div
-                aria-hidden
-                className="absolute top-1 bottom-1"
-                style={{
-                  left: 4,
-                  width: "calc(50% - 4px)",
-                  backgroundColor: GREEN,
-                  borderRadius: 999,
-                  transform: isAi ? "translateX(100%)" : "translateX(0%)",
-                  transition: `transform 760ms ${EASE}`,
-                }}
-              />
-              {(
-                [
-                  { key: "dietitian" as const, label: coachLabel },
-                  { key: "ai" as const, label: "Flora" },
-                ]
-              ).map((tab) => {
-                const active = mode === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => onModeChange(tab.key)}
-                    className="relative px-4 py-2 text-[13px] font-semibold text-center"
-                    style={{
-                      minWidth: 72,
-                      color: active ? CREAM : GREEN,
-                      transition: "color 380ms ease",
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
             {/* Avatar: rotates inside its circle */}
             <div
               className="relative w-[52px] h-[52px] rounded-full overflow-hidden flex-shrink-0"
@@ -203,7 +161,7 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
             {/* Name + subtitle on a rotating wheel */}
             <div
               className="min-w-0 flex-1 relative"
-              style={{ height: 60, perspective: 800 }}
+              style={{ height: 62, perspective: 800 }}
             >
               <div
                 className="absolute inset-0"
@@ -218,11 +176,51 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
               </div>
             </div>
 
+            {/* Sliding toggle */}
+            <div
+              className="relative flex items-center flex-shrink-0 p-1"
+              style={{ backgroundColor: CREAM, borderRadius: 999 }}
+            >
+              <div
+                aria-hidden
+                className="absolute top-1 bottom-1"
+                style={{
+                  left: 4,
+                  width: "calc(50% - 4px)",
+                  backgroundColor: GREEN,
+                  borderRadius: 999,
+                  transform: isAi ? "translateX(100%)" : "translateX(0%)",
+                  transition: `transform 760ms ${EASE}`,
+                }}
+              />
+              {(
+                [
+                  { key: "dietitian" as const, label: coachLabel },
+                  { key: "ai" as const, label: "Flora" },
+                ]
+              ).map((tab) => {
+                const active = mode === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => onModeChange(tab.key)}
+                    className="relative px-3 py-1.5 text-[12.5px] font-semibold text-center"
+                    style={{
+                      minWidth: 58,
+                      color: active ? CREAM : GREEN,
+                      transition: "color 380ms ease",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
-
       </div>
+
 
       {isEscalated && !isAi && (
         <div className="px-5 py-2">
