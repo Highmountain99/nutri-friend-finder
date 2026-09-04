@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveMealImageUrl } from "@/lib/mealImages";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, ImageOff } from "lucide-react";
 
@@ -26,7 +27,7 @@ export function MealImagePreviewDialog({ mealId, mealName, open, onOpenChange }:
         .eq("id", mealId)
         .maybeSingle();
       if (!cancelled) {
-        setImageUrl(data?.image_url ?? null);
+        setImageUrl(await resolveMealImageUrl(data?.image_url));
         setLoading(false);
       }
     })();

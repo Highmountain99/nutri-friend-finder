@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadMealImage } from "@/lib/mealImages";
 
 // Types for journal data
 export interface NutritionGoals {
@@ -520,6 +521,12 @@ export function useJournalData(selectedDate: Date) {
       setEntries(optimisticEntries);
       calculateTotals(optimisticEntries);
 
+      // Photos go to storage (tiny path in DB) instead of multi-MB base64 rows
+      let storedImageUrl = entry.imageUrl;
+      if (entry.imageUrl?.startsWith("data:")) {
+        storedImageUrl = await uploadMealImage(user.id, entry.imageUrl);
+      }
+
       const insertData = {
         user_id: user.id,
         entry_date: dateKey,
@@ -530,7 +537,7 @@ export function useJournalData(selectedDate: Date) {
         carbs: entry.carbs,
         fat: entry.fat,
         is_ai_estimated: entry.isAiEstimated,
-        image_url: entry.imageUrl,
+        image_url: storedImageUrl,
       };
 
       const { data, error } = await supabase
@@ -540,13 +547,14 @@ export function useJournalData(selectedDate: Date) {
         .single();
 
       if (data && !error) {
-        // Reconcile temp id with real server id
+        // Reconcile temp id with real server id + swap base64 for storage ref
         setEntries((prev) =>
           prev.map((e) =>
             e.id === tempId
               ? {
                   ...e,
                   id: data.id,
+                  imageUrl: storedImageUrl,
                   createdAt: new Date(data.created_at || Date.now()),
                 }
               : e
@@ -575,6 +583,12 @@ export function useJournalData(selectedDate: Date) {
       
       const newCreatedAt = updates.mealTime?.toISOString();
 
+      // Upload new photos to storage; keep existing refs as-is
+      let storedImageUrl = updates.imageUrl;
+      if (updates.imageUrl?.startsWith("data:")) {
+        storedImageUrl = await uploadMealImage(user.id, updates.imageUrl);
+      }
+
       const { error } = await supabase
         .from("nutrition_entries")
         .update({
@@ -585,7 +599,7 @@ export function useJournalData(selectedDate: Date) {
           carbs: updates.carbs,
           fat: updates.fat,
           is_ai_estimated: updates.isAiEstimated,
-          image_url: updates.imageUrl,
+          image_url: storedImageUrl,
           ...(newEntryDate && { entry_date: newEntryDate }),
           ...(newCreatedAt && { created_at: newCreatedAt }),
         })
@@ -602,12 +616,13 @@ export function useJournalData(selectedDate: Date) {
           calculateTotals(updatedEntries);
         } else {
           const updatedEntries = entries.map((entry) =>
-            entry.id === id 
-              ? { 
-                  ...entry, 
+            entry.id === id
+              ? {
+                  ...entry,
                   ...updates,
+                  imageUrl: storedImageUrl ?? entry.imageUrl,
                   createdAt: updates.mealTime || entry.createdAt,
-                } 
+                }
               : entry
           );
           setEntries(updatedEntries);

@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useMealImage } from "@/lib/mealImages";
 import { toast } from "@/hooks/use-toast";
 import { MealTypeSelector } from "./MealTypeSelector";
 import { MealTimeSelector } from "./MealTimeSelector";
@@ -89,6 +90,9 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
   
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // imagePreview stores the raw ref (storage path or base64); resolve for display
+  const displayImage = useMealImage(imagePreview);
 
   // Helper to format number to string (empty if 0)
   const formatNutritionValue = (value: number, decimals: number = 0): string => {
@@ -405,9 +409,9 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
 
           {isAnalyzing ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              {imagePreview && (
+              {displayImage && (
                 <div className="w-32 h-32 rounded-xl overflow-hidden">
-                  <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
+                  <img src={displayImage} alt="Mat" className="w-full h-full object-cover" />
                 </div>
               )}
               <OrganicLoader size={32} label="Analyserar måltiden" />
@@ -417,8 +421,8 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
             <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-120px)]">
               {/* Image with replace buttons */}
               <div className="relative w-full h-40 rounded-xl overflow-hidden bg-muted">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
+                {displayImage ? (
+                  <img src={displayImage} alt="Mat" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Camera className="w-12 h-12 text-muted-foreground/50" />

@@ -1,5 +1,6 @@
 import { Camera } from "lucide-react";
 import type { NutritionEntry } from "@/hooks/useJournalData";
+import { useMealImage } from "@/lib/mealImages";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 
@@ -23,6 +24,7 @@ export function MealEntryCard({
   showFat = true,
 }: MealEntryCardProps) {
   const timeStr = format(new Date(entry.createdAt), "HH:mm", { locale: sv });
+  const imageSrc = useMealImage(entry.imageUrl);
 
   const macroParts = [
     showCalories && `${entry.calories} kcal`,
@@ -41,9 +43,9 @@ export function MealEntryCard({
     >
       {/* Time tile / image */}
       <div className={`w-[62px] h-[62px] rounded-2xl overflow-hidden shrink-0 grid place-items-center ${tone}`}>
-        {entry.imageUrl ? (
+        {imageSrc ? (
           <img
-            src={entry.imageUrl}
+            src={imageSrc}
             alt={entry.mealName}
             loading="lazy"
             className="w-full h-full object-cover"

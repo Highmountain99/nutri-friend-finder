@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { useMealImage } from "@/lib/mealImages";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+function MealThumb({ url, alt }: { url: string; alt: string }) {
+  const src = useMealImage(url);
+  if (!src) return null;
+  return <img src={src} alt={alt} className="w-full h-32 object-cover" />;
+}
 
 type Meal = {
   id: string;
@@ -259,7 +266,7 @@ export function DietPatternsView({ meals, symptoms }: Props) {
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs p-0 overflow-hidden">
                             <div>
-                              {m.image_url && <img src={m.image_url} alt={m.meal_name ?? ""} className="w-full h-32 object-cover" />}
+                              {m.image_url && <MealThumb url={m.image_url} alt={m.meal_name ?? ""} />}
                               <div className="p-3 space-y-2">
                                 <p className="font-semibold text-sm">{m.meal_name || "Måltid"}</p>
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
