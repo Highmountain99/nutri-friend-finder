@@ -205,9 +205,8 @@ export function ChatHeader({ loading, dietitian, isEscalated, mode, onModeChange
                     key={tab.key}
                     type="button"
                     onClick={() => onModeChange(tab.key)}
-                    className="relative px-3 py-1.5 text-[12.5px] font-semibold text-center"
+                    className="relative z-10 w-1/2 px-3 py-1.5 text-[13px] font-semibold text-center"
                     style={{
-                      minWidth: 58,
                       color: active ? CREAM : GREEN,
                       transition: "color 380ms ease",
                     }}
