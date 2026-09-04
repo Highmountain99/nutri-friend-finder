@@ -114,9 +114,11 @@ export async function resolveMealImageUrl(value?: string | null): Promise<string
 }
 
 // React hook: resolves storage refs to signed URLs, passes everything else through.
+// Initializes synchronously from the warm cache so pre-signed images render
+// in the very first frame — no loading flash.
 export function useMealImage(value?: string | null): string | null {
-  const [resolved, setResolved] = useState<string | null>(
-    value && !isStorageMealImage(value) ? value : null
+  const [resolved, setResolved] = useState<string | null>(() =>
+    getCachedMealImageUrl(value)
   );
 
   useEffect(() => {
@@ -127,6 +129,11 @@ export function useMealImage(value?: string | null): string | null {
     }
     if (!isStorageMealImage(value)) {
       setResolved(value);
+      return;
+    }
+    const cached = getFresh(mealImagePath(value));
+    if (cached) {
+      setResolved(cached);
       return;
     }
     resolveMealImageUrl(value).then((url) => {
