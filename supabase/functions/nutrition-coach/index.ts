@@ -105,7 +105,7 @@ serve(async (req) => {
       (recipesRes.data || []).map((r) => (r.recipes as any)?.title).filter(Boolean).join(", ") ||
       "Inga sparade recept.";
     const plan = planRes.data
-      ? `Plan: ${planRes.data.title || "-"}. Slutmål: ${planRes.data.end_goal || "-"}${planRes.data.target_date ? ` (måldatum ${planRes.data.target_date})` : ""}`
+      ? `Plan: ${planRes.data.title || "-"}. Slutmål: ${planRes.data.end_goal || "-"}${planRes.data.end_goal_target_date ? ` (måldatum ${planRes.data.end_goal_target_date})` : ""}`
       : "Ingen behandlingsplan satt.";
 
     const systemPrompt = `Du är Kostcoach – en AI-kostcoach i appen Gut Feeling, tränad på råd från legitimerade dietister.
