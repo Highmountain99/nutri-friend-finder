@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useMealImage } from "@/lib/mealImages";
 import { toast } from "@/hooks/use-toast";
 import { MealTypeSelector } from "./MealTypeSelector";
 import { MealTimeSelector } from "./MealTimeSelector";
