@@ -259,7 +259,7 @@ export function DietPatternsView({ meals, symptoms }: Props) {
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs p-0 overflow-hidden">
                             <div>
-                              {m.image_url && <img src={m.image_url} alt={m.meal_name ?? ""} className="w-full h-32 object-cover" />}
+                              {m.image_url && <MealThumb url={m.image_url} alt={m.meal_name ?? ""} />}
                               <div className="p-3 space-y-2">
                                 <p className="font-semibold text-sm">{m.meal_name || "Måltid"}</p>
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
