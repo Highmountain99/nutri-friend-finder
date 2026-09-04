@@ -116,11 +116,16 @@ export default function Messages() {
           dietitian={dietitianInfo}
           isEscalated={hasEscalation}
           mode={mode}
-          onModeChange={setMode}
+          onModeChange={handleModeChange}
         />
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div
+          className={cn(
+            "flex-1 overflow-y-auto px-4 py-4 space-y-4 transition-all duration-200",
+            modeTransitioning && "opacity-40 blur-[6px] pointer-events-none"
+          )}
+        >
           {isAi && (
             <p className="text-center text-[11px] tracking-widest uppercase text-muted-foreground px-6">
               Svaren bygger på råd från legitimerade dietister · ej medicinsk rådgivning
