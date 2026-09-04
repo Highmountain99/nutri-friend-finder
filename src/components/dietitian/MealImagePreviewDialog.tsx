@@ -3,7 +3,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { resolveMealImageUrl } from "@/lib/mealImages";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, ImageOff } from "lucide-react";
-...
+
+interface Props {
+  mealId: string | null;
+  mealName?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function MealImagePreviewDialog({ mealId, mealName, open, onOpenChange }: Props) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !mealId) return;
+    let cancelled = false;
+    setLoading(true);
+    setImageUrl(null);
+    (async () => {
+      const { data } = await supabase
+        .from("nutrition_entries")
+        .select("image_url")
+        .eq("id", mealId)
+        .maybeSingle();
       if (!cancelled) {
         setImageUrl(await resolveMealImageUrl(data?.image_url));
         setLoading(false);
