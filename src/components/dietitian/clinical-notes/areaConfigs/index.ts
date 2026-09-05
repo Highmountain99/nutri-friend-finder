@@ -5,9 +5,14 @@ import { womensHealthConfig } from "./womensHealth";
 import { eatingDisorderConfig } from "./eatingDisorder";
 import { pregnancyConfig } from "./pregnancy";
 import { weightLossConfig } from "./weightLoss";
-import type { AreaConfig } from "../types";
+import { ptAreaConfigs } from "./ptAreas";
+import type { AreaConfig, LegacyAreaConfig } from "../types";
 
-export const areaConfigs: AreaConfig[] = [
+/** Selectable goal areas in the wizard (PT-focused). */
+export const areaConfigs: AreaConfig[] = ptAreaConfigs;
+
+/** Kept only so previously saved notes still resolve a readable title. */
+const legacyAreaConfigs: LegacyAreaConfig[] = [
   heartHealthConfig,
   ibsConfig,
   diabetesConfig,
@@ -17,5 +22,5 @@ export const areaConfigs: AreaConfig[] = [
   weightLossConfig,
 ];
 
-export const getAreaConfig = (id: string): AreaConfig | undefined =>
-  areaConfigs.find(c => c.id === id);
+export const getAreaConfig = (id: string): AreaConfig | LegacyAreaConfig | undefined =>
+  areaConfigs.find(c => c.id === id) || legacyAreaConfigs.find(c => c.id === id);
