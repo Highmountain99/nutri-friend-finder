@@ -14,12 +14,28 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const SPECIALIZATION_OPTIONS = [
-  "IBS", "Viktnedgång", "Diabetes typ 1", "Diabetes typ 2", "Ätstörningar",
-  "Hjärt- och kärlsjukdom", "Celiaki", "Allergi & intolerans", "PCOS",
-  "Graviditet & amning", "Idrottsnutrition", "Barnnutrition", "Geriatrik",
-  "Vegansk/vegetarisk kost", "Njursjukdom", "Leversjukdom", "Onkologi",
-  "Obesitas", "Magtarmsjukdomar", "Emotionellt ätande", "Klimakteriet",
+  "Styrketräning och muskeluppbyggnad",
+  "Viktminskning och livsstilsförändring",
+  "Funktionell träning och vardagsstyrka",
+  "Kondition, löpning eller uthållighet",
+  "Idrottsspecifik prestationsutveckling",
+  "Rörlighet och mobilitet",
+  "Seniorträning",
+  "Träning under och efter graviditet",
+  "Träning för barn och ungdomar",
+  "Träning för personer med funktionsnedsättning",
+  "Återgång till träning efter skada, i samarbete med fysioterapeut",
+  "Smärtanpassad träning, inom PT:ns kompetensområde",
+  "Träning vid exempelvis diabetes eller hjärt-kärlsjukdom, med rätt vidareutbildning och vårdkontakt",
+  "Kostcoachning och beteendeförändring",
+  "Stresshantering, återhämtning och sömnvanor",
+  "Onlinecoachning",
+  "Företagshälsa och arbetsplatsträning",
+  "Gruppträning",
+  "Bodybuilding, powerlifting, tyngdlyftning eller CrossFit",
+  "Kampsportsfys eller annan sportspecifik fysträning",
 ];
+
 
 const LANGUAGE_OPTIONS = [
   "Svenska", "Engelska", "Arabiska", "Persiska", "Somaliska", "Finska",
@@ -79,35 +95,51 @@ export default function DietitianProfile() {
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/avatar.${ext}`;
+      const extMap: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      };
+      const ext = extMap[file.type] ?? "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true });
+        .upload(path, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
         .from("avatars")
         .getPublicUrl(path);
 
-      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      const avatarUrl = urlData.publicUrl;
 
-      const { error: updateError } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from("dietitian_profiles")
         .update({ avatar_url: avatarUrl })
-        .eq("id", profile.id);
+        .eq("id", profile.id)
+        .select("id, avatar_url");
       if (updateError) throw updateError;
+      if (!updated || updated.length === 0) {
+        throw new Error("Bilden kunde inte sparas på din profil");
+      }
 
+      // Uppdatera cachen direkt så bilden syns utan omladdning
+      queryClient.setQueryData(["dietitian-profile", user.id], (prev: any) =>
+        prev ? { ...prev, avatar_url: avatarUrl } : prev
+      );
       queryClient.invalidateQueries({ queryKey: ["dietitian-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["my-dietitian"] });
       toast.success("Profilbild uppdaterad!");
     } catch (err: any) {
-      toast.error(err.message || "Kunde inte ladda upp bilden");
+      console.error("Avatar upload failed:", err);
+      toast.error(err?.message || "Kunde inte ladda upp bilden");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
+
 
   const updateProfile = useMutation({
     mutationFn: async () => {
