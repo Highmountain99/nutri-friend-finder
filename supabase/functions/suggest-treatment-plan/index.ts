@@ -188,7 +188,7 @@ Om journalen beskriver flera problem ska du inte skapa ett mål för varje probl
 
 Språk
 Skriv på enkel och naturlig svenska.
-Använd ord som en PT skulle använda i ett samtal med klienten. Formulera planen respektfullt och utan skuld.
+Använd ord som en kostcoach skulle använda i ett samtal med klienten. Formulera planen respektfullt och utan skuld.
 Undvik:
 - kliniskt och akademiskt språk
 - onödiga förklaringar, långa bisatser, abstrakta mål
@@ -207,8 +207,9 @@ Du får:
 - förenkla coachens formuleringar
 Du får inte:
 - hitta på mål, symtom, diagnoser eller preferenser
-- anta träningsvana eller fysisk förmåga
-- skapa kost- eller träningsrekommendationer utan stöd i journalen
+- anta matvanor, allergier eller preferenser som inte dokumenterats
+- skapa kostrekommendationer utan stöd i journalen
+- ta med träningsmål, träningspass eller fysisk aktivitet i planen
 - lägga till medicinsk behandling
 - lova specifika hälsoresultat
 - fylla ut planen med generiska mål
@@ -232,7 +233,7 @@ Kontrollera tyst att:
 
 Svara endast genom verktygsanropet suggest_treatment_plan. Skriv ingen fritext.`;
 
-    const userPrompt = `Skapa ett kort och PT-anpassat utkast till behandlingsplan.
+    const userPrompt = `Skapa ett kort utkast till kostplan. Allt i planen ska vara kostrelaterat — inga träningsmål eller träningsaktiviteter.
 
 Planens startdatum:
 ${new Date().toISOString().split("T")[0]}
