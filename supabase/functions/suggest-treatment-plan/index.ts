@@ -264,7 +264,8 @@ Välj bara de viktigaste fokusområdena. Skapa inte fler mål för att göra pla
                 properties: {
                   title: { type: "string", description: "Kort titel (3–8 ord, max 60 tecken) som beskriver planens huvudsakliga fokus" },
                   description: { type: "string", description: "Högst två korta meningar (max 240 tecken) om vad planen prioriterar och varför" },
-                  final_goal: { type: "string", description: "Slutmål: en mening (max 140 tecken) om det realistiska önskade läget efter 8–12 veckor" },
+                  end_goal: { type: "string", description: "Slutmål: en mening (max 140 tecken) om det realistiska önskade läget efter 8–12 veckor" },
+                  end_goal_target_date: { type: "string", description: "Måldatum för slutmålet, ISO date YYYY-MM-DD, 8–12 veckor från startdatum" },
                   goals: {
                     type: "array",
                     items: {
