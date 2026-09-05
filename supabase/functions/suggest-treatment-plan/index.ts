@@ -262,8 +262,9 @@ Välj bara de viktigaste fokusområdena. Skapa inte fler mål för att göra pla
               parameters: {
                 type: "object",
                 properties: {
-                  title: { type: "string", description: "Kort titel för behandlingsplanen" },
-                  description: { type: "string", description: "Kort sammanfattning av planens konkreta inriktning och fokusområden. Ingen meta-kommentar om datamängd." },
+                  title: { type: "string", description: "Kort titel (3–8 ord, max 60 tecken) som beskriver planens huvudsakliga fokus" },
+                  description: { type: "string", description: "Högst två korta meningar (max 240 tecken) om vad planen prioriterar och varför" },
+                  final_goal: { type: "string", description: "Slutmål: en mening (max 140 tecken) om det realistiska önskade läget efter 8–12 veckor" },
                   goals: {
                     type: "array",
                     items: {
