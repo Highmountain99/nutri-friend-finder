@@ -147,21 +147,30 @@ export function AddSymptomSheet({
             <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/55 mb-3">
               Koppla till måltid
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Pill active={selectedMealId === "none"} onClick={() => selectMeal(null)}>
-                Ej kopplad
-              </Pill>
+            <div className="space-y-2.5">
+              <MealRow
+                active={selectedMealId === "none"}
+                onClick={() => selectMeal(null)}
+                tile={<Unlink className="h-5 w-5" />}
+                title="Inte kopplat till någon måltid"
+              />
               {meals.map((meal) => (
-                <Pill
+                <MealRow
                   key={meal.id}
                   active={selectedMealId === meal.id}
                   onClick={() => selectMeal(meal)}
-                >
-                  {meal.mealName} {format(meal.createdAt, "HH:mm")}
-                </Pill>
+                  tile={
+                    <span className="text-[13px] font-bold tabular-nums">
+                      {format(meal.createdAt, "HH:mm")}
+                    </span>
+                  }
+                  title={meal.mealName}
+                  subtitle={MEAL_TYPE_LABELS[meal.mealType] ?? meal.mealType}
+                />
               ))}
             </div>
           </div>
+
 
           {/* 2. Tid för symptom */}
           <div className="rounded-card bg-card p-4">
