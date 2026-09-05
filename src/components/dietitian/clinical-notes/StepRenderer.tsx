@@ -4,19 +4,24 @@ import { RadioField } from "./shared/RadioField";
 import { SliderField } from "./shared/SliderField";
 import { NumericField } from "./shared/NumericField";
 import { DropdownField } from "./shared/DropdownField";
+import { TextField } from "./shared/TextField";
+import { TextareaField } from "./shared/TextareaField";
+import { DateField } from "./shared/DateField";
 
 interface StepRendererProps {
   step: StepConfig;
   data: Record<string, any>;
   onChange: (key: string, value: any) => void;
+  errors?: Record<string, string>;
 }
 
-export function StepRenderer({ step, data, onChange }: StepRendererProps) {
+export function StepRenderer({ step, data, onChange, errors = {} }: StepRendererProps) {
   return (
     <div className="space-y-5">
       <h3 className="text-base font-semibold">{step.title}</h3>
       {step.fields.map(field => {
         if (field.showIf && !field.showIf(data)) return null;
+        const error = errors[field.key];
 
         switch (field.type) {
           case "chips":
@@ -32,13 +37,15 @@ export function StepRenderer({ step, data, onChange }: StepRendererProps) {
             );
           case "radio":
             return (
-              <RadioField
-                key={field.key}
-                label={field.label}
-                options={field.options || []}
-                value={data[field.key] || ""}
-                onChange={v => onChange(field.key, v)}
-              />
+              <div key={field.key} className="space-y-1">
+                <RadioField
+                  label={field.required ? `${field.label} *` : field.label}
+                  options={field.options || []}
+                  value={data[field.key] || ""}
+                  onChange={v => onChange(field.key, v)}
+                />
+                {error && <p className="text-xs text-destructive">{error}</p>}
+              </div>
             );
           case "slider":
             return (
@@ -69,6 +76,41 @@ export function StepRenderer({ step, data, onChange }: StepRendererProps) {
                 options={field.options || []}
                 value={data[field.key] || ""}
                 onChange={v => onChange(field.key, v)}
+              />
+            );
+          case "text":
+            return (
+              <TextField
+                key={field.key}
+                label={field.label}
+                value={data[field.key] || ""}
+                onChange={v => onChange(field.key, v)}
+                placeholder={field.placeholder}
+                required={field.required}
+                error={error}
+              />
+            );
+          case "textarea":
+            return (
+              <TextareaField
+                key={field.key}
+                label={field.label}
+                value={data[field.key] || ""}
+                onChange={v => onChange(field.key, v)}
+                placeholder={field.placeholder}
+                required={field.required}
+                error={error}
+              />
+            );
+          case "date":
+            return (
+              <DateField
+                key={field.key}
+                label={field.label}
+                value={data[field.key] || ""}
+                onChange={v => onChange(field.key, v)}
+                required={field.required}
+                error={error}
               />
             );
           default:
