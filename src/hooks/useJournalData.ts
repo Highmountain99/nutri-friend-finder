@@ -222,7 +222,7 @@ function sumTotals(entries: NutritionEntry[]): DailyTotals {
 // image ref arrives together with the rest of the meal values and can be
 // batch-signed in the same fetch — thumbnails render instantly.
 const ENTRY_LIST_COLUMNS =
-  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, image_url, created_at";
+  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, image_url, ingredients, created_at";
 
 
 
