@@ -211,7 +211,7 @@ export function AddSymptomSheet({
             <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/55 mb-3">
               Koppla till måltid
             </p>
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <MealRow
                 active={selectedMealId === "none"}
                 onClick={() => selectMeal(null)}
