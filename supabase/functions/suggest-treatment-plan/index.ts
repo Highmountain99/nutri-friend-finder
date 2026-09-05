@@ -284,7 +284,7 @@ Välj bara de viktigaste fokusområdena. Skapa inte fler mål för att göra pla
                     },
                   },
                 },
-                required: ["title", "description", "goals"],
+                required: ["title", "description", "final_goal", "goals"],
                 additionalProperties: false,
               },
             },
