@@ -92,11 +92,12 @@ function RecipesContent() {
       {/* Header - only show in default mode */}
       {viewMode === "default" && (
         <div
+          className="mb-6"
           style={{
             backgroundColor: "#D9A488",
             color: "#1F3A2E",
             borderRadius: "0 0 28px 28px",
-            padding: "calc(env(safe-area-inset-top) + 28px) 20px 52px",
+            padding: "calc(env(safe-area-inset-top) + 28px) 20px 28px",
           }}
         >
           <div className="flex items-start justify-between gap-3">
