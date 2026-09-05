@@ -1,27 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { sv } from "date-fns/locale";
-import { Mic, MicOff, Loader2 } from "lucide-react";
-import { useScribe, CommitStrategy } from "@elevenlabs/react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Check, Clock, X } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import type { NutritionEntry } from "@/hooks/useJournalData";
 
 interface AddSymptomSheetProps {
@@ -35,6 +17,38 @@ interface AddSymptomSheetProps {
   meals: NutritionEntry[];
 }
 
+const QUICK_TIMES = [
+  { label: "Nu", minutes: 0 },
+  { label: "15 min sedan", minutes: 15 },
+  { label: "30 min sedan", minutes: 30 },
+  { label: "1 h sedan", minutes: 60 },
+];
+
+function Pill({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-pill px-3.5 py-2 text-[13px] font-semibold transition-colors",
+        active
+          ? "bg-primary text-primary-foreground"
+          : "bg-background text-foreground"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function AddSymptomSheet({
   isOpen,
   onClose,
@@ -43,87 +57,37 @@ export function AddSymptomSheet({
 }: AddSymptomSheetProps) {
   const { toast } = useToast();
   const [selectedMealId, setSelectedMealId] = useState<string>("none");
-  const [symptomTime, setSymptomTime] = useState(() =>
-    format(new Date(), "HH:mm")
-  );
+  const [symptomTime, setSymptomTime] = useState(() => format(new Date(), "HH:mm"));
+  const [quickChoice, setQuickChoice] = useState<number | null>(0);
   const [description, setDescription] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
 
-  // ElevenLabs Scribe for speech-to-text
-  const scribe = useScribe({
-    modelId: "scribe_v2_realtime",
-    commitStrategy: CommitStrategy.VAD,
-    onPartialTranscript: (data) => {
-      // Update description with partial transcription
-      if (data.text) {
-        setDescription((prev) => {
-          // If we have existing text, append to it
-          if (prev && !prev.endsWith(" ")) {
-            return prev + " " + data.text;
-          }
-          return prev + data.text;
-        });
-      }
-    },
-    onCommittedTranscript: (data) => {
-      // Final transcription
-      if (data.text) {
-        setDescription((prev) => {
-          if (prev && !prev.endsWith(" ") && !prev.endsWith(".")) {
-            return prev + " " + data.text;
-          }
-          return prev + data.text;
-        });
-      }
-    },
-  });
-
-  const startRecording = useCallback(async () => {
-    setIsConnecting(true);
-    try {
-      // Request microphone permission
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Get token from edge function
-      const { data, error } = await supabase.functions.invoke(
-        "elevenlabs-scribe-token"
-      );
-
-      if (error || !data?.token) {
-        throw new Error(error?.message || "No token received");
-      }
-
-      // Start transcription
-      await scribe.connect({
-        token: data.token,
-        microphone: {
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
-
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Failed to start recording:", error);
-      toast({
-        title: "Kunde inte starta inspelning",
-        description: "Kontrollera att mikrofonen är aktiverad",
-        variant: "destructive",
-      });
-    } finally {
-      setIsConnecting(false);
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedMealId("none");
+      setSymptomTime(format(new Date(), "HH:mm"));
+      setQuickChoice(0);
+      setDescription("");
     }
-  }, [scribe, toast]);
+  }, [isOpen]);
 
-  const stopRecording = useCallback(async () => {
-    try {
-      await scribe.disconnect();
-    } catch (error) {
-      console.error("Error stopping recording:", error);
+  const applyQuickTime = (minutes: number) => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - minutes);
+    setSymptomTime(format(d, "HH:mm"));
+    setQuickChoice(minutes);
+  };
+
+  const selectMeal = (meal: NutritionEntry | null) => {
+    if (!meal) {
+      setSelectedMealId("none");
+      return;
     }
-    setIsRecording(false);
-  }, [scribe]);
+    setSelectedMealId(meal.id);
+    const d = new Date(meal.createdAt);
+    d.setMinutes(d.getMinutes() + 30);
+    setSymptomTime(format(d, "HH:mm"));
+    setQuickChoice(null);
+  };
 
   const handleSubmit = () => {
     if (!description.trim()) {
@@ -135,7 +99,6 @@ export function AddSymptomSheet({
       return;
     }
 
-    // Parse time
     const [hours, minutes] = symptomTime.split(":").map(Number);
     const symptomDate = new Date();
     symptomDate.setHours(hours, minutes, 0, 0);
@@ -146,116 +109,125 @@ export function AddSymptomSheet({
       symptomTime: symptomDate,
     });
 
-    // Reset form
-    handleClose();
-  };
-
-  const handleClose = () => {
-    if (isRecording) {
-      stopRecording();
-    }
-    setSelectedMealId("none");
-    setSymptomTime(format(new Date(), "HH:mm"));
-    setDescription("");
     onClose();
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
-        <SheetHeader>
-          <SheetTitle>Lägg till symptom</SheetTitle>
-        </SheetHeader>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side="bottom"
+        className="h-[92dvh] rounded-t-[28px] border-0 bg-background p-0 overflow-y-auto [&>button]:hidden"
+      >
+        {/* Drag handle */}
+        <div className="pt-3 flex justify-center">
+          <span className="h-1 w-10 rounded-pill bg-foreground/20" />
+        </div>
 
-        <div className="space-y-6 mt-6">
-          {/* Meal Selection */}
-          <div className="space-y-2">
-            <Label>Koppla till måltid</Label>
-            <Select value={selectedMealId} onValueChange={setSelectedMealId}>
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Välj måltid..." />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                <SelectItem value="none">Ej kopplat till måltid</SelectItem>
-                {meals.map((meal) => (
-                  <SelectItem key={meal.id} value={meal.id}>
-                    {meal.mealType} - {meal.mealName} (
-                    {format(meal.createdAt, "HH:mm", { locale: sv })})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Header */}
+        <div className="px-5 pt-4 pb-2 flex items-start justify-between gap-3">
+          <h2 className="font-display text-[26px] uppercase leading-[1.05] text-foreground">
+            Lägg till{" "}
+            <span className="pill-highlight pill-highlight--apricot px-2.5">
+              symptom
+            </span>
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Stäng"
+            className="shrink-0 h-9 w-9 rounded-pill bg-card grid place-items-center text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-5 pt-3 space-y-3.5">
+          {/* 1. Koppla till måltid */}
+          <div className="rounded-card bg-card p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/55 mb-3">
+              Koppla till måltid
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Pill active={selectedMealId === "none"} onClick={() => selectMeal(null)}>
+                Ej kopplad
+              </Pill>
+              {meals.map((meal) => (
+                <Pill
+                  key={meal.id}
+                  active={selectedMealId === meal.id}
+                  onClick={() => selectMeal(meal)}
+                >
+                  {meal.mealName} {format(meal.createdAt, "HH:mm")}
+                </Pill>
+              ))}
+            </div>
           </div>
 
-          {/* Time Selection */}
-          <div className="space-y-2">
-            <Label>Tid för symptom</Label>
-            <Input
-              type="time"
-              value={symptomTime}
-              onChange={(e) => setSymptomTime(e.target.value)}
-            />
+          {/* 2. Tid för symptom */}
+          <div className="rounded-card bg-card p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/55 mb-3">
+              Tid för symptom
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_TIMES.map((q) => (
+                <Pill
+                  key={q.label}
+                  active={quickChoice === q.minutes}
+                  onClick={() => applyQuickTime(q.minutes)}
+                >
+                  {q.label}
+                </Pill>
+              ))}
+            </div>
+
+            <label className="mt-3.5 flex items-center gap-2.5 rounded-[14px] bg-background px-3.5 py-3 w-fit">
+              <Clock className="h-4 w-4 text-foreground/70" />
+              <span className="text-[14px] font-semibold text-foreground">Idag</span>
+              <input
+                type="time"
+                value={symptomTime}
+                onChange={(e) => {
+                  setSymptomTime(e.target.value);
+                  setQuickChoice(null);
+                }}
+                className="bg-transparent border-0 p-0 text-[14px] font-semibold text-foreground outline-none"
+              />
+            </label>
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label>Beskriv ditt symptom</Label>
-            <Textarea
+          {/* 3. Beskriv ditt symptom */}
+          <div className="rounded-card bg-card p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/55 mb-3">
+              Beskriv ditt symptom
+            </p>
+            <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="T.ex. fick ont i magen 30 minuter efter lunch..."
               rows={4}
+              className="w-full resize-none rounded-[14px] bg-background px-4 py-3.5 text-[14px] text-foreground placeholder:text-foreground/40 outline-none"
             />
-            
-            {/* Voice Input Button */}
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                variant={isRecording ? "destructive" : "outline"}
-                size="lg"
-                className="gap-2"
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={isConnecting}
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Ansluter...
-                  </>
-                ) : isRecording ? (
-                  <>
-                    <MicOff className="w-5 h-5" />
-                    Stoppa inspelning
-                  </>
-                ) : (
-                  <>
-                    <Mic className="w-5 h-5" />
-                    Tala in
-                  </>
-                )}
-              </Button>
-            </div>
-            
-            {isRecording && (
-              <p className="text-xs text-center text-muted-foreground animate-pulse">
-                Lyssnar... Tala tydligt
-              </p>
-            )}
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
-            <Button variant="outline" className="flex-1" onClick={handleClose}>
-              Avbryt
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={handleSubmit}
-              disabled={!description.trim()}
-            >
-              Lägg till
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className="px-5 pt-4 pb-8 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-pill border-[1.5px] border-primary py-3 text-[14px] font-bold text-foreground"
+          >
+            Avbryt
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!description.trim()}
+            className="flex-1 rounded-pill bg-primary py-3 text-[14px] font-bold text-primary-foreground inline-flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Check className="h-4 w-4" />
+            Lägg till
+          </button>
         </div>
       </SheetContent>
     </Sheet>
