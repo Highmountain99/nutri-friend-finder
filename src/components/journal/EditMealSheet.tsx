@@ -364,62 +364,28 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
             {ingredients.length > 0 && (
               <div className="px-5 mt-3">
                 <div className="rounded-card bg-card px-4 py-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/70">
-                      Det här åt du ({ingredients.length})
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setShowDetails((v) => !v)}
-                      className="text-[12px] font-semibold underline text-foreground/70"
-                    >
-                      {showDetails ? "Dölj detaljer" : "Visa detaljer"}
-                    </button>
-                  </div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/70 mb-3">
+                    Ingredienser ({ingredients.length})
+                  </p>
 
-                  <div className="mt-2">
+                  <ul className="space-y-2">
                     {ingredients.map((ing, i) => (
-                      <div
+                      <li
                         key={`${ing.name}-${i}`}
-                        className={cn("py-3", i > 0 && "border-t-[1.5px] border-foreground/[0.08]")}
+                        className="flex items-center justify-between gap-3 text-[14px]"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-[13.5px] font-bold text-foreground truncate">{ing.name}</p>
-                              {ing.dataSource === "livsmedelsverket" && (
-                                <span className="shrink-0 rounded-pill bg-sage px-1.5 py-0.5 text-[9.5px] font-bold text-foreground">
-                                  LV
-                                </span>
-                              )}
-                            </div>
-                            {ing.amount && (
-                              <p className="text-[12px] text-foreground/55 mt-0.5">{ing.amount}</p>
-                            )}
-                          </div>
-                          <p className="text-[13px] font-bold text-foreground shrink-0">{ing.calories} kcal</p>
-                        </div>
-
-                        {showDetails && (
-                          <div className="mt-2 grid grid-cols-3 gap-1.5 animate-fade-in">
-                            {[
-                              { dot: MACRO_DOT.protein, text: `P ${Math.round(ing.protein)} g` },
-                              { dot: MACRO_DOT.carbs, text: `K ${Math.round(ing.carbs)} g` },
-                              { dot: MACRO_DOT.fat, text: `F ${Math.round(ing.fat)} g` },
-                            ].map((p) => (
-                              <span
-                                key={p.text}
-                                className="flex items-center justify-center gap-1.5 rounded-pill bg-background px-2 py-1.5 text-[11px] font-semibold text-foreground"
-                              >
-                                <span className={cn("h-[7px] w-[7px] rounded-pill", p.dot)} />
-                                {p.text}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                        <span className="font-medium text-foreground truncate">
+                          {ing.name}
+                          {ing.amount && (
+                            <span className="text-foreground/55 font-normal ml-1.5">{ing.amount}</span>
+                          )}
+                        </span>
+                        <span className="shrink-0 font-semibold text-foreground/70">
+                          {ing.calories} kcal
+                        </span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               </div>
             )}
