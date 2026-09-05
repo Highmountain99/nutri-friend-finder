@@ -261,8 +261,7 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
         side="bottom"
-        hideClose
-        className="h-[90dvh] p-0 border-0 bg-background rounded-t-panel overflow-hidden"
+        className="h-[90dvh] p-0 border-0 bg-background rounded-t-panel overflow-hidden [&>button]:hidden"
       >
         {isAnalyzing ? (
           <div className="flex flex-col items-center justify-center h-full gap-4">
