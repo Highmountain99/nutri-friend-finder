@@ -169,13 +169,13 @@ Varje delmål ska:
 Bra:
 "Planera tre vardagsmiddagar varje söndag."
 "Ta med förberedd lunch minst två arbetsdagar per vecka."
-"Genomföra två planerade styrkepass per vecka."
+"Äta ett proteinrikt mellanmål på eftermiddagen minst tre dagar i veckan."
 Undvik:
 "Få en bättre förståelse för vikten av hälsosamma matvanor."
 "Arbeta aktivt med kost, sömn, återhämtning och stress."
 "Förbättra livsstilen genom hållbara och långsiktiga strategier."
 
-PT-principer
+Kostcoachprinciper
 Prioritera i följande ordning:
 1. beteenden som tydligt stöds av journalen
 2. det största dokumenterade hindret
