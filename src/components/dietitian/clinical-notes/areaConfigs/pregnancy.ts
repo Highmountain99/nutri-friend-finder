@@ -1,4 +1,4 @@
-import type { AreaConfig } from "../types";
+import type { LegacyAreaConfig } from "../types";
 
 const g = (d: Record<string, any>) => {
   const status = d.status || "oklart";
@@ -42,7 +42,7 @@ const g = (d: Record<string, any>) => {
   };
 };
 
-export const pregnancyConfig: AreaConfig = {
+export const pregnancyConfig: LegacyAreaConfig = {
   id: "pregnancy",
   title: "Graviditet & Postpartum",
   icon: "🤰",
