@@ -19,19 +19,19 @@ export function SummaryStep({ journal, onJournalChange, aiSuggestion, aiLoading,
 
       <div className="space-y-3">
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Anamnes</label>
+          <label className="text-xs font-medium text-muted-foreground">Mål och nuläge</label>
           <Textarea value={journal.anamnesis} onChange={e => onJournalChange("anamnesis", e.target.value)} rows={3} />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Bedömning</label>
+          <label className="text-xs font-medium text-muted-foreground">PT:ns observation</label>
           <Textarea value={journal.assessment} onChange={e => onJournalChange("assessment", e.target.value)} rows={3} />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Åtgärd</label>
+          <label className="text-xs font-medium text-muted-foreground">Planerade insatser</label>
           <Textarea value={journal.action} onChange={e => onJournalChange("action", e.target.value)} rows={3} />
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Nästa steg</label>
+          <label className="text-xs font-medium text-muted-foreground">Överenskommelse till nästa gång</label>
           <Textarea value={journal.next_steps} onChange={e => onJournalChange("next_steps", e.target.value)} rows={2} />
         </div>
       </div>

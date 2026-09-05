@@ -33,6 +33,7 @@ export function ClinicalNoteWizard({ open, onOpenChange, patientId, onSave, isSa
   const [journal, setJournal] = useState({ anamnesis: "", assessment: "", action: "", next_steps: "" });
   const [aiSuggestion, setAISuggestion] = useState<AISuggestion | null>(null);
   const [showSummary, setShowSummary] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { requestAI, isLoading: aiLoading } = useClinicalNoteAI();
 
@@ -42,6 +43,7 @@ export function ClinicalNoteWizard({ open, onOpenChange, patientId, onSave, isSa
 
   const handleFieldChange = useCallback((key: string, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
+    setErrors(prev => (prev[key] ? { ...prev, [key]: "" } : prev));
   }, []);
 
   const handleSelectArea = (id: string) => {
@@ -51,6 +53,7 @@ export function ClinicalNoteWizard({ open, onOpenChange, patientId, onSave, isSa
     setJournal({ anamnesis: "", assessment: "", action: "", next_steps: "" });
     setAISuggestion(null);
     setShowSummary(false);
+    setErrors({});
   };
 
   const handleBack = () => {
@@ -64,6 +67,22 @@ export function ClinicalNoteWizard({ open, onOpenChange, patientId, onSave, isSa
   };
 
   const handleNext = () => {
+    const step = config?.steps[currentStep];
+    if (step) {
+      const missing: Record<string, string> = {};
+      step.fields.forEach(f => {
+        if (!f.required) return;
+        if (f.showIf && !f.showIf(formData)) return;
+        const v = formData[f.key];
+        const empty = Array.isArray(v) ? v.length === 0 : !String(v ?? "").trim();
+        if (empty) missing[f.key] = "Det här fältet behöver fyllas i innan du går vidare.";
+      });
+      if (Object.keys(missing).length > 0) {
+        setErrors(missing);
+        return;
+      }
+    }
+    setErrors({});
     if (currentStep < totalSteps - 1) {
       setCurrentStep(s => s + 1);
     } else {
@@ -117,7 +136,7 @@ export function ClinicalNoteWizard({ open, onOpenChange, patientId, onSave, isSa
             <SheetTitle className="flex items-center gap-2">
               {config ? (
                 <>
-                  <span>{config.icon}</span>
+                  <config.icon className="h-5 w-5 text-primary" strokeWidth={1.75} aria-hidden="true" />
                   <span>{config.title}</span>
                 </>
               ) : (
@@ -165,10 +184,11 @@ export function ClinicalNoteWizard({ open, onOpenChange, patientId, onSave, isSa
                 step={config.steps[currentStep]}
                 data={formData}
                 onChange={handleFieldChange}
+                errors={errors}
               />
               <div className="flex justify-between mt-6">
                 <Button variant="outline" size="sm" onClick={handleBack}>
-                  <ArrowLeft className="h-3 w-3 mr-1" /> {currentStep === 0 ? "Byt område" : "Tillbaka"}
+                  <ArrowLeft className="h-3 w-3 mr-1" /> {currentStep === 0 ? "Byt målområde" : "Tillbaka"}
                 </Button>
                 <Button size="sm" onClick={handleNext}>
                   {currentStep < totalSteps - 1 ? (
