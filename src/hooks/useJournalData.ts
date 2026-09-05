@@ -190,6 +190,7 @@ function mapEntry(entry: Record<string, unknown>): NutritionEntry {
     fat: Number(entry.fat) || 0,
     isAiEstimated: (entry.is_ai_estimated as boolean) || false,
     imageUrl: (entry.image_url as string) || undefined,
+    ingredients: (entry.ingredients as Ingredient[] | undefined) || undefined,
     createdAt: new Date((entry.created_at as string) || Date.now()),
   };
 }
