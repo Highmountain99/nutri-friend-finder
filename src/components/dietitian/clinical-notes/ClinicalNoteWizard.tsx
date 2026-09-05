@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, FileText, Save, Loader2 } from "lucide-react";
 import { AreaSelector } from "./AreaSelector";
 import { StepRenderer } from "./StepRenderer";
 import { SummaryStep } from "./SummaryStep";
-import { areaConfigs, getAreaConfig } from "./areaConfigs";
+import { areaConfigs } from "./areaConfigs";
 import { useClinicalNoteAI } from "@/hooks/dietitian/useClinicalNoteAI";
 import type { AISuggestion } from "./types";
 import { toast } from "sonner";
@@ -37,7 +37,7 @@ export function ClinicalNoteWizard({ open, onOpenChange, patientId, onSave, isSa
 
   const { requestAI, isLoading: aiLoading } = useClinicalNoteAI();
 
-  const config = areaId ? getAreaConfig(areaId) : null;
+  const config = areaId ? areaConfigs.find(c => c.id === areaId) ?? null : null;
   const totalSteps = config ? config.steps.length : 0;
   const progress = totalSteps > 0 ? Math.round(((currentStep + 1) / (totalSteps + 1)) * 100) : 0;
 
