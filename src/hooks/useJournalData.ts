@@ -511,6 +511,7 @@ export function useJournalData(selectedDate: Date) {
         fat: entry.fat,
         is_ai_estimated: entry.isAiEstimated,
         image_url: storedImageUrl,
+        ingredients: entry.ingredients as unknown as Json,
       };
 
       const { data, error } = await supabase
