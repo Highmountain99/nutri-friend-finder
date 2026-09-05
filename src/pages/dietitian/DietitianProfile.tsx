@@ -14,12 +14,28 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 const SPECIALIZATION_OPTIONS = [
-  "IBS", "Viktnedgång", "Diabetes typ 1", "Diabetes typ 2", "Ätstörningar",
-  "Hjärt- och kärlsjukdom", "Celiaki", "Allergi & intolerans", "PCOS",
-  "Graviditet & amning", "Idrottsnutrition", "Barnnutrition", "Geriatrik",
-  "Vegansk/vegetarisk kost", "Njursjukdom", "Leversjukdom", "Onkologi",
-  "Obesitas", "Magtarmsjukdomar", "Emotionellt ätande", "Klimakteriet",
+  "Styrketräning och muskeluppbyggnad",
+  "Viktminskning och livsstilsförändring",
+  "Funktionell träning och vardagsstyrka",
+  "Kondition, löpning eller uthållighet",
+  "Idrottsspecifik prestationsutveckling",
+  "Rörlighet och mobilitet",
+  "Seniorträning",
+  "Träning under och efter graviditet",
+  "Träning för barn och ungdomar",
+  "Träning för personer med funktionsnedsättning",
+  "Återgång till träning efter skada, i samarbete med fysioterapeut",
+  "Smärtanpassad träning, inom PT:ns kompetensområde",
+  "Träning vid exempelvis diabetes eller hjärt-kärlsjukdom, med rätt vidareutbildning och vårdkontakt",
+  "Kostcoachning och beteendeförändring",
+  "Stresshantering, återhämtning och sömnvanor",
+  "Onlinecoachning",
+  "Företagshälsa och arbetsplatsträning",
+  "Gruppträning",
+  "Bodybuilding, powerlifting, tyngdlyftning eller CrossFit",
+  "Kampsportsfys eller annan sportspecifik fysträning",
 ];
+
 
 const LANGUAGE_OPTIONS = [
   "Svenska", "Engelska", "Arabiska", "Persiska", "Somaliska", "Finska",
