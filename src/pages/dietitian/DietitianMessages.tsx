@@ -11,6 +11,8 @@ import { ChatAttachmentPicker, AttachmentPreview } from "@/components/messages/C
 import { ChatAttachmentDisplay } from "@/components/messages/ChatAttachmentDisplay";
 import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 import { useState, useRef, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { format, isToday, isYesterday } from "date-fns";
 import { sv } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
