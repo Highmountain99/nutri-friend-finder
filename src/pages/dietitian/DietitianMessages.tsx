@@ -32,8 +32,10 @@ function formatDateGroup(dateStr: string) {
 }
 
 export default function DietitianMessages() {
+  const { user } = useAuth();
   const { data: patients, isLoading } = useAssignedPatients();
   const { data: unread } = useUnreadMessages();
+
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const { messages, sendMessage, approveDraft, rejectAndReplace, dismissDraft } = useDietitianChat(selectedPatient ?? undefined);
   const [input, setInput] = useState("");
