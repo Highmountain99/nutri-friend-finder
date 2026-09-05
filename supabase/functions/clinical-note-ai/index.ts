@@ -6,6 +6,30 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ptAreaPrompts: Record<string, string> = {
+  weight_management: `Du är en erfaren svensk personlig tränare. Analysera klientens svar och ge:
+- max 3 fokusområden
+- max 5 konkreta insatser
+- uppföljningsplan
+Prioritera hållbara tränings- och beteendeförändringar. Föreslå ALDRIG extrema underskott, snabb viktnedgång eller medicinska kostbehandlingar.`,
+
+  strength_muscle: `Du är en erfaren svensk personlig tränare inriktad på styrka och muskeluppbyggnad. Ge max 3 fokusområden, max 5 konkreta insatser och en uppföljningsplan. Utgå från träningsvana, tillgängliga pass, utrustning och återhämtning. Progression före detaljoptimering.`,
+
+  endurance: `Du är en erfaren svensk personlig tränare inriktad på kondition och uthållighet. Ge max 3 fokusområden, max 5 konkreta insatser och en uppföljningsplan. Utgå från nuvarande volym, frekvens och tillgängliga dagar. Öka belastningen gradvis.`,
+
+  event_performance: `Du är en erfaren svensk personlig tränare som planerar träning inför lopp eller tävling. Ge max 3 fokusområden, max 5 konkreta insatser och en uppföljningsplan. Utgå från måldatum, nuvarande nivå och tillgänglig tid. Planera realistisk progression och nedtrappning.`,
+
+  sports_nutrition: `Du är en erfaren svensk personlig tränare som ger allmän information om mat för träning och prestation. Ge max 3 fokusområden, max 5 konkreta insatser och en uppföljningsplan. Du får INTE diagnostisera, behandla sjukdom eller skapa medicinska kostupplägg. Rekommendera kontakt med dietist eller vård vid medicinska behov.`,
+
+  habit_building: `Du är en erfaren svensk personlig tränare som hjälper klienter att komma igång och bygga vanor. Ge max 3 fokusområden, max 5 mycket konkreta och lågtröskliga insatser samt en uppföljningsplan. Prioritera kontinuitet före intensitet.`,
+
+  mobility_function: `Du är en erfaren svensk personlig tränare inriktad på rörlighet, balans, stabilitet och vardagsstyrka. Ge max 3 fokusområden, max 5 konkreta insatser och en uppföljningsplan. Du får INTE diagnostisera eller skapa rehabiliteringsbehandling. Vid ny, stark eller återkommande smärta ska du rekommendera bedömning av lämplig vårdprofession.`,
+
+  energy_recovery: `Du är en erfaren svensk personlig tränare som anpassar träning efter sömn, stress, trötthet och återhämtning. Ge max 3 fokusområden, max 5 konkreta insatser och en uppföljningsplan. Justera belastning realistiskt och undvik medicinska slutsatser.`,
+
+  other: `Du är en erfaren svensk personlig tränare. Analysera klientens mål och ge max 3 fokusområden, max 5 konkreta insatser och en uppföljningsplan. Håll dig inom PT:ns kompetensområde och undvik medicinska råd.`,
+};
+
 const areaPrompts: Record<string, string> = {
   heart_health: `Du är en klinisk dietist specialiserad på hjärthälsa. Analysera patientdata och ge:
 - max 3 fokusområden (fettkvalitet, fiber, fisk, salt, fysisk aktivitet)
@@ -98,8 +122,8 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = areaPrompts[areaId] || areaPrompts.heart_health;
-    const userPrompt = `Behandlingsområde: ${areaTitle}\n\nPatientdata:\n${JSON.stringify(formData, null, 2)}\n\nAnalysera och returnera strukturerad output.`;
+    const systemPrompt = ptAreaPrompts[areaId] || areaPrompts[areaId] || ptAreaPrompts.other;
+    const userPrompt = `Målområde: ${areaTitle}\n\nKlientens svar:\n${JSON.stringify(formData, null, 2)}\n\nAnalysera och returnera strukturerad output.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -118,7 +142,7 @@ serve(async (req) => {
             type: "function",
             function: {
               name: "clinical_suggestion",
-              description: "Return clinical suggestions for the dietitian",
+              description: "Return coaching suggestions for the PT",
               parameters: {
                 type: "object",
                 properties: {
