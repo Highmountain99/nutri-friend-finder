@@ -1,23 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Camera, Image, Loader2, Check, HelpCircle, RefreshCw, Database, Sparkles, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Camera, Image as ImageIcon, Loader2, RefreshCw, Trash2, X, Pencil, Check, CalendarIcon, Clock } from "lucide-react";
 import { OrganicLoader } from "@/components/ui/OrganicLoader";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,8 +19,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useMealImage } from "@/lib/mealImages";
 import { toast } from "@/hooks/use-toast";
-import { MealTypeSelector } from "./MealTypeSelector";
-import { MealTimeSelector } from "./MealTimeSelector";
+import { format, isToday } from "date-fns";
+import { sv } from "date-fns/locale";
 import type { NutritionEntry, Ingredient } from "@/hooks/useJournalData";
 
 interface EditMealSheetProps {
@@ -57,79 +43,73 @@ interface FoodEstimation {
   dataSource?: "livsmedelsverket" | "ai_estimation" | "mixed";
 }
 
+const MEAL_TYPES = ["Frukost", "Förmiddagssnack", "Lunch", "Mellanmål", "Middag", "Kvällssnack"];
+
+const MACRO_DOT = {
+  calories: "bg-terracotta",
+  protein: "bg-leaf",
+  carbs: "bg-gold",
+  fat: "bg-apricot",
+} as const;
+
+const HERO_TONES = ["bg-gold", "bg-sage", "bg-apricot"];
+
 export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: EditMealSheetProps) {
-  // Form state - using string inputs for nutrition fields
   const [mealName, setMealName] = useState("");
   const [mealType, setMealType] = useState("");
   const [mealTime, setMealTime] = useState<Date>(new Date());
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [caloriesInput, setCaloriesInput] = useState("");
-  const [proteinInput, setProteinInput] = useState("");
-  const [carbsInput, setCarbsInput] = useState("");
-  const [fatInput, setFatInput] = useState("");
+  const [calories, setCalories] = useState(0);
+  const [protein, setProtein] = useState(0);
+  const [carbs, setCarbs] = useState(0);
+  const [fat, setFat] = useState(0);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [confidence, setConfidence] = useState<"high" | "medium" | "low">("medium");
   const [dataSource, setDataSource] = useState<"livsmedelsverket" | "ai_estimation" | "mixed">("ai_estimation");
-  
-  // Store original values for quick adjust calculations
-  const [originalNutrition, setOriginalNutrition] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-  
-  // Parsed numeric values for calculations
-  const calories = parseFloat(caloriesInput) || 0;
-  const protein = parseFloat(proteinInput) || 0;
-  const carbs = parseFloat(carbsInput) || 0;
-  const fat = parseFloat(fatInput) || 0;
-  
-  // UI state
-  const [showIngredients, setShowIngredients] = useState(false);
+
+  const [baseNutrition, setBaseNutrition] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+  const [baseIngredients, setBaseIngredients] = useState<Ingredient[]>([]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [adjustmentText, setAdjustmentText] = useState("");
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [appliedMultiplier, setAppliedMultiplier] = useState<number | null>(null);
-  
+  const [multiplier, setMultiplier] = useState<number | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
+
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // imagePreview stores the raw ref (storage path or base64); resolve for display
   const displayImage = useMealImage(imagePreview);
 
-  // Helper to format number to string (empty if 0)
-  const formatNutritionValue = (value: number, decimals: number = 0): string => {
-    if (value <= 0) return "";
-    return decimals > 0 ? value.toFixed(decimals) : String(Math.round(value));
-  };
-
-  // Initialize state when entry changes
   useEffect(() => {
     if (entry && isOpen) {
       setMealName(entry.mealName);
       setMealType(entry.mealType);
       setMealTime(new Date(entry.createdAt));
       setImagePreview(entry.imageUrl || null);
-      setCaloriesInput(entry.calories > 0 ? String(entry.calories) : "");
-      setProteinInput(entry.protein > 0 ? String(entry.protein) : "");
-      setCarbsInput(entry.carbs > 0 ? String(entry.carbs) : "");
-      setFatInput(entry.fat > 0 ? String(entry.fat) : "");
+      setCalories(entry.calories);
+      setProtein(entry.protein);
+      setCarbs(entry.carbs);
+      setFat(entry.fat);
       setIngredients(entry.ingredients || []);
-      setConfidence("medium"); // Default since we don't store this
+      setBaseNutrition({ calories: entry.calories, protein: entry.protein, carbs: entry.carbs, fat: entry.fat });
+      setBaseIngredients(entry.ingredients || []);
+      setConfidence("medium");
       setDataSource(entry.isAiEstimated ? "ai_estimation" : "livsmedelsverket");
-      setAppliedMultiplier(null); // Reset multiplier when entry changes
-      // Store original values for quick adjust calculations
-      setOriginalNutrition({
-        calories: entry.calories,
-        protein: entry.protein,
-        carbs: entry.carbs,
-        fat: entry.fat,
-      });
+      setMultiplier(null);
+      setIsEditing(false);
+      setShowDetails(false);
+      setAdjustmentText("");
     }
   }, [entry, isOpen]);
 
-  // Lazy-load the full image_url for this entry — list queries skip image_url
-  // (base64 blobs can be several MB and would block loading historical logs).
+  // Lazy-load image_url (list queries skip it)
   useEffect(() => {
-    if (!entry?.id || !isOpen) return;
-    if (entry.imageUrl) return;
+    if (!entry?.id || !isOpen || entry.imageUrl) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -137,227 +117,111 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
         .select("image_url")
         .eq("id", entry.id)
         .maybeSingle();
-      if (!cancelled && data?.image_url) {
-        setImagePreview(data.image_url);
-      }
+      if (!cancelled && data?.image_url) setImagePreview(data.image_url);
     })();
     return () => { cancelled = true; };
   }, [entry?.id, entry?.imageUrl, isOpen]);
 
+  const applyEstimation = (estimation: FoodEstimation, withName = false) => {
+    if (withName) setMealName(estimation.mealName);
+    setMealType(estimation.mealType || mealType);
+    setCalories(Math.round(estimation.calories));
+    setProtein(estimation.protein);
+    setCarbs(estimation.carbs);
+    setFat(estimation.fat);
+    setIngredients(estimation.ingredients || []);
+    setBaseNutrition({
+      calories: Math.round(estimation.calories),
+      protein: estimation.protein,
+      carbs: estimation.carbs,
+      fat: estimation.fat,
+    });
+    setBaseIngredients(estimation.ingredients || []);
+    setConfidence(estimation.confidence);
+    setDataSource(estimation.dataSource || "ai_estimation");
+    setMultiplier(null);
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64 = reader.result as string;
       setImagePreview(base64);
-      
-      // Re-analyze with new image
-      await analyzeNewImage(base64);
+      setIsAnalyzing(true);
+      try {
+        const { data: result, error } = await supabase.functions.invoke("analyze-food", {
+          body: { analysisType: "image", imageBase64: base64 },
+        });
+        if (error) throw error;
+        applyEstimation(result as FoodEstimation, true);
+        toast({ title: "Ny bild analyserad", description: "Näringsvärdena har uppdaterats." });
+      } catch {
+        toast({ title: "Analys misslyckades", description: "Näringsvärdena behålls.", variant: "destructive" });
+      } finally {
+        setIsAnalyzing(false);
+      }
     };
     reader.readAsDataURL(file);
-    
-    // Reset input
     e.target.value = "";
   };
 
-  const analyzeNewImage = async (imageBase64: string) => {
-    setIsAnalyzing(true);
-    setAppliedMultiplier(null); // Reset multiplier when new analysis happens
-    
-    try {
-      const { data: result, error } = await supabase.functions.invoke("analyze-food", {
-        body: {
-          analysisType: "image",
-          imageBase64,
-        },
-      });
-
-      if (error) throw error;
-      
-      const estimation = result as FoodEstimation;
-      setMealName(estimation.mealName);
-      setMealType(estimation.mealType);
-      setCaloriesInput(formatNutritionValue(estimation.calories));
-      setProteinInput(formatNutritionValue(estimation.protein, 1));
-      setCarbsInput(formatNutritionValue(estimation.carbs, 1));
-      setFatInput(formatNutritionValue(estimation.fat, 1));
-      setIngredients(estimation.ingredients || []);
-      setConfidence(estimation.confidence);
-      setDataSource(estimation.dataSource || "ai_estimation");
-      
-      toast({
-        title: "Ny bild analyserad",
-        description: "Näringsvärdena har uppdaterats.",
-      });
-    } catch (error) {
-      console.error("Analysis failed:", error);
-      toast({
-        title: "Analys misslyckades",
-        description: "Kunde inte analysera bilden. Näringsvärdena behålls.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleReanalyzeFromTitle = async () => {
-    if (!mealName.trim()) return;
-    
-    setIsAnalyzing(true);
-    setAppliedMultiplier(null); // Reset multiplier when new analysis happens
-    
-    try {
-      const { data: result, error } = await supabase.functions.invoke("analyze-food", {
-        body: {
-          analysisType: "text",
-          textDescription: mealName,
-        },
-      });
-
-      if (error) throw error;
-      
-      const estimation = result as FoodEstimation;
-      setMealType(estimation.mealType);
-      setCaloriesInput(formatNutritionValue(estimation.calories));
-      setProteinInput(formatNutritionValue(estimation.protein, 1));
-      setCarbsInput(formatNutritionValue(estimation.carbs, 1));
-      setFatInput(formatNutritionValue(estimation.fat, 1));
-      setIngredients(estimation.ingredients || []);
-      setConfidence(estimation.confidence);
-      setDataSource(estimation.dataSource || "ai_estimation");
-      
-      toast({
-        title: "Måltid analyserad",
-        description: "Näringsvärdena har uppdaterats baserat på titeln.",
-      });
-    } catch (error) {
-      console.error("Analysis failed:", error);
-      toast({
-        title: "Analys misslyckades",
-        description: "Kunde inte analysera måltiden. Försök igen.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleRecalculate = async (adjustment: string) => {
-    if (!adjustment.trim()) return;
-    
+  const handleRecalculate = async () => {
+    if (!adjustmentText.trim()) return;
     setIsRecalculating(true);
-    setAppliedMultiplier(null); // Reset multiplier when recalculating
-    
     try {
       const originalEstimation: FoodEstimation = {
-        mealName,
-        mealType,
-        calories,
-        protein,
-        carbs,
-        fat,
-        ingredients,
-        confidence,
-        dataSource,
+        mealName, mealType, calories, protein, carbs, fat, ingredients, confidence, dataSource,
       };
-      
       const { data: result, error } = await supabase.functions.invoke("analyze-food", {
-        body: {
-          analysisType: "adjust",
-          originalEstimation,
-          adjustment,
-        },
+        body: { analysisType: "adjust", originalEstimation, adjustment: adjustmentText },
       });
-
       if (error) throw error;
-      
-      const estimation = result as FoodEstimation;
-      setCaloriesInput(formatNutritionValue(estimation.calories));
-      setProteinInput(formatNutritionValue(estimation.protein, 1));
-      setCarbsInput(formatNutritionValue(estimation.carbs, 1));
-      setFatInput(formatNutritionValue(estimation.fat, 1));
-      setIngredients(estimation.ingredients || []);
+      applyEstimation(result as FoodEstimation);
       setAdjustmentText("");
-      
-      toast({
-        title: "Uppskattning uppdaterad",
-        description: "Näringsvärdena har räknats om.",
-      });
-    } catch (error) {
-      console.error("Recalculation failed:", error);
-      toast({
-        title: "Omräkning misslyckades",
-        description: "Kunde inte räkna om. Försök igen.",
-        variant: "destructive",
-      });
+      toast({ title: "Uppskattning uppdaterad", description: "Näringsvärdena har räknats om." });
+    } catch {
+      toast({ title: "Omräkning misslyckades", description: "Försök igen.", variant: "destructive" });
     } finally {
       setIsRecalculating(false);
     }
   };
 
-  const handleQuickAdjust = (multiplier: number) => {
-    // Prevent clicking the same multiplier twice
-    if (appliedMultiplier === multiplier) return;
-    
-    setAppliedMultiplier(multiplier);
-    
-    // Always calculate from original values to prevent exponential multiplication
-    const newCalories = Math.round(originalNutrition.calories * multiplier);
-    const newProtein = Math.round(originalNutrition.protein * multiplier * 10) / 10;
-    const newCarbs = Math.round(originalNutrition.carbs * multiplier * 10) / 10;
-    const newFat = Math.round(originalNutrition.fat * multiplier * 10) / 10;
-    
-    setCaloriesInput(formatNutritionValue(newCalories));
-    setProteinInput(formatNutritionValue(newProtein, 1));
-    setCarbsInput(formatNutritionValue(newCarbs, 1));
-    setFatInput(formatNutritionValue(newFat, 1));
-    
-    // Also update ingredients proportionally from their original (entry) values
-    if (entry?.ingredients) {
-      setIngredients(entry.ingredients.map(ing => ({
-        ...ing,
-        calories: Math.round(ing.calories * multiplier),
-        protein: Math.round(ing.protein * multiplier * 10) / 10,
-        carbs: Math.round(ing.carbs * multiplier * 10) / 10,
-        fat: Math.round(ing.fat * multiplier * 10) / 10,
-      })));
-    }
+  const handleQuickAdjust = (m: number) => {
+    const next = multiplier === m ? null : m;
+    setMultiplier(next);
+    const f = next ?? 1;
+    setCalories(Math.round(baseNutrition.calories * f));
+    setProtein(Math.round(baseNutrition.protein * f * 10) / 10);
+    setCarbs(Math.round(baseNutrition.carbs * f * 10) / 10);
+    setFat(Math.round(baseNutrition.fat * f * 10) / 10);
+    setIngredients(baseIngredients.map((ing) => ({
+      ...ing,
+      calories: Math.round(ing.calories * f),
+      protein: Math.round(ing.protein * f * 10) / 10,
+      carbs: Math.round(ing.carbs * f * 10) / 10,
+      fat: Math.round(ing.fat * f * 10) / 10,
+    })));
   };
 
   const handleSave = async () => {
     if (!entry) return;
-    
     setIsSaving(true);
-    
     try {
       await onUpdate(entry.id, {
-        mealName,
-        mealType,
-        calories,
-        protein,
-        carbs,
-        fat,
+        mealName, mealType, calories, protein, carbs, fat,
         imageUrl: imagePreview || undefined,
         ingredients,
         mealTime,
       });
-      
-      toast({
-        title: "Måltid uppdaterad",
-        description: "Dina ändringar har sparats.",
-      });
-      
-      onClose();
-    } catch (error) {
-      console.error("Save failed:", error);
-      toast({
-        title: "Kunde inte spara",
-        description: "Något gick fel. Försök igen.",
-        variant: "destructive",
-      });
+      setBaseNutrition({ calories, protein, carbs, fat });
+      setBaseIngredients(ingredients);
+      setMultiplier(null);
+      setIsEditing(false);
+      toast({ title: "Måltid uppdaterad", description: "Dina ändringar har sparats." });
+    } catch {
+      toast({ title: "Kunde inte spara", description: "Något gick fel. Försök igen.", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -365,410 +229,376 @@ export function EditMealSheet({ isOpen, onClose, entry, onUpdate, onDelete }: Ed
 
   const handleDelete = async () => {
     if (!entry) return;
-    
     try {
       await onDelete(entry.id);
-      toast({
-        title: "Måltid borttagen",
-        description: "Måltiden har tagits bort.",
-      });
+      toast({ title: "Måltid borttagen", description: "Måltiden har tagits bort." });
       onClose();
-    } catch (error) {
-      console.error("Delete failed:", error);
-      toast({
-        title: "Kunde inte ta bort",
-        description: "Något gick fel. Försök igen.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Kunde inte ta bort", description: "Något gick fel. Försök igen.", variant: "destructive" });
     }
   };
-
-  const getDataSourceLabel = () => {
-    switch (dataSource) {
-      case "livsmedelsverket":
-        return { label: "Livsmedelsverket", icon: Database, variant: "default" as const };
-      case "mixed":
-        return { label: "Livsmedelsverket + AI", icon: Database, variant: "secondary" as const };
-      case "ai_estimation":
-      default:
-        return { label: "AI-uppskattning", icon: Sparkles, variant: "outline" as const };
-    }
-  };
-
-  const dataSourceInfo = getDataSourceLabel();
 
   if (!entry) return null;
 
-  return (
-    <>
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="text-center">Redigera måltid</SheetTitle>
-          </SheetHeader>
+  const heroTone = HERO_TONES[new Date(entry.createdAt).getHours() % HERO_TONES.length];
+  const dayLabel = isToday(mealTime) ? "IDAG" : format(mealTime, "d MMM", { locale: sv }).toUpperCase();
+  const eyebrow = `${(mealType || "MÅLTID").toUpperCase()} · ${dayLabel} ${format(mealTime, "HH:mm")}`;
 
-          {isAnalyzing ? (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              {displayImage && (
-                <div className="w-32 h-32 rounded-xl overflow-hidden">
-                  <img src={displayImage} alt="Mat" className="w-full h-full object-cover" />
+  const macros = [
+    { key: "calories" as const, value: Math.round(calories), unit: "", label: "KCAL" },
+    { key: "protein" as const, value: Math.round(protein), unit: "g", label: "PROTEIN" },
+    { key: "carbs" as const, value: Math.round(carbs), unit: "g", label: "KOLH." },
+    { key: "fat" as const, value: Math.round(fat), unit: "g", label: "FETT" },
+  ];
+
+  const setTimePart = (hours: number, minutes: number) => {
+    const d = new Date(mealTime);
+    d.setHours(hours, minutes);
+    setMealTime(d);
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent
+        side="bottom"
+        className="h-[90dvh] p-0 border-0 bg-background rounded-t-panel overflow-hidden [&>button]:hidden"
+      >
+        {isAnalyzing ? (
+          <div className="flex flex-col items-center justify-center h-full gap-4">
+            <OrganicLoader size={32} label="Analyserar måltiden" />
+            <p className="text-sm text-foreground/60">Analyserar...</p>
+          </div>
+        ) : (
+          <div className="h-full overflow-y-auto overscroll-contain pb-10">
+            {/* Hero */}
+            <div className={cn("relative h-[180px] w-full overflow-hidden rounded-t-panel", !displayImage && heroTone)}>
+              {displayImage ? (
+                <img src={displayImage} alt={mealName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full grid place-items-center">
+                  <Camera className="w-10 h-10 text-foreground/40" />
                 </div>
               )}
-              <OrganicLoader size={32} label="Analyserar måltiden" />
-              <p className="text-muted-foreground">Analyserar...</p>
-            </div>
-          ) : (
-            <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-120px)]">
-              {/* Image with replace buttons */}
-              <div className="relative w-full h-40 rounded-xl overflow-hidden bg-muted">
-                {displayImage ? (
-                  <img src={displayImage} alt="Mat" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Camera className="w-12 h-12 text-muted-foreground/50" />
-                  </div>
-                )}
-                
-                {/* Image action buttons */}
-                <div className="absolute bottom-2 right-2 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="gap-1 bg-background/90 hover:bg-background"
+              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 h-1.5 w-11 rounded-pill bg-foreground/25" />
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Stäng"
+                className="absolute top-3 right-3 h-9 w-9 rounded-pill bg-card/90 grid place-items-center"
+              >
+                <X className="w-4 h-4 text-foreground" />
+              </button>
+
+              {isEditing && (
+                <div className="absolute bottom-3 right-3 flex gap-2 animate-fade-in">
+                  <button
+                    type="button"
                     onClick={() => cameraInputRef.current?.click()}
+                    className="whitespace-nowrap rounded-pill bg-card/90 px-3.5 py-2 text-[12px] font-bold text-foreground"
                   >
-                    <Camera className="w-3 h-3" />
-                    <span className="text-xs">Ny bild</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="gap-1 bg-background/90 hover:bg-background"
+                    Ny bild
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => galleryInputRef.current?.click()}
+                    className="whitespace-nowrap rounded-pill bg-card/90 px-3.5 py-2 text-[12px] font-bold text-foreground"
                   >
-                    <Image className="w-3 h-3" />
-                    <span className="text-xs">Galleri</span>
-                  </Button>
+                    Galleri
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
+            <input ref={galleryInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
+            {/* Title block */}
+            <div className="px-5 py-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/55 whitespace-nowrap">
+                {eyebrow}
+              </p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <h2
+                  className="font-display text-[26px] uppercase leading-[0.95] text-foreground flex-1"
+                  style={{ textWrap: "balance" } as React.CSSProperties}
+                >
+                  {mealName}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing((v) => !v)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1.5 rounded-pill px-3.5 py-2 text-[12px] font-bold transition-colors",
+                    isEditing
+                      ? "bg-primary text-primary-foreground"
+                      : "border-[1.5px] border-primary text-primary"
+                  )}
+                >
+                  {isEditing ? <Check className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
+                  {isEditing ? "Klar" : "Redigera"}
+                </button>
+              </div>
+            </div>
+
+            {/* Summary card */}
+            <div className="px-5">
+              <div className="rounded-card bg-card px-4 py-4">
+                <div className="grid grid-cols-4 gap-2">
+                  {macros.map((m) => (
+                    <div key={m.key} className="flex flex-col items-center text-center min-w-0">
+                      <span className={cn("h-[9px] w-[9px] rounded-pill mb-1.5", MACRO_DOT[m.key])} />
+                      <p className="font-display text-[24px] leading-none text-foreground">
+                        {m.value}
+                        {m.unit && <span className="text-[13px] ml-0.5">{m.unit}</span>}
+                      </p>
+                      <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-foreground/55">
+                        {m.label}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
+            </div>
 
-              {/* Hidden file inputs */}
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <input
-                ref={galleryInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
+            {/* Ingredients */}
+            {ingredients.length > 0 && (
+              <div className="px-5 mt-3">
+                <div className="rounded-card bg-card px-4 py-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/70">
+                      Det här åt du ({ingredients.length})
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowDetails((v) => !v)}
+                      className="text-[12px] font-semibold underline text-foreground/70"
+                    >
+                      {showDetails ? "Dölj detaljer" : "Visa detaljer"}
+                    </button>
+                  </div>
 
-              {/* Meal metadata */}
-              <Card className="shadow-soft">
-                <CardContent className="p-4 space-y-4">
-                  {/* Meal name with analyze button */}
-                  <div className="space-y-2">
-                    <Label htmlFor="meal-name">Titel</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="meal-name"
-                        value={mealName}
-                        onChange={(e) => setMealName(e.target.value)}
-                        placeholder="T.ex. Pasta med köttfärssås"
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleReanalyzeFromTitle}
-                        disabled={!mealName.trim() || isAnalyzing}
-                        title="Analysera med AI"
+                  <div className="mt-2">
+                    {ingredients.map((ing, i) => (
+                      <div
+                        key={`${ing.name}-${i}`}
+                        className={cn("py-3", i > 0 && "border-t-[1.5px] border-foreground/[0.08]")}
                       >
-                        {isAnalyzing ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <RefreshCw className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Meal type */}
-                  <div className="space-y-2">
-                    <Label>Måltidstyp</Label>
-                    <MealTypeSelector value={mealType} onChange={setMealType} />
-                  </div>
-                  
-                  {/* Meal time */}
-                  <div className="space-y-2">
-                    <Label>Tid</Label>
-                    <MealTimeSelector value={mealTime} onChange={setMealTime} />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Nutrition info card - editable */}
-              <Card className="shadow-soft">
-                <CardContent className="p-4 space-y-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      {dataSourceInfo && (
-                        <Badge variant={dataSourceInfo.variant} className="gap-1">
-                          <dataSourceInfo.icon className="w-3 h-3" />
-                          {dataSourceInfo.label}
-                        </Badge>
-                      )}
-                    </div>
-                    <span className={cn(
-                      "text-xs px-2 py-1 rounded flex-shrink-0",
-                      confidence === "high" && "bg-green-100 text-green-700",
-                      confidence === "medium" && "bg-amber-100 text-amber-700",
-                      confidence === "low" && "bg-red-100 text-red-700"
-                    )}>
-                      {confidence === "high" ? "Hög" : confidence === "medium" ? "Medel" : "Låg"} säkerhet
-                    </span>
-                  </div>
-                  
-                  {/* Editable Macros grid */}
-                  <div className="grid grid-cols-4 gap-2 text-sm">
-                    <div className="bg-muted/50 p-2 rounded-lg text-center">
-                      <Label className="block text-muted-foreground text-xs mb-1">Kcal</Label>
-                      <Input
-                        type="number"
-                        value={caloriesInput}
-                        onChange={(e) => setCaloriesInput(e.target.value)}
-                        placeholder="0"
-                        className="h-8 text-center font-bold text-foreground text-lg p-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                    </div>
-                    <div className="bg-primary/10 p-2 rounded-lg text-center">
-                      <Label className="block text-muted-foreground text-xs mb-1">Protein</Label>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={proteinInput}
-                          onChange={(e) => setProteinInput(e.target.value)}
-                          placeholder="0"
-                          className="h-8 text-center font-bold text-primary text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
-                      </div>
-                    </div>
-                    <div className="bg-amber-500/10 p-2 rounded-lg text-center">
-                      <Label className="block text-muted-foreground text-xs mb-1">Kolh.</Label>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={carbsInput}
-                          onChange={(e) => setCarbsInput(e.target.value)}
-                          placeholder="0"
-                          className="h-8 text-center font-bold text-amber-600 text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
-                      </div>
-                    </div>
-                    <div className="bg-green-500/10 p-2 rounded-lg text-center">
-                      <Label className="block text-muted-foreground text-xs mb-1">Fett</Label>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={fatInput}
-                          onChange={(e) => setFatInput(e.target.value)}
-                          placeholder="0"
-                          className="h-8 text-center font-bold text-green-600 text-lg p-1 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="absolute right-1 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* Ingredients section - inline view */}
-              {ingredients.length > 0 && (
-                <Card className="shadow-soft">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Ingredienser ({ingredients.length})</Label>
-                      <button
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => setShowIngredients(true)}
-                      >
-                        Visa detaljer
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {ingredients.map((ing, index) => (
-                        <div key={index} className="flex justify-between items-center p-2 bg-muted/30 rounded-lg text-sm">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="font-medium truncate">{ing.name}</span>
-                            {ing.dataSource === "livsmedelsverket" && (
-                              <Badge variant="secondary" className="text-[10px] px-1 py-0 flex-shrink-0">
-                                <Database className="w-2 h-2 mr-0.5" />
-                                LV
-                              </Badge>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-[13.5px] font-bold text-foreground truncate">{ing.name}</p>
+                              {ing.dataSource === "livsmedelsverket" && (
+                                <span className="shrink-0 rounded-pill bg-sage px-1.5 py-0.5 text-[9.5px] font-bold text-foreground">
+                                  LV
+                                </span>
+                              )}
+                            </div>
+                            {ing.amount && (
+                              <p className="text-[12px] text-foreground/55 mt-0.5">{ing.amount}</p>
                             )}
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{ing.amount}</span>
                           </div>
-                          <span className="text-xs font-medium flex-shrink-0 ml-2">{ing.calories} kcal</span>
+                          <p className="text-[13px] font-bold text-foreground shrink-0">{ing.calories} kcal</p>
                         </div>
+
+                        {showDetails && (
+                          <div className="mt-2 grid grid-cols-3 gap-1.5 animate-fade-in">
+                            {[
+                              { dot: MACRO_DOT.protein, text: `P ${Math.round(ing.protein)} g` },
+                              { dot: MACRO_DOT.carbs, text: `K ${Math.round(ing.carbs)} g` },
+                              { dot: MACRO_DOT.fat, text: `F ${Math.round(ing.fat)} g` },
+                            ].map((p) => (
+                              <span
+                                key={p.text}
+                                className="flex items-center justify-center gap-1.5 rounded-pill bg-background px-2 py-1.5 text-[11px] font-semibold text-foreground"
+                              >
+                                <span className={cn("h-[7px] w-[7px] rounded-pill", p.dot)} />
+                                {p.text}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit mode card */}
+            {isEditing && (
+              <div className="px-5 mt-3 animate-fade-in">
+                <div className="rounded-card bg-card px-4 py-4 space-y-4">
+                  {/* Meal type */}
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/70 mb-2">Måltidstyp</p>
+                    <div className="flex flex-wrap gap-2">
+                      {MEAL_TYPES.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setMealType(t)}
+                          className={cn(
+                            "rounded-pill px-3.5 py-2 text-[12px] font-bold transition-colors",
+                            mealType === t ? "bg-primary text-primary-foreground" : "bg-background text-foreground"
+                          )}
+                        >
+                          {t}
+                        </button>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Quick adjustments */}
-              <Card className="shadow-soft">
-                <CardContent className="p-4 space-y-3">
-                  <Label className="text-sm">Justera mängd</Label>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant={appliedMultiplier === 0.5 ? "default" : "outline"}
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => handleQuickAdjust(0.5)}
-                      disabled={appliedMultiplier === 0.5}
-                    >
-                      Hälften
-                    </Button>
-                    <Button 
-                      variant={appliedMultiplier === 0.75 ? "default" : "outline"}
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => handleQuickAdjust(0.75)}
-                      disabled={appliedMultiplier === 0.75}
-                    >
-                      3/4
-                    </Button>
-                    <Button 
-                      variant={appliedMultiplier === 1.5 ? "default" : "outline"}
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => handleQuickAdjust(1.5)}
-                      disabled={appliedMultiplier === 1.5}
-                    >
-                      1.5x
-                    </Button>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Skriv justering..."
+
+                  {/* Date & time */}
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/70 mb-2">Tid & datum</p>
+                    <div className="flex gap-2">
+                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex-1 flex items-center gap-2 rounded-[14px] bg-background px-3.5 py-3 text-[14px] font-semibold text-foreground"
+                          >
+                            <CalendarIcon className="w-4 h-4 text-foreground/60" />
+                            {isToday(mealTime) ? "Idag" : format(mealTime, "d MMM", { locale: sv })}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-card z-50" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={mealTime}
+                            onSelect={(d) => {
+                              if (!d) return;
+                              const nd = new Date(d);
+                              nd.setHours(mealTime.getHours(), mealTime.getMinutes());
+                              setMealTime(nd);
+                              setCalendarOpen(false);
+                            }}
+                            locale={sv}
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+
+                      <Popover open={timeOpen} onOpenChange={setTimeOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 rounded-[14px] bg-background px-3.5 py-3 text-[14px] font-semibold text-foreground"
+                          >
+                            <Clock className="w-4 h-4 text-foreground/60" />
+                            {format(mealTime, "HH:mm")}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-3 bg-card z-50" align="end">
+                          <input
+                            type="time"
+                            value={format(mealTime, "HH:mm")}
+                            onChange={(e) => {
+                              const [h, m] = e.target.value.split(":").map(Number);
+                              if (!Number.isNaN(h) && !Number.isNaN(m)) setTimePart(h, m);
+                            }}
+                            className="rounded-[12px] bg-background px-3 py-2 text-[15px] font-semibold text-foreground"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+
+                  {/* Quantity */}
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/70 mb-2">Justera mängd</p>
+                    <div className="flex gap-2">
+                      {[
+                        { label: "Hälften", value: 0.5 },
+                        { label: "3/4", value: 0.75 },
+                        { label: "1.5x", value: 1.5 },
+                      ].map((q) => (
+                        <button
+                          key={q.value}
+                          type="button"
+                          onClick={() => handleQuickAdjust(q.value)}
+                          className={cn(
+                            "flex-1 rounded-pill px-3 py-2.5 text-[13px] font-bold transition-colors",
+                            multiplier === q.value
+                              ? "bg-primary text-primary-foreground"
+                              : "border-[1.5px] border-primary text-primary"
+                          )}
+                        >
+                          {q.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[11px] text-foreground/55">
+                      Kalorier och näringsvärden räknas om direkt.
+                    </p>
+                  </div>
+
+                  {/* Free text adjust */}
+                  <div className="flex items-center gap-2">
+                    <input
                       value={adjustmentText}
                       onChange={(e) => setAdjustmentText(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && adjustmentText.trim() && !isRecalculating) {
                           e.preventDefault();
-                          handleRecalculate(adjustmentText);
+                          handleRecalculate();
                         }
                       }}
-                      className="flex-1"
+                      placeholder='Beskriv en ändring, t.ex. "utan dressing"...'
+                      className="flex-1 min-w-0 rounded-pill bg-background px-4 py-3 text-[14px] text-foreground placeholder:text-foreground/45 outline-none"
                     />
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={() => handleRecalculate(adjustmentText)}
+                    <button
+                      type="button"
+                      onClick={handleRecalculate}
                       disabled={!adjustmentText.trim() || isRecalculating}
+                      aria-label="Räkna om"
+                      className="h-11 w-11 shrink-0 grid place-items-center rounded-pill bg-primary text-primary-foreground disabled:opacity-50"
                     >
-                      {isRecalculating ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-4 h-4" />
-                      )}
-                    </Button>
+                      {isRecalculating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Action buttons */}
-              <div className="flex gap-3 sticky bottom-0 bg-background pt-2 pb-4">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="icon" className="text-destructive hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Ta bort måltid?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Är du säker på att du vill ta bort "{mealName}"? Detta går inte att ångra.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Ta bort
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                
-                <Button variant="outline" className="flex-1" onClick={onClose}>
-                  Avbryt
-                </Button>
-                <Button 
-                  className="flex-1 gap-2" 
+                  {/* Delete */}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 text-[13px] font-bold text-terracotta"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Ta bort måltiden
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Ta bort måltid?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Är du säker på att du vill ta bort "{mealName}"? Detta går inte att ångra.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Ta bort
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+
+                <button
+                  type="button"
                   onClick={handleSave}
                   disabled={isSaving}
+                  className="mt-3 w-full rounded-pill bg-primary py-4 text-[15px] font-bold text-primary-foreground disabled:opacity-60"
                 >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )}
-                  Spara
-                </Button>
+                  {isSaving ? "Sparar..." : "Spara ändringar"}
+                </button>
               </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
-      {/* Ingredients Dialog - read-only */}
-      <Dialog open={showIngredients} onOpenChange={setShowIngredients}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Ingredienser</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {ingredients.map((ing, index) => (
-              <div key={index} className="flex justify-between items-start p-3 bg-muted/50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm">{ing.name}</p>
-                    {ing.dataSource === "livsmedelsverket" && (
-                      <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                        <Database className="w-2 h-2 mr-0.5" />
-                        LV
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{ing.amount}</p>
-                </div>
-                <div className="text-right text-xs">
-                  <p className="font-medium">{ing.calories} kcal</p>
-                  <div className="flex gap-2 text-muted-foreground">
-                    <span className="text-primary">P: {ing.protein}g</span>
-                    <span className="text-amber-600">K: {ing.carbs}g</span>
-                    <span className="text-green-600">F: {ing.fat}g</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }
