@@ -116,8 +116,7 @@ export function AddSymptomSheet({
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side="bottom"
-        hideClose
-        className="h-[92dvh] rounded-t-[28px] border-0 bg-background p-0 overflow-y-auto"
+        className="h-[92dvh] rounded-t-[28px] border-0 bg-background p-0 overflow-y-auto [&>button]:hidden"
       >
         {/* Drag handle */}
         <div className="pt-3 flex justify-center">
