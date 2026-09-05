@@ -265,7 +265,16 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
     <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent
         side="bottom"
-        className="max-h-[92dvh] p-0 border-0 bg-background rounded-t-panel overflow-hidden [&>button]:hidden"
+        className={cn(
+          "p-0 border-0 bg-background rounded-t-panel overflow-hidden [&>button]:hidden",
+          // Smoothly grow the sheet when the analysis finishes and the result appears
+          "transition-[height] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+          viewState === "result"
+            ? "h-[92dvh]"
+            : viewState === "analyzing"
+              ? "h-[42dvh]"
+              : "max-h-[92dvh]"
+        )}
       >
         {/* ============ INPUT: SELECT MODE ============ */}
         {viewState === "input" && inputMode === "select" && (
@@ -374,7 +383,7 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
 
         {/* ============ ANALYZING ============ */}
         {viewState === "analyzing" && (
-          <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <div className="flex h-full flex-col items-center justify-center gap-4 animate-fade-in">
             {imagePreview && (
               <div className="w-32 h-32 rounded-card overflow-hidden">
                 <img src={imagePreview} alt="Mat" className="w-full h-full object-cover" />
@@ -387,7 +396,7 @@ export function AddMealSheet({ isOpen, onClose, onAddEntry, initialImage }: AddM
 
         {/* ============ RESULT ============ */}
         {viewState === "result" && estimation && (
-          <div className="max-h-[92dvh] overflow-y-auto overscroll-contain pb-8">
+          <div className="h-full overflow-y-auto overscroll-contain pb-8 animate-fade-in [animation-delay:150ms] [animation-fill-mode:backwards]">
             {/* 1. Hero */}
             <div className={cn("relative h-[190px] w-full overflow-hidden rounded-t-panel", !imagePreview && "bg-gold")}>
               {imagePreview ? (
