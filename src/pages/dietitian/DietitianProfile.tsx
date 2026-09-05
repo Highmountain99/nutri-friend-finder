@@ -79,35 +79,51 @@ export default function DietitianProfile() {
 
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/avatar.${ext}`;
+      const extMap: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      };
+      const ext = extMap[file.type] ?? "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true });
+        .upload(path, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
         .from("avatars")
         .getPublicUrl(path);
 
-      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      const avatarUrl = urlData.publicUrl;
 
-      const { error: updateError } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from("dietitian_profiles")
         .update({ avatar_url: avatarUrl })
-        .eq("id", profile.id);
+        .eq("id", profile.id)
+        .select("id, avatar_url");
       if (updateError) throw updateError;
+      if (!updated || updated.length === 0) {
+        throw new Error("Bilden kunde inte sparas på din profil");
+      }
 
+      // Uppdatera cachen direkt så bilden syns utan omladdning
+      queryClient.setQueryData(["dietitian-profile", user.id], (prev: any) =>
+        prev ? { ...prev, avatar_url: avatarUrl } : prev
+      );
       queryClient.invalidateQueries({ queryKey: ["dietitian-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["my-dietitian"] });
       toast.success("Profilbild uppdaterad!");
     } catch (err: any) {
-      toast.error(err.message || "Kunde inte ladda upp bilden");
+      console.error("Avatar upload failed:", err);
+      toast.error(err?.message || "Kunde inte ladda upp bilden");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
+
 
   const updateProfile = useMutation({
     mutationFn: async () => {
