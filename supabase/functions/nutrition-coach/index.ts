@@ -92,7 +92,53 @@ serve(async (req) => {
         .select("id, title, tags, meal_types, dietary_needs, time_minutes, calories_per_serving, protein_per_serving")
         .eq("is_published", true)
         .limit(300),
+      db
+        .from("dietist_patient_assignments")
+        .select("dietist_id")
+        .eq("patient_id", userId)
+        .limit(1)
+        .maybeSingle(),
+      db
+        .from("client_training_days")
+        .select("weekday, start_time, session_date, label")
+        .eq("patient_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      db
+        .from("symptom_entries")
+        .select("entry_date, symptom_time, description")
+        .eq("user_id", userId)
+        .gte("entry_date", sinceStr)
+        .order("symptom_time", { ascending: false })
+        .limit(20),
+      db
+        .from("health_tracking_entries")
+        .select("entry_date, metric_type, value, unit")
+        .eq("user_id", userId)
+        .in("metric_type", ["weight", "waist", "waist_circumference"])
+        .gte("entry_date", sinceStr)
+        .order("entry_date", { ascending: true })
+        .limit(60),
+      db
+        .from("profiles")
+        .select("first_name")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
+
+    // Coach (PT) name
+    let coachName: string | null = null;
+    const dietistId = (assignRes.data as { dietist_id?: string } | null)?.dietist_id;
+    if (dietistId) {
+      const { data: coachProfile } = await db
+        .from("dietitian_profiles")
+        .select("first_name, last_name")
+        .eq("user_id", dietistId)
+        .maybeSingle();
+      if (coachProfile?.first_name) {
+        coachName = `${coachProfile.first_name} ${coachProfile.last_name || ""}`.trim();
+      }
+    }
 
     const catalog = catalogRes.data || [];
     const catalogText = catalog.length
