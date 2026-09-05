@@ -1,4 +1,4 @@
-import type { AreaConfig } from "../types";
+import type { LegacyAreaConfig } from "../types";
 
 const g = (d: Record<string, any>) => {
   const area = d.focus_area || "oklart";
@@ -45,7 +45,7 @@ const g = (d: Record<string, any>) => {
   };
 };
 
-export const womensHealthConfig: AreaConfig = {
+export const womensHealthConfig: LegacyAreaConfig = {
   id: "womens_health",
   title: "Kvinnohälsa",
   icon: "🌸",

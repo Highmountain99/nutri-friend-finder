@@ -1,4 +1,4 @@
-import type { AreaConfig } from "../types";
+import type { LegacyAreaConfig } from "../types";
 
 const g = (d: Record<string, any>) => {
   const reasons = (d.visit_reasons || []).join(", ") || "svår relation till mat";
@@ -36,7 +36,7 @@ const g = (d: Record<string, any>) => {
   };
 };
 
-export const eatingDisorderConfig: AreaConfig = {
+export const eatingDisorderConfig: LegacyAreaConfig = {
   id: "eating_disorder",
   title: "Relation till mat",
   icon: "🤍",

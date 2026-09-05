@@ -1,4 +1,4 @@
-import type { AreaConfig } from "../types";
+import type { LegacyAreaConfig } from "../types";
 
 const g = (d: Record<string, any>) => {
   const reasons = (d.visit_reasons || []).join(", ") || "IBS/magbesvär";
@@ -39,7 +39,7 @@ const g = (d: Record<string, any>) => {
   };
 };
 
-export const ibsConfig: AreaConfig = {
+export const ibsConfig: LegacyAreaConfig = {
   id: "ibs",
   title: "IBS / Magbesvär",
   icon: "🫄",

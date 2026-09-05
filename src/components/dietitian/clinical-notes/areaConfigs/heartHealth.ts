@@ -1,4 +1,4 @@
-import type { AreaConfig } from "../types";
+import type { LegacyAreaConfig } from "../types";
 
 const g = (d: Record<string, any>) => {
   const reasons = (d.referral_reasons || []).join(", ") || "ej specificerat";
@@ -38,7 +38,7 @@ const g = (d: Record<string, any>) => {
   };
 };
 
-export const heartHealthConfig: AreaConfig = {
+export const heartHealthConfig: LegacyAreaConfig = {
   id: "heart_health",
   title: "Hjärthälsa",
   icon: "❤️",

@@ -1,4 +1,4 @@
-import type { AreaConfig } from "../types";
+import type { LegacyAreaConfig } from "../types";
 
 const g = (d: Record<string, any>) => {
   const type = d.diabetes_type || "oklart";
@@ -35,7 +35,7 @@ const g = (d: Record<string, any>) => {
   };
 };
 
-export const diabetesConfig: AreaConfig = {
+export const diabetesConfig: LegacyAreaConfig = {
   id: "diabetes",
   title: "Diabetes / Blodsocker",
   icon: "🩸",
