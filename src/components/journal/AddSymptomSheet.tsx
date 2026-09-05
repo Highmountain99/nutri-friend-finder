@@ -49,24 +49,24 @@ function MealRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-3.5 rounded-[20px] p-3 text-left transition-colors",
+        "w-full flex items-center gap-3 rounded-[16px] p-2.5 text-left transition-colors",
         active ? "bg-primary text-primary-foreground" : "bg-background text-foreground"
       )}
     >
       <span
         className={cn(
-          "h-12 w-12 shrink-0 rounded-[16px] grid place-items-center",
+          "h-10 w-10 shrink-0 rounded-[13px] grid place-items-center",
           active ? "bg-primary-foreground/15 text-primary-foreground" : "bg-accent/60 text-foreground"
         )}
       >
         {tile}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[16px] font-bold leading-tight">{title}</span>
+        <span className="block truncate text-[15px] font-bold leading-tight">{title}</span>
         {subtitle && (
           <span
             className={cn(
-              "block text-[14px] leading-tight",
+              "block text-[13px] leading-tight",
               active ? "text-primary-foreground/70" : "text-foreground/55"
             )}
           >
@@ -76,13 +76,13 @@ function MealRow({
       </span>
       <span
         className={cn(
-          "h-7 w-7 shrink-0 rounded-full grid place-items-center border-2",
+          "h-6 w-6 shrink-0 rounded-full grid place-items-center border-2",
           active
             ? "border-primary-foreground bg-primary-foreground text-primary"
             : "border-foreground/25 text-transparent"
         )}
       >
-        <Check className="h-4 w-4" strokeWidth={3} />
+        <Check className="h-3.5 w-3.5" strokeWidth={3} />
       </span>
     </button>
   );
@@ -211,7 +211,7 @@ export function AddSymptomSheet({
             <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/55 mb-3">
               Koppla till måltid
             </p>
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <MealRow
                 active={selectedMealId === "none"}
                 onClick={() => selectMeal(null)}
