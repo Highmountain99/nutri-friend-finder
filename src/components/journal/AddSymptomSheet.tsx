@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Check, Clock, X } from "lucide-react";
+import { Check, Clock, Unlink, X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +23,70 @@ const QUICK_TIMES = [
   { label: "30 min sedan", minutes: 30 },
   { label: "1 h sedan", minutes: 60 },
 ];
+
+const MEAL_TYPE_LABELS: Record<string, string> = {
+  breakfast: "Frukost",
+  lunch: "Lunch",
+  dinner: "Middag",
+  snack: "Mellanmål",
+};
+
+function MealRow({
+  active,
+  onClick,
+  tile,
+  title,
+  subtitle,
+}: {
+  active: boolean;
+  onClick: () => void;
+  tile: React.ReactNode;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-3.5 rounded-[20px] p-3 text-left transition-colors",
+        active ? "bg-primary text-primary-foreground" : "bg-background text-foreground"
+      )}
+    >
+      <span
+        className={cn(
+          "h-12 w-12 shrink-0 rounded-[16px] grid place-items-center",
+          active ? "bg-primary-foreground/15 text-primary-foreground" : "bg-accent/60 text-foreground"
+        )}
+      >
+        {tile}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[16px] font-bold leading-tight">{title}</span>
+        {subtitle && (
+          <span
+            className={cn(
+              "block text-[14px] leading-tight",
+              active ? "text-primary-foreground/70" : "text-foreground/55"
+            )}
+          >
+            {subtitle}
+          </span>
+        )}
+      </span>
+      <span
+        className={cn(
+          "h-7 w-7 shrink-0 rounded-full grid place-items-center border-2",
+          active
+            ? "border-primary-foreground bg-primary-foreground text-primary"
+            : "border-foreground/25 text-transparent"
+        )}
+      >
+        <Check className="h-4 w-4" strokeWidth={3} />
+      </span>
+    </button>
+  );
+}
 
 function Pill({
   active,
@@ -147,21 +211,30 @@ export function AddSymptomSheet({
             <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/55 mb-3">
               Koppla till måltid
             </p>
-            <div className="flex flex-wrap gap-2">
-              <Pill active={selectedMealId === "none"} onClick={() => selectMeal(null)}>
-                Ej kopplad
-              </Pill>
+            <div className="space-y-2.5">
+              <MealRow
+                active={selectedMealId === "none"}
+                onClick={() => selectMeal(null)}
+                tile={<Unlink className="h-5 w-5" />}
+                title="Inte kopplat till någon måltid"
+              />
               {meals.map((meal) => (
-                <Pill
+                <MealRow
                   key={meal.id}
                   active={selectedMealId === meal.id}
                   onClick={() => selectMeal(meal)}
-                >
-                  {meal.mealName} {format(meal.createdAt, "HH:mm")}
-                </Pill>
+                  tile={
+                    <span className="text-[13px] font-bold tabular-nums">
+                      {format(meal.createdAt, "HH:mm")}
+                    </span>
+                  }
+                  title={meal.mealName}
+                  subtitle={MEAL_TYPE_LABELS[meal.mealType] ?? meal.mealType}
+                />
               ))}
             </div>
           </div>
+
 
           {/* 2. Tid för symptom */}
           <div className="rounded-card bg-card p-4">
