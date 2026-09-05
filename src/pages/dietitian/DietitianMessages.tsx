@@ -43,6 +43,7 @@ export default function DietitianMessages() {
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [attachmentPickerOpen, setAttachmentPickerOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -54,14 +55,32 @@ export default function DietitianMessages() {
     const unreadIds = messages.data
       .filter((m) => m.sender !== "dietitian" && !(m as any).read_at)
       .map((m) => m.id);
-    if (unreadIds.length > 0) {
-      supabase
+    if (unreadIds.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const { error } = await supabase
         .from("chat_messages")
         .update({ read_at: new Date().toISOString() } as any)
-        .in("id", unreadIds)
-        .then();
-    }
-  }, [selectedPatient, messages.data]);
+        .in("id", unreadIds);
+      if (cancelled || error) return;
+      // Nollställ notisbubblan direkt för den här klienten
+      queryClient.setQueryData(["unread-messages", user?.id], (prev: any) => {
+        if (!prev) return prev;
+        const removed = prev.byPatient?.[selectedPatient] ?? 0;
+        const byPatient = { ...(prev.byPatient ?? {}) };
+        delete byPatient[selectedPatient];
+        return { total: Math.max(0, (prev.total ?? 0) - removed), byPatient };
+      });
+      queryClient.invalidateQueries({ queryKey: ["unread-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["dietitian-chat", selectedPatient] });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPatient, messages.data, queryClient, user?.id]);
+
 
   const handleSend = () => {
     if (!input.trim() && pendingAttachments.length === 0) return;
