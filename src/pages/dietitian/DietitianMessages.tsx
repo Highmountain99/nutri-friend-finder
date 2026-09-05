@@ -12,6 +12,8 @@ import { ChatAttachmentDisplay } from "@/components/messages/ChatAttachmentDispl
 import type { ChatAttachment } from "@/components/messages/ChatAttachmentPicker";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 import { format, isToday, isYesterday } from "date-fns";
 import { sv } from "date-fns/locale";
