@@ -755,6 +755,7 @@ export type Database = {
           fiber: number | null
           id: string
           image_url: string | null
+          ingredients: Json | null
           is_ai_estimated: boolean | null
           meal_name: string | null
           meal_type: string | null
@@ -770,6 +771,7 @@ export type Database = {
           fiber?: number | null
           id?: string
           image_url?: string | null
+          ingredients?: Json | null
           is_ai_estimated?: boolean | null
           meal_name?: string | null
           meal_type?: string | null
@@ -785,6 +787,7 @@ export type Database = {
           fiber?: number | null
           id?: string
           image_url?: string | null
+          ingredients?: Json | null
           is_ai_estimated?: boolean | null
           meal_name?: string | null
           meal_type?: string | null
