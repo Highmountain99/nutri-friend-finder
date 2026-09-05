@@ -575,6 +575,7 @@ export function useJournalData(selectedDate: Date) {
           fat: updates.fat,
           is_ai_estimated: updates.isAiEstimated,
           image_url: storedImageUrl,
+          ingredients: updates.ingredients as unknown as Json,
           ...(newEntryDate && { entry_date: newEntryDate }),
           ...(newCreatedAt && { created_at: newCreatedAt }),
         })
