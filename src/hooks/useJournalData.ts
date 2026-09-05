@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadMealImage, warmMealImageCache } from "@/lib/mealImages";
 
@@ -190,6 +191,7 @@ function mapEntry(entry: Record<string, unknown>): NutritionEntry {
     fat: Number(entry.fat) || 0,
     isAiEstimated: (entry.is_ai_estimated as boolean) || false,
     imageUrl: (entry.image_url as string) || undefined,
+    ingredients: (entry.ingredients as Ingredient[] | undefined) || undefined,
     createdAt: new Date((entry.created_at as string) || Date.now()),
   };
 }
@@ -221,7 +223,7 @@ function sumTotals(entries: NutritionEntry[]): DailyTotals {
 // image ref arrives together with the rest of the meal values and can be
 // batch-signed in the same fetch — thumbnails render instantly.
 const ENTRY_LIST_COLUMNS =
-  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, image_url, created_at";
+  "id, entry_date, meal_name, meal_type, calories, protein, carbs, fat, is_ai_estimated, image_url, ingredients, created_at";
 
 
 
@@ -510,6 +512,7 @@ export function useJournalData(selectedDate: Date) {
         fat: entry.fat,
         is_ai_estimated: entry.isAiEstimated,
         image_url: storedImageUrl,
+        ingredients: entry.ingredients as unknown as Json,
       };
 
       const { data, error } = await supabase
@@ -572,6 +575,7 @@ export function useJournalData(selectedDate: Date) {
           fat: updates.fat,
           is_ai_estimated: updates.isAiEstimated,
           image_url: storedImageUrl,
+          ingredients: updates.ingredients as unknown as Json,
           ...(newEntryDate && { entry_date: newEntryDate }),
           ...(newCreatedAt && { created_at: newCreatedAt }),
         })
